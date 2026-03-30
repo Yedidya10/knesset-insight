@@ -1,0 +1,26 @@
+# Get the commit message
+commit_msg=$(cat "$1")
+
+# Define the pattern: category: description
+# Categories: feat, fix, docs, style, refactor, test, chore, build, ci, perf
+pattern="^(feat|fix|docs|style|refactor|test|chore|build|ci|perf):.+"
+
+if ! echo "$commit_msg" | head -n1 | grep -qE "$pattern"; then
+  echo "❌ Commit message is invalid!"  echo ""
+  echo "Format required: <category>: <description>"
+  echo ""
+  echo "Valid categories:"
+  echo "  feat:     New feature"
+  echo "  fix:      Bug fix"
+  echo "  docs:     Documentation changes"
+  echo "  style:    Code style changes (formatting, etc.)"
+  echo "  refactor: Code refactoring"
+  echo "  test:     Adding or updating tests"
+  echo "  chore:    Other changes (dependencies, config, etc.)"
+  echo "  build:    Build system changes"
+  echo "  ci:       CI/CD changes"
+  echo "  perf:     Performance improvements"
+  echo ""
+  echo "Example: feat: add user authentication"
+  exit 1
+fi

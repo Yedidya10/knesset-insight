@@ -27,7 +27,7 @@
 
 ## טכנולוגיות
 
-- **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS, shadcn/ui
+- **Frontend**: Next.js 16, React 19, TypeScript, Tailwind CSS, shadcn/ui
 - **Backend**: tRPC, Supabase (PostgreSQL + Auth), Drizzle ORM
 - **AI**: OpenAI GPT-4o, Vercel AI SDK, pgvector
 - **Data**: Trigger.dev (scheduled sync), OData client

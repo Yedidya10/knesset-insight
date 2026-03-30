@@ -1,0 +1,7 @@
+pnpm exec lint-staged
+
+if [ $? -ne 0 ]; then
+  echo ""
+  echo " Linting/Formatting failed! Fix the errors above before committing."
+  exit 1
+fi
