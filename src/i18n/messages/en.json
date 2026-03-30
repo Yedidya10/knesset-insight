@@ -1,0 +1,164 @@
+{
+  "common": {
+    "appName": "Knesset Insight",
+    "loading": "Loading...",
+    "error": "Error",
+    "notFound": "Not found",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "search": "Search",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "yes": "Yes",
+    "no": "No",
+    "all": "All",
+    "more": "More",
+    "showMore": "Show more",
+    "showLess": "Show less"
+  },
+  "nav": {
+    "home": "Home",
+    "members": "MKs",
+    "votes": "Votes",
+    "legislation": "Legislation",
+    "parties": "Parties",
+    "budget": "Budget",
+    "committees": "Committees",
+    "compare": "Compare",
+    "search": "Search",
+    "dashboard": "Dashboard",
+    "settings": "Settings",
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout"
+  },
+  "home": {
+    "title": "Knesset Insight",
+    "subtitle": "Parliamentary data — simple and accessible",
+    "todayInKnesset": "Today in Knesset",
+    "latestVote": "Latest Vote",
+    "activeLegislation": "Active Legislation",
+    "budgetOverview": "Budget — Quick View",
+    "stats": {
+      "votesThisWeek": "Votes This Week",
+      "newBills": "New Bills",
+      "committeeSessions": "Committee Sessions"
+    }
+  },
+  "members": {
+    "title": "Members of Knesset",
+    "profile": {
+      "title": "MK Profile",
+      "party": "Party",
+      "voteHistory": "Vote History",
+      "bills": "Bills",
+      "attendance": "Attendance",
+      "roles": "Roles",
+      "coalitionScore": "Coalition Alignment Score",
+      "topics": "Key Topics"
+    },
+    "filter": {
+      "party": "Filter by party",
+      "coalition": "Coalition",
+      "opposition": "Opposition",
+      "committee": "Committee"
+    }
+  },
+  "votes": {
+    "title": "Votes",
+    "for": "For",
+    "against": "Against",
+    "abstain": "Abstain",
+    "absent": "Absent",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "partyBreakdown": "Party Breakdown",
+    "voterList": "Voter List",
+    "aiExplanation": "What does this mean?"
+  },
+  "legislation": {
+    "title": "Legislation",
+    "billStatus": "Status",
+    "initiators": "Initiators",
+    "relatedVotes": "Related Votes",
+    "committeeDiscussions": "Committee Discussions",
+    "aiSummary": "Simple Language Summary",
+    "timeline": "Timeline"
+  },
+  "parties": {
+    "title": "Parties",
+    "coalition": "Coalition",
+    "opposition": "Opposition",
+    "members": "Members",
+    "disciplineScore": "Party Discipline Score",
+    "keyTopics": "Key Topics"
+  },
+  "budget": {
+    "title": "Budget",
+    "allocated": "Allocated",
+    "used": "Used",
+    "yearComparison": "Year Comparison",
+    "ministry": "Ministry"
+  },
+  "committees": {
+    "title": "Committees",
+    "sessions": "Sessions",
+    "recentTopics": "Recent Topics",
+    "members": "Members"
+  },
+  "ai": {
+    "chatTitle": "AI Chat",
+    "placeholder": "Ask a question about Knesset activity...",
+    "loginRequired": "AI Chat is available for registered users only",
+    "loginPrompt": "Sign up to access AI Chat",
+    "dailyLimitReached": "You've reached your daily chat limit",
+    "sources": "Sources",
+    "thinking": "Thinking..."
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot password?",
+    "orContinueWith": "Or continue with",
+    "google": "Google",
+    "github": "GitHub"
+  },
+  "dashboard": {
+    "title": "Personal Dashboard",
+    "watchlist": "Watchlist",
+    "alerts": "Alerts",
+    "weeklySummary": "Weekly Summary",
+    "noAlerts": "No new alerts"
+  },
+  "search": {
+    "title": "Search",
+    "placeholder": "Search MKs, votes, legislation...",
+    "noResults": "No results found",
+    "filters": {
+      "type": "Type",
+      "date": "Date",
+      "party": "Party"
+    }
+  },
+  "pwa": {
+    "install": {
+      "title": "Install Knesset Insight",
+      "description": "Install the app for quick access and offline use",
+      "button": "Install"
+    },
+    "offline": "You are offline. Some data may not be up to date."
+  },
+  "footer": {
+    "about": "About",
+    "openSource": "Open Source",
+    "dataSources": "Data Sources",
+    "privacy": "Privacy",
+    "terms": "Terms of Use"
+  }
+}

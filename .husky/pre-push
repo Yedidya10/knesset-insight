@@ -1,7 +1,1 @@
-pnpm build
-
-if [ $? -ne 0 ]; then
-  echo ""
-  echo "❌ Build failed! Fix the errors above before pushing."
-  exit 1
-fi
+pnpm type-check && pnpm build

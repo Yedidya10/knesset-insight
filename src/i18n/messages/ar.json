@@ -1,0 +1,164 @@
+{
+  "common": {
+    "appName": "بصيرة الكنيست",
+    "loading": "جارٍ التحميل...",
+    "error": "خطأ",
+    "notFound": "غير موجود",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "close": "إغلاق",
+    "search": "بحث",
+    "back": "رجوع",
+    "next": "التالي",
+    "previous": "السابق",
+    "yes": "نعم",
+    "no": "لا",
+    "all": "الكل",
+    "more": "المزيد",
+    "showMore": "عرض المزيد",
+    "showLess": "عرض أقل"
+  },
+  "nav": {
+    "home": "الرئيسية",
+    "members": "أعضاء الكنيست",
+    "votes": "التصويتات",
+    "legislation": "التشريعات",
+    "parties": "الكتل",
+    "budget": "الميزانية",
+    "committees": "اللجان",
+    "compare": "مقارنة",
+    "search": "بحث",
+    "dashboard": "لوحة التحكم",
+    "settings": "الإعدادات",
+    "login": "تسجيل الدخول",
+    "register": "التسجيل",
+    "logout": "تسجيل الخروج"
+  },
+  "home": {
+    "title": "بصيرة الكنيست",
+    "subtitle": "المعلومات البرلمانية — بشكل بسيط ومتاح",
+    "todayInKnesset": "اليوم في الكنيست",
+    "latestVote": "آخر تصويت",
+    "activeLegislation": "تشريعات قيد التنفيذ",
+    "budgetOverview": "الميزانية — نظرة سريعة",
+    "stats": {
+      "votesThisWeek": "تصويتات هذا الأسبوع",
+      "newBills": "مشاريع قوانين جديدة",
+      "committeeSessions": "جلسات اللجان"
+    }
+  },
+  "members": {
+    "title": "أعضاء الكنيست",
+    "profile": {
+      "title": "ملف عضو الكنيست",
+      "party": "الكتلة",
+      "voteHistory": "سجل التصويت",
+      "bills": "مشاريع القوانين",
+      "attendance": "الحضور",
+      "roles": "المناصب",
+      "coalitionScore": "درجة التوافق مع الائتلاف",
+      "topics": "المواضيع الرئيسية"
+    },
+    "filter": {
+      "party": "تصفية حسب الكتلة",
+      "coalition": "الائتلاف",
+      "opposition": "المعارضة",
+      "committee": "اللجنة"
+    }
+  },
+  "votes": {
+    "title": "التصويتات",
+    "for": "مع",
+    "against": "ضد",
+    "abstain": "ممتنع",
+    "absent": "غائب",
+    "approved": "تمت الموافقة",
+    "rejected": "تم الرفض",
+    "partyBreakdown": "التوزيع حسب الكتل",
+    "voterList": "قائمة المصوتين",
+    "aiExplanation": "ما المعنى؟"
+  },
+  "legislation": {
+    "title": "التشريعات",
+    "billStatus": "الحالة",
+    "initiators": "المبادرون",
+    "relatedVotes": "تصويتات ذات صلة",
+    "committeeDiscussions": "مناقشات اللجان",
+    "aiSummary": "ملخص بلغة بسيطة",
+    "timeline": "الجدول الزمني"
+  },
+  "parties": {
+    "title": "الكتل",
+    "coalition": "الائتلاف",
+    "opposition": "المعارضة",
+    "members": "الأعضاء",
+    "disciplineScore": "درجة انضباط الكتلة",
+    "keyTopics": "المواضيع الرئيسية"
+  },
+  "budget": {
+    "title": "الميزانية",
+    "allocated": "المخصص",
+    "used": "المستخدم",
+    "yearComparison": "مقارنة سنوية",
+    "ministry": "الوزارة"
+  },
+  "committees": {
+    "title": "اللجان",
+    "sessions": "الجلسات",
+    "recentTopics": "المواضيع الأخيرة",
+    "members": "الأعضاء"
+  },
+  "ai": {
+    "chatTitle": "دردشة AI",
+    "placeholder": "اطرح سؤالاً عن نشاط الكنيست...",
+    "loginRequired": "دردشة AI متاحة للمستخدمين المسجلين فقط",
+    "loginPrompt": "سجّل للوصول إلى دردشة AI",
+    "dailyLimitReached": "لقد وصلت إلى الحد اليومي للمحادثات",
+    "sources": "المصادر",
+    "thinking": "جارٍ التفكير..."
+  },
+  "auth": {
+    "login": "تسجيل الدخول",
+    "register": "التسجيل",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "forgotPassword": "نسيت كلمة المرور؟",
+    "orContinueWith": "أو تابع مع",
+    "google": "Google",
+    "github": "GitHub"
+  },
+  "dashboard": {
+    "title": "لوحة التحكم الشخصية",
+    "watchlist": "قائمة المتابعة",
+    "alerts": "التنبيهات",
+    "weeklySummary": "الملخص الأسبوعي",
+    "noAlerts": "لا توجد تنبيهات جديدة"
+  },
+  "search": {
+    "title": "بحث",
+    "placeholder": "البحث عن أعضاء كنيست، تصويتات، تشريعات...",
+    "noResults": "لم يتم العثور على نتائج",
+    "filters": {
+      "type": "النوع",
+      "date": "التاريخ",
+      "party": "الكتلة"
+    }
+  },
+  "pwa": {
+    "install": {
+      "title": "تثبيت بصيرة الكنيست",
+      "description": "ثبّت التطبيق للوصول السريع والاستخدام بدون اتصال",
+      "button": "تثبيت"
+    },
+    "offline": "أنت غير متصل بالإنترنت. قد لا تكون بعض البيانات محدّثة."
+  },
+  "footer": {
+    "about": "حول",
+    "openSource": "مفتوح المصدر",
+    "dataSources": "مصادر البيانات",
+    "privacy": "الخصوصية",
+    "terms": "شروط الاستخدام"
+  }
+}

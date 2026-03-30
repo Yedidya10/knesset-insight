@@ -1,0 +1,164 @@
+{
+  "common": {
+    "appName": "כנסת אינסייט",
+    "loading": "טוען...",
+    "error": "שגיאה",
+    "notFound": "לא נמצא",
+    "save": "שמור",
+    "cancel": "ביטול",
+    "delete": "מחק",
+    "edit": "ערוך",
+    "close": "סגור",
+    "search": "חיפוש",
+    "back": "חזרה",
+    "next": "הבא",
+    "previous": "הקודם",
+    "yes": "כן",
+    "no": "לא",
+    "all": "הכל",
+    "more": "עוד",
+    "showMore": "הצג עוד",
+    "showLess": "הצג פחות"
+  },
+  "nav": {
+    "home": "דף הבית",
+    "members": "חברי כנסת",
+    "votes": "הצבעות",
+    "legislation": "חקיקה",
+    "parties": "סיעות",
+    "budget": "תקציב",
+    "committees": "ועדות",
+    "compare": "השוואה",
+    "search": "חיפוש",
+    "dashboard": "דשבורד",
+    "settings": "הגדרות",
+    "login": "התחברות",
+    "register": "הרשמה",
+    "logout": "התנתקות"
+  },
+  "home": {
+    "title": "כנסת אינסייט",
+    "subtitle": "המידע הפרלמנטרי — בצורה פשוטה ונגישה",
+    "todayInKnesset": "היום בכנסת",
+    "latestVote": "הצבעה אחרונה",
+    "activeLegislation": "חקיקה בתהליך",
+    "budgetOverview": "תקציב — מבט מהיר",
+    "stats": {
+      "votesThisWeek": "הצבעות השבוע",
+      "newBills": "הצעות חוק חדשות",
+      "committeeSessions": "ישיבות ועדות"
+    }
+  },
+  "members": {
+    "title": "חברי כנסת",
+    "profile": {
+      "title": "פרופיל חבר כנסת",
+      "party": "סיעה",
+      "voteHistory": "היסטוריית הצבעות",
+      "bills": "הצעות חוק",
+      "attendance": "נוכחות",
+      "roles": "תפקידים",
+      "coalitionScore": "ציון התאמה לקואליציה",
+      "topics": "נושאים מרכזיים"
+    },
+    "filter": {
+      "party": "סינון לפי סיעה",
+      "coalition": "קואליציה",
+      "opposition": "אופוזיציה",
+      "committee": "ועדה"
+    }
+  },
+  "votes": {
+    "title": "הצבעות",
+    "for": "בעד",
+    "against": "נגד",
+    "abstain": "נמנע",
+    "absent": "נעדר",
+    "approved": "אושר",
+    "rejected": "נדחה",
+    "partyBreakdown": "פיצול לפי סיעות",
+    "voterList": "רשימת מצביעים",
+    "aiExplanation": "מה המשמעות?"
+  },
+  "legislation": {
+    "title": "חקיקה",
+    "billStatus": "סטטוס",
+    "initiators": "יוזמים",
+    "relatedVotes": "הצבעות קשורות",
+    "committeeDiscussions": "דיונים בועדות",
+    "aiSummary": "סיכום בשפה פשוטה",
+    "timeline": "ציר זמן"
+  },
+  "parties": {
+    "title": "סיעות",
+    "coalition": "קואליציה",
+    "opposition": "אופוזיציה",
+    "members": "חברי כנסת",
+    "disciplineScore": "ציון משמעת סיעתית",
+    "keyTopics": "נושאים מרכזיים"
+  },
+  "budget": {
+    "title": "תקציב",
+    "allocated": "הוקצה",
+    "used": "נוצל",
+    "yearComparison": "השוואה שנתית",
+    "ministry": "משרד"
+  },
+  "committees": {
+    "title": "ועדות",
+    "sessions": "ישיבות",
+    "recentTopics": "נושאים אחרונים",
+    "members": "חברים"
+  },
+  "ai": {
+    "chatTitle": "צ'אט AI",
+    "placeholder": "שאלו שאלה על פעילות הכנסת...",
+    "loginRequired": "צ'אט AI זמין למשתמשים רשומים בלבד",
+    "loginPrompt": "הירשמו כדי לגשת לצ'אט AI",
+    "dailyLimitReached": "הגעתם למגבלת השיחות היומית",
+    "sources": "מקורות",
+    "thinking": "חושב..."
+  },
+  "auth": {
+    "login": "התחברות",
+    "register": "הרשמה",
+    "email": "אימייל",
+    "password": "סיסמה",
+    "forgotPassword": "שכחתם סיסמה?",
+    "orContinueWith": "או המשיכו עם",
+    "google": "Google",
+    "github": "GitHub"
+  },
+  "dashboard": {
+    "title": "דשבורד אישי",
+    "watchlist": "רשימת מעקב",
+    "alerts": "התראות",
+    "weeklySummary": "סיכום שבועי",
+    "noAlerts": "אין התראות חדשות"
+  },
+  "search": {
+    "title": "חיפוש",
+    "placeholder": "חיפוש חברי כנסת, הצבעות, חקיקה...",
+    "noResults": "לא נמצאו תוצאות",
+    "filters": {
+      "type": "סוג",
+      "date": "תאריך",
+      "party": "סיעה"
+    }
+  },
+  "pwa": {
+    "install": {
+      "title": "התקינו את כנסת אינסייט",
+      "description": "התקינו את האפליקציה לגישה מהירה ועבודה אופליין",
+      "button": "התקנה"
+    },
+    "offline": "אתם במצב אופליין. חלק מהנתונים עשויים להיות לא עדכניים."
+  },
+  "footer": {
+    "about": "אודות",
+    "openSource": "קוד פתוח",
+    "dataSources": "מקורות מידע",
+    "privacy": "פרטיות",
+    "terms": "תנאי שימוש"
+  }
+}
