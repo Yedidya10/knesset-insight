@@ -59,14 +59,18 @@
       "attendance": "Attendance",
       "roles": "Roles",
       "coalitionScore": "Coalition Alignment Score",
-      "topics": "Key Topics"
+      "topics": "Key Topics",
+      "coalitionMember": "Coalition",
+      "oppositionMember": "Opposition"
     },
     "filter": {
       "party": "Filter by party",
       "coalition": "Coalition",
       "opposition": "Opposition",
       "committee": "Committee"
-    }
+    },
+    "noResults": "No members found",
+    "currentMembers": "Current Members"
   },
   "votes": {
     "title": "Votes",

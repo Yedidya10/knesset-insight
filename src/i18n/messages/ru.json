@@ -59,14 +59,18 @@
       "attendance": "Посещаемость",
       "roles": "Должности",
       "coalitionScore": "Рейтинг совпадения с коалицией",
-      "topics": "Ключевые темы"
+      "topics": "Ключевые темы",
+      "coalitionMember": "Коалиция",
+      "oppositionMember": "Оппозиция"
     },
     "filter": {
       "party": "Фильтр по фракции",
       "coalition": "Коалиция",
       "opposition": "Оппозиция",
       "committee": "Комитет"
-    }
+    },
+    "noResults": "Депутаты не найдены",
+    "currentMembers": "Действующие депутаты"
   },
   "votes": {
     "title": "Голосования",

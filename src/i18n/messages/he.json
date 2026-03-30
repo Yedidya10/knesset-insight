@@ -59,14 +59,18 @@
       "attendance": "נוכחות",
       "roles": "תפקידים",
       "coalitionScore": "ציון התאמה לקואליציה",
-      "topics": "נושאים מרכזיים"
+      "topics": "נושאים מרכזיים",
+      "coalitionMember": "קואליציה",
+      "oppositionMember": "אופוזיציה"
     },
     "filter": {
       "party": "סינון לפי סיעה",
       "coalition": "קואליציה",
       "opposition": "אופוזיציה",
       "committee": "ועדה"
-    }
+    },
+    "noResults": "לא נמצאו חברי כנסת",
+    "currentMembers": "חברי כנסת נוכחיים"
   },
   "votes": {
     "title": "הצבעות",

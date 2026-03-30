@@ -59,14 +59,18 @@
       "attendance": "الحضور",
       "roles": "المناصب",
       "coalitionScore": "درجة التوافق مع الائتلاف",
-      "topics": "المواضيع الرئيسية"
+      "topics": "المواضيع الرئيسية",
+      "coalitionMember": "ائتلاف",
+      "oppositionMember": "معارضة"
     },
     "filter": {
       "party": "تصفية حسب الكتلة",
       "coalition": "الائتلاف",
       "opposition": "المعارضة",
       "committee": "اللجنة"
-    }
+    },
+    "noResults": "لم يتم العثور على أعضاء",
+    "currentMembers": "الأعضاء الحاليون"
   },
   "votes": {
     "title": "التصويتات",
