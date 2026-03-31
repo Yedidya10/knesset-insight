@@ -44,9 +44,9 @@
     "activeLegislation": "Active Legislation",
     "budgetOverview": "Budget — Quick View",
     "stats": {
-      "votesThisWeek": "Votes This Week",
-      "newBills": "New Bills",
-      "committeeSessions": "Committee Sessions"
+      "activeMembers": "Active Members",
+      "totalVotes": "Total Votes",
+      "activeParties": "Active Parties"
     }
   },
   "members": {
@@ -67,7 +67,9 @@
       "party": "Filter by party",
       "coalition": "Coalition",
       "opposition": "Opposition",
-      "committee": "Committee"
+      "committee": "Committee",
+      "sortByName": "Sort by name",
+      "sortByParty": "Sort by party"
     },
     "noResults": "No members found",
     "currentMembers": "Current Members"
@@ -81,8 +83,34 @@
     "approved": "Approved",
     "rejected": "Rejected",
     "partyBreakdown": "Party Breakdown",
+    "coalitionBreakdown": "Coalition",
+    "oppositionBreakdown": "Opposition",
     "voterList": "Voter List",
-    "aiExplanation": "What does this mean?"
+    "aiExplanation": "What does this mean?",
+    "totalVoters": "Total voters",
+    "relatedBill": "Related bill",
+    "relatedVotes": "Related votes",
+    "reservations": "Reservations",
+    "mainVote": "Main vote",
+    "knessetNum": "Knesset",
+    "voteType": "Vote type",
+    "noResults": "No votes found",
+    "filter": {
+      "knessetNum": "Knesset number",
+      "dateFrom": "From date",
+      "dateTo": "To date",
+      "result": "Result",
+      "allResults": "All results",
+      "searchPlaceholder": "Search by title...",
+      "clearFilters": "Clear filters"
+    },
+    "sort": {
+      "title": "Sort",
+      "dateDesc": "Date (newest first)",
+      "dateAsc": "Date (oldest first)",
+      "mostVotes": "Most voters",
+      "mostControversial": "Most controversial"
+    }
   },
   "legislation": {
     "title": "Legislation",
@@ -91,7 +119,9 @@
     "relatedVotes": "Related Votes",
     "committeeDiscussions": "Committee Discussions",
     "aiSummary": "Simple Language Summary",
-    "timeline": "Timeline"
+    "timeline": "Timeline",
+    "knesset": "Knesset",
+    "noResults": "No bills found"
   },
   "parties": {
     "title": "Parties",
@@ -112,7 +142,11 @@
     "title": "Committees",
     "sessions": "Sessions",
     "recentTopics": "Recent Topics",
-    "members": "Members"
+    "members": "Members",
+    "active": "Active Committees",
+    "inactive": "Inactive Committees",
+    "knesset": "Knesset",
+    "noResults": "No committees found"
   },
   "ai": {
     "chatTitle": "AI Chat",

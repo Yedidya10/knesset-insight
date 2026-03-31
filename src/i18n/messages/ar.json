@@ -44,9 +44,9 @@
     "activeLegislation": "تشريعات قيد التنفيذ",
     "budgetOverview": "الميزانية — نظرة سريعة",
     "stats": {
-      "votesThisWeek": "تصويتات هذا الأسبوع",
-      "newBills": "مشاريع قوانين جديدة",
-      "committeeSessions": "جلسات اللجان"
+      "activeMembers": "أعضاء نشطون",
+      "totalVotes": "إجمالي التصويتات",
+      "activeParties": "كتل نشطة"
     }
   },
   "members": {
@@ -67,7 +67,9 @@
       "party": "تصفية حسب الكتلة",
       "coalition": "الائتلاف",
       "opposition": "المعارضة",
-      "committee": "اللجنة"
+      "committee": "اللجنة",
+      "sortByName": "ترتيب حسب الاسم",
+      "sortByParty": "ترتيب حسب الكتلة"
     },
     "noResults": "لم يتم العثور على أعضاء",
     "currentMembers": "الأعضاء الحاليون"
@@ -81,8 +83,34 @@
     "approved": "تمت الموافقة",
     "rejected": "تم الرفض",
     "partyBreakdown": "التوزيع حسب الكتل",
+    "coalitionBreakdown": "الائتلاف",
+    "oppositionBreakdown": "المعارضة",
     "voterList": "قائمة المصوتين",
-    "aiExplanation": "ما المعنى؟"
+    "aiExplanation": "ما المعنى؟",
+    "totalVoters": "إجمالي المصوتين",
+    "relatedBill": "مشروع قانون ذو صلة",
+    "relatedVotes": "تصويتات ذات صلة",
+    "reservations": "تحفظات",
+    "mainVote": "التصويت الرئيسي",
+    "knessetNum": "الكنيست",
+    "voteType": "نوع التصويت",
+    "noResults": "لم يتم العثور على تصويتات",
+    "filter": {
+      "knessetNum": "رقم الكنيست",
+      "dateFrom": "من تاريخ",
+      "dateTo": "إلى تاريخ",
+      "result": "النتيجة",
+      "allResults": "جميع النتائج",
+      "searchPlaceholder": "البحث عن عنوان...",
+      "clearFilters": "مسح التصفية"
+    },
+    "sort": {
+      "title": "ترتيب",
+      "dateDesc": "التاريخ (الأحدث أولاً)",
+      "dateAsc": "التاريخ (الأقدم أولاً)",
+      "mostVotes": "الأكثر تصويتاً",
+      "mostControversial": "الأكثر إثارة للجدل"
+    }
   },
   "legislation": {
     "title": "التشريعات",
@@ -91,7 +119,9 @@
     "relatedVotes": "تصويتات ذات صلة",
     "committeeDiscussions": "مناقشات اللجان",
     "aiSummary": "ملخص بلغة بسيطة",
-    "timeline": "الجدول الزمني"
+    "timeline": "الجدول الزمني",
+    "knesset": "الكنيست",
+    "noResults": "لم يتم العثور على مشاريع قانون"
   },
   "parties": {
     "title": "الكتل",
@@ -112,7 +142,11 @@
     "title": "اللجان",
     "sessions": "الجلسات",
     "recentTopics": "المواضيع الأخيرة",
-    "members": "الأعضاء"
+    "members": "الأعضاء",
+    "active": "لجان نشطة",
+    "inactive": "لجان غير نشطة",
+    "knesset": "الكنيست",
+    "noResults": "لم يتم العثور على لجان"
   },
   "ai": {
     "chatTitle": "دردشة AI",

@@ -44,9 +44,9 @@
     "activeLegislation": "חקיקה בתהליך",
     "budgetOverview": "תקציב — מבט מהיר",
     "stats": {
-      "votesThisWeek": "הצבעות השבוע",
-      "newBills": "הצעות חוק חדשות",
-      "committeeSessions": "ישיבות ועדות"
+      "activeMembers": "חברי כנסת פעילים",
+      "totalVotes": "סך הצבעות",
+      "activeParties": "סיעות פעילות"
     }
   },
   "members": {
@@ -67,7 +67,9 @@
       "party": "סינון לפי סיעה",
       "coalition": "קואליציה",
       "opposition": "אופוזיציה",
-      "committee": "ועדה"
+      "committee": "ועדה",
+      "sortByName": "מיון לפי שם",
+      "sortByParty": "מיון לפי סיעה"
     },
     "noResults": "לא נמצאו חברי כנסת",
     "currentMembers": "חברי כנסת נוכחיים"
@@ -81,8 +83,34 @@
     "approved": "אושר",
     "rejected": "נדחה",
     "partyBreakdown": "פיצול לפי סיעות",
+    "coalitionBreakdown": "קואליציה",
+    "oppositionBreakdown": "אופוזיציה",
     "voterList": "רשימת מצביעים",
-    "aiExplanation": "מה המשמעות?"
+    "aiExplanation": "מה המשמעות?",
+    "totalVoters": "סה״כ מצביעים",
+    "relatedBill": "הצעת חוק קשורה",
+    "relatedVotes": "הצבעות קשורות",
+    "reservations": "הסתייגויות",
+    "mainVote": "הצבעה ראשית",
+    "knessetNum": "כנסת",
+    "voteType": "סוג הצבעה",
+    "noResults": "לא נמצאו הצבעות",
+    "filter": {
+      "knessetNum": "מספר כנסת",
+      "dateFrom": "מתאריך",
+      "dateTo": "עד תאריך",
+      "result": "תוצאה",
+      "allResults": "כל התוצאות",
+      "searchPlaceholder": "חיפוש לפי כותרת...",
+      "clearFilters": "נקה סינון"
+    },
+    "sort": {
+      "title": "מיון",
+      "dateDesc": "תאריך (חדש לישן)",
+      "dateAsc": "תאריך (ישן לחדש)",
+      "mostVotes": "הכי הרבה מצביעים",
+      "mostControversial": "הכי שנוי במחלוקת"
+    }
   },
   "legislation": {
     "title": "חקיקה",
@@ -91,7 +119,9 @@
     "relatedVotes": "הצבעות קשורות",
     "committeeDiscussions": "דיונים בועדות",
     "aiSummary": "סיכום בשפה פשוטה",
-    "timeline": "ציר זמן"
+    "timeline": "ציר זמן",
+    "knesset": "כנסת",
+    "noResults": "לא נמצאו הצעות חוק"
   },
   "parties": {
     "title": "סיעות",
@@ -112,7 +142,11 @@
     "title": "ועדות",
     "sessions": "ישיבות",
     "recentTopics": "נושאים אחרונים",
-    "members": "חברים"
+    "members": "חברים",
+    "active": "ועדות פעילות",
+    "inactive": "ועדות לא פעילות",
+    "knesset": "כנסת",
+    "noResults": "לא נמצאו ועדות"
   },
   "ai": {
     "chatTitle": "צ'אט AI",

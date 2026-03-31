@@ -44,9 +44,9 @@
     "activeLegislation": "Текущее законодательство",
     "budgetOverview": "Бюджет — быстрый обзор",
     "stats": {
-      "votesThisWeek": "Голосования на этой неделе",
-      "newBills": "Новые законопроекты",
-      "committeeSessions": "Заседания комитетов"
+      "activeMembers": "Активные депутаты",
+      "totalVotes": "Всего голосований",
+      "activeParties": "Активные фракции"
     }
   },
   "members": {
@@ -67,7 +67,9 @@
       "party": "Фильтр по фракции",
       "coalition": "Коалиция",
       "opposition": "Оппозиция",
-      "committee": "Комитет"
+      "committee": "Комитет",
+      "sortByName": "По имени",
+      "sortByParty": "По фракции"
     },
     "noResults": "Депутаты не найдены",
     "currentMembers": "Действующие депутаты"
@@ -81,8 +83,34 @@
     "approved": "Одобрено",
     "rejected": "Отклонено",
     "partyBreakdown": "Распределение по фракциям",
+    "coalitionBreakdown": "Коалиция",
+    "oppositionBreakdown": "Оппозиция",
     "voterList": "Список голосовавших",
-    "aiExplanation": "Что это значит?"
+    "aiExplanation": "Что это значит?",
+    "totalVoters": "Всего проголосовавших",
+    "relatedBill": "Связанный законопроект",
+    "relatedVotes": "Связанные голосования",
+    "reservations": "Оговорки",
+    "mainVote": "Основное голосование",
+    "knessetNum": "Кнессет",
+    "voteType": "Тип голосования",
+    "noResults": "Голосования не найдены",
+    "filter": {
+      "knessetNum": "Номер Кнессета",
+      "dateFrom": "С даты",
+      "dateTo": "По дату",
+      "result": "Результат",
+      "allResults": "Все результаты",
+      "searchPlaceholder": "Поиск по названию...",
+      "clearFilters": "Очистить фильтры"
+    },
+    "sort": {
+      "title": "Сортировка",
+      "dateDesc": "Дата (сначала новые)",
+      "dateAsc": "Дата (сначала старые)",
+      "mostVotes": "Больше всего голосов",
+      "mostControversial": "Самые спорные"
+    }
   },
   "legislation": {
     "title": "Законодательство",
@@ -91,7 +119,9 @@
     "relatedVotes": "Связанные голосования",
     "committeeDiscussions": "Обсуждения в комитетах",
     "aiSummary": "Краткое изложение простым языком",
-    "timeline": "Хронология"
+    "timeline": "Хронология",
+    "knesset": "Кнессет",
+    "noResults": "Законопроекты не найдены"
   },
   "parties": {
     "title": "Фракции",
@@ -112,7 +142,11 @@
     "title": "Комитеты",
     "sessions": "Заседания",
     "recentTopics": "Последние темы",
-    "members": "Члены"
+    "members": "Члены",
+    "active": "Активные комитеты",
+    "inactive": "Неактивные комитеты",
+    "knesset": "Кнессет",
+    "noResults": "Комитеты не найдены"
   },
   "ai": {
     "chatTitle": "AI Чат",
