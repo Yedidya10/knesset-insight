@@ -77,6 +77,7 @@ export const votes = pgTable('votes', {
   voteType: text('vote_type'),
   knessetNum: integer('knesset_num'),
   sessionId: integer('session_id'),
+  sessItemId: integer('sess_item_id'),
   billId: integer('bill_id').references(() => bills.id),
   forCount: integer('for_count').default(0),
   againstCount: integer('against_count').default(0),

@@ -5,17 +5,17 @@ import type {
 } from './types';
 
 /**
- * Map Hebrew vote result to English enum value.
+ * Map numeric vote result to English enum value.
  */
 export function mapVoteValue(
-  hebrewResult: string,
+  result: number,
 ): 'for' | 'against' | 'abstain' | 'absent' {
-  switch (hebrewResult) {
-    case 'בעד':
+  switch (result) {
+    case 1:
       return 'for';
-    case 'נגד':
+    case 2:
       return 'against';
-    case 'נמנע':
+    case 3:
       return 'abstain';
     default:
       return 'absent';
@@ -29,14 +29,15 @@ export function transformVoteHeader(raw: ODataVoteHeader) {
   return {
     knessetId: raw.vote_id,
     title: raw.vote_item_dscr,
-    voteDate: new Date(raw.vote_date_str),
-    voteType: raw.vote_type,
+    voteDate: new Date(raw.vote_date),
+    voteType: String(raw.vote_type),
     knessetNum: raw.knesset_num,
-    sessionId: raw.session_id,
-    forCount: raw.totalfor,
-    againstCount: raw.totalagainst,
-    abstainCount: raw.totalabstain,
-    isAccepted: raw.vote_result === 'אושר',
+    sessionId: raw.session_id ? Number(raw.session_id) : null,
+    sessItemId: raw.sess_item_id ?? null,
+    forCount: raw.total_for,
+    againstCount: raw.total_against,
+    abstainCount: raw.total_abstain,
+    isAccepted: raw.is_accepted === 1,
   };
 }
 

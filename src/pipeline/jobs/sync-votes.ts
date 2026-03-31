@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { db } from '../../lib/db';
 import { votes, memberVotes, members } from '../../lib/db/schema';
 import { fetchOData, fetchODataSince } from '../../lib/knesset/odata-client';
@@ -9,8 +9,40 @@ import type {
 import { transformVoteHeader, mapVoteValue } from '../../lib/knesset/transforms';
 import { getLastSyncTime, runSyncJob } from '../utils';
 
+const BATCH_SIZE = 50;
+const PAGE_SIZE = 100; // OData server caps at 100 per page
+
+/**
+ * Fetch all paginated OData results for a given entity + filter.
+ */
+async function fetchAllPaginated<T>(
+  entity: string,
+  filter: string,
+  orderby = 'vote_date desc',
+  label = '',
+): Promise<T[]> {
+  const results: T[] = [];
+  let skip = 0;
+  while (true) {
+    const page = await fetchOData<T>('Votes', entity, {
+      $top: PAGE_SIZE,
+      $skip: skip,
+      $orderby: orderby,
+      $filter: filter,
+    });
+    results.push(...page);
+    if (label) {
+      console.log(`  [${label}] page ${skip / PAGE_SIZE + 1}: +${page.length} (total: ${results.length})`);
+    }
+    if (page.length < PAGE_SIZE) break;
+    skip += PAGE_SIZE;
+  }
+  return results;
+}
+
 /**
  * Sync vote headers from OData.
+ * On initial sync, fetches Knesset 25 (current) first then backwards.
  */
 async function syncVoteHeaders(): Promise<number> {
   const lastSync = await getLastSyncTime('votes');
@@ -21,69 +53,66 @@ async function syncVoteHeaders(): Promise<number> {
       'Votes',
       'View_vote_rslts_hdr_Approved',
       lastSync,
-      'vote_date_str',
+      'vote_date',
     );
   } else {
-    // Initial full sync — fetch all
+    // Fetch current Knesset (25) first, then backwards through 24, 23, ...
     rawVotes = [];
-    let skip = 0;
-    const pageSize = 1000;
-    while (true) {
-      const page = await fetchOData<ODataVoteHeader>(
-        'Votes',
+    const knessets = [25, 24, 23, 22, 21, 20];
+    for (const kn of knessets) {
+      const knVotes = await fetchAllPaginated<ODataVoteHeader>(
         'View_vote_rslts_hdr_Approved',
-        {
-          $top: pageSize,
-          $skip: skip,
-          $orderby: 'vote_date_str desc',
-        },
+        `knesset_num eq ${kn}`,
+        'vote_date desc',
+        `votes-knesset${kn}`,
       );
-      rawVotes.push(...page);
-      if (page.length < pageSize) break;
-      skip += pageSize;
+      rawVotes.push(...knVotes);
+      console.log(`  [votes] Knesset ${kn}: ${knVotes.length} votes (running total: ${rawVotes.length})`);
     }
   }
 
-  let count = 0;
-  for (const raw of rawVotes) {
-    const transformed = transformVoteHeader(raw);
+  // Batch upsert vote headers
+  const rows = rawVotes.map(transformVoteHeader);
+  for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+    const batch = rows.slice(i, i + BATCH_SIZE);
     await db
       .insert(votes)
-      .values(transformed)
+      .values(batch)
       .onConflictDoUpdate({
         target: votes.knessetId,
         set: {
-          title: transformed.title,
-          voteDate: transformed.voteDate,
-          voteType: transformed.voteType,
-          forCount: transformed.forCount,
-          againstCount: transformed.againstCount,
-          abstainCount: transformed.abstainCount,
-          isAccepted: transformed.isAccepted,
+          title: sql`excluded.title`,
+          voteDate: sql`excluded.vote_date`,
+          voteType: sql`excluded.vote_type`,
+          knessetNum: sql`excluded.knesset_num`,
+          sessionId: sql`excluded.session_id`,
+          sessItemId: sql`excluded.sess_item_id`,
+          forCount: sql`excluded.for_count`,
+          againstCount: sql`excluded.against_count`,
+          abstainCount: sql`excluded.abstain_count`,
+          isAccepted: sql`excluded.is_accepted`,
           updatedAt: new Date(),
         },
       });
-    count++;
   }
 
-  return count;
+  return rows.length;
 }
 
 /**
- * Sync individual member votes for recently synced vote headers.
+ * Sync individual member votes from OData.
+ * On initial sync, fetches per-Knesset (25 first, backwards).
  */
 async function syncMemberVoteRecords(): Promise<number> {
   const lastSync = await getLastSyncTime('member_votes');
 
-  // Fetch member votes from OData
   let rawMemberVotes: ODataMemberVote[];
   if (lastSync) {
-    // For incremental: get the vote IDs that were recently synced
-    // and fetch their member votes
+    // Incremental: fetch member votes for votes updated since last sync
     const recentVotes = await db
       .select({ knessetId: votes.knessetId })
       .from(votes)
-      .where(eq(votes.updatedAt, votes.updatedAt)) // placeholder for recent
+      .where(sql`${votes.updatedAt} > ${lastSync}`)
       .limit(500);
 
     rawMemberVotes = [];
@@ -96,53 +125,53 @@ async function syncMemberVoteRecords(): Promise<number> {
       rawMemberVotes.push(...mvs);
     }
   } else {
-    // Full sync — fetch all member votes page by page
+    // Full sync per Knesset, current first
     rawMemberVotes = [];
-    let skip = 0;
-    const pageSize = 1000;
-    while (true) {
-      const page = await fetchOData<ODataMemberVote>(
-        'Votes',
+    const knessets = [25, 24, 23, 22, 21, 20];
+    for (const kn of knessets) {
+      const knVotes = await fetchAllPaginated<ODataMemberVote>(
         'vote_rslts_kmmbr_shadow',
-        { $top: pageSize, $skip: skip },
+        `knesset_num eq ${kn}`,
+        'vote_id desc',
+        `member_votes-knesset${kn}`,
       );
-      rawMemberVotes.push(...page);
-      if (page.length < pageSize) break;
-      skip += pageSize;
+      rawMemberVotes.push(...knVotes);
+      console.log(`  [member_votes] Knesset ${kn}: ${knVotes.length} records (running total: ${rawMemberVotes.length})`);
     }
   }
 
-  let count = 0;
-  for (const raw of rawMemberVotes) {
-    // Resolve foreign keys
-    const voteRows = await db
-      .select({ id: votes.id })
-      .from(votes)
-      .where(eq(votes.knessetId, raw.vote_id))
-      .limit(1);
+  // Pre-load all votes and members for FK resolution
+  const allVotes = await db
+    .select({ id: votes.id, knessetId: votes.knessetId })
+    .from(votes);
+  const voteMap = new Map(allVotes.map((v) => [v.knessetId, v.id]));
 
-    const memberRows = await db
-      .select({ id: members.id })
-      .from(members)
-      .where(eq(members.knessetId, raw.kmmbr_id))
-      .limit(1);
+  const allMembers = await db
+    .select({ id: members.id, knessetId: members.knessetId })
+    .from(members);
+  const memberMap = new Map(allMembers.map((m) => [m.knessetId, m.id]));
 
-    const voteId = voteRows[0]?.id;
-    const memberId = memberRows[0]?.id;
-    if (!voteId || !memberId) continue;
-
-    await db
-      .insert(memberVotes)
-      .values({
+  // Prepare rows with resolved FKs
+  const rows = rawMemberVotes
+    .map((raw) => {
+      const voteId = voteMap.get(raw.vote_id);
+      const memberId = memberMap.get(parseInt(String(raw.kmmbr_id), 10));
+      if (!voteId || !memberId) return null;
+      return {
         voteId,
         memberId,
         voteValue: mapVoteValue(raw.vote_result),
-      })
-      .onConflictDoNothing();
-    count++;
+      };
+    })
+    .filter((r): r is NonNullable<typeof r> => r !== null);
+
+  // Batch insert
+  for (let i = 0; i < rows.length; i += BATCH_SIZE) {
+    const batch = rows.slice(i, i + BATCH_SIZE);
+    await db.insert(memberVotes).values(batch).onConflictDoNothing();
   }
 
-  return count;
+  return rows.length;
 }
 
 /**

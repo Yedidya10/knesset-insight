@@ -11,9 +11,7 @@ export async function fetchOKnessetCSV<T extends Record<string, string>>(
 ): Promise<T[]> {
   const url = `${OKNESSET_BASE}/${path}`;
 
-  const response = await fetch(url, {
-    next: { revalidate: 0 },
-  });
+  const response = await fetch(url);
 
   if (!response.ok) {
     throw new Error(

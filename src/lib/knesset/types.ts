@@ -34,28 +34,31 @@ export interface OKnessetMember {
 // Votes.svc — View_vote_rslts_hdr_Approved
 export interface ODataVoteHeader {
   vote_id: number;
-  vote_date_str: string;
-  vote_time_str: string;
+  vote_date: string;
+  vote_time: string;
   vote_item_dscr: string;
   sess_item_nbr: number;
   sess_item_id: number;
-  totalfor: number;
-  totalagainst: number;
-  totalabstain: number;
-  vote_result: string;
-  vote_type: string;
-  is_elctrnc_vote: boolean;
+  total_for: number;
+  total_against: number;
+  total_abstain: number;
+  is_accepted: number;
+  vote_type: number;
+  is_elctrnc_vote: number;
   knesset_num: number;
-  session_id: number;
-  LastUpdatedDate?: string;
+  session_id: string;
+  session_num: number;
 }
 
 // Votes.svc — vote_rslts_kmmbr_shadow
 export interface ODataMemberVote {
   vote_id: number;
-  kmmbr_id: number;
+  kmmbr_id: string; // zero-padded string e.g. "000000405"
   kmmbr_name: string;
-  vote_result: string; // 'בעד', 'נגד', 'נמנע', 'לא הצביע'
+  vote_result: number; // 1=for, 2=against, 3=abstain
+  knesset_num: number;
+  faction_id: number;
+  faction_name: string;
 }
 
 // ParliamentInfo.svc — KNS_Bill

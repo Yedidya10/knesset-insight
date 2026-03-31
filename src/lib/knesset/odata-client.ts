@@ -32,7 +32,6 @@ export async function fetchOData<T>(
 
   const response = await fetch(url.toString(), {
     headers: { Accept: 'application/json' },
-    next: { revalidate: 0 },
   });
 
   if (!response.ok) {
