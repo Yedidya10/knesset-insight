@@ -1,7 +1,15 @@
 'use client';
 
-import { useLocale, useTranslations } from 'next-intl';
+import { useLocale } from 'next-intl';
 import { useRouter, usePathname } from 'next/navigation';
+import { Globe } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { appConfig, type Locale } from '../../../app.config';
 
 const localeLabels: Record<Locale, string> = {
@@ -17,7 +25,6 @@ export default function LanguageSwitcher() {
   const pathname = usePathname();
 
   function switchLocale(newLocale: string) {
-    // Remove current locale prefix from path
     const segments = pathname.split('/').filter(Boolean);
     if (appConfig.i18n.locales.includes(segments[0] as Locale)) {
       segments.shift();
@@ -30,17 +37,22 @@ export default function LanguageSwitcher() {
   }
 
   return (
-    <select
-      value={locale}
-      onChange={(e) => switchLocale(e.target.value)}
-      className="rounded-md border border-border bg-background px-2 py-1 text-sm"
-      aria-label="Language"
-    >
-      {appConfig.i18n.locales.map((loc) => (
-        <option key={loc} value={loc}>
-          {localeLabels[loc]}
-        </option>
-      ))}
-    </select>
+    <DropdownMenu>
+      <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-9 w-9" />}>
+        <Globe className="h-4 w-4" />
+        <span className="sr-only">Language</span>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {appConfig.i18n.locales.map((loc) => (
+          <DropdownMenuItem
+            key={loc}
+            onClick={() => switchLocale(loc)}
+            className={loc === locale ? 'bg-accent font-medium' : ''}
+          >
+            {localeLabels[loc]}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
