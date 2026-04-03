@@ -5,22 +5,34 @@ const OKNESSET_BASE = appConfig.dataSources.oknessetData;
 /**
  * Fetch a CSV file from Open Knesset and parse it into objects.
  * Uses the production.oknesset.org/pipelines/data endpoint.
+ * Retries up to maxRetries times with exponential backoff.
  */
 export async function fetchOKnessetCSV<T extends Record<string, string>>(
   path: string,
+  maxRetries = 3,
 ): Promise<T[]> {
   const url = `${OKNESSET_BASE}/${path}`;
 
-  const response = await fetch(url);
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch(url);
 
-  if (!response.ok) {
-    throw new Error(
-      `Open Knesset fetch failed: ${response.status} ${response.statusText} — ${path}`,
-    );
+      if (!response.ok) {
+        throw new Error(
+          `Open Knesset fetch failed: ${response.status} ${response.statusText} — ${path}`,
+        );
+      }
+
+      const text = await response.text();
+      return parseCSV<T>(text);
+    } catch (err) {
+      if (attempt === maxRetries) throw err;
+      const delay = attempt * 3000;
+      console.warn(`  [CSV retry] Attempt ${attempt} failed for ${path}, retrying in ${delay}ms...`);
+      await new Promise((r) => setTimeout(r, delay));
+    }
   }
-
-  const text = await response.text();
-  return parseCSV<T>(text);
+  return []; // unreachable
 }
 
 /**

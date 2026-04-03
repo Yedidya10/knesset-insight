@@ -29,10 +29,7 @@ export default function LanguageSwitcher() {
     if (appConfig.i18n.locales.includes(segments[0] as Locale)) {
       segments.shift();
     }
-    const newPath =
-      newLocale === appConfig.i18n.defaultLocale
-        ? `/${segments.join('/')}`
-        : `/${newLocale}/${segments.join('/')}`;
+    const newPath = `/${newLocale}/${segments.join('/')}`;
     router.push(newPath);
   }
 

@@ -4,7 +4,7 @@ import { appConfig } from '../app.config';
 export const proxy = createMiddleware({
   locales: appConfig.i18n.locales,
   defaultLocale: appConfig.i18n.defaultLocale,
-  localePrefix: 'as-needed',
+  localePrefix: 'always',
 });
 
 export const config = {

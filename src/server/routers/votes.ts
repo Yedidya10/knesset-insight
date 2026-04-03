@@ -2,7 +2,7 @@ import { z } from 'zod/v4';
 import { eq, desc, asc, sql, ilike, and, gte, lte } from 'drizzle-orm';
 import { router, publicProcedure } from '../trpc';
 import { db } from '../../lib/db';
-import { votes, memberVotes, members, parties, bills } from '../../lib/db/schema';
+import { votes, memberVotes, members, factions, bills } from '../../lib/db/schema';
 
 export const votesRouter = router({
   list: publicProcedure
@@ -150,23 +150,23 @@ export const votesRouter = router({
           lastName: members.lastName,
           imageUrl: members.imageUrl,
           voteValue: memberVotes.voteValue,
-          partyName: parties.name,
-          isCoalition: members.isCoalition,
+          factionName: factions.name,
+          isCoalition: factions.isCoalition,
         })
         .from(memberVotes)
         .innerJoin(members, eq(memberVotes.memberId, members.id))
-        .leftJoin(parties, eq(members.partyId, parties.id))
+        .leftJoin(factions, eq(members.factionId, factions.id))
         .where(eq(memberVotes.voteId, input.voteId));
     }),
 
-  partyBreakdown: publicProcedure
+  factionBreakdown: publicProcedure
     .input(z.object({ voteId: z.number() }))
     .query(async ({ input }) => {
       return db
         .select({
-          partyName: parties.name,
-          partyColor: parties.color,
-          isCoalition: parties.isCoalition,
+          factionName: factions.name,
+          factionColor: factions.color,
+          isCoalition: factions.isCoalition,
           forCount: sql<number>`count(*) filter (where ${memberVotes.voteValue} = 'for')::int`,
           againstCount: sql<number>`count(*) filter (where ${memberVotes.voteValue} = 'against')::int`,
           abstainCount: sql<number>`count(*) filter (where ${memberVotes.voteValue} = 'abstain')::int`,
@@ -174,8 +174,8 @@ export const votesRouter = router({
         })
         .from(memberVotes)
         .innerJoin(members, eq(memberVotes.memberId, members.id))
-        .innerJoin(parties, eq(members.partyId, parties.id))
+        .innerJoin(factions, eq(members.factionId, factions.id))
         .where(eq(memberVotes.voteId, input.voteId))
-        .groupBy(parties.name, parties.color, parties.isCoalition);
+        .groupBy(factions.name, factions.color, factions.isCoalition);
     }),
 });

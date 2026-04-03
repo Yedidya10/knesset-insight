@@ -28,9 +28,27 @@ export const appConfig = {
   dataSources: {
     knessetOdata:
       process.env.KNESSET_ODATA_BASE_URL ?? 'https://knesset.gov.il/Odata',
+    knessetWebsiteApi:
+      process.env.KNESSET_WEBSITE_API_URL ?? 'https://knesset.gov.il/WebSiteApi/knessetapi',
+    knessetOdataV4:
+      process.env.KNESSET_ODATA_V4_URL ?? 'https://knesset.gov.il/OdataV4/ParliamentInfo',
     oknessetData:
       process.env.OKNESSET_DATA_URL ?? 'https://production.oknesset.org/pipelines/data',
     budgetApi: process.env.BUDGET_API_URL ?? 'https://next.obudget.org/api',
+    govPartyRegistrar:
+      process.env.GOV_PARTY_REGISTRAR_URL ?? 'https://www.gov.il/he/departments/dynamiccollectors/parties-db',
+    electionResults:
+      process.env.ELECTION_RESULTS_URL ?? 'https://votes{N}.bechirot.gov.il',
+  },
+
+  // Knesset data scope
+  knesset: {
+    /** Knesset numbers to sync (newest first) */
+    syncKnessets: [25, 24, 23, 22, 21, 20] as readonly number[],
+    /** Knessets where only the Knesset WebSiteApi has data (no OData / no CSV) */
+    websiteApiOnlyKnessets: [25] as readonly number[],
+    /** OData PositionID for "Member of Knesset" */
+    mkPositionId: 54,
   },
 
   // Sync schedule (cron expressions)
@@ -38,6 +56,15 @@ export const appConfig = {
     odata: process.env.SYNC_ODATA_CRON ?? '0 */6 * * *',
     oknesset: process.env.SYNC_OKNESSET_CRON ?? '0 3 * * *',
     budget: process.env.SYNC_BUDGET_CRON ?? '0 2 * * 5',
+  },
+
+  // Google Translate
+  translate: {
+    apiKey: process.env.GOOGLE_TRANSLATE_API_KEY ?? '',
+    apiUrl: 'https://translation.googleapis.com/language/translate/v2',
+    sourceLocale: 'he' as const,
+    /** Max characters per single translation request */
+    maxChars: Number(process.env.TRANSLATE_MAX_CHARS ?? 5000),
   },
 
   // Feature flags

@@ -3,15 +3,15 @@
 import { useTranslations } from 'next-intl';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-interface PartyVoteData {
-  partyName: string;
+interface FactionVoteData {
+  factionName: string;
   forCount: number;
   againstCount: number;
   abstainCount: number;
 }
 
 interface VoteDistributionChartProps {
-  data: PartyVoteData[];
+  data: FactionVoteData[];
 }
 
 export default function VoteDistributionChart({ data }: VoteDistributionChartProps) {
@@ -25,7 +25,7 @@ export default function VoteDistributionChart({ data }: VoteDistributionChartPro
         <BarChart data={data} layout="vertical" margin={{ top: 10, right: 30, left: 80, bottom: 10 }}>
           <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
           <XAxis type="number" className="text-xs" />
-          <YAxis type="category" dataKey="partyName" width={70} className="text-xs" />
+          <YAxis type="category" dataKey="factionName" width={70} className="text-xs" />
           <Tooltip
             contentStyle={{
               backgroundColor: 'hsl(var(--popover))',

@@ -2,7 +2,27 @@ import type {
   ODataVoteHeader,
   ODataMemberVote,
   OKnessetMember,
+  ODataV4PlenumVoteResult,
 } from './types';
+
+/**
+ * Map OData v4 PlenumVoteResult ResultCode to English enum value.
+ * v4 codes: 7=for, 8=against, 9=abstain
+ */
+export function mapV4ResultCode(
+  resultCode: number,
+): 'for' | 'against' | 'abstain' | 'absent' {
+  switch (resultCode) {
+    case 7:
+      return 'for';
+    case 8:
+      return 'against';
+    case 9:
+      return 'abstain';
+    default:
+      return 'absent';
+  }
+}
 
 /**
  * Map numeric vote result to English enum value.

@@ -16,7 +16,8 @@ export default function BillDetailPage() {
         {tCommon('back')}
       </Button>
 
-      <Card className="mb-6 border-border/60 shadow-sm">
+      <Card className="glass-card mb-6 overflow-hidden">
+        <div className="h-2 bg-gradient-to-r from-primary/40 via-chart-2/30 to-chart-4/30" />
         <CardContent className="p-6">
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <Badge variant="secondary">{t('billStatus')}: —</Badge>
@@ -34,7 +35,7 @@ export default function BillDetailPage() {
       </Card>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="border-border/60 shadow-sm">
+        <Card className="glass-card overflow-hidden">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <Users className="h-5 w-5 text-primary" />
@@ -49,7 +50,7 @@ export default function BillDetailPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-border/60 shadow-sm">
+        <Card className="glass-card overflow-hidden">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <Vote className="h-5 w-5 text-primary" />

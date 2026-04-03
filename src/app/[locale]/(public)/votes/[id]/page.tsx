@@ -4,12 +4,13 @@ import { notFound } from 'next/navigation';
 import { Vote, ThumbsUp, ThumbsDown, Minus, FileText, Link2 } from 'lucide-react';
 import { eq, and, desc, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { votes, memberVotes, members, parties, bills } from '@/lib/db/schema';
+import { votes, memberVotes, members, factions, bills } from '@/lib/db/schema';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import TranslatedText from '@/components/ui/translated-text';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -57,13 +58,13 @@ export default async function VoteDetailPage({ params }: Props) {
       lastName: members.lastName,
       imageUrl: members.imageUrl,
       voteValue: memberVotes.voteValue,
-      partyName: parties.name,
-      partyId: parties.id,
-      isCoalition: parties.isCoalition,
+      factionName: factions.name,
+      factionId: factions.id,
+      isCoalition: factions.isCoalition,
     })
     .from(memberVotes)
     .innerJoin(members, eq(memberVotes.memberId, members.id))
-    .leftJoin(parties, eq(members.partyId, parties.id))
+    .leftJoin(factions, eq(members.factionId, factions.id))
     .where(eq(memberVotes.voteId, vote.id));
 
   // Fetch related votes (same sessItemId)
@@ -87,29 +88,29 @@ export default async function VoteDetailPage({ params }: Props) {
       .orderBy(desc(votes.voteDate));
   }
 
-  // Group by party for breakdown, split by coalition/opposition
-  const partyBreakdown = new Map<string, { for: number; against: number; abstain: number; absent: number; isCoalition: boolean | null }>();
+  // Group by faction for breakdown, split by coalition/opposition
+  const factionBreakdown = new Map<string, { for: number; against: number; abstain: number; absent: number; isCoalition: boolean | null }>();
   for (const v of voterData) {
-    const pName = v.partyName ?? '—';
-    if (!partyBreakdown.has(pName)) {
-      partyBreakdown.set(pName, { for: 0, against: 0, abstain: 0, absent: 0, isCoalition: v.isCoalition });
+    const fName = v.factionName ?? '—';
+    if (!factionBreakdown.has(fName)) {
+      factionBreakdown.set(fName, { for: 0, against: 0, abstain: 0, absent: 0, isCoalition: v.isCoalition });
     }
-    const counts = partyBreakdown.get(pName)!;
+    const counts = factionBreakdown.get(fName)!;
     if (v.voteValue === 'for') counts.for++;
     else if (v.voteValue === 'against') counts.against++;
     else if (v.voteValue === 'abstain') counts.abstain++;
     else counts.absent++;
   }
 
-  const coalitionParties = [...partyBreakdown.entries()].filter(([, c]) => c.isCoalition).sort((a, b) => a[0].localeCompare(b[0]));
-  const oppositionParties = [...partyBreakdown.entries()].filter(([, c]) => !c.isCoalition).sort((a, b) => a[0].localeCompare(b[0]));
+  const coalitionFactions = [...factionBreakdown.entries()].filter(([, c]) => c.isCoalition).sort((a, b) => a[0].localeCompare(b[0]));
+  const oppositionFactions = [...factionBreakdown.entries()].filter(([, c]) => !c.isCoalition).sort((a, b) => a[0].localeCompare(b[0]));
 
   const forVoters = voterData.filter((v) => v.voteValue === 'for');
   const againstVoters = voterData.filter((v) => v.voteValue === 'against');
   const abstainVoters = voterData.filter((v) => v.voteValue === 'abstain');
   const totalVoters = forVoters.length + againstVoters.length + abstainVoters.length;
 
-  const renderPartyBar = (entries: [string, { for: number; against: number; abstain: number; absent: number; isCoalition: boolean | null }][]) => (
+  const renderFactionBar = (entries: [string, { for: number; against: number; abstain: number; absent: number; isCoalition: boolean | null }][]) => (
     <div className="space-y-2.5">
       {entries.map(([partyName, counts]) => {
         const total = counts.for + counts.against + counts.abstain;
@@ -117,7 +118,7 @@ export default async function VoteDetailPage({ params }: Props) {
         return (
           <div key={partyName} className="flex items-center gap-3">
             <span className="min-w-[120px] text-sm font-medium truncate">{partyName}</span>
-            <div className="flex flex-1 items-center gap-0.5 rounded overflow-hidden">
+            <div className="flex flex-1 items-center gap-0.5 rounded-full overflow-hidden">
               {counts.for > 0 && (
                 <div
                   className="h-5 bg-green-500 transition-all"
@@ -155,7 +156,7 @@ export default async function VoteDetailPage({ params }: Props) {
     label: string,
     colorClass: string,
   ) => (
-    <Card className="border-border/60 shadow-sm">
+    <Card className="glass-card overflow-hidden">
       <CardHeader className="pb-2">
         <CardTitle className={`flex items-center gap-2 text-base ${colorClass}`}>
           {icon}
@@ -177,7 +178,7 @@ export default async function VoteDetailPage({ params }: Props) {
                   <Link href={`/members/${v.memberId}`} className="text-sm text-primary hover:underline">
                     {v.firstName} {v.lastName}
                   </Link>
-                  <span className="text-xs text-muted-foreground"> · {v.partyName}</span>
+                  <span className="text-xs text-muted-foreground"> · {v.factionName}</span>
                 </div>
               </li>
             ))}
@@ -196,9 +197,12 @@ export default async function VoteDetailPage({ params }: Props) {
       </Button>
 
       {/* Vote header card */}
-      <Card className="mb-6 border-border/60 shadow-sm">
+      <Card className="glass-card mb-6 overflow-hidden">
+        <div className="h-2 bg-gradient-to-r from-primary/40 via-chart-2/30 to-chart-4/30" />
         <CardContent className="p-6">
-          <h1 className="text-xl font-bold sm:text-2xl">{vote.title}</h1>
+          <h1 className="text-xl font-bold sm:text-2xl">
+            <TranslatedText text={vote.title} as="span" />
+          </h1>
 
           {/* Meta badges */}
           <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -226,7 +230,7 @@ export default async function VoteDetailPage({ params }: Props) {
                 href={`/legislation/${vote.billId}`}
                 className="text-primary hover:underline"
               >
-                {vote.billName}
+                <TranslatedText text={vote.billName} />
               </Link>
             </div>
           )}
@@ -235,17 +239,17 @@ export default async function VoteDetailPage({ params }: Props) {
 
           {/* Vote counts — enhanced */}
           <div className="grid grid-cols-3 gap-4 text-center">
-            <div className="rounded-lg bg-green-50 p-4 dark:bg-green-950/30">
+            <div className="rounded-xl bg-green-50 p-4 dark:bg-green-950/30">
               <ThumbsUp className="mx-auto mb-1.5 h-5 w-5 text-green-600 dark:text-green-400" />
               <p className="text-2xl font-bold text-green-700 dark:text-green-300">{vote.forCount ?? 0}</p>
               <p className="text-xs text-muted-foreground">{t('for')}</p>
             </div>
-            <div className="rounded-lg bg-red-50 p-4 dark:bg-red-950/30">
+            <div className="rounded-xl bg-red-50 p-4 dark:bg-red-950/30">
               <ThumbsDown className="mx-auto mb-1.5 h-5 w-5 text-red-600 dark:text-red-400" />
               <p className="text-2xl font-bold text-red-700 dark:text-red-300">{vote.againstCount ?? 0}</p>
               <p className="text-xs text-muted-foreground">{t('against')}</p>
             </div>
-            <div className="rounded-lg bg-yellow-50 p-4 dark:bg-yellow-950/30">
+            <div className="rounded-xl bg-yellow-50 p-4 dark:bg-yellow-950/30">
               <Minus className="mx-auto mb-1.5 h-5 w-5 text-yellow-600 dark:text-yellow-400" />
               <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">{vote.abstainCount ?? 0}</p>
               <p className="text-xs text-muted-foreground">{t('abstain')}</p>
@@ -262,7 +266,7 @@ export default async function VoteDetailPage({ params }: Props) {
 
       {/* Related votes (reservations / הסתייגויות) */}
       {relatedVotes.length > 0 && (
-        <Card className="mb-6 border-border/60 shadow-sm">
+        <Card className="glass-card mb-6 overflow-hidden">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <Link2 className="h-4 w-4" />
@@ -274,7 +278,7 @@ export default async function VoteDetailPage({ params }: Props) {
               {relatedVotes.map((rv) => (
                 <Link key={rv.id} href={`/votes/${rv.id}`}>
                   <div className="flex items-center justify-between rounded-lg bg-muted/40 px-4 py-2.5 text-sm transition-colors hover:bg-muted">
-                    <span className="min-w-0 flex-1 truncate">{rv.title}</span>
+                    <span className="min-w-0 flex-1 truncate"><TranslatedText text={rv.title} /></span>
                     <div className="flex items-center gap-2">
                       <span className="text-green-600 dark:text-green-400">{rv.forCount ?? 0}</span>
                       <span className="text-muted-foreground">/</span>
@@ -291,24 +295,24 @@ export default async function VoteDetailPage({ params }: Props) {
         </Card>
       )}
 
-      {/* Party breakdown — split by coalition / opposition */}
-      <Card className="mb-6 border-border/60 shadow-sm">
+      {/* Faction breakdown — split by coalition / opposition */}
+      <Card className="glass-card mb-6 overflow-hidden">
         <CardHeader>
-          <CardTitle className="text-lg">{t('partyBreakdown')}</CardTitle>
+          <CardTitle className="text-lg">{t('factionBreakdown')}</CardTitle>
         </CardHeader>
         <CardContent>
-          {coalitionParties.length > 0 || oppositionParties.length > 0 ? (
+          {coalitionFactions.length > 0 || oppositionFactions.length > 0 ? (
             <div className="space-y-6">
-              {coalitionParties.length > 0 && (
+              {coalitionFactions.length > 0 && (
                 <div>
                   <h3 className="mb-3 text-sm font-semibold text-muted-foreground">{t('coalitionBreakdown')}</h3>
-                  {renderPartyBar(coalitionParties)}
+                  {renderFactionBar(coalitionFactions)}
                 </div>
               )}
-              {oppositionParties.length > 0 && (
+              {oppositionFactions.length > 0 && (
                 <div>
                   <h3 className="mb-3 text-sm font-semibold text-muted-foreground">{t('oppositionBreakdown')}</h3>
-                  {renderPartyBar(oppositionParties)}
+                  {renderFactionBar(oppositionFactions)}
                 </div>
               )}
             </div>

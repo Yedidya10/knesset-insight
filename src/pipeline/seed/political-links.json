@@ -1,0 +1,259 @@
+{
+  "electoralListParties": [
+    {
+      "knessetNum": 25,
+      "ballotLetters": "מחל",
+      "partyRegistrarNumbers": [
+        "59-900002-3"
+      ]
+    },
+    {
+      "knessetNum": 25,
+      "ballotLetters": "פה",
+      "partyRegistrarNumbers": [
+        "59-900091-6"
+      ]
+    },
+    {
+      "knessetNum": 25,
+      "ballotLetters": "ט",
+      "partyRegistrarNumbers": [
+        "59-900067-6",
+        "59-900064-3",
+        "59-900079-1"
+      ]
+    },
+    {
+      "knessetNum": 25,
+      "ballotLetters": "כן",
+      "partyRegistrarNumbers": [
+        "59-900123-7",
+        "59-900157-5"
+      ]
+    },
+    {
+      "knessetNum": 25,
+      "ballotLetters": "שס",
+      "partyRegistrarNumbers": [
+        "59-900007-2"
+      ]
+    },
+    {
+      "knessetNum": 25,
+      "ballotLetters": "ג",
+      "partyRegistrarNumbers": [
+        "59-900009-8",
+        "59-900010-6"
+      ]
+    },
+    {
+      "knessetNum": 25,
+      "ballotLetters": "ל",
+      "partyRegistrarNumbers": [
+        "59-900042-9"
+      ]
+    },
+    {
+      "knessetNum": 25,
+      "ballotLetters": "עם",
+      "partyRegistrarNumbers": [
+        "59-900034-6"
+      ]
+    },
+    {
+      "knessetNum": 25,
+      "ballotLetters": "ום",
+      "partyRegistrarNumbers": [
+        "59-900011-4",
+        "59-900025-4"
+      ]
+    },
+    {
+      "knessetNum": 25,
+      "ballotLetters": "אמת",
+      "partyRegistrarNumbers": [
+        "59-900001-5"
+      ]
+    }
+  ],
+  "factionElectoralList": [
+    {
+      "factionKnessetId": 1095,
+      "ballotLetters": "שס",
+      "knessetNum": 25
+    },
+    {
+      "factionKnessetId": 1096,
+      "ballotLetters": "מחל",
+      "knessetNum": 25
+    },
+    {
+      "factionKnessetId": 1097,
+      "ballotLetters": "ט",
+      "knessetNum": 25
+    },
+    {
+      "factionKnessetId": 1098,
+      "ballotLetters": "כן",
+      "knessetNum": 25
+    },
+    {
+      "factionKnessetId": 1099,
+      "ballotLetters": "עם",
+      "knessetNum": 25
+    },
+    {
+      "factionKnessetId": 1100,
+      "ballotLetters": "אמת",
+      "knessetNum": 25
+    },
+    {
+      "factionKnessetId": 1101,
+      "ballotLetters": "ג",
+      "knessetNum": 25
+    },
+    {
+      "factionKnessetId": 1102,
+      "ballotLetters": "פה",
+      "knessetNum": 25
+    },
+    {
+      "factionKnessetId": 1103,
+      "ballotLetters": "ום",
+      "knessetNum": 25
+    },
+    {
+      "factionKnessetId": 1104,
+      "ballotLetters": "ל",
+      "knessetNum": 25
+    },
+    {
+      "factionKnessetId": 1105,
+      "ballotLetters": "ט",
+      "knessetNum": 25
+    },
+    {
+      "factionKnessetId": 1106,
+      "ballotLetters": "ט",
+      "knessetNum": 25
+    },
+    {
+      "factionKnessetId": 1107,
+      "ballotLetters": "ט",
+      "knessetNum": 25
+    },
+    {
+      "factionKnessetId": 1108,
+      "ballotLetters": "כן",
+      "knessetNum": 25
+    },
+    {
+      "factionKnessetId": 1109,
+      "ballotLetters": "כן",
+      "knessetNum": 25
+    },
+    {
+      "factionKnessetId": 1110,
+      "ballotLetters": "כן",
+      "knessetNum": 25
+    }
+  ],
+  "partyFactions": [
+    {
+      "partyRegistrarNumber": "59-900002-3",
+      "factionKnessetIds": [
+        1096
+      ]
+    },
+    {
+      "partyRegistrarNumber": "59-900091-6",
+      "factionKnessetIds": [
+        1102
+      ]
+    },
+    {
+      "partyRegistrarNumber": "59-900067-6",
+      "factionKnessetIds": [
+        1097,
+        1105
+      ]
+    },
+    {
+      "partyRegistrarNumber": "59-900064-3",
+      "factionKnessetIds": [
+        1097,
+        1106
+      ]
+    },
+    {
+      "partyRegistrarNumber": "59-900079-1",
+      "factionKnessetIds": [
+        1097,
+        1107
+      ]
+    },
+    {
+      "partyRegistrarNumber": "59-900123-7",
+      "factionKnessetIds": [
+        1098,
+        1109,
+        1110
+      ]
+    },
+    {
+      "partyRegistrarNumber": "59-900157-5",
+      "factionKnessetIds": [
+        1098,
+        1108
+      ]
+    },
+    {
+      "partyRegistrarNumber": "59-900007-2",
+      "factionKnessetIds": [
+        1095
+      ]
+    },
+    {
+      "partyRegistrarNumber": "59-900009-8",
+      "factionKnessetIds": [
+        1101
+      ]
+    },
+    {
+      "partyRegistrarNumber": "59-900010-6",
+      "factionKnessetIds": [
+        1101
+      ]
+    },
+    {
+      "partyRegistrarNumber": "59-900042-9",
+      "factionKnessetIds": [
+        1104
+      ]
+    },
+    {
+      "partyRegistrarNumber": "59-900034-6",
+      "factionKnessetIds": [
+        1099
+      ]
+    },
+    {
+      "partyRegistrarNumber": "59-900011-4",
+      "factionKnessetIds": [
+        1103
+      ]
+    },
+    {
+      "partyRegistrarNumber": "59-900025-4",
+      "factionKnessetIds": [
+        1103
+      ]
+    },
+    {
+      "partyRegistrarNumber": "59-900001-5",
+      "factionKnessetIds": [
+        1100
+      ]
+    }
+  ]
+}

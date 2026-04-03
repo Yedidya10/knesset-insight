@@ -5,7 +5,7 @@
 import { config } from 'dotenv';
 config({ path: '.env.local' });
 
-const job = process.argv[2] as 'members' | 'votes' | 'bills' | 'committees' | 'images' | 'all' | undefined;
+const job = process.argv[2] as 'members' | 'votes' | 'bills' | 'committees' | 'images' | 'parties' | 'elections' | 'links' | 'all' | undefined;
 
 async function main() {
   // Dynamic imports so env vars are loaded before DB module initializes
@@ -14,6 +14,9 @@ async function main() {
   const { syncBills } = await import('../pipeline/jobs/sync-bills');
   const { syncCommittees } = await import('../pipeline/jobs/sync-committees');
   const { syncMemberImages } = await import('../pipeline/jobs/sync-images');
+  const { syncRegisteredParties } = await import('../pipeline/jobs/sync-registered-parties');
+  const { syncElectoralLists } = await import('../pipeline/jobs/sync-electoral-lists');
+  const { syncPoliticalLinks } = await import('../pipeline/jobs/sync-political-links');
 
   const target = job ?? 'all';
   console.log(`Starting sync: ${target}`);
@@ -37,6 +40,18 @@ async function main() {
 
   if (target === 'images' || target === 'all') {
     await syncMemberImages();
+  }
+
+  if (target === 'parties' || target === 'all') {
+    await syncRegisteredParties();
+  }
+
+  if (target === 'elections' || target === 'all') {
+    await syncElectoralLists();
+  }
+
+  if (target === 'links' || target === 'all') {
+    await syncPoliticalLinks();
   }
 
   console.log(`Sync complete in ${((Date.now() - start) / 1000).toFixed(1)}s`);

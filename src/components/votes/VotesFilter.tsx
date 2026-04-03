@@ -4,6 +4,16 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useCallback } from 'react';
 import { Search, X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface VotesFilterProps {
   currentSearch: string;
@@ -48,6 +58,8 @@ export default function VotesFilter({
   const hasActiveFilters =
     currentSearch || currentKnessetNum || currentResult || currentDateFrom || currentDateTo;
 
+  const activeFilterCount = [currentSearch, currentKnessetNum, currentResult, currentDateFrom, currentDateTo].filter(Boolean).length;
+
   const knessetNumbers = [25, 24, 23, 22, 21, 20];
 
   return (
@@ -55,45 +67,55 @@ export default function VotesFilter({
       {/* Search bar */}
       <div className="relative">
         <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <input
+        <Input
           type="text"
           value={currentSearch}
           onChange={(e) => updateParam('search', e.target.value)}
           placeholder={t('filter.searchPlaceholder')}
-          className="w-full rounded-lg border border-border/60 bg-background py-2.5 ps-10 pe-4 text-sm shadow-sm focus:border-primary focus:outline-none"
+          className="w-full rounded-xl ps-10 pe-4"
         />
       </div>
 
       {/* Filter row */}
-      <div className="flex flex-wrap items-center gap-3">
-        <select
-          value={currentKnessetNum}
-          onChange={(e) => updateParam('knessetNum', e.target.value)}
-          className="rounded-lg border border-border/60 bg-background px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none"
+      <div className="flex flex-wrap items-center gap-2">
+        <Select
+          value={currentKnessetNum || '_all'}
+          onValueChange={(val) => updateParam('knessetNum', val === '_all' ? '' : String(val))}
+          items={{ _all: t('filter.knessetNum'), ...Object.fromEntries(knessetNumbers.map((n) => [String(n), `${t('knessetNum')} ${n}`])) }}
         >
-          <option value="">{t('filter.knessetNum')}</option>
-          {knessetNumbers.map((n) => (
-            <option key={n} value={String(n)}>
-              {t('knessetNum')} {n}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="_all">{t('filter.knessetNum')}</SelectItem>
+            {knessetNumbers.map((n) => (
+              <SelectItem key={n} value={String(n)}>
+                {t('knessetNum')} {n}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-        <select
-          value={currentResult}
-          onChange={(e) => updateParam('result', e.target.value)}
-          className="rounded-lg border border-border/60 bg-background px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none"
+        <Select
+          value={currentResult || '_all'}
+          onValueChange={(val) => updateParam('result', val === '_all' ? '' : String(val))}
+          items={{ _all: t('filter.allResults'), approved: t('approved'), rejected: t('rejected') }}
         >
-          <option value="">{t('filter.allResults')}</option>
-          <option value="approved">{t('approved')}</option>
-          <option value="rejected">{t('rejected')}</option>
-        </select>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="_all">{t('filter.allResults')}</SelectItem>
+            <SelectItem value="approved">{t('approved')}</SelectItem>
+            <SelectItem value="rejected">{t('rejected')}</SelectItem>
+          </SelectContent>
+        </Select>
 
         <input
           type="date"
           value={currentDateFrom}
           onChange={(e) => updateParam('dateFrom', e.target.value)}
-          className="rounded-lg border border-border/60 bg-background px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none"
+          className="h-9 rounded-xl border border-border/60 bg-background px-3 text-sm shadow-sm transition-colors focus:border-primary focus:outline-none"
           title={t('filter.dateFrom')}
         />
 
@@ -101,29 +123,41 @@ export default function VotesFilter({
           type="date"
           value={currentDateTo}
           onChange={(e) => updateParam('dateTo', e.target.value)}
-          className="rounded-lg border border-border/60 bg-background px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none"
+          className="h-9 rounded-xl border border-border/60 bg-background px-3 text-sm shadow-sm transition-colors focus:border-primary focus:outline-none"
           title={t('filter.dateTo')}
         />
 
-        <select
-          value={currentSort}
-          onChange={(e) => updateParam('sort', e.target.value)}
-          className="rounded-lg border border-border/60 bg-background px-3 py-2 text-sm shadow-sm focus:border-primary focus:outline-none"
+        <Select
+          value={currentSort || 'dateDesc'}
+          onValueChange={(val) => updateParam('sort', String(val))}
+          items={{ dateDesc: t('sort.dateDesc'), dateAsc: t('sort.dateAsc'), mostVotes: t('sort.mostVotes'), mostControversial: t('sort.mostControversial') }}
         >
-          <option value="dateDesc">{t('sort.dateDesc')}</option>
-          <option value="dateAsc">{t('sort.dateAsc')}</option>
-          <option value="mostVotes">{t('sort.mostVotes')}</option>
-          <option value="mostControversial">{t('sort.mostControversial')}</option>
-        </select>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="dateDesc">{t('sort.dateDesc')}</SelectItem>
+            <SelectItem value="dateAsc">{t('sort.dateAsc')}</SelectItem>
+            <SelectItem value="mostVotes">{t('sort.mostVotes')}</SelectItem>
+            <SelectItem value="mostControversial">{t('sort.mostControversial')}</SelectItem>
+          </SelectContent>
+        </Select>
 
         {hasActiveFilters && (
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={clearAllFilters}
-            className="flex items-center gap-1 rounded-lg border border-border/60 bg-background px-3 py-2 text-sm text-muted-foreground shadow-sm hover:bg-muted"
+            className="h-9 gap-1.5 rounded-xl text-muted-foreground hover:text-foreground"
           >
             <X className="h-3.5 w-3.5" />
             {t('filter.clearFilters')}
-          </button>
+            {activeFilterCount > 0 && (
+              <Badge variant="secondary" className="ms-1 h-5 min-w-5 px-1 text-[10px]">
+                {activeFilterCount}
+              </Badge>
+            )}
+          </Button>
         )}
       </div>
     </div>

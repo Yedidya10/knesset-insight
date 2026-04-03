@@ -6,6 +6,7 @@ import { db } from '@/lib/db';
 import { bills } from '@/lib/db/schema';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import TranslatedText from '@/components/ui/translated-text';
 
 interface Props {
   searchParams: Promise<{ knesset?: string; type?: string; page?: string }>;
@@ -64,8 +65,8 @@ export default async function LegislationPage({ searchParams }: Props) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       <div className="mb-8 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-          <Gavel className="h-5 w-5 text-primary" />
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
+          <Gavel className="h-7 w-7 text-primary" />
         </div>
         <div>
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{t('title')}</h1>
@@ -76,13 +77,13 @@ export default async function LegislationPage({ searchParams }: Props) {
       </div>
 
       {/* Filters */}
-      <div className="mb-6 flex flex-wrap gap-3">
+      <div className="mb-6 flex flex-wrap gap-2">
         {[25, 24, 23].map((k) => {
           const isActive = knessetNum === k;
           const href = isActive ? '/legislation' : `/legislation?knesset=${k}`;
           return (
             <Link key={k} href={href}>
-              <Badge variant={isActive ? 'default' : 'outline'} className="cursor-pointer">
+              <Badge variant={isActive ? 'default' : 'outline'} className="cursor-pointer rounded-xl transition-colors">
                 {t('knesset')} {k}
               </Badge>
             </Link>
@@ -101,7 +102,7 @@ export default async function LegislationPage({ searchParams }: Props) {
               >
                 <Badge
                   variant={billType === bt.billType ? 'default' : 'outline'}
-                  className="cursor-pointer"
+                  className="cursor-pointer rounded-xl transition-colors"
                 >
                   {bt.billType}
                 </Badge>
@@ -112,13 +113,13 @@ export default async function LegislationPage({ searchParams }: Props) {
 
       {data.length > 0 ? (
         <>
-          <div className="space-y-3">
+          <div className="space-y-3 stagger-children">
             {data.map((bill) => (
               <Link key={bill.id} href={`/legislation/${bill.id}`}>
-                <Card className="border-border/60 shadow-sm transition-all hover:border-primary/30 hover:shadow-md">
+                <Card className="glass-card hover-lift overflow-hidden">
                   <CardContent className="flex flex-col gap-2 p-5 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0 flex-1">
-                      <h3 className="font-semibold leading-tight">{bill.name}</h3>
+                      <h3 className="font-semibold leading-tight"><TranslatedText text={bill.name} /></h3>
                       <div className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                         {bill.proposedDate && (
                           <span>
@@ -130,10 +131,10 @@ export default async function LegislationPage({ searchParams }: Props) {
                     </div>
                     <div className="flex items-center gap-2">
                       {bill.billType && (
-                        <Badge variant="outline">{bill.billType}</Badge>
+                        <Badge variant="outline"><TranslatedText text={bill.billType} /></Badge>
                       )}
                       {bill.status && (
-                        <Badge variant="secondary">{bill.status}</Badge>
+                        <Badge variant="secondary"><TranslatedText text={bill.status} /></Badge>
                       )}
                     </div>
                   </CardContent>
@@ -153,7 +154,7 @@ export default async function LegislationPage({ searchParams }: Props) {
                     page: String(page - 1),
                   }).toString()}`}
                 >
-                  <Badge variant="outline" className="cursor-pointer px-4 py-2">
+                  <Badge variant="outline" className="cursor-pointer rounded-xl px-4 py-2 transition-colors hover:bg-muted">
                     ←
                   </Badge>
                 </Link>
@@ -169,7 +170,7 @@ export default async function LegislationPage({ searchParams }: Props) {
                     page: String(page + 1),
                   }).toString()}`}
                 >
-                  <Badge variant="outline" className="cursor-pointer px-4 py-2">
+                  <Badge variant="outline" className="cursor-pointer rounded-xl px-4 py-2 transition-colors hover:bg-muted">
                     →
                   </Badge>
                 </Link>
@@ -178,8 +179,10 @@ export default async function LegislationPage({ searchParams }: Props) {
           )}
         </>
       ) : (
-        <div className="mt-12 flex flex-col items-center gap-2 text-muted-foreground">
-          <Gavel className="h-12 w-12 opacity-20" />
+        <div className="mt-16 flex flex-col items-center gap-3 text-muted-foreground">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
+            <Gavel className="h-8 w-8 opacity-40" />
+          </div>
           <p className="text-sm">{t('noResults')}</p>
         </div>
       )}

@@ -128,3 +128,126 @@
     @apply font-sans;
   }
 }
+
+/* ── Modern UI utilities ── */
+@layer utilities {
+  .glass {
+    @apply bg-background/60 backdrop-blur-xl border border-border/40;
+  }
+  .glass-card {
+    @apply bg-card/80 backdrop-blur-lg border border-border/30 shadow-sm;
+  }
+  .gradient-border {
+    @apply relative;
+    &::after {
+      content: '';
+      @apply absolute inset-x-0 bottom-0 h-px;
+      background: linear-gradient(
+        to right,
+        transparent,
+        oklch(0.45 0.18 255 / 0.4),
+        oklch(0.65 0.18 160 / 0.4),
+        transparent
+      );
+    }
+  }
+  .gradient-border-top {
+    @apply relative;
+    &::before {
+      content: '';
+      @apply absolute inset-x-0 top-0 h-px;
+      background: linear-gradient(
+        to right,
+        transparent,
+        oklch(0.45 0.18 255 / 0.4),
+        oklch(0.65 0.18 160 / 0.4),
+        transparent
+      );
+    }
+  }
+  .glow-primary {
+    box-shadow: 0 0 20px oklch(0.45 0.18 255 / 0.15),
+                0 0 40px oklch(0.45 0.18 255 / 0.05);
+  }
+  .hover-lift {
+    @apply transition-all duration-300;
+    &:hover {
+      @apply -translate-y-1 shadow-lg;
+    }
+  }
+}
+
+/* ── Animations ── */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes mesh-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.5s ease-out both;
+}
+
+.animate-shimmer {
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-mesh {
+  background-size: 200% 200%;
+  animation: mesh-shift 8s ease infinite;
+}
+
+/* Staggered children animation */
+.stagger-children > * {
+  animation: fade-in-up 0.4s ease-out both;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 50ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 100ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 150ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 200ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 250ms; }
+.stagger-children > *:nth-child(7) { animation-delay: 300ms; }
+.stagger-children > *:nth-child(8) { animation-delay: 350ms; }
+.stagger-children > *:nth-child(n+9) { animation-delay: 400ms; }
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-up,
+  .animate-shimmer,
+  .animate-float,
+  .animate-mesh,
+  .stagger-children > * {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .hover-lift:hover {
+    transform: none !important;
+  }
+}

@@ -79,6 +79,41 @@ export interface OKnessetFaction {
   faction_id: number;
   faction_name: string;
   knesset_num: number;
-  is_coalition: boolean;
-  seats: number;
+}
+
+// OData v4 — KNS_PlenumVote (ParliamentInfo)
+export interface ODataV4PlenumVote {
+  Id: number;
+  VoteDateTime: string;
+  SessionID: number | null;
+  ItemID: number | null;
+  Ordinal: number | null;
+  VoteMethodID: number | null;
+  VoteMethodDesc: string | null;
+  VoteStatusCode: number | null;
+  VoteStatusDesc: string | null;
+  VoteTitle: string;
+  VoteSubject: string | null;
+  IsNoConfidenceInGov: boolean | null;
+  LastUpdatedDate: string | null;
+  ForOptionID: number | null;
+  ForOptionDesc: string | null;
+  AgainstOptionID: number | null;
+  AgainstOptionDesc: string | null;
+  KNS_PlenumSession?: { KnessetNum: number };
+}
+
+// OData v4 — KNS_PlenumVoteResult (ParliamentInfo)
+export interface ODataV4PlenumVoteResult {
+  Id: number;
+  MkId: number;
+  VoteID: number;
+  VoteDate: string;
+  ResultCode: number; // 7=for, 8=against, 9=abstain
+  ResultDesc: string;
+  LastUpdatedDate: string | null;
+  LastName: string;
+  FirstName: string;
+  SessionID: number | null;
+  ItemID: number | null;
 }

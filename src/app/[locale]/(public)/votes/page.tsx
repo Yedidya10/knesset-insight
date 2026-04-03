@@ -7,6 +7,7 @@ import { votes } from '@/lib/db/schema';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import VotesFilter from '@/components/votes/VotesFilter';
+import TranslatedText from '@/components/ui/translated-text';
 
 interface Props {
   searchParams: Promise<{
@@ -151,8 +152,8 @@ export default async function VotesPage({ searchParams }: Props) {
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       {/* Header */}
       <div className="mb-6 flex items-center gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-          <Vote className="h-6 w-6 text-primary" />
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
+          <Vote className="h-7 w-7 text-primary" />
         </div>
         <div>
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{t('title')}</h1>
@@ -176,16 +177,19 @@ export default async function VotesPage({ searchParams }: Props) {
 
       {groups.length > 0 ? (
         <>
-          <div className="space-y-3">
+          <div className="space-y-3 stagger-children">
             {groups.map((group) => (
               <div key={group.main.id}>
                 {/* Main vote card */}
                 <Link href={`/votes/${group.main.id}`}>
-                  <Card className="border-border/60 shadow-sm transition-all hover:border-primary/30 hover:shadow-md">
+                  {(() => {
+                    const hasTally = (group.main.forCount ?? 0) + (group.main.againstCount ?? 0) + (group.main.abstainCount ?? 0) > 0;
+                    return (
+                  <Card className={`glass-card hover-lift overflow-hidden border-s-4 ${hasTally ? (group.main.isAccepted ? 'border-s-green-500/60' : 'border-s-red-500/60') : 'border-s-muted-foreground/30'}`}>
                     <CardContent className="p-5">
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div className="min-w-0 flex-1">
-                          <h3 className="font-semibold leading-tight">{group.main.title}</h3>
+                          <h3 className="font-semibold leading-tight"><TranslatedText text={group.main.title} /></h3>
                           <div className="mt-1.5 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                             {group.main.voteDate && (
                               <span>
@@ -200,34 +204,44 @@ export default async function VotesPage({ searchParams }: Props) {
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
-                          {/* Vote tallies */}
-                          <div className="flex items-center gap-1.5 rounded-md bg-green-50 px-2 py-1 dark:bg-green-950/30">
-                            <ThumbsUp className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
-                            <span className="text-sm font-semibold text-green-700 dark:text-green-300">
-                              {group.main.forCount ?? 0}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1.5 rounded-md bg-red-50 px-2 py-1 dark:bg-red-950/30">
-                            <ThumbsDown className="h-3.5 w-3.5 text-red-600 dark:text-red-400" />
-                            <span className="text-sm font-semibold text-red-700 dark:text-red-300">
-                              {group.main.againstCount ?? 0}
-                            </span>
-                          </div>
-                          {(group.main.abstainCount ?? 0) > 0 && (
-                            <div className="flex items-center gap-1.5 rounded-md bg-yellow-50 px-2 py-1 dark:bg-yellow-950/30">
-                              <Minus className="h-3.5 w-3.5 text-yellow-600 dark:text-yellow-400" />
-                              <span className="text-sm font-semibold text-yellow-700 dark:text-yellow-300">
-                                {group.main.abstainCount}
-                              </span>
-                            </div>
+                          {hasTally ? (
+                            <>
+                              {/* Vote tallies */}
+                              <div className="flex items-center gap-1.5 rounded-md bg-green-50 px-2 py-1 dark:bg-green-950/30">
+                                <ThumbsUp className="h-3.5 w-3.5 text-green-600 dark:text-green-400" />
+                                <span className="text-sm font-semibold text-green-700 dark:text-green-300">
+                                  {group.main.forCount ?? 0}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1.5 rounded-md bg-red-50 px-2 py-1 dark:bg-red-950/30">
+                                <ThumbsDown className="h-3.5 w-3.5 text-red-600 dark:text-red-400" />
+                                <span className="text-sm font-semibold text-red-700 dark:text-red-300">
+                                  {group.main.againstCount ?? 0}
+                                </span>
+                              </div>
+                              {(group.main.abstainCount ?? 0) > 0 && (
+                                <div className="flex items-center gap-1.5 rounded-md bg-yellow-50 px-2 py-1 dark:bg-yellow-950/30">
+                                  <Minus className="h-3.5 w-3.5 text-yellow-600 dark:text-yellow-400" />
+                                  <span className="text-sm font-semibold text-yellow-700 dark:text-yellow-300">
+                                    {group.main.abstainCount}
+                                  </span>
+                                </div>
+                              )}
+                              <Badge variant={group.main.isAccepted ? 'default' : 'secondary'}>
+                                {group.main.isAccepted ? t('approved') : t('rejected')}
+                              </Badge>
+                            </>
+                          ) : (
+                            <Badge variant="outline" className="text-muted-foreground">
+                              {t('noTallyData')}
+                            </Badge>
                           )}
-                          <Badge variant={group.main.isAccepted ? 'default' : 'secondary'}>
-                            {group.main.isAccepted ? t('approved') : t('rejected')}
-                          </Badge>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
+                    );
+                  })()}
                 </Link>
 
                 {/* Child reservation votes */}
@@ -236,21 +250,32 @@ export default async function VotesPage({ searchParams }: Props) {
                     <p className="text-xs font-medium text-muted-foreground">
                       <ChevronDown className="inline-block h-3 w-3" /> {t('reservations')} ({group.children.length})
                     </p>
-                    {group.children.map((child) => (
+                    {group.children.map((child) => {
+                      const childHasTally = (child.forCount ?? 0) + (child.againstCount ?? 0) + (child.abstainCount ?? 0) > 0;
+                      return (
                       <Link key={child.id} href={`/votes/${child.id}`}>
                         <div className="flex items-center justify-between rounded-lg bg-muted/40 px-4 py-2 text-sm transition-colors hover:bg-muted">
-                          <span className="min-w-0 flex-1 truncate">{child.title}</span>
+                          <span className="min-w-0 flex-1 truncate"><TranslatedText text={child.title} /></span>
                           <div className="flex items-center gap-2">
-                            <span className="text-green-600 dark:text-green-400">{child.forCount ?? 0}</span>
-                            <span className="text-muted-foreground">/</span>
-                            <span className="text-red-600 dark:text-red-400">{child.againstCount ?? 0}</span>
-                            <Badge variant={child.isAccepted ? 'default' : 'secondary'} className="text-xs">
-                              {child.isAccepted ? t('approved') : t('rejected')}
-                            </Badge>
+                            {childHasTally ? (
+                              <>
+                                <span className="text-green-600 dark:text-green-400">{child.forCount ?? 0}</span>
+                                <span className="text-muted-foreground">/</span>
+                                <span className="text-red-600 dark:text-red-400">{child.againstCount ?? 0}</span>
+                                <Badge variant={child.isAccepted ? 'default' : 'secondary'} className="text-xs">
+                                  {child.isAccepted ? t('approved') : t('rejected')}
+                                </Badge>
+                              </>
+                            ) : (
+                              <Badge variant="outline" className="text-xs text-muted-foreground">
+                                {t('noTallyData')}
+                              </Badge>
+                            )}
                           </div>
                         </div>
                       </Link>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -259,26 +284,28 @@ export default async function VotesPage({ searchParams }: Props) {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="mt-8 flex items-center justify-center gap-4">
+            <div className="mt-8 flex items-center justify-center gap-2">
               {page > 1 && (
                 <Link href={buildPageUrl(page - 1)}>
-                  <Badge variant="outline" className="cursor-pointer px-4 py-2">←</Badge>
+                  <Badge variant="outline" className="cursor-pointer rounded-xl px-4 py-2 transition-colors hover:bg-muted">←</Badge>
                 </Link>
               )}
-              <span className="text-sm text-muted-foreground">
+              <span className="mx-2 text-sm text-muted-foreground">
                 {page} / {totalPages}
               </span>
               {page < totalPages && (
                 <Link href={buildPageUrl(page + 1)}>
-                  <Badge variant="outline" className="cursor-pointer px-4 py-2">→</Badge>
+                  <Badge variant="outline" className="cursor-pointer rounded-xl px-4 py-2 transition-colors hover:bg-muted">→</Badge>
                 </Link>
               )}
             </div>
           )}
         </>
       ) : (
-        <div className="mt-12 flex flex-col items-center gap-2 text-muted-foreground">
-          <Vote className="h-12 w-12 opacity-20" />
+        <div className="mt-16 flex flex-col items-center gap-3 text-muted-foreground">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
+            <Vote className="h-8 w-8 opacity-40" />
+          </div>
           <p className="text-sm">{t('noResults')}</p>
         </div>
       )}

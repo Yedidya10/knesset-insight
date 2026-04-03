@@ -2,7 +2,7 @@ import { z } from 'zod/v4';
 import { eq, desc, ilike, or, sql } from 'drizzle-orm';
 import { router, publicProcedure } from '../trpc';
 import { db } from '../../lib/db';
-import { members, parties, memberVotes, votes } from '../../lib/db/schema';
+import { members, factions, memberVotes, votes } from '../../lib/db/schema';
 
 export const membersRouter = router({
   list: publicProcedure
@@ -11,12 +11,12 @@ export const membersRouter = router({
         page: z.number().min(1).default(1),
         pageSize: z.number().min(1).max(100).default(20),
         search: z.string().optional(),
-        partyId: z.number().optional(),
+        factionId: z.number().optional(),
         isCurrent: z.boolean().optional(),
       }),
     )
     .query(async ({ input }) => {
-      const { page, pageSize, search, partyId, isCurrent } = input;
+      const { page, pageSize, search, factionId, isCurrent } = input;
       const offset = (page - 1) * pageSize;
 
       let query = db
@@ -28,13 +28,13 @@ export const membersRouter = router({
           isCurrent: members.isCurrent,
           imageUrl: members.imageUrl,
           knessetNum: members.knessetNum,
-          isCoalition: members.isCoalition,
-          partyId: members.partyId,
-          partyName: parties.name,
-          partyColor: parties.color,
+          isCoalition: factions.isCoalition,
+          factionId: members.factionId,
+          factionName: factions.name,
+          factionColor: factions.color,
         })
         .from(members)
-        .leftJoin(parties, eq(members.partyId, parties.id))
+        .leftJoin(factions, eq(members.factionId, factions.id))
         .$dynamic();
 
       const conditions = [];
@@ -46,8 +46,8 @@ export const membersRouter = router({
           ),
         );
       }
-      if (partyId !== undefined) {
-        conditions.push(eq(members.partyId, partyId));
+      if (factionId !== undefined) {
+        conditions.push(eq(members.factionId, factionId));
       }
       if (isCurrent !== undefined) {
         conditions.push(eq(members.isCurrent, isCurrent));
@@ -93,12 +93,12 @@ export const membersRouter = router({
           startDate: members.startDate,
           endDate: members.endDate,
           knessetNum: members.knessetNum,
-          isCoalition: members.isCoalition,
-          partyName: parties.name,
-          partyColor: parties.color,
+          isCoalition: factions.isCoalition,
+          factionName: factions.name,
+          factionColor: factions.color,
         })
         .from(members)
-        .leftJoin(parties, eq(members.partyId, parties.id))
+        .leftJoin(factions, eq(members.factionId, factions.id))
         .where(eq(members.id, input.id))
         .limit(1);
 

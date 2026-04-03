@@ -48,6 +48,12 @@ supabase/.temp/
 # PWA
 public/sw.js
 public/sw.js.map
+
+# Sync checkpoints
+.sync-checkpoints/
+
+# Playwright MCP
+.playwright-mcp/
 public/workbox-*.js
 public/workbox-*.js.map
 public/swe-worker-*.js
