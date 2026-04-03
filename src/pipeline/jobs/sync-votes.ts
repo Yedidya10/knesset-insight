@@ -180,10 +180,13 @@ async function syncVoteHeaders(): Promise<number> {
           knessetNum: sql`excluded.knesset_num`,
           sessionId: sql`excluded.session_id`,
           sessItemId: sql`excluded.sess_item_id`,
-          forCount: sql`excluded.for_count`,
-          againstCount: sql`excluded.against_count`,
-          abstainCount: sql`excluded.abstain_count`,
-          isAccepted: sql`excluded.is_accepted`,
+          // Only overwrite tallies when incoming values are non-zero.
+          // v4 headers carry 0 tallies (computed later in Phase 2);
+          // overwriting would erase previously computed tallies.
+          forCount: sql`CASE WHEN excluded.for_count > 0 THEN excluded.for_count ELSE ${votes.forCount} END`,
+          againstCount: sql`CASE WHEN excluded.against_count > 0 THEN excluded.against_count ELSE ${votes.againstCount} END`,
+          abstainCount: sql`CASE WHEN excluded.abstain_count > 0 THEN excluded.abstain_count ELSE ${votes.abstainCount} END`,
+          isAccepted: sql`CASE WHEN excluded.for_count > 0 OR excluded.against_count > 0 THEN excluded.is_accepted ELSE ${votes.isAccepted} END`,
           updatedAt: new Date(),
         },
       });
@@ -317,6 +320,48 @@ async function syncMemberVoteRecords(): Promise<number> {
   for (let i = 0; i < allRows.length; i += BATCH_SIZE) {
     const batch = allRows.slice(i, i + BATCH_SIZE);
     await db.insert(memberVotes).values(batch).onConflictDoNothing();
+  }
+
+  // Recompute tallies for v4 votes from actual member_votes rows
+  // (v4 headers are inserted with 0 tallies, so we must always recompute)
+  if (v4MemberVoteRows.length > 0) {
+    const v4VoteIds = [...new Set(v4MemberVoteRows.map((r) => r.voteId))];
+    console.log(`  [tally-recompute] Recomputing tallies for ${v4VoteIds.length} v4 votes from member_votes...`);
+    for (let i = 0; i < v4VoteIds.length; i += BATCH_SIZE) {
+      const batch = v4VoteIds.slice(i, i + BATCH_SIZE);
+      // Aggregate member_votes per vote
+      const tallies = await db
+        .select({
+          voteId: memberVotes.voteId,
+          voteValue: memberVotes.voteValue,
+          count: sql<number>`cast(count(*) as integer)`,
+        })
+        .from(memberVotes)
+        .where(sql`${memberVotes.voteId} IN (${sql.join(batch.map((id) => sql`${id}`), sql`, `)})`)
+        .groupBy(memberVotes.voteId, memberVotes.voteValue);
+
+      const tallyMap = new Map<number, { for: number; against: number; abstain: number }>();
+      for (const row of tallies) {
+        let t = tallyMap.get(row.voteId);
+        if (!t) { t = { for: 0, against: 0, abstain: 0 }; tallyMap.set(row.voteId, t); }
+        if (row.voteValue === 'for') t.for = row.count;
+        else if (row.voteValue === 'against') t.against = row.count;
+        else if (row.voteValue === 'abstain') t.abstain = row.count;
+      }
+
+      await Promise.all([...tallyMap.entries()].map(([vId, tally]) =>
+        db.update(votes)
+          .set({
+            forCount: tally.for,
+            againstCount: tally.against,
+            abstainCount: tally.abstain,
+            isAccepted: tally.for > tally.against,
+            updatedAt: new Date(),
+          })
+          .where(eq(votes.id, vId))
+      ));
+    }
+    console.log(`  [tally-recompute] Done.`);
   }
 
   return allRows.length;
@@ -585,18 +630,33 @@ export async function syncVotesForKnessets(knessetNums: number[]): Promise<void>
       );
       processedResults += results.length;
 
-      // Compute tallies
-      const tallyMap = new Map<number, { for: number; against: number; abstain: number }>();
+      // Resolve FKs first — only resolved rows count toward tallies
+      const mvRows: { voteId: number; memberId: number; voteValue: string; voteKnessetId: number }[] = [];
+      let unresolvedCount = 0;
       for (const r of results) {
-        let tally = tallyMap.get(r.VoteID);
+        const vId = voteMap.get(r.VoteID);
+        const mId = memberMap.get(r.MkId);
+        if (vId && mId) {
+          mvRows.push({ voteId: vId, memberId: mId, voteValue: mapV4ResultCode(r.ResultCode), voteKnessetId: r.VoteID });
+        } else {
+          unresolvedCount++;
+        }
+      }
+      if (unresolvedCount > 0) {
+        console.warn(`  [chunk ${chunkNum}/${totalChunks}] ⚠ ${unresolvedCount} results skipped (unresolved MkId/VoteID)`);
+      }
+
+      // Compute tallies from resolved member votes only
+      const tallyMap = new Map<number, { for: number; against: number; abstain: number }>();
+      for (const mv of mvRows) {
+        let tally = tallyMap.get(mv.voteKnessetId);
         if (!tally) {
           tally = { for: 0, against: 0, abstain: 0 };
-          tallyMap.set(r.VoteID, tally);
+          tallyMap.set(mv.voteKnessetId, tally);
         }
-        const val = mapV4ResultCode(r.ResultCode);
-        if (val === 'for') tally.for++;
-        else if (val === 'against') tally.against++;
-        else if (val === 'abstain') tally.abstain++;
+        if (mv.voteValue === 'for') tally.for++;
+        else if (mv.voteValue === 'against') tally.against++;
+        else if (mv.voteValue === 'abstain') tally.abstain++;
       }
 
       // UPDATE vote headers with tallies (batched via Promise.all)
@@ -617,23 +677,16 @@ export async function syncVotesForKnessets(knessetNums: number[]): Promise<void>
       }
 
       // INSERT member votes
-      const mvRows: { voteId: number; memberId: number; voteValue: string }[] = [];
-      for (const r of results) {
-        const vId = voteMap.get(r.VoteID);
-        const mId = memberMap.get(r.MkId);
-        if (vId && mId) {
-          mvRows.push({ voteId: vId, memberId: mId, voteValue: mapV4ResultCode(r.ResultCode) });
-        }
-      }
-      for (let j = 0; j < mvRows.length; j += BATCH_SIZE) {
-        const batch = mvRows.slice(j, j + BATCH_SIZE);
+      const mvInsertRows = mvRows.map(({ voteId, memberId, voteValue }) => ({ voteId, memberId, voteValue }));
+      for (let j = 0; j < mvInsertRows.length; j += BATCH_SIZE) {
+        const batch = mvInsertRows.slice(j, j + BATCH_SIZE);
         await db.insert(memberVotes).values(batch).onConflictDoNothing();
       }
-      processedMemberVotes += mvRows.length;
+      processedMemberVotes += mvInsertRows.length;
 
       // Save checkpoint
       saveCheckpoint(checkpointKey, maxId);
-      console.log(`  [chunk ${chunkNum}/${totalChunks}] ✓ ${results.length} results → ${tallyMap.size} tallies, ${mvRows.length} member votes`);
+      console.log(`  [chunk ${chunkNum}/${totalChunks}] ✓ ${results.length} results → ${tallyMap.size} tallies, ${mvInsertRows.length} member votes`);
     }
 
     if (skipped > 0) {

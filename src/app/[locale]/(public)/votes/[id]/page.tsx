@@ -108,7 +108,12 @@ export default async function VoteDetailPage({ params }: Props) {
   const forVoters = voterData.filter((v) => v.voteValue === 'for');
   const againstVoters = voterData.filter((v) => v.voteValue === 'against');
   const abstainVoters = voterData.filter((v) => v.voteValue === 'abstain');
-  const totalVoters = forVoters.length + againstVoters.length + abstainVoters.length;
+  // Use actual member_votes count — always consistent with the breakdown displayed below.
+  // vote.forCount etc. may differ if some members haven't been synced yet.
+  const forCount = forVoters.length;
+  const againstCount = againstVoters.length;
+  const abstainCount = abstainVoters.length;
+  const totalVoters = forCount + againstCount + abstainCount;
 
   const renderFactionBar = (entries: [string, { for: number; against: number; abstain: number; absent: number; isCoalition: boolean | null }][]) => (
     <div className="space-y-2.5">
@@ -241,17 +246,17 @@ export default async function VoteDetailPage({ params }: Props) {
           <div className="grid grid-cols-3 gap-4 text-center">
             <div className="rounded-xl bg-green-50 p-4 dark:bg-green-950/30">
               <ThumbsUp className="mx-auto mb-1.5 h-5 w-5 text-green-600 dark:text-green-400" />
-              <p className="text-2xl font-bold text-green-700 dark:text-green-300">{vote.forCount ?? 0}</p>
+              <p className="text-2xl font-bold text-green-700 dark:text-green-300">{forCount}</p>
               <p className="text-xs text-muted-foreground">{t('for')}</p>
             </div>
             <div className="rounded-xl bg-red-50 p-4 dark:bg-red-950/30">
               <ThumbsDown className="mx-auto mb-1.5 h-5 w-5 text-red-600 dark:text-red-400" />
-              <p className="text-2xl font-bold text-red-700 dark:text-red-300">{vote.againstCount ?? 0}</p>
+              <p className="text-2xl font-bold text-red-700 dark:text-red-300">{againstCount}</p>
               <p className="text-xs text-muted-foreground">{t('against')}</p>
             </div>
             <div className="rounded-xl bg-yellow-50 p-4 dark:bg-yellow-950/30">
               <Minus className="mx-auto mb-1.5 h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-              <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">{vote.abstainCount ?? 0}</p>
+              <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">{abstainCount}</p>
               <p className="text-xs text-muted-foreground">{t('abstain')}</p>
             </div>
           </div>
