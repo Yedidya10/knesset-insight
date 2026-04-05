@@ -20,6 +20,7 @@ export async function fetchOData<T>(
   service: ODataService,
   entity: string,
   params: ODataParams = {},
+  maxRetries = 3,
 ): Promise<T[]> {
   const url = new URL(`${ODATA_BASE}/${service}.svc/${entity}`);
   url.searchParams.set('$format', 'json');
@@ -30,18 +31,31 @@ export async function fetchOData<T>(
     }
   }
 
-  const response = await fetch(url.toString(), {
-    headers: { Accept: 'application/json' },
-  });
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const response = await fetch(url.toString(), {
+        headers: { Accept: 'application/json' },
+      });
 
-  if (!response.ok) {
-    throw new Error(
-      `OData request failed: ${response.status} ${response.statusText} — ${url.pathname}`,
-    );
+      if (!response.ok) {
+        throw new Error(
+          `OData request failed: ${response.status} ${response.statusText} — ${url.pathname}`,
+        );
+      }
+
+      const data: ODataResponse<T> = await response.json();
+      return data.value;
+    } catch (err) {
+      if (attempt < maxRetries) {
+        const delay = attempt * 3000;
+        console.warn(`  [OData retry] Attempt ${attempt} failed, retrying in ${delay}ms...`);
+        await new Promise((r) => setTimeout(r, delay));
+      } else {
+        throw err;
+      }
+    }
   }
-
-  const data: ODataResponse<T> = await response.json();
-  return data.value;
+  throw new Error('Unreachable');
 }
 
 /**
@@ -52,9 +66,11 @@ export async function fetchAllOData<T>(
   entity: string,
   params: ODataParams = {},
   pageSize = 1000,
+  label?: string,
 ): Promise<T[]> {
   const results: T[] = [];
   let skip = params.$skip ?? 0;
+  let pageNum = 0;
 
   while (true) {
     const page = await fetchOData<T>(service, entity, {
@@ -64,6 +80,11 @@ export async function fetchAllOData<T>(
     });
 
     results.push(...page);
+    pageNum++;
+
+    if (label && pageNum % 10 === 0) {
+      console.log(`  [${label}] page ${pageNum}: total ${results.length}`);
+    }
 
     if (page.length < pageSize) break;
     skip += pageSize;
