@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { Gavel } from 'lucide-react';
 import { desc, eq, sql } from 'drizzle-orm';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { db } from '@/lib/db';
 import { bills } from '@/lib/db/schema';
 import { Card, CardContent } from '@/components/ui/card';

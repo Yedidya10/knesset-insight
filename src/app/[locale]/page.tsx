@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { Vote, Users, Building2, Landmark, Gavel, ArrowRight } from 'lucide-react';
 import { sql } from 'drizzle-orm';
 import { db } from '@/lib/db';

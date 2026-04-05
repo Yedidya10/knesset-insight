@@ -1,6 +1,7 @@
 'use client';
 
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
+import { useRouter, usePathname } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { useCallback, useState, useEffect, useRef } from 'react';
 import { Search, X, Eye, EyeOff } from 'lucide-react';

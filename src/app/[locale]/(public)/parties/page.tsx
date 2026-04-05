@@ -6,7 +6,7 @@ import { politicalParties } from '@/lib/db/schema';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 
 interface Props {
   searchParams: Promise<{ search?: string; type?: string }>;

@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { Building2 } from 'lucide-react';
 import { eq, sql, desc, inArray, and, or } from 'drizzle-orm';
 import { db } from '@/lib/db';

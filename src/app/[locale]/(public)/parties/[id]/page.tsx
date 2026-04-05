@@ -13,7 +13,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { ArrowLeft, Download, Building2, Vote, Phone, Mail, MapPin } from 'lucide-react';
 
 interface Props {

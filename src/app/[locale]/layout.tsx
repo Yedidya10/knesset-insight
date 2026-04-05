@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
-import { NextIntlClientProvider } from 'next-intl';
-import { getMessages } from 'next-intl/server';
+import { NextIntlClientProvider, hasLocale } from 'next-intl';
+import { getMessages, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
-import { appConfig, type Locale } from '../../../app.config';
+import { routing } from '@/i18n/routing';
+import { appConfig } from '../../../app.config';
 import Header from '../../components/layout/Header';
 import Footer from '../../components/layout/Footer';
 
@@ -22,15 +23,17 @@ type Props = {
 };
 
 export function generateStaticParams() {
-  return appConfig.i18n.locales.map((locale) => ({ locale }));
+  return routing.locales.map((locale) => ({ locale }));
 }
 
 export default async function LocaleLayout({ children, params }: Props) {
   const { locale } = await params;
 
-  if (!appConfig.i18n.locales.includes(locale as Locale)) {
+  if (!hasLocale(routing.locales, locale)) {
     notFound();
   }
+
+  setRequestLocale(locale);
 
   const isRTL = (appConfig.i18n.rtlLocales as readonly string[]).includes(locale);
 

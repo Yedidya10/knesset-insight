@@ -1,8 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { Link, usePathname } from '@/i18n/navigation';
 import { useState, useEffect } from 'react';
 import {
   Menu,
@@ -50,8 +49,8 @@ export default function Header() {
   }, []);
 
   function isActive(href: string) {
-    if (href === '/') return pathname === '/' || pathname.match(/^\/[a-z]{2}$/);
-    return pathname.includes(href);
+    if (href === '/') return pathname === '/';
+    return pathname.startsWith(href);
   }
 
   return (

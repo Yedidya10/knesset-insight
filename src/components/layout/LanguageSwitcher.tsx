@@ -1,7 +1,7 @@
 'use client';
 
 import { useLocale } from 'next-intl';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname } from '@/i18n/navigation';
 import { Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -25,12 +25,7 @@ export default function LanguageSwitcher() {
   const pathname = usePathname();
 
   function switchLocale(newLocale: string) {
-    const segments = pathname.split('/').filter(Boolean);
-    if (appConfig.i18n.locales.includes(segments[0] as Locale)) {
-      segments.shift();
-    }
-    const newPath = `/${newLocale}/${segments.join('/')}`;
-    router.push(newPath);
+    router.replace(pathname, { locale: newLocale as Locale });
   }
 
   return (

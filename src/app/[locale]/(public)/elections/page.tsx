@@ -6,7 +6,7 @@ import { electoralLists } from '@/lib/db/schema';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { appConfig } from '../../../../../app.config';
 
 interface Props {

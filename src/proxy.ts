@@ -1,12 +1,8 @@
 import createMiddleware from 'next-intl/middleware';
-import { appConfig } from '../app.config';
+import { routing } from './i18n/routing';
 
-export const proxy = createMiddleware({
-  locales: appConfig.i18n.locales,
-  defaultLocale: appConfig.i18n.defaultLocale,
-  localePrefix: 'always',
-});
+export const proxy = createMiddleware(routing);
 
 export const config = {
-  matcher: ['/((?!api|_next|_vercel|.*\\..*).*)'],
+  matcher: ['/((?!api|trpc|_next|_vercel|.*\\..*).*)'],
 };

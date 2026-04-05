@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { Vote, ThumbsUp, ThumbsDown, Minus, ChevronDown } from 'lucide-react';
 import { desc, asc, sql, eq, and, ilike, gte, lte } from 'drizzle-orm';
-import Link from 'next/link';
+import { Link } from '@/i18n/navigation';
 import { db } from '@/lib/db';
 import { votes } from '@/lib/db/schema';
 import { Card, CardContent } from '@/components/ui/card';
