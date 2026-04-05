@@ -3,10 +3,12 @@
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useCallback } from 'react';
+import { format, parseISO } from 'date-fns';
 import { Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { DatePicker } from '@/components/ui/date-picker';
 import {
   Select,
   SelectContent,
@@ -111,20 +113,16 @@ export default function VotesFilter({
           </SelectContent>
         </Select>
 
-        <input
-          type="date"
-          value={currentDateFrom}
-          onChange={(e) => updateParam('dateFrom', e.target.value)}
-          className="h-9 rounded-xl border border-border/60 bg-background px-3 text-sm shadow-sm transition-colors focus:border-primary focus:outline-none"
-          title={t('filter.dateFrom')}
+        <DatePicker
+          value={currentDateFrom ? parseISO(currentDateFrom) : undefined}
+          onChange={(date) => updateParam('dateFrom', date ? format(date, 'yyyy-MM-dd') : '')}
+          placeholder={t('filter.dateFrom')}
         />
 
-        <input
-          type="date"
-          value={currentDateTo}
-          onChange={(e) => updateParam('dateTo', e.target.value)}
-          className="h-9 rounded-xl border border-border/60 bg-background px-3 text-sm shadow-sm transition-colors focus:border-primary focus:outline-none"
-          title={t('filter.dateTo')}
+        <DatePicker
+          value={currentDateTo ? parseISO(currentDateTo) : undefined}
+          onChange={(date) => updateParam('dateTo', date ? format(date, 'yyyy-MM-dd') : '')}
+          placeholder={t('filter.dateTo')}
         />
 
         <Select
