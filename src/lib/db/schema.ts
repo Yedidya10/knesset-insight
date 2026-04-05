@@ -40,6 +40,8 @@ export const factions = pgTable('factions', {
 export const members = pgTable('members', {
   id: serial('id').primaryKey(),
   knessetId: integer('knesset_id').unique().notNull(),
+  vipId: integer('vip_id'),
+  legacyVipId: integer('legacy_vip_id'),
   firstName: text('first_name').notNull(),
   lastName: text('last_name').notNull(),
   factionId: integer('faction_id').references(() => factions.id),
@@ -286,6 +288,7 @@ export const syncLog = pgTable('sync_log', {
   recordCount: integer('record_count'),
   status: text('status').notNull(), // 'success', 'failed'
   errorMessage: text('error_message'),
+  lastCheckpoint: text('last_checkpoint'), // JSON checkpoint data for incremental sync
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
 
