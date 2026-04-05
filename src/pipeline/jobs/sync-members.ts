@@ -3,8 +3,16 @@ import { db } from '../../lib/db';
 import { members, factions, memberFactionHistory } from '../../lib/db/schema';
 import { fetchOKnessetCSV } from '../../lib/knesset/oknesset-client';
 import { fetchAllOData, fetchOData } from '../../lib/knesset/odata-client';
-import { runSyncJob } from '../utils';
+import { fetchV4MkIdMapping } from '../../lib/knesset/knesset-api-client';
+import { runSyncJob, type SyncCheckpoint } from '../utils';
 import { appConfig } from '../../../app.config';
+
+interface VoteMkIndividual {
+  vip_id: string;
+  mk_individual_id: number;
+  mk_individual_name: string;
+  mk_individual_first_name: string;
+}
 
 const BATCH_SIZE = 50;
 
@@ -33,7 +41,7 @@ interface ODataFaction {
  * Enriched with StartDate, FinishDate, IsCurrent from OData.
  * Falls back to Open Knesset CSV for any factions not in OData.
  */
-async function syncFactions(): Promise<number> {
+async function syncFactions(_prevCheckpoint: SyncCheckpoint | null): Promise<number> {
   // Primary: Fetch from OData (has date range + isCurrent)
   const odataFactions = await fetchAllOData<ODataFaction>(
     'ParliamentInfo',
@@ -110,7 +118,7 @@ async function syncFactions(): Promise<number> {
  * Uses mk_individual.csv for member data and KNS_PersonToPosition OData
  * to determine which 120 members are truly active in the current Knesset.
  */
-async function syncMemberRecords(): Promise<number> {
+async function syncMemberRecords(_prevCheckpoint: SyncCheckpoint | null): Promise<number> {
   // Fetch member data from CSV
   const membersData = await fetchOKnessetCSV<Record<string, string>>(
     'members/mk_individual/mk_individual.csv',
@@ -177,6 +185,54 @@ async function syncMemberRecords(): Promise<number> {
     .from(factions);
   const factionMap = new Map(allFactions.map((f) => [f.knessetId, f.id]));
 
+  // ── vipId mapping: cross-reference legacy View_Vote_MK_Individual with v4 KNS_PlenumVoteResult ──
+  // The v4 MkId is the authoritative vote ID for K25+.
+  // Legacy vip_id from View_Vote_MK_Individual is used as fallback and stored in legacyVipId
+  // when it differs from the v4 MkId (needed for legacy K1-K24 vote matching).
+  //
+  // This two-source approach fixes the name-collision bugs where name-based matching
+  // (e.g. two "ישראל כץ" or two "אלי כהן") picked the wrong person's vip_id.
+
+  // Source 1: Legacy OData — View_Vote_MK_Individual (name → vip_id)
+  const voteMkRows = await fetchAllOData<VoteMkIndividual>(
+    'Votes',
+    'View_Vote_MK_Individual',
+    {},
+    100,
+  );
+  // Build name → vip_id map. For name collisions, collect ALL vip_ids per name.
+  const nameToLegacyVipIds = new Map<string, number[]>();
+  for (const row of voteMkRows) {
+    const vipId = parseInt(String(row.vip_id), 10);
+    if (!vipId) continue;
+    const firstName = (row.mk_individual_first_name || '').trim();
+    const lastName = (row.mk_individual_name || '').trim();
+    if (firstName && lastName) {
+      const key = `${firstName} ${lastName}`;
+      const existing = nameToLegacyVipIds.get(key) ?? [];
+      existing.push(vipId);
+      nameToLegacyVipIds.set(key, existing);
+    }
+  }
+  console.log(`  [members] Loaded ${nameToLegacyVipIds.size} names from legacy Vote API`);
+
+  // Source 2: v4 OData — KNS_PlenumVoteResult, latest results with (MkId, FirstName, LastName)
+  // This is the authoritative source for K25 members' vote ID.
+  let v4MkIdByName = new Map<string, number>();
+  try {
+    const v4Mapping = await fetchV4MkIdMapping();
+    for (const entry of v4Mapping) {
+      if (entry.firstName && entry.lastName) {
+        v4MkIdByName.set(`${entry.firstName} ${entry.lastName}`, entry.mkId);
+      }
+    }
+    console.log(`  [members] Loaded ${v4MkIdByName.size} v4 MkId mappings from PlenumVoteResult`);
+  } catch (err) {
+    console.warn(`  [members] Failed to fetch v4 MkId mapping, falling back to legacy only:`, err);
+  }
+
+  console.log(`  [members] Loaded ${nameToLegacyVipIds.size} name → vip_id mappings from Vote API`);
+
   // Prepare member rows
   const rows = membersData
     .filter((raw) => Number(raw.PersonID))
@@ -186,8 +242,48 @@ async function syncMemberRecords(): Promise<number> {
       const factionKnessetId = personFaction.get(knessetId) ?? personToFaction.get(knessetId);
       const factionId = factionKnessetId ? (factionMap.get(factionKnessetId) ?? null) : null;
 
+      // Resolve vipId via two-source cross-reference:
+      // Priority: v4 MkId (authoritative for K25) > legacy vip_id (fallback)
+      const firstName = (raw.mk_individual_first_name || '').trim();
+      const lastName = (raw.mk_individual_name || '').trim();
+      const fullName = (firstName && lastName) ? `${firstName} ${lastName}` : '';
+
+      let vipId: number | null = null;
+      let legacyVipId: number | null = null;
+
+      if (fullName) {
+        const v4Id = v4MkIdByName.get(fullName) ?? null;
+        const legacyIds = nameToLegacyVipIds.get(fullName) ?? [];
+
+        if (v4Id) {
+          // v4 MkId is authoritative — use it as primary
+          vipId = v4Id;
+          // If legacy has a DIFFERENT id, store it for K1-K24 vote matching
+          if (legacyIds.length === 1 && legacyIds[0] !== v4Id) {
+            legacyVipId = legacyIds[0];
+          } else if (legacyIds.length > 1) {
+            // Name collision in legacy — pick the one matching v4, or first non-v4
+            const matchingLegacy = legacyIds.find((id) => id === v4Id);
+            const otherLegacy = legacyIds.find((id) => id !== v4Id);
+            if (otherLegacy && !matchingLegacy) {
+              // v4 MkId doesn't appear in legacy at all — legacy ID is different
+              legacyVipId = otherLegacy;
+            }
+          }
+        } else if (legacyIds.length === 1) {
+          // No v4 data — use the only legacy vip_id
+          vipId = legacyIds[0];
+        } else if (legacyIds.length > 1) {
+          // Name collision with no v4 data — log warning, pick first
+          console.warn(`  [members] Name collision for "${fullName}": ${legacyIds.length} legacy IDs [${legacyIds.join(',')}], no v4 data`);
+          vipId = legacyIds[0];
+        }
+      }
+
       return {
         knessetId,
+        vipId,
+        legacyVipId,
         firstName: raw.mk_individual_first_name || raw.FirstName || '',
         lastName: raw.mk_individual_name || raw.LastName || '',
         factionId,
@@ -216,6 +312,8 @@ async function syncMemberRecords(): Promise<number> {
           gender: sql`excluded.gender`,
           imageUrl: sql`excluded.image_url`,
           email: sql`excluded.email`,
+          vipId: sql`COALESCE(excluded.vip_id, ${members.vipId})`,
+          legacyVipId: sql`COALESCE(excluded.legacy_vip_id, ${members.legacyVipId})`,
           updatedAt: new Date(),
         },
       });
@@ -244,7 +342,7 @@ interface GovPosition {
  * 3. Coalition factions = factions that have at least one government-position holder
  * 4. Update parties.isCoalition accordingly
  */
-async function syncCoalitionStatus(): Promise<number> {
+async function syncCoalitionStatus(_prevCheckpoint: SyncCheckpoint | null): Promise<number> {
   const { mkPositionId } = appConfig.knesset;
   let updated = 0;
 
@@ -328,7 +426,7 @@ async function syncCoalitionStatus(): Promise<number> {
  * Sync member faction history from Open Knesset mk_individual_factions.csv.
  * Provides temporal tracking of which MK was in which faction and when.
  */
-async function syncFactionHistory(): Promise<number> {
+async function syncFactionHistory(_prevCheckpoint: SyncCheckpoint | null): Promise<number> {
   const historyRows = await fetchOKnessetCSV<Record<string, string>>(
     'members/mk_individual/mk_individual_factions.csv',
   );
