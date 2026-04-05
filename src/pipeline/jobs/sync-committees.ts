@@ -2,7 +2,7 @@ import { sql } from 'drizzle-orm';
 import { db } from '../../lib/db';
 import { committees } from '../../lib/db/schema';
 import { fetchOData, fetchODataSince } from '../../lib/knesset/odata-client';
-import { getLastSyncTime, runSyncJob } from '../utils';
+import { getLastSyncTime, runSyncJob, type SyncCheckpoint } from '../utils';
 
 const BATCH_SIZE = 50;
 const PAGE_SIZE = 100;
@@ -21,9 +21,13 @@ interface ODataCommittee {
 
 /**
  * Sync committees from OData, Knesset 25 first.
+ * Uses checkpoint-based incremental sync from the max LastUpdatedDate of processed items.
  */
-async function syncCommitteeRecords(): Promise<number> {
-  const lastSync = await getLastSyncTime('committees');
+async function syncCommitteeRecords(prevCheckpoint: SyncCheckpoint | null): Promise<{ count: number; checkpoint: SyncCheckpoint }> {
+  const checkpointDate = prevCheckpoint?.lastItemTimestamp
+    ? new Date(prevCheckpoint.lastItemTimestamp as string)
+    : null;
+  const lastSync = checkpointDate ?? await getLastSyncTime('committees');
 
   let rawCommittees: ODataCommittee[];
   if (lastSync) {
@@ -52,13 +56,19 @@ async function syncCommitteeRecords(): Promise<number> {
     }
   }
 
-  const rows = rawCommittees.map((raw) => ({
-    knessetId: raw.CommitteeID,
-    name: raw.Name,
-    committeeType: raw.CommitteeTypeDesc || null,
-    knessetNum: raw.KnessetNum,
-    isActive: raw.IsCurrent,
-  }));
+  let maxLastUpdated = prevCheckpoint?.lastItemTimestamp as string | undefined;
+  const rows = rawCommittees.map((raw) => {
+    if (raw.LastUpdatedDate && (!maxLastUpdated || raw.LastUpdatedDate > maxLastUpdated)) {
+      maxLastUpdated = raw.LastUpdatedDate;
+    }
+    return {
+      knessetId: raw.CommitteeID,
+      name: raw.Name,
+      committeeType: raw.CommitteeTypeDesc || null,
+      knessetNum: raw.KnessetNum,
+      isActive: raw.IsCurrent,
+    };
+  });
 
   for (let i = 0; i < rows.length; i += BATCH_SIZE) {
     const batch = rows.slice(i, i + BATCH_SIZE);
@@ -77,7 +87,13 @@ async function syncCommitteeRecords(): Promise<number> {
       });
   }
 
-  return rows.length;
+  const maxId = rawCommittees.reduce((max, c) => Math.max(max, c.CommitteeID), prevCheckpoint?.lastItemId as number ?? 0);
+  const checkpoint: SyncCheckpoint = {
+    lastItemId: maxId,
+    lastItemTimestamp: maxLastUpdated,
+  };
+
+  return { count: rows.length, checkpoint };
 }
 
 export async function syncCommittees(): Promise<void> {

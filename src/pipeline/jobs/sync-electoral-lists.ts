@@ -1,7 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { db } from '../../lib/db';
 import { electoralLists } from '../../lib/db/schema';
-import { runSyncJob } from '../utils';
+import { runSyncJob, type SyncCheckpoint } from '../utils';
 import { appConfig } from '../../../app.config';
 
 const BATCH_SIZE = 50;
@@ -170,7 +170,7 @@ function sleep(ms: number): Promise<void> {
 /**
  * Sync electoral lists from bechirot.gov.il for configured Knesset numbers.
  */
-async function syncElectoralListsJob(): Promise<number> {
+async function syncElectoralListsJob(_prevCheckpoint: SyncCheckpoint | null): Promise<number> {
   let totalCount = 0;
 
   for (const knessetNum of appConfig.knesset.syncKnessets) {

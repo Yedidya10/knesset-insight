@@ -1,7 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { db } from '../../lib/db';
 import { politicalParties } from '../../lib/db/schema';
-import { runSyncJob } from '../utils';
+import { runSyncJob, type SyncCheckpoint } from '../utils';
 
 const BATCH_SIZE = 50;
 const CKAN_RESOURCE_ID = '1dbfc053-e92f-4354-92d6-1b99aadb20d7';
@@ -105,7 +105,7 @@ async function fetchAllParties(): Promise<CkanPartyRecord[]> {
 /**
  * Sync registered political parties from data.gov.il Party Registrar.
  */
-async function syncRegisteredPartiesJob(): Promise<number> {
+async function syncRegisteredPartiesJob(_prevCheckpoint: SyncCheckpoint | null): Promise<number> {
   const records = await fetchAllParties();
   console.log(`  [parties] Fetched ${records.length} records from data.gov.il`);
 

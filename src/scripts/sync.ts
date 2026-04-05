@@ -5,13 +5,14 @@
 import { config } from 'dotenv';
 config({ path: '.env.local' });
 
-const job = process.argv[2] as 'members' | 'votes' | 'bills' | 'committees' | 'images' | 'parties' | 'elections' | 'links' | 'all' | undefined;
+const job = process.argv[2] as 'members' | 'votes' | 'bills' | 'billInitiators' | 'committees' | 'images' | 'parties' | 'elections' | 'links' | 'all' | undefined;
 
 async function main() {
   // Dynamic imports so env vars are loaded before DB module initializes
   const { syncMembers } = await import('../pipeline/jobs/sync-members');
   const { syncVotes } = await import('../pipeline/jobs/sync-votes');
   const { syncBills } = await import('../pipeline/jobs/sync-bills');
+  const { syncBillInitiators } = await import('../pipeline/jobs/sync-bill-initiators');
   const { syncCommittees } = await import('../pipeline/jobs/sync-committees');
   const { syncMemberImages } = await import('../pipeline/jobs/sync-images');
   const { syncRegisteredParties } = await import('../pipeline/jobs/sync-registered-parties');
@@ -32,6 +33,10 @@ async function main() {
 
   if (target === 'bills' || target === 'all') {
     await syncBills();
+  }
+
+  if (target === 'billInitiators' || target === 'all') {
+    await syncBillInitiators();
   }
 
   if (target === 'committees' || target === 'all') {

@@ -1,6 +1,7 @@
 import { syncMembers } from './jobs/sync-members';
 import { syncVotes } from './jobs/sync-votes';
 import { syncBills } from './jobs/sync-bills';
+import { syncBillInitiators } from './jobs/sync-bill-initiators';
 import { syncCommittees } from './jobs/sync-committees';
 import { syncMemberImages } from './jobs/sync-images';
 import { syncRegisteredParties } from './jobs/sync-registered-parties';
@@ -11,6 +12,7 @@ export const syncJobs = {
   members: syncMembers,
   votes: syncVotes,
   bills: syncBills,
+  billInitiators: syncBillInitiators,
   committees: syncCommittees,
   images: syncMemberImages,
   registeredParties: syncRegisteredParties,
@@ -20,6 +22,7 @@ export const syncJobs = {
     await syncMembers();
     await syncVotes();
     await syncBills();
+    await syncBillInitiators();
     await syncCommittees();
     await syncMemberImages();
     await syncRegisteredParties();

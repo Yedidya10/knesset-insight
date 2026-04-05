@@ -7,7 +7,7 @@ import {
   electoralListParties,
   partyFactionLinks,
 } from '../../lib/db/schema';
-import { runSyncJob } from '../utils';
+import { runSyncJob, type SyncCheckpoint } from '../utils';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -32,7 +32,7 @@ interface SeedData {
  * Load and apply manually curated political entity links.
  * Resolves IDs from the seed file and populates junction tables.
  */
-async function syncPoliticalLinksJob(): Promise<number> {
+async function syncPoliticalLinksJob(_prevCheckpoint: SyncCheckpoint | null): Promise<number> {
   const seedPath = path.resolve(
     process.cwd(),
     'src/pipeline/seed/political-links.json',

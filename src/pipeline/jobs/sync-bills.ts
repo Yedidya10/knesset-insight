@@ -2,7 +2,7 @@ import { sql } from 'drizzle-orm';
 import { db } from '../../lib/db';
 import { bills } from '../../lib/db/schema';
 import { fetchOData, fetchODataSince } from '../../lib/knesset/odata-client';
-import { getLastSyncTime, runSyncJob } from '../utils';
+import { getLastSyncTime, runSyncJob, type SyncCheckpoint } from '../utils';
 
 const BATCH_SIZE = 50;
 const PAGE_SIZE = 100;
@@ -19,9 +19,15 @@ interface ODataBill {
 
 /**
  * Sync bills from OData, Knesset 25 first then backwards.
+ * Uses checkpoint-based incremental sync: picks up from the max LastUpdatedDate
+ * of previously processed bills rather than the wall-clock sync start time.
  */
-async function syncBillRecords(): Promise<number> {
-  const lastSync = await getLastSyncTime('bills');
+async function syncBillRecords(prevCheckpoint: SyncCheckpoint | null): Promise<{ count: number; checkpoint: SyncCheckpoint }> {
+  // Prefer checkpoint's item timestamp over the sync start time for incremental
+  const checkpointDate = prevCheckpoint?.lastItemTimestamp
+    ? new Date(prevCheckpoint.lastItemTimestamp as string)
+    : null;
+  const lastSync = checkpointDate ?? await getLastSyncTime('bills');
 
   let rawBills: ODataBill[];
   if (lastSync) {
@@ -53,15 +59,22 @@ async function syncBillRecords(): Promise<number> {
     }
   }
 
-  const rows = rawBills.map((raw) => ({
-    knessetId: raw.BillID,
-    name: raw.Name,
-    status: String(raw.StatusID),
-    billType: raw.SubTypeDesc || null,
-    knessetNum: raw.KnessetNum,
-    proposedDate: raw.PublicationDate ? raw.PublicationDate.split('T')[0] : null,
-    lastUpdate: raw.LastUpdatedDate ? new Date(raw.LastUpdatedDate) : null,
-  }));
+  // Track the max LastUpdatedDate from processed items for the checkpoint
+  let maxLastUpdated = prevCheckpoint?.lastItemTimestamp as string | undefined;
+  const rows = rawBills.map((raw) => {
+    if (raw.LastUpdatedDate && (!maxLastUpdated || raw.LastUpdatedDate > maxLastUpdated)) {
+      maxLastUpdated = raw.LastUpdatedDate;
+    }
+    return {
+      knessetId: raw.BillID,
+      name: raw.Name,
+      status: String(raw.StatusID),
+      billType: raw.SubTypeDesc || null,
+      knessetNum: raw.KnessetNum,
+      proposedDate: raw.PublicationDate ? raw.PublicationDate.split('T')[0] : null,
+      lastUpdate: raw.LastUpdatedDate ? new Date(raw.LastUpdatedDate) : null,
+    };
+  });
 
   for (let i = 0; i < rows.length; i += BATCH_SIZE) {
     const batch = rows.slice(i, i + BATCH_SIZE);
@@ -82,7 +95,13 @@ async function syncBillRecords(): Promise<number> {
       });
   }
 
-  return rows.length;
+  const maxBillId = rawBills.reduce((max, b) => Math.max(max, b.BillID), prevCheckpoint?.lastItemId as number ?? 0);
+  const checkpoint: SyncCheckpoint = {
+    lastItemId: maxBillId,
+    lastItemTimestamp: maxLastUpdated,
+  };
+
+  return { count: rows.length, checkpoint };
 }
 
 export async function syncBills(): Promise<void> {
