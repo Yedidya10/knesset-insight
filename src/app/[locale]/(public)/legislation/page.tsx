@@ -7,6 +7,7 @@ import { bills } from '@/lib/db/schema';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import TranslatedText from '@/components/ui/translated-text';
+import PaginationNav from '@/components/ui/pagination-nav';
 
 interface Props {
   searchParams: Promise<{ knesset?: string; type?: string; page?: string }>;
@@ -16,6 +17,7 @@ const PAGE_SIZE = 50;
 
 export default async function LegislationPage({ searchParams }: Props) {
   const t = await getTranslations('legislation');
+  const tCommon = await getTranslations('common');
   const params = await searchParams;
   const knessetNum = params.knesset ? Number(params.knesset) : undefined;
   const billType = params.type ?? '';
@@ -144,39 +146,20 @@ export default async function LegislationPage({ searchParams }: Props) {
           </div>
 
           {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="mt-8 flex items-center justify-center gap-4">
-              {page > 1 && (
-                <Link
-                  href={`/legislation?${new URLSearchParams({
-                    ...(knessetNum ? { knesset: String(knessetNum) } : {}),
-                    ...(billType ? { type: billType } : {}),
-                    page: String(page - 1),
-                  }).toString()}`}
-                >
-                  <Badge variant="outline" className="cursor-pointer rounded-xl px-4 py-2 transition-colors hover:bg-muted">
-                    ←
-                  </Badge>
-                </Link>
-              )}
-              <span className="text-sm text-muted-foreground">
-                {page} / {totalPages}
-              </span>
-              {page < totalPages && (
-                <Link
-                  href={`/legislation?${new URLSearchParams({
-                    ...(knessetNum ? { knesset: String(knessetNum) } : {}),
-                    ...(billType ? { type: billType } : {}),
-                    page: String(page + 1),
-                  }).toString()}`}
-                >
-                  <Badge variant="outline" className="cursor-pointer rounded-xl px-4 py-2 transition-colors hover:bg-muted">
-                    →
-                  </Badge>
-                </Link>
-              )}
-            </div>
-          )}
+          <PaginationNav
+            currentPage={page}
+            totalPages={totalPages}
+            buildPageUrl={(p) => {
+              const urlParams = new URLSearchParams();
+              if (knessetNum) urlParams.set('knesset', String(knessetNum));
+              if (billType) urlParams.set('type', billType);
+              if (p > 1) urlParams.set('page', String(p));
+              const qs = urlParams.toString();
+              return `/legislation${qs ? `?${qs}` : ''}`;
+            }}
+            previousLabel={tCommon('previous')}
+            nextLabel={tCommon('next')}
+          />
         </>
       ) : (
         <div className="mt-16 flex flex-col items-center gap-3 text-muted-foreground">

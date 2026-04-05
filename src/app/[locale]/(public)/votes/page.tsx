@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import VotesFilter from '@/components/votes/VotesFilter';
 import TranslatedText from '@/components/ui/translated-text';
+import PaginationNav from '@/components/ui/pagination-nav';
 
 interface Props {
   searchParams: Promise<{
@@ -25,6 +26,7 @@ const PAGE_SIZE = 30;
 
 export default async function VotesPage({ searchParams }: Props) {
   const t = await getTranslations('votes');
+  const tCommon = await getTranslations('common');
   const params = await searchParams;
   const page = Math.max(1, Number(params.page ?? '1'));
   const offset = (page - 1) * PAGE_SIZE;
@@ -283,23 +285,13 @@ export default async function VotesPage({ searchParams }: Props) {
           </div>
 
           {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="mt-8 flex items-center justify-center gap-2">
-              {page > 1 && (
-                <Link href={buildPageUrl(page - 1)}>
-                  <Badge variant="outline" className="cursor-pointer rounded-xl px-4 py-2 transition-colors hover:bg-muted">←</Badge>
-                </Link>
-              )}
-              <span className="mx-2 text-sm text-muted-foreground">
-                {page} / {totalPages}
-              </span>
-              {page < totalPages && (
-                <Link href={buildPageUrl(page + 1)}>
-                  <Badge variant="outline" className="cursor-pointer rounded-xl px-4 py-2 transition-colors hover:bg-muted">→</Badge>
-                </Link>
-              )}
-            </div>
-          )}
+          <PaginationNav
+            currentPage={page}
+            totalPages={totalPages}
+            buildPageUrl={buildPageUrl}
+            previousLabel={tCommon('previous')}
+            nextLabel={tCommon('next')}
+          />
         </>
       ) : (
         <div className="mt-16 flex flex-col items-center gap-3 text-muted-foreground">

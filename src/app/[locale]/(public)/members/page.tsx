@@ -5,6 +5,9 @@ import { db } from '@/lib/db';
 import { members, factions, memberVotes, billInitiators } from '@/lib/db/schema';
 import MemberCard from '@/components/members/MemberCard';
 import MembersFilter from '@/components/members/MembersFilter';
+import PaginationNav from '@/components/ui/pagination-nav';
+
+const PAGE_SIZE = 60;
 
 interface Props {
   searchParams: Promise<{
@@ -16,12 +19,16 @@ interface Props {
     coalition?: string;
     gender?: string;
     details?: string;
+    page?: string;
   }>;
 }
 
 export default async function MembersPage({ searchParams }: Props) {
   const t = await getTranslations('members');
+  const tCommon = await getTranslations('common');
   const params = await searchParams;
+  const page = Math.max(1, Number(params.page ?? '1'));
+  const offset = (page - 1) * PAGE_SIZE;
   const partyFilter = params.party ?? '';
   const sortBy = params.sort ?? 'name';
   const statusFilter = params.status ?? 'current';
@@ -124,6 +131,15 @@ export default async function MembersPage({ searchParams }: Props) {
   const whereClause =
     conditions.length > 0 ? and(...conditions) : undefined;
 
+  // Count for pagination
+  const [countResult] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(members)
+    .leftJoin(factions, eq(members.factionId, factions.id))
+    .where(whereClause);
+  const totalCount = countResult?.count ?? 0;
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+
   // Query 1: Fetch members with extra fields for new sorts
   const memberRows = await db
     .select({
@@ -144,7 +160,8 @@ export default async function MembersPage({ searchParams }: Props) {
     .leftJoin(factions, eq(members.factionId, factions.id))
     .where(whereClause)
     .orderBy(asc(members.lastName))
-    .limit(200);
+    .limit(PAGE_SIZE)
+    .offset(offset);
 
   const memberIds = memberRows.map((m) => m.id);
 
@@ -242,7 +259,7 @@ export default async function MembersPage({ searchParams }: Props) {
             {t('title')}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {t(subtitleKey)} ({data.length})
+            {t(subtitleKey)} ({totalCount})
           </p>
         </div>
       </div>
@@ -264,11 +281,33 @@ export default async function MembersPage({ searchParams }: Props) {
       </div>
 
       {data.length > 0 ? (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 stagger-children">
-          {data.map((member) => (
-            <MemberCard key={member.id} member={member} showDetails={showDetails} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 stagger-children">
+            {data.map((member) => (
+              <MemberCard key={member.id} member={member} showDetails={showDetails} />
+            ))}
+          </div>
+          <PaginationNav
+            currentPage={page}
+            totalPages={totalPages}
+            buildPageUrl={(p) => {
+              const urlParams = new URLSearchParams();
+              if (partyFilter) urlParams.set('party', partyFilter);
+              if (sortBy !== 'name') urlParams.set('sort', sortBy);
+              if (statusFilter !== 'current') urlParams.set('status', statusFilter);
+              if (searchQuery) urlParams.set('search', searchQuery);
+              if (knessetFilter) urlParams.set('knesset', knessetFilter);
+              if (coalitionFilter) urlParams.set('coalition', coalitionFilter);
+              if (genderFilter) urlParams.set('gender', genderFilter);
+              if (showDetails) urlParams.set('details', 'true');
+              if (p > 1) urlParams.set('page', String(p));
+              const qs = urlParams.toString();
+              return `/members${qs ? `?${qs}` : ''}`;
+            }}
+            previousLabel={tCommon('previous')}
+            nextLabel={tCommon('next')}
+          />
+        </>
       ) : (
         <div className="mt-16 flex flex-col items-center gap-3 text-muted-foreground">
           <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
