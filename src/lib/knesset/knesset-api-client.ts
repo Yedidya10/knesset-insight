@@ -238,3 +238,44 @@ export async function fetchV4VoteResultsMinimal(
 }
 
 // computeV4TalliesInChunks removed — tallies are now computed in the single-pass sync pipeline
+
+/**
+ * Fetch unique (MkId, FirstName, LastName) tuples from recent K25 vote results.
+ * Used by sync-members to build an authoritative v4 MkId mapping that avoids
+ * the name-collision bugs of the legacy View_Vote_MK_Individual approach.
+ *
+ * Fetches the latest ~500 vote results, which typically span 4-5 votes
+ * and cover all ~120 current MKs.
+ */
+export async function fetchV4MkIdMapping(): Promise<
+  Array<{ mkId: number; firstName: string; lastName: string }>
+> {
+  const results = await fetchAllODataV4<{
+    MkId: number;
+    FirstName: string;
+    LastName: string;
+  }>(
+    'KNS_PlenumVoteResult',
+    {
+      $select: 'MkId,FirstName,LastName',
+      $orderby: 'Id desc',
+      $top: '500',
+    },
+    'v4-mkid-mapping',
+  );
+
+  // Deduplicate by MkId, keeping the first occurrence (most recent)
+  const seen = new Map<number, { mkId: number; firstName: string; lastName: string }>();
+  for (const r of results) {
+    if (!seen.has(r.MkId)) {
+      seen.set(r.MkId, {
+        mkId: r.MkId,
+        firstName: (r.FirstName || '').trim(),
+        lastName: (r.LastName || '').trim(),
+      });
+    }
+  }
+
+  console.log(`  [v4-mkid-mapping] ${seen.size} unique MK IDs from ${results.length} vote results`);
+  return [...seen.values()];
+}
