@@ -20,7 +20,7 @@ export default function VoteDistributionChart({ data }: VoteDistributionChartPro
   if (data.length === 0) return null;
 
   return (
-    <div className="h-[400px] w-full">
+    <div className="h-64 w-full sm:h-80 lg:h-96">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} layout="vertical" margin={{ top: 10, right: 30, left: 80, bottom: 10 }}>
           <CartesianGrid strokeDasharray="3 3" className="stroke-border" />

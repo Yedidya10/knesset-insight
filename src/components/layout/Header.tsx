@@ -1,6 +1,6 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Link, usePathname } from '@/i18n/navigation';
 import { useState, useEffect } from 'react';
 import {
@@ -22,6 +22,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
+import { appConfig } from '../../../app.config';
 import LanguageSwitcher from './LanguageSwitcher';
 
 const navLinks = [
@@ -38,6 +39,8 @@ const navLinks = [
 export default function Header() {
   const t = useTranslations('nav');
   const tCommon = useTranslations('common');
+  const locale = useLocale();
+  const isRTL = (appConfig.i18n.rtlLocales as readonly string[]).includes(locale);
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -75,7 +78,7 @@ export default function Header() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-0.5 lg:flex">
+        <nav className="hidden items-center gap-1 lg:flex">
           {navLinks.map(({ key, href }) => {
             const active = isActive(href);
             return (
@@ -114,7 +117,7 @@ export default function Header() {
               <Menu className="h-5 w-5" />
               <span className="sr-only">Menu</span>
             </SheetTrigger>
-            <SheetContent side="left" className="w-72">
+            <SheetContent side={isRTL ? 'right' : 'left'} className="w-72">
               <SheetTitle className="flex items-center gap-2 px-2 pb-6">
                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                   <Landmark className="h-4 w-4" />

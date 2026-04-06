@@ -61,7 +61,7 @@ export default async function FactionsPage({ searchParams }: Props) {
       </div>
 
       {/* Knesset tabs */}
-      <div className="mb-6 flex flex-wrap gap-1 rounded-xl bg-muted/60 p-1 backdrop-blur-sm">
+      <div className="mb-6 flex flex-wrap gap-1.5 rounded-xl bg-muted/60 p-1.5 backdrop-blur-sm">
         {availableKnessets.map((num) => (
           <Link
             key={num}

@@ -58,7 +58,7 @@ export default async function ElectionsPage({ searchParams }: Props) {
 
       {/* Knesset tabs */}
       {availableKnessets.length > 0 && (
-        <div className="mb-6 flex flex-wrap gap-1 rounded-xl bg-muted/60 p-1 backdrop-blur-sm">
+        <div className="mb-6 flex flex-wrap gap-1.5 rounded-xl bg-muted/60 p-1.5 backdrop-blur-sm">
           {availableKnessets.map((num) => (
             <Link
               key={num}

@@ -68,7 +68,7 @@ export default async function PartiesPage({ searchParams }: Props) {
           />
           {typeFilter && <input type="hidden" name="type" value={typeFilter} />}
         </form>
-        <div className="flex gap-1 rounded-xl bg-muted/60 p-1">
+        <div className="flex gap-1.5 rounded-xl bg-muted/60 p-1.5">
           <Link
             href="/parties"
             className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
