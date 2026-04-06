@@ -121,6 +121,22 @@ export default function PoliticalTimeline({ groups, terms }: Props) {
             />
           ))}
 
+          {/* Zebra-stripe backgrounds — separate layer so hover doesn't affect them */}
+          {visibleGroups.map((_, rowIdx) => {
+            if (rowIdx % 2 !== 0) return null;
+            const y = HEADER_HEIGHT + rowIdx * ROW_HEIGHT;
+            return (
+              <rect
+                key={`bg-${rowIdx}`}
+                x={0}
+                y={y}
+                width={svgWidth}
+                height={ROW_HEIGHT}
+                className="fill-muted/30"
+              />
+            );
+          })}
+
           {/* Rows */}
           {visibleGroups.map((group, rowIdx) => {
             const y = HEADER_HEIGHT + rowIdx * ROW_HEIGHT;
@@ -132,17 +148,17 @@ export default function PoliticalTimeline({ groups, terms }: Props) {
                 key={group.id}
                 onMouseEnter={() => setHoveredGroup(group.id)}
                 onMouseLeave={() => setHoveredGroup(null)}
-                opacity={hoveredGroup === null || isHovered ? 1 : 0.3}
+                opacity={hoveredGroup === null || isHovered ? 1 : 0.4}
                 className="transition-opacity duration-200"
               >
-                {/* Row background */}
-                {rowIdx % 2 === 0 && (
+                {/* Hover highlight */}
+                {isHovered && (
                   <rect
                     x={0}
                     y={y}
                     width={svgWidth}
                     height={ROW_HEIGHT}
-                    className="fill-muted/30"
+                    className="fill-primary/5"
                   />
                 )}
 
@@ -159,7 +175,7 @@ export default function PoliticalTimeline({ groups, terms }: Props) {
                 </Link>
 
                 {/* Term cells */}
-                {gTerms.map((term) => {
+                {gTerms.map((term, termIdx) => {
                   if (!term.knessetNum || term.knessetNum < minKnesset || term.knessetNum > MAX_KNESSET) return null;
                   const colIdx = term.knessetNum - minKnesset;
                   const cx = LEFT_LABEL_WIDTH + colIdx * CELL_WIDTH + CELL_WIDTH / 2;
@@ -175,15 +191,14 @@ export default function PoliticalTimeline({ groups, terms }: Props) {
 
                   return (
                     <circle
-                      key={`${group.id}-${term.knessetNum}`}
+                      key={`${group.id}-${term.knessetNum}-${termIdx}`}
                       cx={cx}
                       cy={cy}
                       r={radius}
                       fill={group.color ?? 'hsl(var(--primary))'}
-                      opacity={0.8}
                       stroke={term.isCoalition ? 'hsl(var(--chart-1))' : 'transparent'}
                       strokeWidth={term.isCoalition ? 2 : 0}
-                      className="cursor-pointer transition-all hover:opacity-100"
+                      className="cursor-pointer"
                     >
                       <title>{tooltipText}</title>
                     </circle>
