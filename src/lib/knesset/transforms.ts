@@ -76,6 +76,8 @@ export function transformMemberVote(raw: ODataMemberVote) {
  * Transform Open Knesset member CSV row to our members table shape.
  */
 export function transformOKnessetMember(raw: OKnessetMember) {
+  const photo = raw.mk_individual_photo || null;
+  const hasRealPhoto = photo && !photo.includes('placeholder');
   return {
     knessetId: raw.mk_individual_id,
     firstName: raw.mk_individual_first_name,
@@ -83,9 +85,9 @@ export function transformOKnessetMember(raw: OKnessetMember) {
     isCurrent: raw.mk_individual_is_current,
     gender: raw.mk_individual_gender,
     birthDate: raw.mk_individual_date_of_birth || null,
-    imageUrl: raw.mk_individual_photo || null,
-    imageSource: raw.mk_individual_photo ? ('oknesset' as const) : null,
-    imageAttribution: raw.mk_individual_photo
+    imageUrl: hasRealPhoto ? photo : null,
+    imageSource: hasRealPhoto ? ('oknesset' as const) : null,
+    imageAttribution: hasRealPhoto
       ? 'כנסת פתוחה — הסדנא לידע ציבורי'
       : null,
     email: raw.mk_individual_email || null,

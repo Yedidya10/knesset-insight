@@ -38,7 +38,8 @@ export default function MemberAvatar({
 
   const initials = `${member.firstName?.[0] ?? ''}${member.lastName?.[0] ?? ''}`;
   const s = sizeMap[size];
-  const showImage = member.imageUrl && !imgError;
+  const isPlaceholder = member.imageUrl?.includes('placeholder');
+  const showImage = member.imageUrl && !isPlaceholder && !imgError;
 
   const attributionKey = member.imageSource as
     | 'oknesset'
