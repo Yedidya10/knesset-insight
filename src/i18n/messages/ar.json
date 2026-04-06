@@ -74,6 +74,7 @@
       "roles": "المناصب",
       "committeesChaired": "لجان يرأسها",
       "noCommittees": "لم يتم العثور على لجان",
+      "factionHistory": "الكنيست والكتل",
       "coalitionScore": "درجة التوافق مع الائتلاف",
       "topics": "المواضيع الرئيسية",
       "coalitionMember": "ائتلاف",
@@ -94,7 +95,12 @@
       "recentVotes": "التصويتات الأخيرة",
       "noVotes": "لم يتم العثور على تصويتات",
       "billCount": "مشاريع قوانين",
-      "participation": "المشاركة"
+      "participation": "المشاركة",
+      "allKnessets": "جميع الكنيست",
+      "allStatuses": "جميع الحالات",
+      "knesset": "الكنيست {num}",
+      "clearFilters": "مسح التصفية",
+      "pageOf": "صفحة {current} من {total}"
     },
     "filter": {
       "allParties": "جميع الكتل",
@@ -172,12 +178,70 @@
     "title": "التشريعات",
     "billStatus": "الحالة",
     "initiators": "المبادرون",
+    "primaryInitiator": "المبادر الرئيسي",
+    "noInitiators": "لم يتم العثور على مبادرين",
     "relatedVotes": "تصويتات ذات صلة",
+    "noRelatedVotes": "لم يتم العثور على تصويتات ذات صلة",
     "committeeDiscussions": "مناقشات اللجان",
     "aiSummary": "ملخص بلغة بسيطة",
     "timeline": "الجدول الزمني",
+    "proposedDate": "تاريخ التقديم",
+    "lastUpdate": "آخر تحديث",
+    "fullText": "عرض النص الكامل",
+    "officialPage": "صفحة القانون في موقع الكنيست",
     "knesset": "الكنيست",
-    "noResults": "لم يتم العثور على مشاريع قانون"
+    "noResults": "لم يتم العثور على مشاريع قانون",
+    "filter": {
+      "searchPlaceholder": "البحث حسب اسم مشروع القانون...",
+      "allKnessets": "جميع الكنيست",
+      "allTypes": "جميع الأنواع",
+      "allStatuses": "جميع الحالات",
+      "clearFilters": "مسح التصفية"
+    },
+    "sort": {
+      "dateDesc": "التاريخ (الأحدث)",
+      "dateAsc": "التاريخ (الأقدم)",
+      "nameAsc": "الاسم (أ-ي)",
+      "nameDesc": "الاسم (ي-أ)"
+    },
+    "stages": {
+      "step": "مرحلة {num}",
+      "submitted": "تقديم",
+      "preliminary": "نقاش أولي",
+      "committeeFirst": "لجنة — القراءة الأولى",
+      "firstReading": "القراءة الأولى",
+      "committeeSecond": "لجنة — القراءة 2+3",
+      "secondThirdReading": "القراءة الثانية والثالثة",
+      "passed": "تمت الموافقة",
+      "completed": "مكتمل",
+      "current": "المرحلة الحالية",
+      "upcoming": "قادم"
+    },
+    "special": {
+      "merged": "دُمج مع مشروع قانون آخر",
+      "mergedWith": "دُمج مع",
+      "includesMerge": "يشمل دمج من",
+      "split": "تم التقسيم",
+      "splitFrom": "انقسم من",
+      "splitInto": "انقسم إلى",
+      "stopped": "توقف",
+      "converted": "تحوّل إلى اقتراح لجدول الأعمال",
+      "continuity": "قانون الاستمرارية",
+      "continuityRejected": "رُفضت الاستمرارية",
+      "returnedToCommittee": "أُعيد إلى اللجنة",
+      "removedFromAgenda": "أُزيل من جدول الأعمال"
+    },
+    "billType": {
+      "government": "حكومي",
+      "private": "خاص",
+      "committee": "لجنة"
+    },
+    "nameHistory": "تاريخ الأسماء",
+    "viewOnKnesset": "عرض في موقع الكنيست",
+    "knessetNum": "الكنيست {num}",
+    "noVotes": "لم يتم العثور على تصويتات",
+    "accepted": "مقبول",
+    "rejected": "مرفوض"
   },
   "parties": {
     "title": "الكتل",

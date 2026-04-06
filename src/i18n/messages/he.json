@@ -74,6 +74,7 @@
       "roles": "תפקידים",
       "committeesChaired": "ועדות בראשותו/ה",
       "noCommittees": "לא נמצאו ועדות",
+      "factionHistory": "כנסות וסיעות",
       "coalitionScore": "ציון התאמה לקואליציה",
       "topics": "נושאים מרכזיים",
       "coalitionMember": "קואליציה",
@@ -94,7 +95,12 @@
       "recentVotes": "הצבעות אחרונות",
       "noVotes": "לא נמצאו הצבעות",
       "billCount": "הצעות חוק",
-      "participation": "השתתפות"
+      "participation": "השתתפות",
+      "allKnessets": "כל הכנסות",
+      "allStatuses": "כל הסטטוסים",
+      "knesset": "כנסת {num}",
+      "clearFilters": "נקה סינון",
+      "pageOf": "עמוד {current} מתוך {total}"
     },
     "filter": {
       "allParties": "כל הסיעות",
@@ -172,12 +178,70 @@
     "title": "חקיקה",
     "billStatus": "סטטוס",
     "initiators": "יוזמים",
+    "primaryInitiator": "יוזם ראשי",
+    "noInitiators": "לא נמצאו יוזמים",
     "relatedVotes": "הצבעות קשורות",
+    "noRelatedVotes": "לא נמצאו הצבעות קשורות",
     "committeeDiscussions": "דיונים בועדות",
     "aiSummary": "סיכום בשפה פשוטה",
     "timeline": "ציר זמן",
+    "proposedDate": "תאריך הגשה",
+    "lastUpdate": "עדכון אחרון",
+    "fullText": "צפייה בנוסח המלא",
+    "officialPage": "דף החוק באתר הכנסת",
     "knesset": "כנסת",
-    "noResults": "לא נמצאו הצעות חוק"
+    "noResults": "לא נמצאו הצעות חוק",
+    "filter": {
+      "searchPlaceholder": "חיפוש לפי שם הצעת חוק...",
+      "allKnessets": "כל הכנסות",
+      "allTypes": "כל הסוגים",
+      "allStatuses": "כל הסטטוסים",
+      "clearFilters": "נקה סינון"
+    },
+    "sort": {
+      "dateDesc": "תאריך (חדש לישן)",
+      "dateAsc": "תאריך (ישן לחדש)",
+      "nameAsc": "שם (א-ת)",
+      "nameDesc": "שם (ת-א)"
+    },
+    "stages": {
+      "step": "שלב {num}",
+      "submitted": "הגשה",
+      "preliminary": "דיון מוקדם",
+      "committeeFirst": "ועדה — קריאה ראשונה",
+      "firstReading": "קריאה ראשונה",
+      "committeeSecond": "ועדה — קריאה 2+3",
+      "secondThirdReading": "קריאה שנייה ושלישית",
+      "passed": "התקבלה",
+      "completed": "הושלם",
+      "current": "שלב נוכחי",
+      "upcoming": "ממתין"
+    },
+    "special": {
+      "merged": "מוזגה עם הצעת חוק אחרת",
+      "mergedWith": "מוזגה עם",
+      "includesMerge": "כולל מיזוג מ-",
+      "split": "פוצלה",
+      "splitFrom": "פוצלה מ-",
+      "splitInto": "פוצלה ל-",
+      "stopped": "נעצרה",
+      "converted": "הוסבה להצעה לסדר היום",
+      "continuity": "דין רציפות",
+      "continuityRejected": "דין רציפות נדחה",
+      "returnedToCommittee": "הוחזרה לוועדה",
+      "removedFromAgenda": "הוסרה מסדר היום"
+    },
+    "billType": {
+      "government": "ממשלתית",
+      "private": "פרטית",
+      "committee": "ועדה"
+    },
+    "nameHistory": "היסטוריית שמות",
+    "viewOnKnesset": "צפייה באתר הכנסת",
+    "knessetNum": "כנסת {num}",
+    "noVotes": "לא נמצאו הצבעות",
+    "accepted": "אושרה",
+    "rejected": "נדחתה"
   },
   "parties": {
     "title": "סיעות",

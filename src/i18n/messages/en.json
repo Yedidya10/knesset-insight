@@ -74,6 +74,7 @@
       "roles": "Roles",
       "committeesChaired": "Committees Chaired",
       "noCommittees": "No committees found",
+      "factionHistory": "Knessets & Factions",
       "coalitionScore": "Coalition Alignment Score",
       "topics": "Key Topics",
       "coalitionMember": "Coalition",
@@ -94,7 +95,12 @@
       "recentVotes": "Recent Votes",
       "noVotes": "No votes found",
       "billCount": "Bills",
-      "participation": "Participation"
+      "participation": "Participation",
+      "allKnessets": "All Knessets",
+      "allStatuses": "All Statuses",
+      "knesset": "Knesset {num}",
+      "clearFilters": "Clear filters",
+      "pageOf": "Page {current} of {total}"
     },
     "filter": {
       "allParties": "All factions",
@@ -172,12 +178,70 @@
     "title": "Legislation",
     "billStatus": "Status",
     "initiators": "Initiators",
+    "primaryInitiator": "Primary Initiator",
+    "noInitiators": "No initiators found",
     "relatedVotes": "Related Votes",
+    "noRelatedVotes": "No related votes found",
     "committeeDiscussions": "Committee Discussions",
     "aiSummary": "Simple Language Summary",
     "timeline": "Timeline",
+    "proposedDate": "Proposed Date",
+    "lastUpdate": "Last Update",
+    "fullText": "View Full Text",
+    "officialPage": "Bill on Knesset Website",
     "knesset": "Knesset",
-    "noResults": "No bills found"
+    "noResults": "No bills found",
+    "filter": {
+      "searchPlaceholder": "Search by bill name...",
+      "allKnessets": "All Knessets",
+      "allTypes": "All Types",
+      "allStatuses": "All Statuses",
+      "clearFilters": "Clear Filters"
+    },
+    "sort": {
+      "dateDesc": "Date (Newest)",
+      "dateAsc": "Date (Oldest)",
+      "nameAsc": "Name (A-Z)",
+      "nameDesc": "Name (Z-A)"
+    },
+    "stages": {
+      "step": "Step {num}",
+      "submitted": "Submitted",
+      "preliminary": "Preliminary Debate",
+      "committeeFirst": "Committee — 1st Reading",
+      "firstReading": "First Reading",
+      "committeeSecond": "Committee — 2nd+3rd",
+      "secondThirdReading": "2nd & 3rd Reading",
+      "passed": "Passed",
+      "completed": "Completed",
+      "current": "Current stage",
+      "upcoming": "Upcoming"
+    },
+    "special": {
+      "merged": "Merged with another bill",
+      "mergedWith": "Merged with",
+      "includesMerge": "Includes merge from",
+      "split": "Split",
+      "splitFrom": "Split from",
+      "splitInto": "Split into",
+      "stopped": "Stopped",
+      "converted": "Converted to agenda motion",
+      "continuity": "Continuity law",
+      "continuityRejected": "Continuity rejected",
+      "returnedToCommittee": "Returned to committee",
+      "removedFromAgenda": "Removed from agenda"
+    },
+    "billType": {
+      "government": "Government",
+      "private": "Private",
+      "committee": "Committee"
+    },
+    "nameHistory": "Name history",
+    "viewOnKnesset": "View on Knesset website",
+    "knessetNum": "Knesset {num}",
+    "noVotes": "No votes found",
+    "accepted": "Accepted",
+    "rejected": "Rejected"
   },
   "parties": {
     "title": "Factions",

@@ -74,6 +74,7 @@
       "roles": "Должности",
       "committeesChaired": "Комитеты под председательством",
       "noCommittees": "Комитеты не найдены",
+      "factionHistory": "Кнессеты и фракции",
       "coalitionScore": "Рейтинг совпадения с коалицией",
       "topics": "Ключевые темы",
       "coalitionMember": "Коалиция",
@@ -94,7 +95,12 @@
       "recentVotes": "Последние голосования",
       "noVotes": "Голосования не найдены",
       "billCount": "Законопроекты",
-      "participation": "Участие"
+      "participation": "Участие",
+      "allKnessets": "Все Кнессеты",
+      "allStatuses": "Все статусы",
+      "knesset": "Кнессет {num}",
+      "clearFilters": "Сбросить фильтры",
+      "pageOf": "Страница {current} из {total}"
     },
     "filter": {
       "allParties": "Все фракции",
@@ -172,12 +178,70 @@
     "title": "Законодательство",
     "billStatus": "Статус",
     "initiators": "Инициаторы",
+    "primaryInitiator": "Основной инициатор",
+    "noInitiators": "Инициаторы не найдены",
     "relatedVotes": "Связанные голосования",
+    "noRelatedVotes": "Связанные голосования не найдены",
     "committeeDiscussions": "Обсуждения в комитетах",
     "aiSummary": "Краткое изложение простым языком",
     "timeline": "Хронология",
+    "proposedDate": "Дата подачи",
+    "lastUpdate": "Последнее обновление",
+    "fullText": "Просмотр полного текста",
+    "officialPage": "Страница закона на сайте Кнессета",
     "knesset": "Кнессет",
-    "noResults": "Законопроекты не найдены"
+    "noResults": "Законопроекты не найдены",
+    "filter": {
+      "searchPlaceholder": "Поиск по названию законопроекта...",
+      "allKnessets": "Все Кнессеты",
+      "allTypes": "Все типы",
+      "allStatuses": "Все статусы",
+      "clearFilters": "Сбросить фильтры"
+    },
+    "sort": {
+      "dateDesc": "Дата (новые)",
+      "dateAsc": "Дата (старые)",
+      "nameAsc": "Название (А-Я)",
+      "nameDesc": "Название (Я-А)"
+    },
+    "stages": {
+      "step": "Шаг {num}",
+      "submitted": "Подача",
+      "preliminary": "Предварительное обсуждение",
+      "committeeFirst": "Комитет — 1-е чтение",
+      "firstReading": "Первое чтение",
+      "committeeSecond": "Комитет — 2+3 чтение",
+      "secondThirdReading": "Второе и третье чтение",
+      "passed": "Принят",
+      "completed": "Завершён",
+      "current": "Текущий этап",
+      "upcoming": "Ожидается"
+    },
+    "special": {
+      "merged": "Объединён с другим законопроектом",
+      "mergedWith": "Объединён с",
+      "includesMerge": "Включает объединение из",
+      "split": "Разделён",
+      "splitFrom": "Отделён от",
+      "splitInto": "Разделён на",
+      "stopped": "Остановлен",
+      "converted": "Преобразован в предложение повестки дня",
+      "continuity": "Закон о преемственности",
+      "continuityRejected": "Преемственность отклонена",
+      "returnedToCommittee": "Возвращён в комитет",
+      "removedFromAgenda": "Снят с повестки дня"
+    },
+    "billType": {
+      "government": "Правительственный",
+      "private": "Частный",
+      "committee": "Комитет"
+    },
+    "nameHistory": "История названий",
+    "viewOnKnesset": "Смотреть на сайте Кнессета",
+    "knessetNum": "Кнессет {num}",
+    "noVotes": "Голосования не найдены",
+    "accepted": "Принято",
+    "rejected": "Отклонено"
   },
   "parties": {
     "title": "Фракции",
