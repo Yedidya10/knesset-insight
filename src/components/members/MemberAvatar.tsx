@@ -41,6 +41,11 @@ export default function MemberAvatar({
   const isPlaceholder = member.imageUrl?.includes('placeholder');
   const showImage = member.imageUrl && !isPlaceholder && !imgError;
 
+  // Wikimedia images are already pre-sized thumbnails — skip Next.js proxy
+  // to avoid 429 rate-limits from bulk server-side fetches
+  const isWikimedia =
+    member.imageUrl?.includes('wikimedia.org') || member.imageUrl?.includes('wikipedia.org');
+
   const attributionKey = member.imageSource as
     | 'oknesset'
     | 'wikidata'
@@ -68,7 +73,8 @@ export default function MemberAvatar({
           alt={`${member.firstName ?? ''} ${member.lastName ?? ''}`.trim()}
           width={s.px}
           height={s.px}
-          quality={appConfig.images.quality}
+          quality={isWikimedia ? undefined : appConfig.images.quality}
+          unoptimized={isWikimedia}
           className="h-full w-full object-cover"
           loading={priority ? 'eager' : 'lazy'}
           priority={priority}
