@@ -2,7 +2,7 @@ import { getTranslations } from 'next-intl/server';
 import { Users } from 'lucide-react';
 import { eq, asc, sql, and, or, ilike, inArray, desc } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { members, factions, memberVotes, billInitiators } from '@/lib/db/schema';
+import { members, factions, memberVotes, billInitiators, memberFactionHistory } from '@/lib/db/schema';
 import MemberCard from '@/components/members/MemberCard';
 import MembersFilter from '@/components/members/MembersFilter';
 import PaginationNav from '@/components/ui/pagination-nav';
@@ -38,13 +38,11 @@ export default async function MembersPage({ searchParams }: Props) {
   const genderFilter = params.gender ?? '';
   const showDetails = params.details === 'true';
 
-  // Get available knesset numbers
+  // Get available knesset numbers from faction history (complete) + factions (current)
   const knessetNums = await db
-    .selectDistinct({ knessetNum: factions.knessetNum })
-    .from(factions)
-    .innerJoin(members, eq(members.factionId, factions.id))
-    .where(sql`${factions.knessetNum} IS NOT NULL`)
-    .orderBy(desc(factions.knessetNum));
+    .selectDistinct({ knessetNum: memberFactionHistory.knessetNum })
+    .from(memberFactionHistory)
+    .orderBy(desc(memberFactionHistory.knessetNum));
   const availableKnessets = knessetNums
     .map((k) => k.knessetNum)
     .filter((n): n is number => n !== null);
@@ -53,33 +51,108 @@ export default async function MembersPage({ searchParams }: Props) {
   const selectedKnesset = knessetFilter ? Number(knessetFilter) : currentKnesset;
   const isCurrentKnesset = selectedKnesset === currentKnesset;
 
-  // Smart faction list based on selected knesset context
-  const factionListConditions = eq(factions.knessetNum, selectedKnesset);
+  // For past knessets, pre-fetch member→faction mapping from history.
+  // The members table stores only ONE factionId per member (typically latest),
+  // but members serve across multiple knessets with different factions.
+  // memberFactionHistory has the complete per-knesset faction data.
+  type HistoryFactionInfo = {
+    factionId: number;
+    factionName: string | null;
+    factionColor: string | null;
+    isCoalition: boolean | null;
+  };
+  let historyFactionMap: Map<number, HistoryFactionInfo> | null = null;
 
-  const factionQuery = db
-    .selectDistinct({ name: factions.name })
-    .from(factions)
-    .innerJoin(members, eq(members.factionId, factions.id));
-  const factionRows = await factionQuery.where(factionListConditions).orderBy(factions.name);
-  const factionList = factionRows.map((f) => f.name).filter(Boolean);
+  if (!isCurrentKnesset) {
+    const historyRows = await db
+      .select({
+        memberId: memberFactionHistory.memberId,
+        factionId: factions.id,
+        factionName: factions.name,
+        factionColor: factions.color,
+        isCoalition: factions.isCoalition,
+        startDate: memberFactionHistory.startDate,
+      })
+      .from(memberFactionHistory)
+      .innerJoin(factions, eq(memberFactionHistory.factionId, factions.id))
+      .where(eq(memberFactionHistory.knessetNum, selectedKnesset))
+      .orderBy(memberFactionHistory.memberId, desc(memberFactionHistory.startDate));
+
+    historyFactionMap = new Map();
+    for (const row of historyRows) {
+      // First entry per member is the latest (due to DESC startDate order)
+      if (!historyFactionMap.has(row.memberId)) {
+        historyFactionMap.set(row.memberId, {
+          factionId: row.factionId,
+          factionName: row.factionName,
+          factionColor: row.factionColor,
+          isCoalition: row.isCoalition,
+        });
+      }
+    }
+  }
+
+  // Faction list for filter dropdown
+  let factionList: string[];
+  if (historyFactionMap) {
+    const factionNames = new Set<string>();
+    for (const info of historyFactionMap.values()) {
+      if (info.factionName) factionNames.add(info.factionName);
+    }
+    factionList = [...factionNames].sort();
+  } else {
+    const factionRows = await db
+      .selectDistinct({ name: factions.name })
+      .from(factions)
+      .innerJoin(members, eq(members.factionId, factions.id))
+      .where(eq(factions.knessetNum, selectedKnesset))
+      .orderBy(factions.name);
+    factionList = factionRows.map((f) => f.name).filter(Boolean);
+  }
 
   // Build member conditions
   const conditions = [];
 
-  // Knesset filter: only show members whose faction belongs to this knesset
-  const knessetFactionIds = await db
-    .select({ id: factions.id })
-    .from(factions)
-    .where(eq(factions.knessetNum, selectedKnesset));
-  const kfIds = knessetFactionIds.map((f) => f.id);
-  if (kfIds.length > 0) {
-    conditions.push(inArray(members.factionId, kfIds));
-  } else {
-    conditions.push(sql`false`);
-  }
+  if (historyFactionMap) {
+    // Past knesset: select members from faction history, pre-filter by party/coalition
+    let eligibleIds = [...historyFactionMap.keys()];
 
-  // Status filter — only relevant when viewing the current knesset
-  if (isCurrentKnesset) {
+    if (coalitionFilter === 'coalition') {
+      eligibleIds = eligibleIds.filter(
+        (id) => historyFactionMap!.get(id)?.isCoalition === true,
+      );
+    } else if (coalitionFilter === 'opposition') {
+      eligibleIds = eligibleIds.filter((id) => {
+        const isCoalition = historyFactionMap!.get(id)?.isCoalition;
+        return isCoalition === false || isCoalition == null;
+      });
+    }
+
+    if (partyFilter) {
+      eligibleIds = eligibleIds.filter(
+        (id) => historyFactionMap!.get(id)?.factionName === partyFilter,
+      );
+    }
+
+    if (eligibleIds.length > 0) {
+      conditions.push(inArray(members.id, eligibleIds));
+    } else {
+      conditions.push(sql`false`);
+    }
+  } else {
+    // Current knesset: filter by faction on members table
+    const knessetFactionIds = await db
+      .select({ id: factions.id })
+      .from(factions)
+      .where(eq(factions.knessetNum, selectedKnesset));
+    const kfIds = knessetFactionIds.map((f) => f.id);
+    if (kfIds.length > 0) {
+      conditions.push(inArray(members.factionId, kfIds));
+    } else {
+      conditions.push(sql`false`);
+    }
+
+    // Status filter — only relevant for current knesset
     if (statusFilter === 'current') {
       conditions.push(eq(members.isCurrent, true));
     } else if (statusFilter === 'past') {
@@ -87,16 +160,15 @@ export default async function MembersPage({ searchParams }: Props) {
         or(eq(members.isCurrent, false), sql`${members.isCurrent} IS NULL`),
       );
     }
-  }
-  // When viewing a past knesset, show ALL members of those factions
 
-  // Coalition/opposition filter (uses faction-level coalition status)
-  if (coalitionFilter === 'coalition') {
-    conditions.push(eq(factions.isCoalition, true));
-  } else if (coalitionFilter === 'opposition') {
-    conditions.push(
-      or(eq(factions.isCoalition, false), sql`${factions.isCoalition} IS NULL`),
-    );
+    // Coalition/opposition filter
+    if (coalitionFilter === 'coalition') {
+      conditions.push(eq(factions.isCoalition, true));
+    } else if (coalitionFilter === 'opposition') {
+      conditions.push(
+        or(eq(factions.isCoalition, false), sql`${factions.isCoalition} IS NULL`),
+      );
+    }
   }
 
   // Gender filter (matches DB values: "זכר" / "נקבה")
@@ -106,7 +178,7 @@ export default async function MembersPage({ searchParams }: Props) {
     conditions.push(eq(members.gender, 'נקבה'));
   }
 
-  if (partyFilter) {
+  if (!historyFactionMap && partyFilter) {
     const matchingFactions = await db
       .select({ id: factions.id })
       .from(factions)
@@ -208,12 +280,17 @@ export default async function MembersPage({ searchParams }: Props) {
     }
   }
 
-  // Merge all data
-  const data = memberRows.map((m) => ({
-    ...m,
-    ...(voteStatsMap.get(m.id) ?? { forCount: 0, againstCount: 0, abstainCount: 0, absentCount: 0, totalVotes: 0 }),
-    billCount: billCountMap.get(m.id) ?? 0,
-  }));
+  // Merge all data — for past knessets, override faction data with history
+  const data = memberRows.map((m) => {
+    const historyInfo = historyFactionMap?.get(m.id);
+    return {
+      ...(historyInfo
+        ? { ...m, factionId: historyInfo.factionId, factionName: historyInfo.factionName, factionColor: historyInfo.factionColor, isCoalition: historyInfo.isCoalition }
+        : m),
+      ...(voteStatsMap.get(m.id) ?? { forCount: 0, againstCount: 0, abstainCount: 0, absentCount: 0, totalVotes: 0 }),
+      billCount: billCountMap.get(m.id) ?? 0,
+    };
+  });
 
   // Apply sorting in JS (member query already sorted by name)
   if (sortBy !== 'name') {
@@ -282,7 +359,7 @@ export default async function MembersPage({ searchParams }: Props) {
 
       {data.length > 0 ? (
         <>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 stagger-children">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 stagger-children">
             {data.map((member) => (
               <MemberCard key={member.id} member={member} showDetails={showDetails} />
             ))}

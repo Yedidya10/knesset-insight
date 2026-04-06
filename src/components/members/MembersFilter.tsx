@@ -145,7 +145,7 @@ export default function MembersFilter({
 
         {/* Status tabs — only shown for current knesset */}
         {isCurrentKnesset && (
-          <div className="flex gap-1 rounded-xl bg-muted/60 p-1 backdrop-blur-sm">
+          <div className="flex gap-1.5 rounded-xl bg-muted/60 p-1.5 backdrop-blur-sm">
             {(['current', 'past'] as const).map((status) => (
               <button
                 key={status}
@@ -268,7 +268,7 @@ export default function MembersFilter({
             <X className="h-3.5 w-3.5" />
             {t('clearFilters')}
             {activeFilterCount > 0 && (
-              <Badge variant="secondary" className="ms-1 h-5 min-w-5 px-1 text-[10px]">
+              <Badge variant="secondary" className="ms-1 h-5 min-w-5 px-1 text-xs">
                 {activeFilterCount}
               </Badge>
             )}

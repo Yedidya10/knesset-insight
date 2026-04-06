@@ -98,7 +98,7 @@ export default function MemberCard({ member, showDetails = false }: MemberCardPr
                   style={{ width: `${absentPct}%` }}
                 />
               </div>
-              <div className="flex items-center justify-center gap-3 text-[10px] tabular-nums text-muted-foreground">
+              <div className="flex items-center justify-center gap-3 text-xs tabular-nums text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-500" />
                   {member.forCount ?? 0}
@@ -120,7 +120,7 @@ export default function MemberCard({ member, showDetails = false }: MemberCardPr
             <div className="w-full space-y-2 border-t border-border/40 pt-2">
               {/* Participation rate */}
               {hasStats && (
-                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <BarChart3 className="h-3 w-3 shrink-0" />
                   <span>{t('participation')}</span>
                   <span className="ms-auto font-medium tabular-nums text-foreground">
@@ -131,7 +131,7 @@ export default function MemberCard({ member, showDetails = false }: MemberCardPr
 
               {/* Bill count */}
               {(member.billCount ?? 0) > 0 && (
-                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <FileText className="h-3 w-3 shrink-0" />
                   <span>{t('billCount')}</span>
                   <span className="ms-auto font-medium tabular-nums text-foreground">
@@ -143,7 +143,7 @@ export default function MemberCard({ member, showDetails = false }: MemberCardPr
           )}
 
           {member.isCurrent === false && (
-            <Badge variant="outline" className="text-[10px]">
+            <Badge variant="outline" className="text-xs">
               {t('endDate')}
             </Badge>
           )}

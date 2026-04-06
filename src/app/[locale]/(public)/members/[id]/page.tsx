@@ -13,7 +13,7 @@ import {
   FileText,
   Gavel,
 } from 'lucide-react';
-import { eq, desc, sql } from 'drizzle-orm';
+import { eq, desc, sql, asc } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import {
   members,
@@ -23,6 +23,7 @@ import {
   billInitiators,
   bills,
   committees,
+  memberFactionHistory,
 } from '@/lib/db/schema';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -30,6 +31,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import TranslatedText from '@/components/ui/translated-text';
+import MemberBillsList from '@/components/members/MemberBillsList';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -70,7 +72,7 @@ export default async function MemberProfilePage({ params }: Props) {
   if (!member) notFound();
 
   // Parallel data fetching
-  const [recentVotesData, voteStats, initiatedBills, chairedCommittees] =
+  const [recentVotesData, voteStats, initiatedBills, chairedCommittees, factionHistory] =
     await Promise.all([
       // Recent votes by this member
       db
@@ -103,6 +105,7 @@ export default async function MemberProfilePage({ params }: Props) {
           billId: bills.id,
           billName: bills.name,
           billStatus: bills.status,
+          billKnessetNum: bills.knessetNum,
           proposedDate: bills.proposedDate,
           isPrimary: billInitiators.isPrimary,
         })
@@ -121,6 +124,19 @@ export default async function MemberProfilePage({ params }: Props) {
         })
         .from(committees)
         .where(eq(committees.chairmanId, member.id)),
+
+      // Faction history across Knessets
+      db
+        .select({
+          knessetNum: memberFactionHistory.knessetNum,
+          factionName: factions.name,
+          startDate: memberFactionHistory.startDate,
+          endDate: memberFactionHistory.endDate,
+        })
+        .from(memberFactionHistory)
+        .innerJoin(factions, eq(memberFactionHistory.factionId, factions.id))
+        .where(eq(memberFactionHistory.memberId, member.id))
+        .orderBy(desc(memberFactionHistory.knessetNum), asc(memberFactionHistory.startDate)),
     ]);
 
   const stats = { for: 0, against: 0, abstain: 0, absent: 0 };
@@ -285,6 +301,53 @@ export default async function MemberProfilePage({ params }: Props) {
                 </div>
               )}
             </div>
+
+            {/* Knesset & Faction History */}
+            {factionHistory.length > 0 && (
+              <>
+                <Separator className="opacity-30" />
+                <div className="w-full space-y-3">
+                  <h3 className="text-sm font-semibold">
+                    {t('factionHistory')}
+                  </h3>
+                  {(() => {
+                    // Group by knesset number
+                    const byKnesset = new Map<number, typeof factionHistory>();
+                    for (const h of factionHistory) {
+                      const arr = byKnesset.get(h.knessetNum) ?? [];
+                      arr.push(h);
+                      byKnesset.set(h.knessetNum, arr);
+                    }
+                    return Array.from(byKnesset.entries()).map(
+                      ([knessetNum, entries]) => (
+                        <div key={knessetNum} className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <Badge
+                              variant={
+                                knessetNum === member.knessetNum
+                                  ? 'default'
+                                  : 'outline'
+                              }
+                              className="text-xs"
+                            >
+                              {t('knessetNum')}: {knessetNum}
+                            </Badge>
+                          </div>
+                          {entries.map((entry, i) => (
+                            <p
+                              key={i}
+                              className="text-xs text-muted-foreground ps-2"
+                            >
+                              {entry.factionName}
+                            </p>
+                          ))}
+                        </div>
+                      ),
+                    );
+                  })()}
+                </div>
+              </>
+            )}
           </CardContent>
         </Card>
 
@@ -464,54 +527,7 @@ export default async function MemberProfilePage({ params }: Props) {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {initiatedBills.length > 0 ? (
-                <div className="space-y-2">
-                  {initiatedBills.map((b) => (
-                    <Link
-                      key={b.billId}
-                      href={`/legislation/${b.billId}`}
-                      className="block"
-                    >
-                      <div className="flex items-center justify-between rounded-lg p-2 transition-colors hover:bg-muted/50">
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium">
-                            <TranslatedText text={b.billName} />
-                          </p>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            {b.proposedDate && (
-                              <span>
-                                {new Date(
-                                  b.proposedDate,
-                                ).toLocaleDateString('he-IL')}
-                              </span>
-                            )}
-                            <Badge
-                              variant="outline"
-                              className="text-xs"
-                            >
-                              {b.isPrimary
-                                ? t('primaryInitiator')
-                                : t('secondaryInitiator')}
-                            </Badge>
-                          </div>
-                        </div>
-                        {b.billStatus && (
-                          <Badge
-                            variant="secondary"
-                            className="shrink-0 text-xs"
-                          >
-                            <TranslatedText text={b.billStatus} />
-                          </Badge>
-                        )}
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  {t('noBills')}
-                </p>
-              )}
+              <MemberBillsList bills={initiatedBills} />
             </CardContent>
           </Card>
 
