@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Rubik, Noto_Sans_Arabic, JetBrains_Mono } from 'next/font/google';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { getMessages, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
@@ -8,8 +8,20 @@ import { appConfig } from '../../../app.config';
 import Header from '../../components/layout/Header';
 import Footer from '../../components/layout/Footer';
 
-const geistSans = Geist({ variable: '--font-sans', subsets: ['latin'] });
-const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] });
+const rubik = Rubik({
+  variable: '--font-rubik',
+  subsets: ['latin', 'hebrew', 'cyrillic'],
+});
+
+const notoArabic = Noto_Sans_Arabic({
+  variable: '--font-noto-arabic',
+  subsets: ['arabic'],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: '--font-jbmono',
+  subsets: ['latin', 'cyrillic'],
+});
 
 export const metadata: Metadata = {
   title: 'Knesset Insight',
@@ -40,8 +52,8 @@ export default async function LocaleLayout({ children, params }: Props) {
   const messages = await getMessages();
 
   return (
-    <html lang={locale} dir={isRTL ? 'rtl' : 'ltr'} suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+    <html lang={locale} dir={isRTL ? 'rtl' : 'ltr'} className={`${rubik.variable} ${jetbrainsMono.variable} ${locale === 'ar' ? notoArabic.variable : ''}`} suppressHydrationWarning>
+      <body className="antialiased">
         <NextIntlClientProvider locale={locale} messages={messages}>
           <div className="flex min-h-screen flex-col">
             <Header />
