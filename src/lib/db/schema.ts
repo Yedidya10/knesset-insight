@@ -576,6 +576,117 @@ export const memberLobbyistConnections = pgTable(
 );
 
 // ──────────────────────────────────────
+// Election Campaigns (2026+)
+// ──────────────────────────────────────
+
+export const electionCampaigns = pgTable('election_campaigns', {
+  id: serial('id').primaryKey(),
+  knessetNum: integer('knesset_num').unique().notNull(),
+  electionDate: date('election_date'), // nullable until confirmed
+  status: text('status').notNull().default('pre_campaign'), // 'pre_campaign' | 'campaign' | 'election_day' | 'results' | 'completed'
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
+export const electionCandidateLists = pgTable('election_candidate_lists', {
+  id: serial('id').primaryKey(),
+  campaignId: integer('campaign_id')
+    .references(() => electionCampaigns.id, { onDelete: 'cascade' })
+    .notNull(),
+  name: text('name').notNull(),
+  shortName: text('short_name'),
+  slug: text('slug').unique().notNull(),
+  ballotLetters: text('ballot_letters'), // nullable until Phase 2
+  politicalGroupId: integer('political_group_id').references(
+    () => politicalGroups.id,
+  ), // nullable for new parties
+  leaderName: text('leader_name'),
+  leaderMemberId: integer('leader_member_id').references(() => members.id),
+  status: text('status').notNull().default('potential'), // 'potential' | 'confirmed' | 'withdrawn' | 'disqualified'
+  color: text('color'), // hex
+  logoUrl: text('logo_url'),
+  platformSummary: text('platform_summary'),
+  platformUrl: text('platform_url'),
+  estimatedSeats: integer('estimated_seats'),
+  politicalPosition: text('political_position'), // 'left' | 'center_left' | 'center' | 'center_right' | 'right' | 'arab' | 'haredi'
+  sortOrder: integer('sort_order').default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
+export const electionCandidates = pgTable('election_candidates', {
+  id: serial('id').primaryKey(),
+  candidateListId: integer('candidate_list_id')
+    .references(() => electionCandidateLists.id, { onDelete: 'cascade' })
+    .notNull(),
+  memberId: integer('member_id').references(() => members.id), // nullable — linked only if already an MK
+  slug: text('slug').unique().notNull(),
+  firstName: text('first_name').notNull(),
+  lastName: text('last_name').notNull(),
+  position: integer('position'), // list position, nullable until Phase 2
+  status: text('status').notNull().default('potential'), // 'potential' | 'confirmed' | 'removed'
+  isLeader: boolean('is_leader').default(false),
+  // Profile fields
+  bio: text('bio'),
+  imageUrl: text('image_url'),
+  birthYear: integer('birth_year'),
+  residence: text('residence'), // city/area
+  profession: text('profession'),
+  education: text('education'),
+  // Civic / public record
+  civicActivity: text('civic_activity'),
+  publicStatements: text('public_statements'),
+  platformUrl: text('platform_url'),
+  // Integrity fields
+  integrityNotes: text('integrity_notes'),
+  financialDisclosure: text('financial_disclosure'),
+  conflictsOfInterest: text('conflicts_of_interest'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
+export const electionPolls = pgTable('election_polls', {
+  id: serial('id').primaryKey(),
+  campaignId: integer('campaign_id')
+    .references(() => electionCampaigns.id, { onDelete: 'cascade' })
+    .notNull(),
+  pollsterName: text('pollster_name').notNull(),
+  publishDate: date('publish_date').notNull(),
+  sampleSize: integer('sample_size'),
+  marginOfError: numeric('margin_of_error', { precision: 3, scale: 1 }),
+  sourceUrl: text('source_url'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+export const electionPollResults = pgTable(
+  'election_poll_results',
+  {
+    id: serial('id').primaryKey(),
+    pollId: integer('poll_id')
+      .references(() => electionPolls.id, { onDelete: 'cascade' })
+      .notNull(),
+    candidateListId: integer('candidate_list_id')
+      .references(() => electionCandidateLists.id, { onDelete: 'cascade' })
+      .notNull(),
+    predictedSeats: integer('predicted_seats').notNull(),
+  },
+  (t) => [unique().on(t.pollId, t.candidateListId)],
+);
+
+export const electionTimelineEvents = pgTable('election_timeline_events', {
+  id: serial('id').primaryKey(),
+  campaignId: integer('campaign_id')
+    .references(() => electionCampaigns.id, { onDelete: 'cascade' })
+    .notNull(),
+  title: text('title').notNull(),
+  description: text('description'),
+  eventDate: date('event_date').notNull(),
+  type: text('type').notNull(), // 'deadline' | 'event' | 'debate' | 'announcement' | 'milestone'
+  isCompleted: boolean('is_completed').default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+// ──────────────────────────────────────
 // Sync tracking
 // ──────────────────────────────────────
 
@@ -947,6 +1058,88 @@ export const memberLobbyistConnectionsRelations = relations(
     member: one(members, {
       fields: [memberLobbyistConnections.memberId],
       references: [members.id],
+    }),
+  }),
+);
+
+// ──────────────────────────────────────
+// Election Campaign Relations
+// ──────────────────────────────────────
+
+export const electionCampaignsRelations = relations(
+  electionCampaigns,
+  ({ many }) => ({
+    candidateLists: many(electionCandidateLists),
+    polls: many(electionPolls),
+    timelineEvents: many(electionTimelineEvents),
+  }),
+);
+
+export const electionCandidateListsRelations = relations(
+  electionCandidateLists,
+  ({ one, many }) => ({
+    campaign: one(electionCampaigns, {
+      fields: [electionCandidateLists.campaignId],
+      references: [electionCampaigns.id],
+    }),
+    politicalGroup: one(politicalGroups, {
+      fields: [electionCandidateLists.politicalGroupId],
+      references: [politicalGroups.id],
+    }),
+    leader: one(members, {
+      fields: [electionCandidateLists.leaderMemberId],
+      references: [members.id],
+    }),
+    candidates: many(electionCandidates),
+    pollResults: many(electionPollResults),
+  }),
+);
+
+export const electionCandidatesRelations = relations(
+  electionCandidates,
+  ({ one }) => ({
+    candidateList: one(electionCandidateLists, {
+      fields: [electionCandidates.candidateListId],
+      references: [electionCandidateLists.id],
+    }),
+    member: one(members, {
+      fields: [electionCandidates.memberId],
+      references: [members.id],
+    }),
+  }),
+);
+
+export const electionPollsRelations = relations(
+  electionPolls,
+  ({ one, many }) => ({
+    campaign: one(electionCampaigns, {
+      fields: [electionPolls.campaignId],
+      references: [electionCampaigns.id],
+    }),
+    results: many(electionPollResults),
+  }),
+);
+
+export const electionPollResultsRelations = relations(
+  electionPollResults,
+  ({ one }) => ({
+    poll: one(electionPolls, {
+      fields: [electionPollResults.pollId],
+      references: [electionPolls.id],
+    }),
+    candidateList: one(electionCandidateLists, {
+      fields: [electionPollResults.candidateListId],
+      references: [electionCandidateLists.id],
+    }),
+  }),
+);
+
+export const electionTimelineEventsRelations = relations(
+  electionTimelineEvents,
+  ({ one }) => ({
+    campaign: one(electionCampaigns, {
+      fields: [electionTimelineEvents.campaignId],
+      references: [electionCampaigns.id],
     }),
   }),
 );

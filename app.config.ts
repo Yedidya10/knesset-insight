@@ -148,6 +148,17 @@ export const appConfig = {
       },
     },
   },
+
+  // Election 2026 campaign
+  elections2026: {
+    knessetNum: 26,
+    /** Estimated election date — update when confirmed */
+    estimatedDate: process.env.ELECTION_2026_DATE ?? '2026-10-27',
+    /** Total Knesset seats */
+    totalSeats: 120,
+    /** Minimum seats to pass electoral threshold */
+    thresholdPercent: 3.25,
+  },
 } as const;
 
 export type Locale = (typeof appConfig.i18n.locales)[number];

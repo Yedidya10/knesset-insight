@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { Vote } from 'lucide-react';
+import { Vote, ArrowRight } from 'lucide-react';
 import { sql, eq, desc } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { electoralLists } from '@/lib/db/schema';
@@ -15,6 +15,7 @@ interface Props {
 
 export default async function ElectionsPage({ searchParams }: Props) {
   const t = await getTranslations('elections');
+  const t2026 = await getTranslations('elections2026');
   const params = await searchParams;
   const knessetFilter = params.knesset ? Number(params.knesset) : null;
 
@@ -55,6 +56,19 @@ export default async function ElectionsPage({ searchParams }: Props) {
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{t('title')}</h1>
         </div>
       </div>
+
+      {/* Elections 2026 banner */}
+      <Link href="/elections/2026">
+        <Card className="mb-6 overflow-hidden border-primary/30 bg-gradient-to-r from-primary/5 to-primary/10 transition-colors hover:border-primary/50">
+          <CardContent className="flex items-center justify-between p-4">
+            <div>
+              <h2 className="text-lg font-bold">{t2026('bannerTitle')}</h2>
+              <p className="text-sm text-muted-foreground">{t2026('bannerDescription')}</p>
+            </div>
+            <ArrowRight className="h-5 w-5 shrink-0 text-primary rtl:rotate-180" />
+          </CardContent>
+        </Card>
+      </Link>
 
       {/* Knesset tabs */}
       {availableKnessets.length > 0 && (
