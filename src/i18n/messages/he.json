@@ -31,6 +31,7 @@
     "budget": "תקציב",
     "committees": "ועדות",
     "governments": "ממשלות",
+    "politicalGroups": "קבוצות פוליטיות",
     "compare": "השוואה",
     "search": "חיפוש",
     "dashboard": "דשבורד",
@@ -441,5 +442,29 @@
     "allKnessets": "כל הכנסות",
     "viewDetails": "צפייה בפרטים",
     "backToList": "חזרה לרשימת הממשלות"
+  },
+  "politicalGroups": {
+    "title": "קבוצות פוליטיות",
+    "subtitle": "מעקב אחרי תנועות פוליטיות לאורך כל הכנסות",
+    "groupName": "שם הקבוצה",
+    "foundedYear": "שנת הקמה",
+    "dissolvedYear": "שנת פירוק",
+    "active": "פעיל",
+    "inactive": "לא פעיל",
+    "factionsAcrossTerms": "סיעות לאורך הכנסות",
+    "factionCount": "{count} סיעות",
+    "lineage": "תולדות",
+    "mergedInto": "התמזג לתוך",
+    "splitFrom": "פוצל מתוך",
+    "renamedTo": "שינה שם ל",
+    "absorbedBy": "נבלע על ידי",
+    "timeline": "ציר זמן",
+    "graph": "גרף קשרים",
+    "noGroups": "לא נמצאו קבוצות פוליטיות",
+    "backToList": "חזרה לרשימת הקבוצות",
+    "knesset": "כנסת {num}",
+    "seats": "מנדטים",
+    "coalition": "קואליציה",
+    "opposition": "אופוזיציה"
   }
 }

@@ -31,6 +31,7 @@
     "budget": "Budget",
     "committees": "Committees",
     "governments": "Governments",
+    "politicalGroups": "Political Groups",
     "compare": "Compare",
     "search": "Search",
     "dashboard": "Dashboard",
@@ -440,6 +441,28 @@
     "filterByKnesset": "Filter by Knesset",
     "allKnessets": "All Knessets",
     "viewDetails": "View Details",
-    "backToList": "Back to Governments"
-  }
+    "backToList": "Back to Governments"  },
+  "politicalGroups": {
+    "title": "Political Groups",
+    "subtitle": "Track political movements across all Knesset terms",
+    "groupName": "Group Name",
+    "foundedYear": "Founded",
+    "dissolvedYear": "Dissolved",
+    "active": "Active",
+    "inactive": "Inactive",
+    "factionsAcrossTerms": "Factions Across Terms",
+    "factionCount": "{count} factions",
+    "lineage": "Lineage",
+    "mergedInto": "Merged into",
+    "splitFrom": "Split from",
+    "renamedTo": "Renamed to",
+    "absorbedBy": "Absorbed by",
+    "timeline": "Timeline",
+    "graph": "Relationship Graph",
+    "noGroups": "No political groups found",
+    "backToList": "Back to groups list",
+    "knesset": "Knesset {num}",
+    "seats": "Seats",
+    "coalition": "Coalition",
+    "opposition": "Opposition"  }
 }

@@ -2,7 +2,7 @@ import { z } from 'zod/v4';
 import { eq, sql } from 'drizzle-orm';
 import { router, publicProcedure } from '../trpc';
 import { db } from '../../lib/db';
-import { factions, members } from '../../lib/db/schema';
+import { factions, members, politicalGroups } from '../../lib/db/schema';
 
 export const factionsRouter = router({
   list: publicProcedure.query(async () => {
@@ -11,6 +11,7 @@ export const factionsRouter = router({
         id: factions.id,
         knessetId: factions.knessetId,
         name: factions.name,
+        knessetNum: factions.knessetNum,
         isCoalition: factions.isCoalition,
         seats: factions.seats,
         color: factions.color,
@@ -22,8 +23,13 @@ export const factionsRouter = router({
           select count(*)::int from members
           where members.faction_id = ${factions.id} and members.is_current = true
         )`,
+        politicalGroupId: factions.politicalGroupId,
+        politicalGroupSlug: politicalGroups.slug,
+        politicalGroupName: politicalGroups.canonicalName,
+        politicalGroupColor: politicalGroups.color,
       })
       .from(factions)
+      .leftJoin(politicalGroups, eq(factions.politicalGroupId, politicalGroups.id))
       .orderBy(factions.name);
   }),
 

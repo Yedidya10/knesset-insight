@@ -10,6 +10,7 @@ import { syncMemberImages } from './jobs/sync-images';
 import { syncRegisteredParties } from './jobs/sync-registered-parties';
 import { syncElectoralLists } from './jobs/sync-electoral-lists';
 import { syncPoliticalLinks } from './jobs/sync-political-links';
+import { syncPoliticalGroups } from './jobs/sync-political-groups';
 import { syncGovMinistries } from './jobs/sync-gov-ministries';
 import { syncGovernments } from './jobs/sync-governments';
 
@@ -26,6 +27,7 @@ export const syncJobs = {
   registeredParties: syncRegisteredParties,
   electoralLists: syncElectoralLists,
   politicalLinks: syncPoliticalLinks,
+  politicalGroups: syncPoliticalGroups,
   govMinistries: syncGovMinistries,
   governments: syncGovernments,
   all: async () => {
@@ -43,6 +45,8 @@ export const syncJobs = {
     await syncElectoralLists();
     // Links must run after parties + lists + factions
     await syncPoliticalLinks();
+    // Groups must run after factions exist
+    await syncPoliticalGroups();
     // Governments must run after members + factions
     await syncGovMinistries();
     await syncGovernments();

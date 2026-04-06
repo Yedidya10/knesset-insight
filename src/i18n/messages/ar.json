@@ -31,6 +31,7 @@
     "budget": "الميزانية",
     "committees": "اللجان",
     "governments": "الحكومات",
+    "politicalGroups": "كتل سياسية",
     "compare": "مقارنة",
     "search": "بحث",
     "dashboard": "لوحة التحكم",
@@ -441,5 +442,29 @@
     "allKnessets": "جميع الكنيست",
     "viewDetails": "عرض التفاصيل",
     "backToList": "العودة إلى قائمة الحكومات"
+  },
+  "politicalGroups": {
+    "title": "كتل سياسية",
+    "subtitle": "تتبع الحركات السياسية عبر جميع دورات الكنيست",
+    "groupName": "اسم الكتلة",
+    "foundedYear": "سنة التأسيس",
+    "dissolvedYear": "سنة الحل",
+    "active": "نشطة",
+    "inactive": "غير نشطة",
+    "factionsAcrossTerms": "الفصائل عبر الدورات",
+    "factionCount": "{count} فصائل",
+    "lineage": "النسب",
+    "mergedInto": "اندمجت في",
+    "splitFrom": "انفصلت من",
+    "renamedTo": "أعيدت تسميتها إلى",
+    "absorbedBy": "استوعبتها",
+    "timeline": "الجدول الزمني",
+    "graph": "رسم بياني للعلاقات",
+    "noGroups": "لم يتم العثور على كتل سياسية",
+    "backToList": "العودة إلى قائمة الكتل",
+    "knesset": "الكنيست {num}",
+    "seats": "مقاعد",
+    "coalition": "ائتلاف",
+    "opposition": "معارضة"
   }
 }

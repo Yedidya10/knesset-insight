@@ -31,6 +31,7 @@
     "budget": "Бюджет",
     "committees": "Комитеты",
     "governments": "Правительства",
+    "politicalGroups": "Политические группы",
     "compare": "Сравнение",
     "search": "Поиск",
     "dashboard": "Панель управления",
@@ -441,5 +442,29 @@
     "allKnessets": "Все Кнессеты",
     "viewDetails": "Подробнее",
     "backToList": "Назад к списку правительств"
+  },
+  "politicalGroups": {
+    "title": "Политические группы",
+    "subtitle": "Отслеживание политических движений по всем созывам Кнессета",
+    "groupName": "Название группы",
+    "foundedYear": "Год основания",
+    "dissolvedYear": "Год роспуска",
+    "active": "Активна",
+    "inactive": "Неактивна",
+    "factionsAcrossTerms": "Фракции по созывам",
+    "factionCount": "{count} фракций",
+    "lineage": "Происхождение",
+    "mergedInto": "Объединилась в",
+    "splitFrom": "Отделилась от",
+    "renamedTo": "Переименована в",
+    "absorbedBy": "Поглощена",
+    "timeline": "Хронология",
+    "graph": "Граф связей",
+    "noGroups": "Политические группы не найдены",
+    "backToList": "Назад к списку групп",
+    "knesset": "Кнессет {num}",
+    "seats": "Мандаты",
+    "coalition": "Коалиция",
+    "opposition": "Оппозиция"
   }
 }

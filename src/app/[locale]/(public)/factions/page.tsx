@@ -2,7 +2,7 @@ import { getTranslations } from 'next-intl/server';
 import { Building2 } from 'lucide-react';
 import { sql, eq, desc } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { factions, members } from '@/lib/db/schema';
+import { factions, members, politicalGroups } from '@/lib/db/schema';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Link } from '@/i18n/navigation';
@@ -29,7 +29,7 @@ export default async function FactionsPage({ searchParams }: Props) {
   // Default to current (highest) knesset if no filter
   const activeKnesset = knessetFilter ?? (availableKnessets[0] || 25);
 
-  // Fetch factions for the selected knesset with member counts
+  // Fetch factions for the selected knesset with member counts + group info
   const data = await db
     .select({
       id: factions.id,
@@ -41,13 +41,17 @@ export default async function FactionsPage({ searchParams }: Props) {
         select count(*)::int from members
         where members.faction_id = ${factions.id}
       )`,
+      politicalGroupSlug: politicalGroups.slug,
+      politicalGroupName: politicalGroups.canonicalName,
+      politicalGroupColor: politicalGroups.color,
     })
     .from(factions)
+    .leftJoin(politicalGroups, eq(factions.politicalGroupId, politicalGroups.id))
     .where(eq(factions.knessetNum, activeKnesset))
-    .orderBy(desc(sql`(select count(*) from members where members.faction_id = ${factions.id})`));
+    .orderBy(desc(factions.seats), desc(sql`(select count(*) from members where members.faction_id = ${factions.id})`));
 
-  // Only show factions that have at least one member
-  const activeFactions = data.filter((f) => f.memberCount > 0);
+  // Show all factions (don't filter by memberCount — K25 has no member links yet)
+  const activeFactions = data;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
@@ -84,11 +88,18 @@ export default async function FactionsPage({ searchParams }: Props) {
               <Card className={`glass-card hover-lift h-full overflow-hidden border-s-4 ${faction.isCoalition ? 'border-s-blue-500/50' : 'border-s-orange-500/50'}`}>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg">{faction.name}</CardTitle>
+                  {faction.politicalGroupName && (
+                    <p className="text-xs text-muted-foreground">
+                      {faction.politicalGroupName}
+                    </p>
+                  )}
                 </CardHeader>
                 <CardContent className="flex flex-wrap items-center gap-2">
-                  <Badge variant="secondary">
-                    {t('memberCount', { count: faction.memberCount })}
-                  </Badge>
+                  {faction.memberCount > 0 && (
+                    <Badge variant="secondary">
+                      {t('memberCount', { count: faction.memberCount })}
+                    </Badge>
+                  )}
                   {faction.isCoalition !== null && (
                     <Badge variant={faction.isCoalition ? 'default' : 'outline'}>
                       {faction.isCoalition ? t('coalition') : t('opposition')}

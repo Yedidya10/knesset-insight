@@ -15,6 +15,43 @@ import {
 import { relations } from 'drizzle-orm';
 
 // ──────────────────────────────────────
+// Political Groups (canonical cross-term identities)
+// ──────────────────────────────────────
+
+export const politicalGroups = pgTable('political_groups', {
+  id: serial('id').primaryKey(),
+  slug: text('slug').unique().notNull(),
+  canonicalName: text('canonical_name').notNull(),
+  shortName: text('short_name'),
+  color: text('color'),
+  logoUrl: text('logo_url'),
+  foundedYear: integer('founded_year'),
+  dissolvedYear: integer('dissolved_year'),
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
+export const politicalGroupLineage = pgTable(
+  'political_group_lineage',
+  {
+    id: serial('id').primaryKey(),
+    sourceGroupId: integer('source_group_id')
+      .references(() => politicalGroups.id, { onDelete: 'cascade' })
+      .notNull(),
+    targetGroupId: integer('target_group_id')
+      .references(() => politicalGroups.id, { onDelete: 'cascade' })
+      .notNull(),
+    relationshipType: text('relationship_type').notNull(), // 'merged_into' | 'split_from' | 'renamed_to' | 'absorbed_by'
+    knessetNum: integer('knesset_num'),
+    year: integer('year'),
+    notes: text('notes'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  },
+  (t) => [unique().on(t.sourceGroupId, t.targetGroupId, t.relationshipType)],
+);
+
+// ──────────────────────────────────────
 // Core Tables
 // ──────────────────────────────────────
 
@@ -30,6 +67,9 @@ export const factions = pgTable('factions', {
   startDate: date('start_date'),
   finishDate: date('finish_date'),
   isCurrent: boolean('is_current').default(false),
+  politicalGroupId: integer('political_group_id').references(
+    () => politicalGroups.id,
+  ),
   electoralListId: integer('electoral_list_id').references(
     () => electoralLists.id,
   ),
@@ -146,6 +186,25 @@ export const partyFactionLinks = pgTable(
       .notNull(),
   },
   (t) => [unique().on(t.partyId, t.factionId)],
+);
+
+export const factionCompositionHistory = pgTable(
+  'faction_composition_history',
+  {
+    id: serial('id').primaryKey(),
+    factionId: integer('faction_id')
+      .references(() => factions.id, { onDelete: 'cascade' })
+      .notNull(),
+    partyId: integer('party_id')
+      .references(() => politicalParties.id, { onDelete: 'cascade' })
+      .notNull(),
+    knessetNum: integer('knesset_num').notNull(),
+    role: text('role').notNull().default('partner'), // 'sole' | 'primary' | 'partner' | 'junior'
+    joinDate: date('join_date'),
+    leaveDate: date('leave_date'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  },
+  (t) => [unique().on(t.factionId, t.partyId, t.knessetNum)],
 );
 
 export const factionCoalitionPeriods = pgTable(
@@ -427,13 +486,47 @@ export const syncLog = pgTable('sync_log', {
 // Relations
 // ──────────────────────────────────────
 
+export const politicalGroupsRelations = relations(
+  politicalGroups,
+  ({ many }) => ({
+    factions: many(factions),
+    lineageAsSource: many(politicalGroupLineage, {
+      relationName: 'lineageSource',
+    }),
+    lineageAsTarget: many(politicalGroupLineage, {
+      relationName: 'lineageTarget',
+    }),
+  }),
+);
+
+export const politicalGroupLineageRelations = relations(
+  politicalGroupLineage,
+  ({ one }) => ({
+    sourceGroup: one(politicalGroups, {
+      fields: [politicalGroupLineage.sourceGroupId],
+      references: [politicalGroups.id],
+      relationName: 'lineageSource',
+    }),
+    targetGroup: one(politicalGroups, {
+      fields: [politicalGroupLineage.targetGroupId],
+      references: [politicalGroups.id],
+      relationName: 'lineageTarget',
+    }),
+  }),
+);
+
 export const factionsRelations = relations(factions, ({ one, many }) => ({
   members: many(members),
+  politicalGroup: one(politicalGroups, {
+    fields: [factions.politicalGroupId],
+    references: [politicalGroups.id],
+  }),
   electoralList: one(electoralLists, {
     fields: [factions.electoralListId],
     references: [electoralLists.id],
   }),
   partyLinks: many(partyFactionLinks),
+  compositionHistory: many(factionCompositionHistory),
   memberHistory: many(memberFactionHistory),
   coalitionPeriods: many(factionCoalitionPeriods),
 }));
@@ -455,6 +548,7 @@ export const politicalPartiesRelations = relations(
     financialReports: many(partyFinancialReports),
     electoralListLinks: many(electoralListParties),
     factionLinks: many(partyFactionLinks),
+    compositionHistory: many(factionCompositionHistory),
   }),
 );
 
@@ -500,6 +594,20 @@ export const partyFactionLinksRelations = relations(
     faction: one(factions, {
       fields: [partyFactionLinks.factionId],
       references: [factions.id],
+    }),
+  }),
+);
+
+export const factionCompositionHistoryRelations = relations(
+  factionCompositionHistory,
+  ({ one }) => ({
+    faction: one(factions, {
+      fields: [factionCompositionHistory.factionId],
+      references: [factions.id],
+    }),
+    party: one(politicalParties, {
+      fields: [factionCompositionHistory.partyId],
+      references: [politicalParties.id],
     }),
   }),
 );

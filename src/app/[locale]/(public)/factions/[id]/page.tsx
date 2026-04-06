@@ -4,7 +4,7 @@ import { Link } from '@/i18n/navigation';
 import { Building2 } from 'lucide-react';
 import { eq, sql, desc, inArray, and, or } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { factions, members, memberVotes } from '@/lib/db/schema';
+import { factions, members, memberVotes, politicalGroups } from '@/lib/db/schema';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -32,6 +32,21 @@ export default async function FactionDetailPage({ params }: Props) {
     .limit(1);
 
   if (!faction) notFound();
+
+  // Get political group info if linked
+  const politicalGroup = faction.politicalGroupId
+    ? (
+        await db
+          .select({
+            slug: politicalGroups.slug,
+            canonicalName: politicalGroups.canonicalName,
+            color: politicalGroups.color,
+          })
+          .from(politicalGroups)
+          .where(eq(politicalGroups.id, faction.politicalGroupId))
+          .limit(1)
+      )[0] ?? null
+    : null;
 
   // Find ALL faction rows with the same name (same faction across knessets)
   const siblingFactions = await db
@@ -141,6 +156,14 @@ export default async function FactionDetailPage({ params }: Props) {
               <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
                 <TranslatedText text={faction.name} as="span" />
               </h1>
+              {politicalGroup && (
+                <Link
+                  href={`/political-groups/${politicalGroup.slug}`}
+                  className="mt-0.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {politicalGroup.canonicalName} →
+                </Link>
+              )}
               <div className="mt-1 flex items-center gap-2">
                 {faction.knessetNum && (
                   <Badge variant="outline">
