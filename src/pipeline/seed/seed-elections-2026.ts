@@ -8,17 +8,18 @@ import { config } from 'dotenv';
 config({ path: '.env.local' });
 
 import { eq } from 'drizzle-orm';
-import { db } from '../../lib/db';
-import {
-  electionCampaigns,
-  electionCandidateLists,
-  electionTimelineEvents,
-  politicalGroups,
-  members,
-} from '../../lib/db/schema';
 import seedData from './elections-2026.json';
 
 async function seed() {
+  // Dynamic import so DATABASE_URL is available after dotenv.config()
+  const { db } = await import('../../lib/db');
+  const {
+    electionCampaigns,
+    electionCandidateLists,
+    electionTimelineEvents,
+    politicalGroups,
+    members,
+  } = await import('../../lib/db/schema');
   console.log('Seeding Elections 2026 data...');
 
   // 1. Upsert campaign
@@ -74,7 +75,7 @@ async function seed() {
 
   // 3. Upsert candidate lists
   let created = 0;
-  let skipped = 0;
+  let updated = 0;
   for (const list of seedData.candidateLists) {
     const existingList = await db
       .select({ id: electionCandidateLists.id })
@@ -82,17 +83,32 @@ async function seed() {
       .where(eq(electionCandidateLists.slug, list.slug))
       .limit(1);
 
-    if (existingList[0]) {
-      skipped++;
-      continue;
-    }
-
     const politicalGroupId = list.politicalGroupSlug
       ? groupBySlug.get(list.politicalGroupSlug) ?? null
       : null;
     const leaderMemberId = list.leaderName
       ? findMember(list.leaderName)
       : null;
+
+    if (existingList[0]) {
+      await db
+        .update(electionCandidateLists)
+        .set({
+          name: list.name,
+          shortName: list.shortName,
+          politicalGroupId,
+          leaderName: list.leaderName,
+          leaderMemberId,
+          status: list.status,
+          color: list.color,
+          estimatedSeats: list.estimatedSeats,
+          politicalPosition: list.politicalPosition,
+          sortOrder: list.sortOrder,
+        })
+        .where(eq(electionCandidateLists.slug, list.slug));
+      updated++;
+      continue;
+    }
 
     await db.insert(electionCandidateLists).values({
       campaignId,
@@ -110,19 +126,31 @@ async function seed() {
     });
     created++;
   }
-  console.log(`  Candidate lists: ${created} created, ${skipped} skipped (already exist)`);
+  console.log(`  Candidate lists: ${created} created, ${updated} updated`);
 
   // 4. Upsert timeline events
   let eventsCreated = 0;
+  let eventsUpdated = 0;
   for (const event of seedData.timelineEvents) {
-    // Simple dedup by title + date
     const existingEvent = await db
       .select({ id: electionTimelineEvents.id })
       .from(electionTimelineEvents)
       .where(eq(electionTimelineEvents.title, event.title))
       .limit(1);
 
-    if (existingEvent[0]) continue;
+    if (existingEvent[0]) {
+      await db
+        .update(electionTimelineEvents)
+        .set({
+          description: event.description,
+          eventDate: event.eventDate,
+          type: event.type,
+          isCompleted: event.isCompleted,
+        })
+        .where(eq(electionTimelineEvents.title, event.title));
+      eventsUpdated++;
+      continue;
+    }
 
     await db.insert(electionTimelineEvents).values({
       campaignId,
@@ -134,7 +162,7 @@ async function seed() {
     });
     eventsCreated++;
   }
-  console.log(`  Timeline events: ${eventsCreated} created`);
+  console.log(`  Timeline events: ${eventsCreated} created, ${eventsUpdated} updated`);
 
   console.log('Done!');
   process.exit(0);

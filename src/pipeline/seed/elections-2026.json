@@ -12,9 +12,21 @@
       "leaderName": "בנימין נתניהו",
       "status": "potential",
       "color": "#0047AB",
-      "estimatedSeats": 23,
+      "estimatedSeats": 27,
       "politicalPosition": "right",
       "sortOrder": 1
+    },
+    {
+      "slug": "hamachaneh-hamamlachti",
+      "name": "המחנה הממלכתי",
+      "shortName": "הממלכתי",
+      "politicalGroupSlug": "kahol-lavan",
+      "leaderName": "בני גנץ",
+      "status": "potential",
+      "color": "#4169E1",
+      "estimatedSeats": 14,
+      "politicalPosition": "center",
+      "sortOrder": 2
     },
     {
       "slug": "yesh-atid",
@@ -26,31 +38,31 @@
       "color": "#1E90FF",
       "estimatedSeats": 14,
       "politicalPosition": "center",
-      "sortOrder": 2
-    },
-    {
-      "slug": "hamachaneh-hamamlachti",
-      "name": "המחנה הממלכתי",
-      "shortName": "הממלכתי",
-      "politicalGroupSlug": "kahol-lavan",
-      "leaderName": "בני גנץ",
-      "status": "potential",
-      "color": "#4169E1",
-      "estimatedSeats": 21,
-      "politicalPosition": "center",
       "sortOrder": 3
     },
     {
-      "slug": "shas",
-      "name": "ש\"ס",
-      "shortName": "ש\"ס",
-      "politicalGroupSlug": "shas",
-      "leaderName": "אריה דרעי",
+      "slug": "bennett-2026",
+      "name": "בנט 2026",
+      "shortName": "בנט 2026",
+      "politicalGroupSlug": null,
+      "leaderName": "נפתלי בנט",
       "status": "potential",
-      "color": "#1B365D",
-      "estimatedSeats": 10,
-      "politicalPosition": "haredi",
+      "color": "#2A7B9B",
+      "estimatedSeats": 9,
+      "politicalPosition": "center_right",
       "sortOrder": 4
+    },
+    {
+      "slug": "yisrael-beytenu",
+      "name": "ישראל ביתנו",
+      "shortName": "ישראל ביתנו",
+      "politicalGroupSlug": "yisrael-beytenu",
+      "leaderName": "אביגדור ליברמן",
+      "status": "potential",
+      "color": "#003087",
+      "estimatedSeats": 9,
+      "politicalPosition": "right",
+      "sortOrder": 5
     },
     {
       "slug": "yahadut-hatorah",
@@ -60,9 +72,57 @@
       "leaderName": "יצחק גולדקנופף",
       "status": "potential",
       "color": "#000000",
+      "estimatedSeats": 9,
+      "politicalPosition": "haredi",
+      "sortOrder": 6
+    },
+    {
+      "slug": "shas",
+      "name": "ש\"ס",
+      "shortName": "ש\"ס",
+      "politicalGroupSlug": "shas",
+      "leaderName": "אריה דרעי",
+      "status": "potential",
+      "color": "#1B365D",
       "estimatedSeats": 8,
       "politicalPosition": "haredi",
-      "sortOrder": 5
+      "sortOrder": 7
+    },
+    {
+      "slug": "hatzionut-hadatit",
+      "name": "הציונות הדתית",
+      "shortName": "הציונות הדתית",
+      "politicalGroupSlug": "hatzionut-hadatit",
+      "leaderName": "בצלאל סמוטריץ'",
+      "status": "potential",
+      "color": "#B8860B",
+      "estimatedSeats": 7,
+      "politicalPosition": "right",
+      "sortOrder": 8
+    },
+    {
+      "slug": "otzma-yehudit",
+      "name": "עוצמה יהודית",
+      "shortName": "עוצמה יהודית",
+      "politicalGroupSlug": "otzma-yehudit",
+      "leaderName": "איתמר בן גביר",
+      "status": "potential",
+      "color": "#8B4513",
+      "estimatedSeats": 7,
+      "politicalPosition": "right",
+      "sortOrder": 9
+    },
+    {
+      "slug": "raam",
+      "name": "הרשימה הערבית המאוחדת — רע\"ם",
+      "shortName": "רע\"ם",
+      "politicalGroupSlug": "raam",
+      "leaderName": "מנסור עבאס",
+      "status": "potential",
+      "color": "#008000",
+      "estimatedSeats": 6,
+      "politicalPosition": "arab",
+      "sortOrder": 10
     },
     {
       "slug": "hademocratiim",
@@ -74,78 +134,30 @@
       "color": "#4CAF50",
       "estimatedSeats": 5,
       "politicalPosition": "left",
-      "sortOrder": 7
-    },
-    {
-      "slug": "yisrael-beytenu",
-      "name": "ישראל ביתנו",
-      "shortName": "ישראל ביתנו",
-      "politicalGroupSlug": "yisrael-beytenu",
-      "leaderName": "אביגדור ליברמן",
-      "status": "potential",
-      "color": "#003087",
-      "estimatedSeats": 6,
-      "politicalPosition": "right",
-      "sortOrder": 8
-    },
-    {
-      "slug": "hatzionut-hadatit",
-      "name": "הציונות הדתית",
-      "shortName": "הציונות הדתית",
-      "politicalGroupSlug": "hatzionut-hadatit",
-      "leaderName": "בצלאל סמוטריץ'",
-      "status": "potential",
-      "color": "#B8860B",
-      "estimatedSeats": 5,
-      "politicalPosition": "right",
-      "sortOrder": 9
-    },
-    {
-      "slug": "otzma-yehudit",
-      "name": "עוצמה יהודית",
-      "shortName": "עוצמה יהודית",
-      "politicalGroupSlug": "otzma-yehudit",
-      "leaderName": "איתמר בן גביר",
-      "status": "potential",
-      "color": "#8B4513",
-      "estimatedSeats": 6,
-      "politicalPosition": "right",
-      "sortOrder": 10
-    },
-    {
-      "slug": "raam",
-      "name": "הרשימה הערבית המאוחדת — רע\"ם",
-      "shortName": "רע\"ם",
-      "politicalGroupSlug": "raam",
-      "leaderName": "מנסור עבאס",
-      "status": "potential",
-      "color": "#008000",
-      "estimatedSeats": 5,
-      "politicalPosition": "arab",
       "sortOrder": 11
+    },
+    {
+      "slug": "yashar",
+      "name": "ישר! עם איזנקוט",
+      "shortName": "ישר!",
+      "politicalGroupSlug": null,
+      "leaderName": "גדי איזנקוט",
+      "status": "potential",
+      "color": "#5DADE2",
+      "estimatedSeats": 5,
+      "politicalPosition": "center",
+      "sortOrder": 12
     },
     {
       "slug": "hadash-taal",
       "name": "חד\"ש — תע\"ל",
       "shortName": "חד\"ש-תע\"ל",
       "politicalGroupSlug": "hadash",
-      "leaderName": "איימן עודה",
+      "leaderName": "אחמד טיבי",
       "status": "potential",
       "color": "#CC0000",
-      "estimatedSeats": 5,
-      "politicalPosition": "arab",
-      "sortOrder": 12
-    },
-    {
-      "slug": "noam",
-      "name": "נעם",
-      "shortName": "נעם",
-      "politicalGroupSlug": "noam",
-      "leaderName": "אבי מעוז",
-      "status": "potential",
-      "color": "#8B4513",
       "estimatedSeats": 0,
-      "politicalPosition": "right",
+      "politicalPosition": "arab",
       "sortOrder": 13
     },
     {
@@ -161,25 +173,79 @@
       "sortOrder": 14
     },
     {
-      "slug": "new-hope",
-      "name": "תקווה חדשה",
-      "shortName": "תקווה חדשה",
+      "slug": "hamiluimnikim",
+      "name": "המילואימניקים",
+      "shortName": "מילואימניקים",
       "politicalGroupSlug": null,
-      "leaderName": "גדעון סער",
+      "leaderName": "יועז הנדל",
       "status": "potential",
-      "color": "#1C4587",
-      "estimatedSeats": 4,
+      "color": "#6B8E23",
+      "estimatedSeats": 0,
       "politicalPosition": "center_right",
       "sortOrder": 15
+    },
+    {
+      "slug": "noam",
+      "name": "נעם",
+      "shortName": "נעם",
+      "politicalGroupSlug": "noam",
+      "leaderName": "אבי מעוז",
+      "status": "potential",
+      "color": "#8B4513",
+      "estimatedSeats": 0,
+      "politicalPosition": "right",
+      "sortOrder": 16
     }
   ],
   "timelineEvents": [
     {
-      "title": "פיזור הכנסת ה-25",
-      "description": "הכנסת מצביעה על חוק פיזור עצמי",
-      "eventDate": "2026-04-15",
+      "title": "מיזוג העבודה ומרצ למפלגת הדמוקרטים",
+      "description": "מפלגות העבודה ומרצ אישרו מיזוג והקמת מפלגת \"הדמוקרטים\" בראשות יאיר גולן",
+      "eventDate": "2024-07-12",
+      "type": "event",
+      "isCompleted": true
+    },
+    {
+      "title": "רישום מפלגת בנט 2026",
+      "description": "ראש הממשלה לשעבר נפתלי בנט רשם מפלגה חדשה בשם \"בנט 2026\"",
+      "eventDate": "2025-04-01",
+      "type": "event",
+      "isCompleted": true
+    },
+    {
+      "title": "הקמת מפלגת ישר! עם איזנקוט",
+      "description": "הרמטכ\"ל לשעבר גדי איזנקוט הקים את מפלגת \"ישר!\" לאחר פרישתו מהמחנה הממלכתי",
+      "eventDate": "2025-09-16",
+      "type": "event",
+      "isCompleted": true
+    },
+    {
+      "title": "הקמת מפלגת המילואימניקים",
+      "description": "השר לשעבר יועז הנדל הקים את מפלגת \"המילואימניקים\" לקידום חובת שירות אוניברסלית",
+      "eventDate": "2025-09-18",
+      "type": "event",
+      "isCompleted": true
+    },
+    {
+      "title": "הסכם לאיחוד הרשימה המשותפת",
+      "description": "רע\"ם, חד\"ש, תע\"ל ובל\"ד חתמו על הסכם לשיתוף פעולה לקראת הבחירות",
+      "eventDate": "2026-01-22",
+      "type": "event",
+      "isCompleted": true
+    },
+    {
+      "title": "פתיחת עימות מול איראן",
+      "description": "תחילת המבצע הצבאי של ישראל ובעלות הברית נגד איראן",
+      "eventDate": "2026-02-28",
       "type": "milestone",
-      "isCompleted": false
+      "isCompleted": true
+    },
+    {
+      "title": "אישור תקציב המדינה 2026",
+      "description": "הכנסת אישרה את תקציב המדינה, ומנעה בחירות מוקדמות",
+      "eventDate": "2026-03-30",
+      "type": "milestone",
+      "isCompleted": true
     },
     {
       "title": "מועד אחרון להגשת רשימות",
@@ -189,15 +255,8 @@
       "isCompleted": false
     },
     {
-      "title": "פתיחת תקופת התעמולה",
-      "description": "תחילת שידורי תעמולת בחירות ברדיו ובטלוויזיה",
-      "eventDate": "2026-10-06",
-      "type": "event",
-      "isCompleted": false
-    },
-    {
-      "title": "יום הבחירות (משוער)",
-      "description": "יום הבחירות לכנסת ה-26 — יום שבתון",
+      "title": "יום הבחירות לכנסת ה-26",
+      "description": "יום הבחירות לכנסת ה-26 — יום שבתון ארצי. המועד האחרון שנקבע ע\"י בית המשפט העליון",
       "eventDate": "2026-10-27",
       "type": "milestone",
       "isCompleted": false
