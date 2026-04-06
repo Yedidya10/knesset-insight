@@ -12,7 +12,12 @@ const withSerwist = withSerwistInit({
 
 const nextConfig: NextConfig = {
   images: {
+    qualities: [75, 80],
     remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'oknesset.org',
+      },
       {
         protocol: 'https',
         hostname: 'production.oknesset.org',
