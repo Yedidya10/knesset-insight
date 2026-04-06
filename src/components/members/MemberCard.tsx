@@ -23,9 +23,10 @@ interface MemberCardProps {
     billCount?: number;
   };
   showDetails?: boolean;
+  priority?: boolean;
 }
 
-export default function MemberCard({ member, showDetails = false }: MemberCardProps) {
+export default function MemberCard({ member, showDetails = false, priority }: MemberCardProps) {
   const t = useTranslations('members.profile');
   const tVotes = useTranslations('votes');
 
@@ -61,6 +62,7 @@ export default function MemberCard({ member, showDetails = false }: MemberCardPr
               size="lg"
               className="relative"
               ring="ring-2 ring-border/60 transition-all group-hover:ring-primary/40"
+              priority={priority}
             />
           </div>
 

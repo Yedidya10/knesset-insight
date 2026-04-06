@@ -23,6 +23,7 @@ interface MemberAvatarProps {
   size?: keyof typeof sizeMap;
   className?: string;
   ring?: string;
+  priority?: boolean;
 }
 
 export default function MemberAvatar({
@@ -30,6 +31,7 @@ export default function MemberAvatar({
   size = 'md',
   className,
   ring,
+  priority,
 }: MemberAvatarProps) {
   const t = useTranslations('images');
   const [imgError, setImgError] = useState(false);
@@ -67,6 +69,8 @@ export default function MemberAvatar({
           height={s.px}
           quality={appConfig.images.quality}
           className="h-full w-full object-cover"
+          loading={priority ? 'eager' : 'lazy'}
+          priority={priority}
           onError={() => setImgError(true)}
         />
       ) : (

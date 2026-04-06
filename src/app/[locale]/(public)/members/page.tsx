@@ -406,8 +406,8 @@ export default async function MembersPage({ searchParams }: Props) {
       {data.length > 0 ? (
         <>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 stagger-children">
-            {data.map((member) => (
-              <MemberCard key={member.id} member={member} showDetails={showDetails} />
+            {data.map((member, i) => (
+              <MemberCard key={member.id} member={member} showDetails={showDetails} priority={i < 10} />
             ))}
           </div>
           <PaginationNav
