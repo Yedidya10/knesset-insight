@@ -3,6 +3,7 @@ import { db } from '../../lib/db';
 import { bills } from '../../lib/db/schema';
 import { fetchOData, fetchODataSince } from '../../lib/knesset/odata-client';
 import { getLastSyncTime, runSyncJob, type SyncCheckpoint } from '../utils';
+import { appConfig } from '../../../app.config';
 
 const BATCH_SIZE = 50;
 const PAGE_SIZE = 100;
@@ -11,8 +12,11 @@ interface ODataBill {
   BillID: number;
   KnessetNum: number;
   Name: string;
+  SubTypeID: number;
   SubTypeDesc: string;
   StatusID: number;
+  CommitteeID: number | null;
+  IsContinuationBill: boolean | null;
   PublicationDate: string | null;
   LastUpdatedDate: string;
 }
@@ -36,18 +40,18 @@ async function syncBillRecords(prevCheckpoint: SyncCheckpoint | null): Promise<{
       'KNS_Bill',
       lastSync,
       'LastUpdatedDate',
-      { $select: 'BillID,KnessetNum,Name,SubTypeDesc,StatusID,PublicationDate,LastUpdatedDate' },
+      { $select: 'BillID,KnessetNum,Name,SubTypeID,SubTypeDesc,StatusID,CommitteeID,IsContinuationBill,PublicationDate,LastUpdatedDate' },
     );
   } else {
     rawBills = [];
-    const knessets = [25, 24, 23];
+    const knessets = appConfig.knesset.syncKnessets;
     for (const kn of knessets) {
       let skip = 0;
       while (true) {
         const page = await fetchOData<ODataBill>('ParliamentInfo', 'KNS_Bill', {
           $filter: `KnessetNum eq ${kn}`,
           $orderby: 'LastUpdatedDate desc',
-          $select: 'BillID,KnessetNum,Name,SubTypeDesc,StatusID,PublicationDate,LastUpdatedDate',
+          $select: 'BillID,KnessetNum,Name,SubTypeID,SubTypeDesc,StatusID,CommitteeID,IsContinuationBill,PublicationDate,LastUpdatedDate',
           $top: PAGE_SIZE,
           $skip: skip,
         });
@@ -70,6 +74,9 @@ async function syncBillRecords(prevCheckpoint: SyncCheckpoint | null): Promise<{
       name: raw.Name,
       status: String(raw.StatusID),
       billType: raw.SubTypeDesc || null,
+      subTypeId: raw.SubTypeID ?? null,
+      isContinuationBill: raw.IsContinuationBill ?? null,
+      committeeId: raw.CommitteeID ?? null,
       knessetNum: raw.KnessetNum,
       proposedDate: raw.PublicationDate ? raw.PublicationDate.split('T')[0] : null,
       lastUpdate: raw.LastUpdatedDate ? new Date(raw.LastUpdatedDate) : null,
@@ -87,6 +94,9 @@ async function syncBillRecords(prevCheckpoint: SyncCheckpoint | null): Promise<{
           name: sql`excluded.name`,
           status: sql`excluded.status`,
           billType: sql`excluded.bill_type`,
+          subTypeId: sql`excluded.sub_type_id`,
+          isContinuationBill: sql`excluded.is_continuation_bill`,
+          committeeId: sql`excluded.committee_id`,
           knessetNum: sql`excluded.knesset_num`,
           proposedDate: sql`excluded.proposed_date`,
           lastUpdate: sql`excluded.last_update`,

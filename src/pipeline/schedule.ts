@@ -2,6 +2,9 @@ import { syncMembers } from './jobs/sync-members';
 import { syncVotes } from './jobs/sync-votes';
 import { syncBills } from './jobs/sync-bills';
 import { syncBillInitiators } from './jobs/sync-bill-initiators';
+import { syncBillUnions } from './jobs/sync-bill-unions';
+import { syncBillSplits } from './jobs/sync-bill-splits';
+import { syncBillNames } from './jobs/sync-bill-names';
 import { syncCommittees } from './jobs/sync-committees';
 import { syncMemberImages } from './jobs/sync-images';
 import { syncRegisteredParties } from './jobs/sync-registered-parties';
@@ -13,6 +16,9 @@ export const syncJobs = {
   votes: syncVotes,
   bills: syncBills,
   billInitiators: syncBillInitiators,
+  billUnions: syncBillUnions,
+  billSplits: syncBillSplits,
+  billNames: syncBillNames,
   committees: syncCommittees,
   images: syncMemberImages,
   registeredParties: syncRegisteredParties,
@@ -23,6 +29,10 @@ export const syncJobs = {
     await syncVotes();
     await syncBills();
     await syncBillInitiators();
+    // Bill relations must run after bills
+    await syncBillUnions();
+    await syncBillSplits();
+    await syncBillNames();
     await syncCommittees();
     await syncMemberImages();
     await syncRegisteredParties();

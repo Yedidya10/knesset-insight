@@ -170,6 +170,9 @@ export const bills = pgTable('bills', {
   summary: text('summary'),
   status: text('status'),
   billType: text('bill_type'),
+  subTypeId: integer('sub_type_id'),
+  isContinuationBill: boolean('is_continuation_bill'),
+  committeeId: integer('committee_id'),
   knessetNum: integer('knesset_num'),
   proposedDate: date('proposed_date'),
   lastUpdate: timestamp('last_update', { withTimezone: true }),
@@ -230,6 +233,54 @@ export const billInitiators = pgTable(
   },
   (t) => [unique().on(t.billId, t.memberId)],
 );
+
+export const billUnions = pgTable(
+  'bill_unions',
+  {
+    id: serial('id').primaryKey(),
+    knessetId: integer('knesset_id').unique().notNull(),
+    mainBillId: integer('main_bill_id')
+      .references(() => bills.id)
+      .notNull(),
+    unionBillId: integer('union_bill_id')
+      .references(() => bills.id)
+      .notNull(),
+    lastUpdated: timestamp('last_updated', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  },
+  (t) => [unique().on(t.mainBillId, t.unionBillId)],
+);
+
+export const billSplits = pgTable(
+  'bill_splits',
+  {
+    id: serial('id').primaryKey(),
+    knessetId: integer('knesset_id').unique().notNull(),
+    mainBillId: integer('main_bill_id')
+      .references(() => bills.id)
+      .notNull(),
+    splitBillId: integer('split_bill_id')
+      .references(() => bills.id)
+      .notNull(),
+    name: text('name'),
+    lastUpdated: timestamp('last_updated', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  },
+  (t) => [unique().on(t.mainBillId, t.splitBillId)],
+);
+
+export const billNames = pgTable('bill_names', {
+  id: serial('id').primaryKey(),
+  knessetId: integer('knesset_id').unique().notNull(),
+  billId: integer('bill_id')
+    .references(() => bills.id)
+    .notNull(),
+  name: text('name').notNull(),
+  nameHistoryTypeId: integer('name_history_type_id'),
+  nameHistoryTypeDesc: text('name_history_type_desc'),
+  lastUpdated: timestamp('last_updated', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
 
 export const committees = pgTable('committees', {
   id: serial('id').primaryKey(),
@@ -407,6 +458,11 @@ export const memberVotesRelations = relations(memberVotes, ({ one }) => ({
 export const billsRelations = relations(bills, ({ many }) => ({
   initiators: many(billInitiators),
   votes: many(votes),
+  unionsAsMain: many(billUnions, { relationName: 'mainBillUnions' }),
+  unionsAsMerged: many(billUnions, { relationName: 'unionBillUnions' }),
+  splitsAsMain: many(billSplits, { relationName: 'mainBillSplits' }),
+  splitsAsChild: many(billSplits, { relationName: 'splitBillSplits' }),
+  nameHistory: many(billNames),
 }));
 
 export const billInitiatorsRelations = relations(
@@ -422,6 +478,39 @@ export const billInitiatorsRelations = relations(
     }),
   }),
 );
+
+export const billUnionsRelations = relations(billUnions, ({ one }) => ({
+  mainBill: one(bills, {
+    fields: [billUnions.mainBillId],
+    references: [bills.id],
+    relationName: 'mainBillUnions',
+  }),
+  unionBill: one(bills, {
+    fields: [billUnions.unionBillId],
+    references: [bills.id],
+    relationName: 'unionBillUnions',
+  }),
+}));
+
+export const billSplitsRelations = relations(billSplits, ({ one }) => ({
+  mainBill: one(bills, {
+    fields: [billSplits.mainBillId],
+    references: [bills.id],
+    relationName: 'mainBillSplits',
+  }),
+  splitBill: one(bills, {
+    fields: [billSplits.splitBillId],
+    references: [bills.id],
+    relationName: 'splitBillSplits',
+  }),
+}));
+
+export const billNamesRelations = relations(billNames, ({ one }) => ({
+  bill: one(bills, {
+    fields: [billNames.billId],
+    references: [bills.id],
+  }),
+}));
 
 export const committeesRelations = relations(committees, ({ one, many }) => ({
   chairman: one(members, {

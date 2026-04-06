@@ -1,8 +1,9 @@
 import { z } from 'zod/v4';
-import { eq, desc, sql, ilike } from 'drizzle-orm';
+import { eq, desc, sql, ilike, inArray } from 'drizzle-orm';
 import { router, publicProcedure } from '../trpc';
 import { db } from '../../lib/db';
-import { bills, billInitiators, members, votes } from '../../lib/db/schema';
+import { bills, billInitiators, billUnions, billSplits, billNames, members, votes } from '../../lib/db/schema';
+import { computeBillStage } from '../../lib/knesset/bill-stages';
 
 export const billsRouter = router({
   list: publicProcedure
@@ -68,31 +69,80 @@ export const billsRouter = router({
 
       if (!result[0]) return null;
 
-      const initiators = await db
-        .select({
-          memberId: members.id,
-          firstName: members.firstName,
-          lastName: members.lastName,
-          imageUrl: members.imageUrl,
-          isPrimary: billInitiators.isPrimary,
-        })
-        .from(billInitiators)
-        .innerJoin(members, eq(billInitiators.memberId, members.id))
-        .where(eq(billInitiators.billId, input.id));
+      const bill = result[0];
 
-      const relatedVotes = await db
-        .select({
-          id: votes.id,
-          title: votes.title,
-          voteDate: votes.voteDate,
-          isAccepted: votes.isAccepted,
-          forCount: votes.forCount,
-          againstCount: votes.againstCount,
-        })
-        .from(votes)
-        .where(eq(votes.billId, input.id))
-        .orderBy(desc(votes.voteDate));
+      const [initiators, relatedVotes, rawUnions, rawSplits, nameHistory] =
+        await Promise.all([
+          db
+            .select({
+              memberId: members.id,
+              firstName: members.firstName,
+              lastName: members.lastName,
+              imageUrl: members.imageUrl,
+              isPrimary: billInitiators.isPrimary,
+            })
+            .from(billInitiators)
+            .innerJoin(members, eq(billInitiators.memberId, members.id))
+            .where(eq(billInitiators.billId, input.id)),
 
-      return { ...result[0], initiators, relatedVotes };
+          db
+            .select({
+              id: votes.id,
+              title: votes.title,
+              voteDate: votes.voteDate,
+              isAccepted: votes.isAccepted,
+              forCount: votes.forCount,
+              againstCount: votes.againstCount,
+            })
+            .from(votes)
+            .where(eq(votes.billId, input.id))
+            .orderBy(desc(votes.voteDate)),
+
+          db
+            .select({ id: billUnions.id, mainBillId: billUnions.mainBillId })
+            .from(billUnions)
+            .where(eq(billUnions.unionBillId, input.id)),
+
+          db
+            .select({ id: billSplits.id, splitBillId: billSplits.splitBillId })
+            .from(billSplits)
+            .where(eq(billSplits.mainBillId, input.id)),
+
+          db
+            .select({ name: billNames.name, typeDesc: billNames.nameHistoryTypeDesc })
+            .from(billNames)
+            .where(eq(billNames.billId, input.id)),
+        ]);
+
+      // Resolve related bill names
+      const relatedIds = [
+        ...rawUnions.map((u) => u.mainBillId),
+        ...rawSplits.map((s) => s.splitBillId),
+      ];
+      const billMap = new Map<number, { name: string | null; knessetId: number }>();
+      if (relatedIds.length > 0) {
+        const rows = await db
+          .select({ id: bills.id, name: bills.name, knessetId: bills.knessetId })
+          .from(bills)
+          .where(inArray(bills.id, relatedIds));
+        for (const r of rows) billMap.set(r.id, { name: r.name, knessetId: r.knessetId });
+      }
+
+      const unions = rawUnions.map((u) => ({
+        id: u.id,
+        mainBillId: u.mainBillId,
+        mainBillName: billMap.get(u.mainBillId)?.name ?? null,
+        mainBillKnessetId: billMap.get(u.mainBillId)?.knessetId ?? 0,
+      }));
+      const splits = rawSplits.map((s) => ({
+        id: s.id,
+        splitBillId: s.splitBillId,
+        splitBillName: billMap.get(s.splitBillId)?.name ?? null,
+        splitBillKnessetId: billMap.get(s.splitBillId)?.knessetId ?? 0,
+      }));
+
+      const stageInfo = computeBillStage(bill.status, bill.subTypeId);
+
+      return { ...bill, initiators, relatedVotes, unions, splits, nameHistory, stageInfo };
     }),
 });
