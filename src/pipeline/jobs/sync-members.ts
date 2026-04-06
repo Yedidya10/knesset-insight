@@ -1,4 +1,4 @@
-import { eq, sql, inArray } from 'drizzle-orm';
+import { and, eq, sql, inArray } from 'drizzle-orm';
 import { db } from '../../lib/db';
 import { members, factions, memberFactionHistory, factionCoalitionPeriods } from '../../lib/db/schema';
 import { fetchOKnessetCSV } from '../../lib/knesset/oknesset-client';
@@ -400,33 +400,81 @@ async function syncCoalitionStatus(_prevCheckpoint: SyncCheckpoint | null): Prom
     const latestCoalitionFactionIds = new Set<number>();
 
     for (const [govNum, positions] of govGroups) {
-      // Collect coalition factions for this government
-      const factionDates = new Map<number, { start: string | null; end: string | null }>();
+      // Check for a static coalition override first
+      const overrideKey = `${knessetNum}-${govNum}`;
+      const staticFactionKnessetIds = appConfig.knesset.coalitionFactions[overrideKey];
 
-      for (const pos of positions) {
-        const factionKnessetId = pos.FactionID || personToFactionId.get(pos.PersonID);
-        if (!factionKnessetId) continue;
+      let factionDates: Map<number, { start: string | null; end: string | null }>;
 
-        const dbId = factionKnessetIdToDbId.get(factionKnessetId);
-        if (!dbId) continue;
+      if (staticFactionKnessetIds) {
+        // Use the verified static mapping — only include these factions
+        factionDates = new Map();
+        for (const factionKnessetId of staticFactionKnessetIds) {
+          const dbId = factionKnessetIdToDbId.get(factionKnessetId);
+          if (!dbId) continue;
 
-        const existing = factionDates.get(dbId);
-        const posStart = pos.StartDate?.split('T')[0] ?? null;
-        const posEnd = pos.FinishDate?.split('T')[0] ?? null;
+          // Derive dates from positions for this faction (if any exist)
+          const factionPositions = positions.filter((pos) => {
+            const posFK = pos.FactionID || personToFactionId.get(pos.PersonID);
+            return posFK === factionKnessetId;
+          });
 
-        if (!existing) {
-          factionDates.set(dbId, { start: posStart, end: posEnd });
-        } else {
-          // Expand date range: earliest start, latest end
-          if (posStart && (!existing.start || posStart < existing.start)) {
-            existing.start = posStart;
-          }
-          if (posEnd === null) {
-            existing.end = null; // Still active
-          } else if (existing.end !== null && posEnd > existing.end) {
-            existing.end = posEnd;
+          if (factionPositions.length > 0) {
+            let start: string | null = null;
+            let end: string | null = null;
+            for (const pos of factionPositions) {
+              const posStart = pos.StartDate?.split('T')[0] ?? null;
+              const posEnd = pos.FinishDate?.split('T')[0] ?? null;
+              if (posStart && (!start || posStart < start)) start = posStart;
+              if (posEnd === null) {
+                end = null;
+              } else if (end !== null && posEnd > end) {
+                end = posEnd;
+              }
+            }
+            factionDates.set(dbId, { start, end });
+          } else {
+            // Faction is in static mapping but has no government positions
+            // (can happen if ministers resigned under Norwegian Law, etc.)
+            factionDates.set(dbId, { start: null, end: null });
           }
         }
+
+        console.log(
+          `  [coalition] Knesset ${knessetNum}, Gov ${govNum}: using STATIC mapping (${staticFactionKnessetIds.length} factions)`,
+        );
+      } else {
+        // Fallback: derive coalition from government positions (original logic)
+        factionDates = new Map();
+
+        for (const pos of positions) {
+          const factionKnessetId = pos.FactionID || personToFactionId.get(pos.PersonID);
+          if (!factionKnessetId) continue;
+
+          const dbId = factionKnessetIdToDbId.get(factionKnessetId);
+          if (!dbId) continue;
+
+          const existing = factionDates.get(dbId);
+          const posStart = pos.StartDate?.split('T')[0] ?? null;
+          const posEnd = pos.FinishDate?.split('T')[0] ?? null;
+
+          if (!existing) {
+            factionDates.set(dbId, { start: posStart, end: posEnd });
+          } else {
+            if (posStart && (!existing.start || posStart < existing.start)) {
+              existing.start = posStart;
+            }
+            if (posEnd === null) {
+              existing.end = null;
+            } else if (existing.end !== null && posEnd > existing.end) {
+              existing.end = posEnd;
+            }
+          }
+        }
+
+        console.log(
+          `  [coalition] Knesset ${knessetNum}, Gov ${govNum}: derived from positions (${factionDates.size} factions from ${positions.length} gov positions)`,
+        );
       }
 
       // Upsert coalition periods for this government
@@ -462,10 +510,44 @@ async function syncCoalitionStatus(_prevCheckpoint: SyncCheckpoint | null): Prom
           latestCoalitionFactionIds.add(dbId);
         }
       }
+    }
 
-      console.log(
-        `  [coalition] Knesset ${knessetNum}, Gov ${govNum}: ${factionDates.size} coalition factions from ${positions.length} gov positions`,
-      );
+    // When using static mapping, also DELETE stale coalition period records
+    // for factions that are no longer in the coalition for this government.
+    for (const [govNum] of govGroups) {
+      const overrideKey = `${knessetNum}-${govNum}`;
+      const staticFactionKnessetIds = appConfig.knesset.coalitionFactions[overrideKey];
+      if (!staticFactionKnessetIds) continue;
+
+      const validDbIds = new Set<number>();
+      for (const fkId of staticFactionKnessetIds) {
+        const dbId = factionKnessetIdToDbId.get(fkId);
+        if (dbId) validDbIds.add(dbId);
+      }
+
+      // Delete rows for this knesset+gov that are NOT in the static mapping
+      const existingRows = await db
+        .select({ id: factionCoalitionPeriods.id, factionId: factionCoalitionPeriods.factionId })
+        .from(factionCoalitionPeriods)
+        .where(
+          and(
+            eq(factionCoalitionPeriods.knessetNum, knessetNum),
+            eq(factionCoalitionPeriods.governmentNum, govNum),
+          ),
+        );
+
+      const staleIds = existingRows
+        .filter((r) => !validDbIds.has(r.factionId))
+        .map((r) => r.id);
+
+      if (staleIds.length > 0) {
+        await db
+          .delete(factionCoalitionPeriods)
+          .where(inArray(factionCoalitionPeriods.id, staleIds));
+        console.log(
+          `  [coalition] Knesset ${knessetNum}, Gov ${govNum}: removed ${staleIds.length} stale coalition periods`,
+        );
+      }
     }
 
     // Update factions.isCoalition based on the latest government (backward compat)

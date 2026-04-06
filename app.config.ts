@@ -58,6 +58,27 @@ export const appConfig = {
       minister: [39, 57],      // שר / שרה
       deputyMinister: [40, 59, 285079], // סגן שר / סגנית שר / סגן שרה
     },
+    /**
+     * Static coalition faction mapping per knesset + government.
+     * The Knesset OData has no dedicated coalition entity — deriving coalition
+     * from government positions (KNS_PersonToPosition) is unreliable because
+     * emergency government members (e.g. כחול לבן in Gov37) and position
+     * reshuffles (e.g. ש"ס positions all ending) produce false data.
+     * Values are KNS_Faction FactionIDs (knessetId in our DB).
+     * Source: Wikipedia + official Knesset records.
+     */
+    coalitionFactions: {
+      // K25 Gov37: הליכוד, ש"ס, הציונות הדתית, עוצמה יהודית, הימין הממלכתי, יהדות התורה, נעם
+      '25-37': [1096, 1095, 1105, 1106, 1108, 1101, 1107],
+      // K24 Gov36: ימינה, יש עתיד, כחול לבן, העבודה, ישראל ביתנו, מרצ, תקווה חדשה, רע"ם
+      '24-36': [966, 967, 969, 963, 968, 970, 972, 973],
+      // K23 Gov35: הליכוד, כחול לבן, העבודה-גשר-מרצ, דרך ארץ, גשר (emergency unity gov)
+      '23-35': [942, 946, 949, 954, 957],
+      // K23 Gov34: הליכוד, ש"ס, יהדות התורה, ישראל ביתנו, ימינה, כחול לבן
+      '23-34': [942, 947, 944, 945, 948, 946],
+      // K20 Gov34: הליכוד, כולנו, הבית היהודי, ש"ס, יהדות התורה, ישראל ביתנו
+      '20-34': [882, 906, 907, 910, 908, 905],
+    } as Record<string, readonly number[]>,
   },
 
   // Sync schedule (cron expressions)
