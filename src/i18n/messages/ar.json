@@ -474,5 +474,63 @@
     "seats": "مقاعد",
     "coalition": "ائتلاف",
     "opposition": "معارضة"
+  },
+  "integrity": {
+    "title": "النزاهة والأخلاقيات",
+    "noRecords": "لم يتم العثور على سجلات نزاهة لهذا العضو",
+    "totalCases": "إجمالي الحالات",
+    "corporateAffiliations": "الارتباطات المؤسسية",
+    "lobbyistConnections": "علاقات اللوبي",
+    "bySeverity": "حسب الخطورة",
+    "caseTimeline": "الجدول الزمني للحالات",
+    "viewSource": "عرض المصدر",
+    "aiSummary": "ملخص AI",
+    "decision": "القرار",
+    "verified": "تم التحقق",
+    "disclaimer": "المعلومات مبنية على مصادر عامة رسمية فقط. قد يحتوي تحليل AI على عدم دقة. يرجى التحقق من المصادر الأصلية.",
+    "client": "العميل",
+    "categories": {
+      "ethics_complaint": "شكوى أخلاقية",
+      "immunity_request": "طلب حصانة",
+      "criminal_indictment": "لائحة اتهام جنائية",
+      "criminal_conviction": "إدانة جنائية",
+      "comptroller_finding": "نتائج مراقب الدولة",
+      "conflict_of_interest": "تضارب مصالح",
+      "regulatory_sanction": "عقوبة تنظيمية",
+      "disciplinary_action": "إجراء تأديبي",
+      "financial_disclosure_issue": "مشكلة إفصاح مالي"
+    },
+    "statuses": {
+      "reported": "تم الإبلاغ",
+      "under_investigation": "قيد التحقيق",
+      "decided": "تم البت",
+      "appealed": "قيد الاستئناف",
+      "closed": "مغلق",
+      "convicted": "مُدان",
+      "acquitted": "بريء",
+      "sanctions_applied": "تم تطبيق العقوبات"
+    },
+    "sanctions": {
+      "reprimand": "توبيخ",
+      "suspension": "تعليق",
+      "fine": "غرامة",
+      "removal_from_committee": "إقصاء من اللجنة"
+    },
+    "roles": {
+      "director": "مدير",
+      "shareholder": "مساهم",
+      "officer": "مسؤول",
+      "beneficiary": "مستفيد"
+    },
+    "affiliationStatus": {
+      "active": "نشط",
+      "inactive": "غير نشط",
+      "dissolved": "منحل"
+    },
+    "connectionTypes": {
+      "meeting": "اجتماع",
+      "committee_attendance": "حضور لجنة",
+      "registered_contact": "اتصال مسجل"
+    }
   }
 }

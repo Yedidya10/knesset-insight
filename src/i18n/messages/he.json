@@ -476,5 +476,63 @@
     "seats": "מנדטים",
     "coalition": "קואליציה",
     "opposition": "אופוזיציה"
+  },
+  "integrity": {
+    "title": "יושרה ואתיקה",
+    "noRecords": "לא נמצאו ממצאי יושרה עבור חבר/ת כנסת זה/ו",
+    "totalCases": "סה\"כ אירועים",
+    "corporateAffiliations": "זיקות עסקיות",
+    "lobbyistConnections": "קשרי לוביסטים",
+    "bySeverity": "לפי חומרה",
+    "caseTimeline": "ציר זמן אירועים",
+    "viewSource": "צפה במקור",
+    "aiSummary": "סיכום AI",
+    "decision": "החלטה",
+    "verified": "מאומת",
+    "disclaimer": "המידע מבוסס על מקורות ציבוריים רשמיים בלבד. ניתוח AI עשוי להכיל אי-דיוקים. יש לבדוק את המקורות המקוריים.",
+    "client": "לקוח",
+    "categories": {
+      "ethics_complaint": "תלונה אתית",
+      "immunity_request": "בקשת חסינות",
+      "criminal_indictment": "כתב אישום",
+      "criminal_conviction": "הרשעה פלילית",
+      "comptroller_finding": "ממצא מבקר המדינה",
+      "conflict_of_interest": "ניגוד עניינים",
+      "regulatory_sanction": "סנקציה רגולטורית",
+      "disciplinary_action": "הליך משמעתי",
+      "financial_disclosure_issue": "בעיית דיווח כספי"
+    },
+    "statuses": {
+      "reported": "דווח",
+      "under_investigation": "בחקירה",
+      "decided": "הוחלט",
+      "appealed": "בערעור",
+      "closed": "סגור",
+      "convicted": "הורשע",
+      "acquitted": "זוכה",
+      "sanctions_applied": "הוטלו סנקציות"
+    },
+    "sanctions": {
+      "reprimand": "נזיפה",
+      "suspension": "השעיה",
+      "fine": "קנס",
+      "removal_from_committee": "הרחקה מוועדה"
+    },
+    "roles": {
+      "director": "דירקטור",
+      "shareholder": "בעל מניות",
+      "officer": "נושא משרה",
+      "beneficiary": "נהנה"
+    },
+    "affiliationStatus": {
+      "active": "פעיל",
+      "inactive": "לא פעיל",
+      "dissolved": "פורק"
+    },
+    "connectionTypes": {
+      "meeting": "פגישה",
+      "committee_attendance": "נוכחות בוועדה",
+      "registered_contact": "קשר רשום"
+    }
   }
 }

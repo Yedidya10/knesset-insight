@@ -476,5 +476,63 @@
     "seats": "Мандаты",
     "coalition": "Коалиция",
     "opposition": "Оппозиция"
+  },
+  "integrity": {
+    "title": "Честность и этика",
+    "noRecords": "Записи о нарушениях не найдены для этого члена Кнессета",
+    "totalCases": "Всего дел",
+    "corporateAffiliations": "Корпоративные связи",
+    "lobbyistConnections": "Связи с лоббистами",
+    "bySeverity": "По серьёзности",
+    "caseTimeline": "Хронология дел",
+    "viewSource": "Источник",
+    "aiSummary": "Резюме AI",
+    "decision": "Решение",
+    "verified": "Проверено",
+    "disclaimer": "Информация основана исключительно на официальных публичных источниках. Анализ AI может содержать неточности. Пожалуйста, проверяйте первоисточники.",
+    "client": "Клиент",
+    "categories": {
+      "ethics_complaint": "Жалоба на этику",
+      "immunity_request": "Запрос на иммунитет",
+      "criminal_indictment": "Уголовное обвинение",
+      "criminal_conviction": "Уголовное осуждение",
+      "comptroller_finding": "Заключение госконтролёра",
+      "conflict_of_interest": "Конфликт интересов",
+      "regulatory_sanction": "Регуляторная санкция",
+      "disciplinary_action": "Дисциплинарное взыскание",
+      "financial_disclosure_issue": "Проблема финансовой декларации"
+    },
+    "statuses": {
+      "reported": "Зарегистрировано",
+      "under_investigation": "Расследуется",
+      "decided": "Решено",
+      "appealed": "Обжалуется",
+      "closed": "Закрыто",
+      "convicted": "Осуждён",
+      "acquitted": "Оправдан",
+      "sanctions_applied": "Санкции применены"
+    },
+    "sanctions": {
+      "reprimand": "Выговор",
+      "suspension": "Отстранение",
+      "fine": "Штраф",
+      "removal_from_committee": "Удаление из комиссии"
+    },
+    "roles": {
+      "director": "Директор",
+      "shareholder": "Акционер",
+      "officer": "Должностное лицо",
+      "beneficiary": "Бенефициар"
+    },
+    "affiliationStatus": {
+      "active": "Активно",
+      "inactive": "Неактивно",
+      "dissolved": "Ликвидировано"
+    },
+    "connectionTypes": {
+      "meeting": "Встреча",
+      "committee_attendance": "Участие в комиссии",
+      "registered_contact": "Зарегистрированный контакт"
+    }
   }
 }

@@ -11,6 +11,7 @@ import {
   bigint,
   uuid,
   numeric,
+  real,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 
@@ -468,6 +469,113 @@ export const budgetItems = pgTable(
 );
 
 // ──────────────────────────────────────
+// Integrity & Ethics
+// ──────────────────────────────────────
+
+export const integrityCases = pgTable('integrity_cases', {
+  id: serial('id').primaryKey(),
+  memberId: integer('member_id')
+    .references(() => members.id)
+    .notNull(),
+  category: text('category').notNull(), // 'ethics_complaint' | 'immunity_request' | 'criminal_indictment' | 'criminal_conviction' | 'comptroller_finding' | 'conflict_of_interest' | 'regulatory_sanction' | 'disciplinary_action' | 'financial_disclosure_issue'
+  severity: text('severity').notNull().default('info'), // 'info' | 'warning' | 'serious' | 'critical'
+  status: text('status').notNull().default('reported'), // 'reported' | 'under_investigation' | 'decided' | 'appealed' | 'closed' | 'convicted' | 'acquitted' | 'sanctions_applied'
+  title: text('title').notNull(),
+  titleEn: text('title_en'),
+  description: text('description'),
+  descriptionEn: text('description_en'),
+  sourceType: text('source_type').notNull(), // 'knesset_ethics_committee' | 'knesset_house_committee' | 'state_comptroller' | 'court_ruling' | 'government_registry' | 'police_investigation' | 'attorney_general' | 'official_gazette'
+  sourceName: text('source_name').notNull(),
+  sourceUrl: text('source_url'),
+  sourceDocId: text('source_doc_id'),
+  eventDate: date('event_date').notNull(),
+  reportedDate: date('reported_date'),
+  resolutionDate: date('resolution_date'),
+  decision: text('decision'),
+  sanctionType: text('sanction_type'),
+  financialAmount: numeric('financial_amount'),
+  metadata: jsonb('metadata'),
+  aiSummary: text('ai_summary'),
+  aiConfidence: real('ai_confidence'),
+  verified: boolean('verified').default(false),
+  verifiedBy: text('verified_by'),
+  verifiedAt: timestamp('verified_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
+export const integrityCaseLinks = pgTable(
+  'integrity_case_links',
+  {
+    id: serial('id').primaryKey(),
+    caseId: integer('case_id')
+      .references(() => integrityCases.id, { onDelete: 'cascade' })
+      .notNull(),
+    relatedCaseId: integer('related_case_id')
+      .references(() => integrityCases.id, { onDelete: 'cascade' })
+      .notNull(),
+    linkType: text('link_type').notNull(), // 'preceded_by' | 'followed_by' | 'related_to' | 'appeals'
+  },
+  (t) => [unique().on(t.caseId, t.relatedCaseId)],
+);
+
+export const integrityDocuments = pgTable('integrity_documents', {
+  id: serial('id').primaryKey(),
+  caseId: integer('case_id')
+    .references(() => integrityCases.id, { onDelete: 'cascade' })
+    .notNull(),
+  docType: text('doc_type').notNull(), // 'protocol' | 'ruling' | 'report' | 'indictment' | 'response' | 'other'
+  title: text('title').notNull(),
+  url: text('url'),
+  filePath: text('file_path'),
+  publishedAt: date('published_at'),
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+export const memberCorporateAffiliations = pgTable(
+  'member_corporate_affiliations',
+  {
+    id: serial('id').primaryKey(),
+    memberId: integer('member_id')
+      .references(() => members.id)
+      .notNull(),
+    companyNumber: text('company_number').notNull(),
+    companyName: text('company_name').notNull(),
+    role: text('role').notNull(), // 'director' | 'shareholder' | 'officer' | 'beneficiary'
+    status: text('status').default('active'), // 'active' | 'inactive' | 'dissolved'
+    startDate: date('start_date'),
+    endDate: date('end_date'),
+    sourceUrl: text('source_url'),
+    potentialConflict: boolean('potential_conflict').default(false),
+    conflictDescription: text('conflict_description'),
+    metadata: jsonb('metadata'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+  },
+  (t) => [unique().on(t.memberId, t.companyNumber, t.role)],
+);
+
+export const memberLobbyistConnections = pgTable(
+  'member_lobbyist_connections',
+  {
+    id: serial('id').primaryKey(),
+    memberId: integer('member_id')
+      .references(() => members.id)
+      .notNull(),
+    lobbyistName: text('lobbyist_name').notNull(),
+    lobbyistNumber: text('lobbyist_number'),
+    clientName: text('client_name'),
+    connectionType: text('connection_type').notNull(), // 'meeting' | 'committee_attendance' | 'registered_contact'
+    eventDate: date('event_date'),
+    sourceUrl: text('source_url'),
+    metadata: jsonb('metadata'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  },
+  (t) => [unique().on(t.memberId, t.lobbyistName, t.eventDate)],
+);
+
+// ──────────────────────────────────────
 // Sync tracking
 // ──────────────────────────────────────
 
@@ -540,6 +648,9 @@ export const membersRelations = relations(members, ({ one, many }) => ({
   initiatedBills: many(billInitiators),
   factionHistory: many(memberFactionHistory),
   governmentPositions: many(governmentPositions),
+  integrityCases: many(integrityCases),
+  corporateAffiliations: many(memberCorporateAffiliations),
+  lobbyistConnections: many(memberLobbyistConnections),
 }));
 
 export const politicalPartiesRelations = relations(
@@ -773,6 +884,69 @@ export const governmentPositionsRelations = relations(
     ministry: one(govMinistries, {
       fields: [governmentPositions.govMinistryId],
       references: [govMinistries.id],
+    }),
+  }),
+);
+
+// ──────────────────────────────────────
+// Integrity Relations
+// ──────────────────────────────────────
+
+export const integrityCasesRelations = relations(
+  integrityCases,
+  ({ one, many }) => ({
+    member: one(members, {
+      fields: [integrityCases.memberId],
+      references: [members.id],
+    }),
+    documents: many(integrityDocuments),
+    linksFrom: many(integrityCaseLinks, { relationName: 'caseFrom' }),
+    linksTo: many(integrityCaseLinks, { relationName: 'caseTo' }),
+  }),
+);
+
+export const integrityCaseLinksRelations = relations(
+  integrityCaseLinks,
+  ({ one }) => ({
+    case: one(integrityCases, {
+      fields: [integrityCaseLinks.caseId],
+      references: [integrityCases.id],
+      relationName: 'caseFrom',
+    }),
+    relatedCase: one(integrityCases, {
+      fields: [integrityCaseLinks.relatedCaseId],
+      references: [integrityCases.id],
+      relationName: 'caseTo',
+    }),
+  }),
+);
+
+export const integrityDocumentsRelations = relations(
+  integrityDocuments,
+  ({ one }) => ({
+    case: one(integrityCases, {
+      fields: [integrityDocuments.caseId],
+      references: [integrityCases.id],
+    }),
+  }),
+);
+
+export const memberCorporateAffiliationsRelations = relations(
+  memberCorporateAffiliations,
+  ({ one }) => ({
+    member: one(members, {
+      fields: [memberCorporateAffiliations.memberId],
+      references: [members.id],
+    }),
+  }),
+);
+
+export const memberLobbyistConnectionsRelations = relations(
+  memberLobbyistConnections,
+  ({ one }) => ({
+    member: one(members, {
+      fields: [memberLobbyistConnections.memberId],
+      references: [members.id],
     }),
   }),
 );

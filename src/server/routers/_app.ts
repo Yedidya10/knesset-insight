@@ -7,6 +7,7 @@ import { politicalPartiesRouter } from './political-parties';
 import { electoralListsRouter } from './electoral-lists';
 import { governmentsRouter } from './governments';
 import { politicalGroupsRouter } from './political-groups';
+import { integrityRouter } from './integrity';
 
 export const appRouter = router({
   members: membersRouter,
@@ -17,6 +18,7 @@ export const appRouter = router({
   electoralLists: electoralListsRouter,
   governments: governmentsRouter,
   politicalGroups: politicalGroupsRouter,
+  integrity: integrityRouter,
 });
 
 export type AppRouter = typeof appRouter;

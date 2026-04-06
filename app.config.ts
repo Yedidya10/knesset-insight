@@ -101,6 +101,33 @@ export const appConfig = {
   features: {
     pwa: process.env.NEXT_PUBLIC_PWA_ENABLED === 'true',
     aiChat: true, // always on for registered users
+    integrity: process.env.NEXT_PUBLIC_INTEGRITY_ENABLED !== 'false', // on by default
+  },
+
+  // Integrity & Ethics feature
+  integrity: {
+    ai: {
+      provider: 'anthropic' as const,
+      model: process.env.INTEGRITY_AI_MODEL ?? 'claude-sonnet-4-20250514',
+      maxTokens: Number(process.env.INTEGRITY_AI_MAX_TOKENS ?? 4096),
+    },
+    /** Cache TTL for integrity data queries (seconds) */
+    cacheTtl: Number(process.env.INTEGRITY_CACHE_TTL ?? 3600),
+    /** Data sources for integrity pipeline */
+    sources: {
+      knessetEthicsCommittee:
+        process.env.INTEGRITY_KNESSET_ETHICS_URL ??
+        'https://knesset.gov.il/Odata/ParliamentInfo.svc/KNS_CmtSessionItem',
+      stateComptroller:
+        process.env.INTEGRITY_COMPTROLLER_URL ??
+        'https://www.mevaker.gov.il',
+      lobbyistRegistry:
+        process.env.INTEGRITY_LOBBYIST_URL ??
+        'https://production.oknesset.org/pipelines/data/lobbyists/list/datapackage.json',
+    },
+    sync: {
+      cron: process.env.INTEGRITY_SYNC_CRON ?? '0 4 * * *',
+    },
   },
 
   // Image settings

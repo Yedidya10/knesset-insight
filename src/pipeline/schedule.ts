@@ -13,6 +13,8 @@ import { syncPoliticalLinks } from './jobs/sync-political-links';
 import { syncPoliticalGroups } from './jobs/sync-political-groups';
 import { syncGovMinistries } from './jobs/sync-gov-ministries';
 import { syncGovernments } from './jobs/sync-governments';
+import { syncIntegrityKnesset } from './jobs/sync-integrity-knesset';
+import { syncIntegrityLobbyists } from './jobs/sync-integrity-lobbyists';
 
 export const syncJobs = {
   members: syncMembers,
@@ -30,6 +32,8 @@ export const syncJobs = {
   politicalGroups: syncPoliticalGroups,
   govMinistries: syncGovMinistries,
   governments: syncGovernments,
+  integrityKnesset: syncIntegrityKnesset,
+  integrityLobbyists: syncIntegrityLobbyists,
   all: async () => {
     await syncMembers();
     await syncVotes();
@@ -50,6 +54,9 @@ export const syncJobs = {
     // Governments must run after members + factions
     await syncGovMinistries();
     await syncGovernments();
+    // Integrity must run after members + committees
+    await syncIntegrityKnesset();
+    await syncIntegrityLobbyists();
   },
 } as const;
 

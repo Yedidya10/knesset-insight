@@ -497,71 +497,127 @@ export const integrityRouter = router({
 
 ## 7. AI Integration
 
+### 7.0 AI Provider — Anthropic Claude with Custom Skills
+
+> **Decision**: For all integrity-related AI analysis, we use **Anthropic Claude**
+> (via `@ai-sdk/anthropic` Vercel AI SDK adapter) with **Claude Skills** — 
+> custom, reusable instruction sets hosted at `claude.com/skills`.
+> This is separate from the project's default Gemini provider used for
+> general AI features (chat, bill summaries).
+
+**Why Claude for integrity analysis?**
+- Superior Hebrew language understanding for legal/parliamentary documents
+- Claude Skills allow creating reusable, versioned analysis capabilities
+- Structured output with high reliability for JSON extraction
+- Strong safety guardrails for sensitive legal/ethical data
+
+**Architecture:**
+```
+appConfig.integrity.ai.provider = 'anthropic'
+appConfig.integrity.ai.model = 'claude-sonnet-4-20250514'
+
+src/lib/ai/integrity/provider.ts  → dedicated Anthropic provider
+src/lib/ai/integrity/skills/       → Claude Skill definitions (system prompts)
+```
+
+Each skill is a structured system prompt that defines Claude's behavior
+for a specific extraction task. Skills are versioned and can be updated
+independently.
+
 ### 7.1 Protocol Parser (חילוץ מפרוטוקולים)
 
 ```typescript
-// src/lib/ai/integrity/protocol-parser.ts
+// src/lib/ai/integrity/skills/protocol-parser.ts
+// Claude Skill: Ethics Committee Protocol Analyzer
 
-const SYSTEM_PROMPT = `
-אתה מנתח פרוטוקולים של ועדת האתיקה של הכנסת.
-עליך לחלץ מכל פרוטוקול את המידע הבא:
-1. שמות חברי כנסת הנדונים
-2. סוג התלונה/הנושא
-3. ההחלטה שהתקבלה (אם יש)
-4. חומרת הסנקציה (אם הוטלה)
-5. תאריכים רלוונטיים
+export const PROTOCOL_PARSER_SKILL = `
+<skill name="knesset-ethics-protocol-parser" version="1.0">
+<purpose>
+You analyze protocols (פרוטוקולים) from the Knesset Ethics Committee (ועדת האתיקה).
+Your task is to extract structured factual information from Hebrew-language
+parliamentary documents.
+</purpose>
 
-החזר JSON מובנה בלבד. אם אין מידע ברור — החזר null לשדה.
-אל תנחש, אל תפרש — רק עובדות מהטקסט.
+<instructions>
+1. Identify all Knesset Members (ח"כ) discussed in the protocol
+2. For each member mentioned in a complaint context, extract:
+   - Full name (Hebrew)
+   - Type of complaint/issue
+   - Decision made (if any)
+   - Sanction severity (if imposed)
+   - Relevant dates
+3. Return ONLY factual information present in the text
+4. Never infer, assume, or editorialize
+5. If information is unclear, return null for that field
+6. Distinguish between complainant, respondent, and witnesses
+</instructions>
+
+<output_format>
+Return a JSON array of extracted cases. Each case:
+{
+  "memberName": string,
+  "complaintType": string,
+  "decision": string | null,
+  "sanctionType": string | null,
+  "sanctionDetails": string | null,
+  "eventDate": string | null,  // ISO date
+  "severity": "info" | "warning" | "serious" | "critical",
+  "status": "reported" | "under_investigation" | "decided" | "closed",
+  "summary": string  // 1-2 sentence factual summary in Hebrew
+}
+</output_format>
+</skill>
 `;
 ```
 
 ### 7.2 Comptroller Report Analyzer
 
 ```typescript
-// src/lib/ai/integrity/comptroller-analyzer.ts
+// src/lib/ai/integrity/skills/comptroller-analyzer.ts
+// Claude Skill: State Comptroller Report Analyzer
 
-const SYSTEM_PROMPT = `
-אתה מנתח דוחות מבקר המדינה.
-עליך לזהות אזכורים של חברי כנסת, שרים ונושאי תפקידים ציבוריים.
-לכל אזכור, חלץ:
-1. שם נושא התפקיד
-2. תפקידו בזמן הממצא
-3. תיאור הליקוי/ממצא
-4. המלצת המבקר
-5. חומרה (info/warning/serious/critical)
+export const COMPTROLLER_ANALYZER_SKILL = `
+<skill name="knesset-comptroller-analyzer" version="1.0">
+<purpose>
+You analyze State Comptroller reports (דוחות מבקר המדינה) to identify
+findings related to Knesset Members and government ministers.
+</purpose>
 
-החזר JSON מובנה. סווג רק ממצאים ספציפיים, לא סקירות כלליות.
+<instructions>
+1. Identify mentions of MKs, ministers, and senior public officials
+2. For each person-related finding, extract:
+   - Name and role at time of finding
+   - Description of the issue/finding
+   - Comptroller's recommendation
+   - Severity level
+3. Only extract specific findings, not general policy discussions
+4. Do not classify mentions that are neutral (e.g., "Minister X attended")
+5. Focus on: mismanagement, ethical violations, regulatory failures,
+   budget irregularities, conflicts of interest
+</instructions>
+
+<output_format>
+Return JSON array of findings:
+{
+  "officialName": string,
+  "role": string,
+  "findingDescription": string,
+  "recommendation": string | null,
+  "severity": "info" | "warning" | "serious" | "critical",
+  "summary": string
+}
+</output_format>
+</skill>
 `;
 ```
 
 ### 7.3 Integrity Score Calculator
 
-```
-Formula (v1.0):
-
-overall_score = (
-  ethics_score      * 0.30 +
-  legal_score       * 0.30 +
-  transparency_score * 0.15 +
-  conflict_score    * 0.15 +
-  attendance_score  * 0.10
-)
-
-חישוב כל ציון:
-- ethics_score: 100 - (Σ penalty per ethics case by severity)
-  • info: -2, warning: -5, serious: -15, critical: -30
-  
-- legal_score: 100 - (Σ penalty per legal case)
-  • investigation: -5, indictment: -20, conviction: -40, acquitted: +0
-  
-- transparency_score: based on disclosure compliance
-  • filed on time: 100, late: -20, missing: -50
-  
-- conflict_score: 100 - (Σ unresolved conflicts * 15)
-
-- attendance_score: (from existing vote participation data)
-```
+> **DEFERRED** — Scoring formula is deferred to a future phase. The current
+> implementation focuses on presenting factual data without computing a
+> single numeric score. A weighted scoring system is too simplistic to
+> capture the nuance of ethical/legal situations and risks oversimplification.
+> The `member_integrity_scores` table is **not created** in this phase.
 
 ---
 

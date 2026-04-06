@@ -474,5 +474,63 @@
     "knesset": "Knesset {num}",
     "seats": "Seats",
     "coalition": "Coalition",
-    "opposition": "Opposition"  }
+    "opposition": "Opposition"  },
+  "integrity": {
+    "title": "Integrity & Ethics",
+    "noRecords": "No integrity records found for this member",
+    "totalCases": "Total Cases",
+    "corporateAffiliations": "Corporate Affiliations",
+    "lobbyistConnections": "Lobbyist Connections",
+    "bySeverity": "By Severity",
+    "caseTimeline": "Case Timeline",
+    "viewSource": "View Source",
+    "aiSummary": "AI Summary",
+    "decision": "Decision",
+    "verified": "Verified",
+    "disclaimer": "Information is based solely on official public sources. AI analysis may contain inaccuracies. Please verify with original sources.",
+    "client": "Client",
+    "categories": {
+      "ethics_complaint": "Ethics Complaint",
+      "immunity_request": "Immunity Request",
+      "criminal_indictment": "Criminal Indictment",
+      "criminal_conviction": "Criminal Conviction",
+      "comptroller_finding": "State Comptroller Finding",
+      "conflict_of_interest": "Conflict of Interest",
+      "regulatory_sanction": "Regulatory Sanction",
+      "disciplinary_action": "Disciplinary Action",
+      "financial_disclosure_issue": "Financial Disclosure Issue"
+    },
+    "statuses": {
+      "reported": "Reported",
+      "under_investigation": "Under Investigation",
+      "decided": "Decided",
+      "appealed": "Appealed",
+      "closed": "Closed",
+      "convicted": "Convicted",
+      "acquitted": "Acquitted",
+      "sanctions_applied": "Sanctions Applied"
+    },
+    "sanctions": {
+      "reprimand": "Reprimand",
+      "suspension": "Suspension",
+      "fine": "Fine",
+      "removal_from_committee": "Removal from Committee"
+    },
+    "roles": {
+      "director": "Director",
+      "shareholder": "Shareholder",
+      "officer": "Officer",
+      "beneficiary": "Beneficiary"
+    },
+    "affiliationStatus": {
+      "active": "Active",
+      "inactive": "Inactive",
+      "dissolved": "Dissolved"
+    },
+    "connectionTypes": {
+      "meeting": "Meeting",
+      "committee_attendance": "Committee Attendance",
+      "registered_contact": "Registered Contact"
+    }
+  }
 }

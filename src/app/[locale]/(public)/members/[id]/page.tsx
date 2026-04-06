@@ -24,6 +24,9 @@ import {
   bills,
   committees,
   memberFactionHistory,
+  integrityCases,
+  memberCorporateAffiliations,
+  memberLobbyistConnections,
 } from '@/lib/db/schema';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -32,6 +35,7 @@ import { Button } from '@/components/ui/button';
 import TranslatedText from '@/components/ui/translated-text';
 import MemberAvatar from '@/components/members/MemberAvatar';
 import MemberBillsList from '@/components/members/MemberBillsList';
+import IntegrityTab from '@/components/integrity/IntegrityTab';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -72,7 +76,7 @@ export default async function MemberProfilePage({ params }: Props) {
   if (!member) notFound();
 
   // Parallel data fetching
-  const [recentVotesData, voteStats, initiatedBills, chairedCommittees, factionHistory] =
+  const [recentVotesData, voteStats, initiatedBills, chairedCommittees, factionHistory, integrityData, corporateAff, lobbyistConn] =
     await Promise.all([
       // Recent votes by this member
       db
@@ -137,6 +141,28 @@ export default async function MemberProfilePage({ params }: Props) {
         .innerJoin(factions, eq(memberFactionHistory.factionId, factions.id))
         .where(eq(memberFactionHistory.memberId, member.id))
         .orderBy(desc(memberFactionHistory.knessetNum), asc(memberFactionHistory.startDate)),
+
+      // Integrity cases
+      db
+        .select()
+        .from(integrityCases)
+        .where(eq(integrityCases.memberId, member.id))
+        .orderBy(desc(integrityCases.eventDate)),
+
+      // Corporate affiliations
+      db
+        .select()
+        .from(memberCorporateAffiliations)
+        .where(eq(memberCorporateAffiliations.memberId, member.id))
+        .orderBy(desc(memberCorporateAffiliations.startDate)),
+
+      // Lobbyist connections
+      db
+        .select()
+        .from(memberLobbyistConnections)
+        .where(eq(memberLobbyistConnections.memberId, member.id))
+        .orderBy(desc(memberLobbyistConnections.eventDate))
+        .limit(20),
     ]);
 
   const stats = { for: 0, against: 0, abstain: 0, absent: 0 };
@@ -147,6 +173,19 @@ export default async function MemberProfilePage({ params }: Props) {
   const participationCount = stats.for + stats.against + stats.abstain;
   const participationRate =
     totalVotes > 0 ? Math.round((participationCount / totalVotes) * 100) : 0;
+
+  // Compute integrity case summary (group by category+severity)
+  const caseSummaryMap = new Map<string, { category: string; severity: string; count: number }>();
+  for (const c of integrityData) {
+    const key = `${c.category}-${c.severity}`;
+    const existing = caseSummaryMap.get(key);
+    if (existing) {
+      existing.count++;
+    } else {
+      caseSummaryMap.set(key, { category: c.category, severity: c.severity, count: 1 });
+    }
+  }
+  const caseSummary = Array.from(caseSummaryMap.values());
 
   const initials = `${member.firstName?.[0] ?? ''}${member.lastName?.[0] ?? ''}`;
 
@@ -568,6 +607,37 @@ export default async function MemberProfilePage({ params }: Props) {
               </CardContent>
             </Card>
           )}
+          {/* Integrity & Ethics */}
+          <IntegrityTab
+            cases={integrityData.map((c) => ({
+              ...c,
+              eventDate: c.eventDate,
+              resolutionDate: c.resolutionDate,
+              sourceUrl: c.sourceUrl,
+              aiSummary: c.aiSummary,
+              sanctionType: c.sanctionType,
+              titleEn: c.titleEn,
+              description: c.description,
+              verified: c.verified,
+            }))}
+            caseSummary={caseSummary}
+            totalCases={integrityData.length}
+            corporateAffiliations={corporateAff.map((a) => ({
+              ...a,
+              startDate: a.startDate,
+              endDate: a.endDate,
+              sourceUrl: a.sourceUrl,
+              potentialConflict: a.potentialConflict,
+              conflictDescription: a.conflictDescription,
+            }))}
+            corporateCount={corporateAff.length}
+            lobbyistConnections={lobbyistConn.map((l) => ({
+              ...l,
+              eventDate: l.eventDate,
+              sourceUrl: l.sourceUrl,
+            }))}
+            lobbyistTotal={lobbyistConn.length}
+          />
         </div>
       </div>
     </div>
