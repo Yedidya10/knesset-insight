@@ -30,6 +30,7 @@
     "elections": "בחירות",
     "budget": "תקציב",
     "committees": "ועדות",
+    "governments": "ממשלות",
     "compare": "השוואה",
     "search": "חיפוש",
     "dashboard": "דשבורד",
@@ -411,5 +412,34 @@
       "manual": "תמונה הועלתה ידנית"
     },
     "noPhoto": "אין תמונה זמינה"
+  },
+  "governments": {
+    "title": "ממשלות ישראל",
+    "government": "ממשלה",
+    "governmentNum": "ממשלה מס׳ {num}",
+    "current": "ממשלה נוכחית",
+    "primeMinister": "ראש הממשלה",
+    "alternatePm": "ראש הממשלה החלופי",
+    "actingPm": "ממלא מקום ראש הממשלה",
+    "deputyPm": "סגן ראש הממשלה",
+    "minister": "שר/ה",
+    "deputyMinister": "סגן/ית שר/ה",
+    "coalition": "קואליציה",
+    "coalitionFactions": "סיעות הקואליציה",
+    "ministers": "שרים",
+    "ministerCount": "{count} שרים",
+    "composition": "הרכב הממשלה",
+    "ministerChanges": "שינויים בממשלה",
+    "ministry": "משרד",
+    "dateRange": "תקופת כהונה",
+    "startDate": "תחילת כהונה",
+    "endDate": "סיום כהונה",
+    "seats": "מנדטים",
+    "knessetNum": "כנסת {num}",
+    "noData": "אין נתונים",
+    "filterByKnesset": "סנן לפי כנסת",
+    "allKnessets": "כל הכנסות",
+    "viewDetails": "צפייה בפרטים",
+    "backToList": "חזרה לרשימת הממשלות"
   }
 }

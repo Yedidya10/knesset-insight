@@ -30,6 +30,7 @@
     "elections": "Выборы",
     "budget": "Бюджет",
     "committees": "Комитеты",
+    "governments": "Правительства",
     "compare": "Сравнение",
     "search": "Поиск",
     "dashboard": "Панель управления",
@@ -411,5 +412,34 @@
       "manual": "Фото загружено вручную"
     },
     "noPhoto": "Фото недоступно"
+  },
+  "governments": {
+    "title": "Правительства Израиля",
+    "government": "Правительство",
+    "governmentNum": "Правительство № {num}",
+    "current": "Текущее правительство",
+    "primeMinister": "Премьер-министр",
+    "alternatePm": "Альтернативный премьер-министр",
+    "actingPm": "Исполняющий обязанности премьер-министра",
+    "deputyPm": "Заместитель премьер-министра",
+    "minister": "Министр",
+    "deputyMinister": "Заместитель министра",
+    "coalition": "Коалиция",
+    "coalitionFactions": "Коалиционные фракции",
+    "ministers": "Министры",
+    "ministerCount": "{count} министров",
+    "composition": "Состав правительства",
+    "ministerChanges": "Кабинетные перестановки",
+    "ministry": "Министерство",
+    "dateRange": "Период полномочий",
+    "startDate": "Дата начала",
+    "endDate": "Дата окончания",
+    "seats": "Мандаты",
+    "knessetNum": "Кнессет {num}",
+    "noData": "Нет данных",
+    "filterByKnesset": "Фильтр по Кнессету",
+    "allKnessets": "Все Кнессеты",
+    "viewDetails": "Подробнее",
+    "backToList": "Назад к списку правительств"
   }
 }

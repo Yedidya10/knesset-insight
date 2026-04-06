@@ -30,6 +30,7 @@
     "elections": "الانتخابات",
     "budget": "الميزانية",
     "committees": "اللجان",
+    "governments": "الحكومات",
     "compare": "مقارنة",
     "search": "بحث",
     "dashboard": "لوحة التحكم",
@@ -411,5 +412,34 @@
       "manual": "صورة تم تحميلها يدويًا"
     },
     "noPhoto": "لا تتوفر صورة"
+  },
+  "governments": {
+    "title": "حكومات إسرائيل",
+    "government": "حكومة",
+    "governmentNum": "حكومة رقم {num}",
+    "current": "الحكومة الحالية",
+    "primeMinister": "رئيس الوزراء",
+    "alternatePm": "رئيس الوزراء البديل",
+    "actingPm": "رئيس الوزراء بالإنابة",
+    "deputyPm": "نائب رئيس الوزراء",
+    "minister": "وزير/ة",
+    "deputyMinister": "نائب/ة الوزير",
+    "coalition": "الائتلاف",
+    "coalitionFactions": "كتل الائتلاف",
+    "ministers": "الوزراء",
+    "ministerCount": "{count} وزراء",
+    "composition": "تشكيلة الحكومة",
+    "ministerChanges": "تغييرات وزارية",
+    "ministry": "وزارة",
+    "dateRange": "فترة الولاية",
+    "startDate": "تاريخ البدء",
+    "endDate": "تاريخ الانتهاء",
+    "seats": "مقاعد",
+    "knessetNum": "الكنيست {num}",
+    "noData": "لا تتوفر بيانات",
+    "filterByKnesset": "تصفية حسب الكنيست",
+    "allKnessets": "جميع الكنيست",
+    "viewDetails": "عرض التفاصيل",
+    "backToList": "العودة إلى قائمة الحكومات"
   }
 }

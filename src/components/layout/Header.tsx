@@ -13,6 +13,7 @@ import {
   Home,
   LayoutList,
   BookOpen,
+  Crown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -34,6 +35,7 @@ const navLinks = [
   { key: 'parties', href: '/parties', icon: Landmark },
   { key: 'elections', href: '/elections', icon: BookOpen },
   { key: 'committees', href: '/committees', icon: LayoutList },
+  { key: 'governments', href: '/governments', icon: Crown },
 ] as const;
 
 export default function Header() {

@@ -30,6 +30,7 @@
     "elections": "Elections",
     "budget": "Budget",
     "committees": "Committees",
+    "governments": "Governments",
     "compare": "Compare",
     "search": "Search",
     "dashboard": "Dashboard",
@@ -411,5 +412,34 @@
       "manual": "Photo provided manually"
     },
     "noPhoto": "No photo available"
+  },
+  "governments": {
+    "title": "Governments of Israel",
+    "government": "Government",
+    "governmentNum": "Government No. {num}",
+    "current": "Current Government",
+    "primeMinister": "Prime Minister",
+    "alternatePm": "Alternate Prime Minister",
+    "actingPm": "Acting Prime Minister",
+    "deputyPm": "Deputy Prime Minister",
+    "minister": "Minister",
+    "deputyMinister": "Deputy Minister",
+    "coalition": "Coalition",
+    "coalitionFactions": "Coalition Factions",
+    "ministers": "Ministers",
+    "ministerCount": "{count} Ministers",
+    "composition": "Government Composition",
+    "ministerChanges": "Cabinet Changes",
+    "ministry": "Ministry",
+    "dateRange": "Term Period",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "seats": "Seats",
+    "knessetNum": "Knesset {num}",
+    "noData": "No data available",
+    "filterByKnesset": "Filter by Knesset",
+    "allKnessets": "All Knessets",
+    "viewDetails": "View Details",
+    "backToList": "Back to Governments"
   }
 }

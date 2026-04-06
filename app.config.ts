@@ -49,6 +49,15 @@ export const appConfig = {
     websiteApiOnlyKnessets: [25] as readonly number[],
     /** OData PositionID for "Member of Knesset" */
     mkPositionId: 54,
+    /** Government-related position IDs from KNS_Position */
+    govPositionIds: {
+      primeMinister: 45,       // ראש הממשלה
+      alternatePm: 73,         // ראש הממשלה החלופי
+      actingPm: 51,            // מ"מ ראש הממשלה
+      deputyPm: [31, 50, 65], // משנה/סגן/סגנית לראש הממשלה
+      minister: [39, 57],      // שר / שרה
+      deputyMinister: [40, 59, 285079], // סגן שר / סגנית שר / סגן שרה
+    },
   },
 
   // Sync schedule (cron expressions)

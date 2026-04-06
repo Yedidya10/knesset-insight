@@ -165,6 +165,67 @@ export const factionCoalitionPeriods = pgTable(
   (t) => [unique().on(t.factionId, t.knessetNum, t.governmentNum)],
 );
 
+// ──────────────────────────────────────
+// Government Tables
+// ──────────────────────────────────────
+
+export const govMinistries = pgTable('gov_ministries', {
+  id: serial('id').primaryKey(),
+  knessetId: integer('knesset_id').unique().notNull(), // KNS_GovMinistry.GovMinistryID
+  name: text('name').notNull(),
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
+export const governments = pgTable('governments', {
+  id: serial('id').primaryKey(),
+  governmentNum: integer('government_num').unique().notNull(),
+  knessetNum: integer('knesset_num').notNull(),
+  name: text('name').notNull(), // "הממשלה ה-37"
+  startDate: date('start_date'),
+  endDate: date('end_date'),
+  pmMemberId: integer('pm_member_id').references(() => members.id),
+  alternatePmMemberId: integer('alternate_pm_member_id').references(
+    () => members.id,
+  ),
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
+export const governmentPositions = pgTable(
+  'government_positions',
+  {
+    id: serial('id').primaryKey(),
+    governmentId: integer('government_id')
+      .references(() => governments.id, { onDelete: 'cascade' })
+      .notNull(),
+    memberId: integer('member_id').references(() => members.id), // nullable for historical
+    memberKnessetId: integer('member_knesset_id').notNull(), // PersonID from OData
+    positionId: integer('position_id').notNull(), // PositionID from OData
+    positionDesc: text('position_desc'), // Denormalized position name
+    govMinistryId: integer('gov_ministry_id').references(
+      () => govMinistries.id,
+    ),
+    factionKnessetId: integer('faction_knesset_id'),
+    startDate: date('start_date'),
+    endDate: date('end_date'),
+    isCurrent: boolean('is_current').default(false),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+  },
+  (t) => [
+    unique().on(
+      t.governmentId,
+      t.memberKnessetId,
+      t.positionId,
+      t.govMinistryId,
+      t.startDate,
+    ),
+  ],
+);
+
 export const memberFactionHistory = pgTable(
   'member_faction_history',
   {
@@ -385,6 +446,7 @@ export const membersRelations = relations(members, ({ one, many }) => ({
   votes: many(memberVotes),
   initiatedBills: many(billInitiators),
   factionHistory: many(memberFactionHistory),
+  governmentPositions: many(governmentPositions),
 }));
 
 export const politicalPartiesRelations = relations(
@@ -556,6 +618,53 @@ export const committeeSessionsRelations = relations(
     committee: one(committees, {
       fields: [committeeSessions.committeeId],
       references: [committees.id],
+    }),
+  }),
+);
+
+// ──────────────────────────────────────
+// Government Relations
+// ──────────────────────────────────────
+
+export const govMinistriesRelations = relations(
+  govMinistries,
+  ({ many }) => ({
+    positions: many(governmentPositions),
+  }),
+);
+
+export const governmentsRelations = relations(
+  governments,
+  ({ one, many }) => ({
+    pm: one(members, {
+      fields: [governments.pmMemberId],
+      references: [members.id],
+      relationName: 'governmentPm',
+    }),
+    alternatePm: one(members, {
+      fields: [governments.alternatePmMemberId],
+      references: [members.id],
+      relationName: 'governmentAlternatePm',
+    }),
+    positions: many(governmentPositions),
+    coalitionPeriods: many(factionCoalitionPeriods),
+  }),
+);
+
+export const governmentPositionsRelations = relations(
+  governmentPositions,
+  ({ one }) => ({
+    government: one(governments, {
+      fields: [governmentPositions.governmentId],
+      references: [governments.id],
+    }),
+    member: one(members, {
+      fields: [governmentPositions.memberId],
+      references: [members.id],
+    }),
+    ministry: one(govMinistries, {
+      fields: [governmentPositions.govMinistryId],
+      references: [govMinistries.id],
     }),
   }),
 );
