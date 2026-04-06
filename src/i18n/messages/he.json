@@ -25,13 +25,11 @@
     "members": "חברי כנסת",
     "votes": "הצבעות",
     "legislation": "חקיקה",
-    "parties": "מפלגות",
-    "factions": "סיעות",
+    "politics": "פוליטיקה",
     "elections": "בחירות",
     "budget": "תקציב",
     "committees": "ועדות",
     "governments": "ממשלות",
-    "politicalGroups": "קבוצות פוליטיות",
     "compare": "השוואה",
     "search": "חיפוש",
     "dashboard": "דשבורד",
@@ -442,6 +440,20 @@
     "allKnessets": "כל הכנסות",
     "viewDetails": "צפייה בפרטים",
     "backToList": "חזרה לרשימת הממשלות"
+  },
+  "politics": {
+    "title": "פוליטיקה",
+    "subtitle": "סיעות, מפלגות רשומות ותנועות פוליטיות",
+    "tabs": {
+      "factions": "סיעות",
+      "parties": "מפלגות רשומות",
+      "groups": "תנועות פוליטיות",
+      "timeline": "ציר זמן",
+      "graph": "גרף קשרים"
+    },
+    "showAll": "הצג הכל",
+    "showRecent": "רק אחרונות",
+    "backTo": "חזרה לפוליטיקה"
   },
   "politicalGroups": {
     "title": "קבוצות פוליטיות",

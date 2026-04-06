@@ -3,6 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import { Link } from '@/i18n/navigation';
+import { Button } from '@/components/ui/button';
 import {
   Tooltip,
   TooltipContent,
@@ -32,7 +33,8 @@ interface Props {
   terms: TermData[];
 }
 
-const MIN_KNESSET = 10;
+const MIN_KNESSET_FULL = 10;
+const MIN_KNESSET_RECENT = 20;
 const MAX_KNESSET = 25;
 const ROW_HEIGHT = 36;
 const HEADER_HEIGHT = 40;
@@ -41,7 +43,11 @@ const CELL_WIDTH = 52;
 
 export default function PoliticalTimeline({ groups, terms }: Props) {
   const t = useTranslations('politicalGroups');
+  const tPolitics = useTranslations('politics');
   const [hoveredGroup, setHoveredGroup] = useState<number | null>(null);
+  const [showAll, setShowAll] = useState(false);
+
+  const minKnesset = showAll ? MIN_KNESSET_FULL : MIN_KNESSET_RECENT;
 
   // Build a map: groupId → [{ knessetNum, seats, isCoalition, name }]
   const groupTermsMap = useMemo(() => {
@@ -60,14 +66,14 @@ export default function PoliticalTimeline({ groups, terms }: Props) {
     return groups.filter((g) => {
       const gTerms = groupTermsMap.get(g.id);
       return gTerms && gTerms.some(
-        (t) => t.knessetNum !== null && t.knessetNum >= MIN_KNESSET && t.knessetNum <= MAX_KNESSET,
+        (t) => t.knessetNum !== null && t.knessetNum >= minKnesset && t.knessetNum <= MAX_KNESSET,
       );
     });
-  }, [groups, groupTermsMap]);
+  }, [groups, groupTermsMap, minKnesset]);
 
   const knessetNums = Array.from(
-    { length: MAX_KNESSET - MIN_KNESSET + 1 },
-    (_, i) => MIN_KNESSET + i,
+    { length: MAX_KNESSET - minKnesset + 1 },
+    (_, i) => minKnesset + i,
   );
 
   const svgWidth = LEFT_LABEL_WIDTH + knessetNums.length * CELL_WIDTH + 20;
@@ -75,6 +81,18 @@ export default function PoliticalTimeline({ groups, terms }: Props) {
 
   return (
     <TooltipProvider>
+      <div className="mb-3 flex items-center gap-2">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowAll(!showAll)}
+        >
+          {showAll ? tPolitics('showRecent') : tPolitics('showAll')}
+        </Button>
+        <span className="text-xs text-muted-foreground">
+          {t('knesset', { num: minKnesset })} – {t('knesset', { num: MAX_KNESSET })}
+        </span>
+      </div>
       <div className="overflow-x-auto rounded-xl border bg-card">
         <svg
           width={svgWidth}
@@ -148,8 +166,8 @@ export default function PoliticalTimeline({ groups, terms }: Props) {
 
                 {/* Term cells */}
                 {gTerms.map((term) => {
-                  if (!term.knessetNum || term.knessetNum < MIN_KNESSET || term.knessetNum > MAX_KNESSET) return null;
-                  const colIdx = term.knessetNum - MIN_KNESSET;
+                  if (!term.knessetNum || term.knessetNum < minKnesset || term.knessetNum > MAX_KNESSET) return null;
+                  const colIdx = term.knessetNum - minKnesset;
                   const cx = LEFT_LABEL_WIDTH + colIdx * CELL_WIDTH + CELL_WIDTH / 2;
                   const cy = y + ROW_HEIGHT / 2;
                   const radius = Math.min(Math.max((term.seats ?? 4) / 2, 6), 18);

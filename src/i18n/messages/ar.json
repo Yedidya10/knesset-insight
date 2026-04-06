@@ -25,13 +25,11 @@
     "members": "أعضاء الكنيست",
     "votes": "التصويتات",
     "legislation": "التشريعات",
-    "parties": "الأحزاب",
-    "factions": "الكتل",
+    "politics": "سياسة",
     "elections": "الانتخابات",
     "budget": "الميزانية",
     "committees": "اللجان",
     "governments": "الحكومات",
-    "politicalGroups": "كتل سياسية",
     "compare": "مقارنة",
     "search": "بحث",
     "dashboard": "لوحة التحكم",
@@ -442,8 +440,20 @@
     "allKnessets": "جميع الكنيست",
     "viewDetails": "عرض التفاصيل",
     "backToList": "العودة إلى قائمة الحكومات"
-  },
-  "politicalGroups": {
+  },  "politics": {
+    "title": "السياسة",
+    "subtitle": "الكتل والأحزاب المسجلة والحركات السياسية",
+    "tabs": {
+      "factions": "الكتل",
+      "parties": "الأحزاب المسجلة",
+      "groups": "كتل سياسية",
+      "timeline": "الجدول الزمني",
+      "graph": "رسم العلاقات"
+    },
+    "showAll": "عرض الكل",
+    "showRecent": "الأخيرة فقط",
+    "backTo": "العودة للسياسة"
+  },  "politicalGroups": {
     "title": "كتل سياسية",
     "subtitle": "تتبع الحركات السياسية عبر جميع دورات الكنيست",
     "groupName": "اسم الكتلة",

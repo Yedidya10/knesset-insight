@@ -139,7 +139,7 @@ export default async function FactionDetailPage({ params }: Props) {
         variant="ghost"
         size="sm"
         className="mb-6"
-        render={<Link href="/factions" />}
+        render={<Link href="/politics" />}
       >
         {tCommon('back')}
       </Button>

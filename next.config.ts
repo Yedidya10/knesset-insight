@@ -40,6 +40,35 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        source: '/:locale/factions',
+        destination: '/:locale/politics?tab=factions',
+        permanent: true,
+      },
+      {
+        source: '/:locale/parties',
+        destination: '/:locale/politics?tab=parties',
+        permanent: true,
+      },
+      {
+        source: '/:locale/political-groups',
+        destination: '/:locale/politics?tab=groups',
+        permanent: true,
+      },
+      {
+        source: '/:locale/political-groups/timeline',
+        destination: '/:locale/politics?tab=timeline',
+        permanent: true,
+      },
+      {
+        source: '/:locale/political-groups/graph',
+        destination: '/:locale/politics?tab=graph',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default withSerwist(withNextIntl(nextConfig));

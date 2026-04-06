@@ -92,7 +92,7 @@ export default async function PoliticalGroupDetailPage({ params }: Props) {
         variant="ghost"
         size="sm"
         className="mb-6"
-        render={<Link href="/political-groups" />}
+        render={<Link href="/politics?tab=groups" />}
       >
         {t('backToList')}
       </Button>

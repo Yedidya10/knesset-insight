@@ -14,7 +14,6 @@ import {
   LayoutList,
   BookOpen,
   Crown,
-  Network,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -32,12 +31,10 @@ const navLinks = [
   { key: 'members', href: '/members', icon: Users },
   { key: 'votes', href: '/votes', icon: Vote },
   { key: 'legislation', href: '/legislation', icon: Gavel },
-  { key: 'factions', href: '/factions', icon: Building2 },
-  { key: 'parties', href: '/parties', icon: Landmark },
+  { key: 'politics', href: '/politics', icon: Building2 },
   { key: 'elections', href: '/elections', icon: BookOpen },
   { key: 'committees', href: '/committees', icon: LayoutList },
   { key: 'governments', href: '/governments', icon: Crown },
-  { key: 'politicalGroups', href: '/political-groups', icon: Network },
 ] as const;
 
 export default function Header() {

@@ -1,14 +1,13 @@
 import { getTranslations } from 'next-intl/server';
-import { Users, Clock, Network } from 'lucide-react';
+import { Users } from 'lucide-react';
 import { sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { politicalGroups, factions } from '@/lib/db/schema';
+import { politicalGroups } from '@/lib/db/schema';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Link } from '@/i18n/navigation';
 
-export default async function PoliticalGroupsPage() {
+export default async function GroupsTab() {
   const t = await getTranslations('politicalGroups');
 
   const groups = await db
@@ -33,31 +32,7 @@ export default async function PoliticalGroupsPage() {
   const inactiveGroups = groups.filter((g) => !g.isActive);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-      <div className="mb-8 flex items-center gap-3">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
-          <Users className="h-7 w-7 text-primary" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-            {t('title')}
-          </h1>
-          <p className="text-sm text-muted-foreground">{t('subtitle')}</p>
-        </div>
-      </div>
-
-      {/* Visualization links */}
-      <div className="mb-8 flex flex-wrap gap-3">
-        <Button variant="outline" size="sm" render={<Link href="/political-groups/timeline" />}>
-          <Clock className="me-1.5 h-4 w-4" />
-          {t('timeline')}
-        </Button>
-        <Button variant="outline" size="sm" render={<Link href="/political-groups/graph" />}>
-          <Network className="me-1.5 h-4 w-4" />
-          {t('graph')}
-        </Button>
-      </div>
-
+    <div>
       {/* Active groups */}
       {activeGroups.length > 0 && (
         <section className="mb-10">
@@ -111,11 +86,12 @@ function GroupCard({
     isActive: boolean | null;
     factionCount: number;
   };
-  t: ReturnType<typeof import('next-intl').useTranslations>;
+  t: Awaited<ReturnType<typeof getTranslations<'politicalGroups'>>>;
 }) {
   return (
     <Link href={`/political-groups/${group.slug}`}>
-      <Card className="glass-card hover-lift h-full overflow-hidden border-s-4"
+      <Card
+        className="glass-card hover-lift h-full overflow-hidden border-s-4"
         style={{ borderInlineStartColor: group.color ?? undefined }}
       >
         <CardHeader className="pb-2">

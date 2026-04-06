@@ -25,13 +25,11 @@
     "members": "MKs",
     "votes": "Votes",
     "legislation": "Legislation",
-    "parties": "Parties",
-    "factions": "Factions",
+    "politics": "Politics",
     "elections": "Elections",
     "budget": "Budget",
     "committees": "Committees",
     "governments": "Governments",
-    "politicalGroups": "Political Groups",
     "compare": "Compare",
     "search": "Search",
     "dashboard": "Dashboard",
@@ -442,6 +440,20 @@
     "allKnessets": "All Knessets",
     "viewDetails": "View Details",
     "backToList": "Back to Governments"  },
+  "politics": {
+    "title": "Politics",
+    "subtitle": "Factions, registered parties and political movements",
+    "tabs": {
+      "factions": "Factions",
+      "parties": "Registered Parties",
+      "groups": "Political Groups",
+      "timeline": "Timeline",
+      "graph": "Lineage Graph"
+    },
+    "showAll": "Show all",
+    "showRecent": "Recent only",
+    "backTo": "Back to Politics"
+  },
   "politicalGroups": {
     "title": "Political Groups",
     "subtitle": "Track political movements across all Knesset terms",

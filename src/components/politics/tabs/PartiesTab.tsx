@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { Landmark, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { sql, eq, like, and } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { politicalParties } from '@/lib/db/schema';
@@ -9,14 +9,14 @@ import { Input } from '@/components/ui/input';
 import { Link } from '@/i18n/navigation';
 
 interface Props {
-  searchParams: Promise<{ search?: string; type?: string }>;
+  searchParam?: string;
+  typeParam?: string;
 }
 
-export default async function PartiesPage({ searchParams }: Props) {
+export default async function PartiesTab({ searchParam, typeParam }: Props) {
   const t = await getTranslations('registeredParties');
-  const params = await searchParams;
-  const searchQuery = params.search ?? '';
-  const typeFilter = params.type ?? '';
+  const searchQuery = searchParam ?? '';
+  const typeFilter = typeParam ?? '';
 
   const conditions = [];
   if (searchQuery) {
@@ -46,16 +46,7 @@ export default async function PartiesPage({ searchParams }: Props) {
     .orderBy(politicalParties.name);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-      <div className="mb-8 flex items-center gap-3">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
-          <Landmark className="h-7 w-7 text-primary" />
-        </div>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{t('title')}</h1>
-        </div>
-      </div>
-
+    <div>
       {/* Search and filters */}
       <div className="mb-6 flex flex-wrap gap-3">
         <form className="relative flex-1" action="" method="GET">
@@ -67,10 +58,11 @@ export default async function PartiesPage({ searchParams }: Props) {
             className="ps-9"
           />
           {typeFilter && <input type="hidden" name="type" value={typeFilter} />}
+          <input type="hidden" name="tab" value="parties" />
         </form>
         <div className="flex gap-1.5 rounded-xl bg-muted/60 p-1.5">
           <Link
-            href="/parties"
+            href="/politics?tab=parties"
             className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
               !typeFilter ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'
             }`}
@@ -78,7 +70,7 @@ export default async function PartiesPage({ searchParams }: Props) {
             {t('filterAll')}
           </Link>
           <Link
-            href={`/parties?type=party${searchQuery ? `&search=${searchQuery}` : ''}`}
+            href={`/politics?tab=parties&type=party${searchQuery ? `&search=${searchQuery}` : ''}`}
             className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
               typeFilter === 'party' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'
             }`}
@@ -86,7 +78,7 @@ export default async function PartiesPage({ searchParams }: Props) {
             {t('filterParties')}
           </Link>
           <Link
-            href={`/parties?type=movement${searchQuery ? `&search=${searchQuery}` : ''}`}
+            href={`/politics?tab=parties&type=movement${searchQuery ? `&search=${searchQuery}` : ''}`}
             className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
               typeFilter === 'movement' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'
             }`}
