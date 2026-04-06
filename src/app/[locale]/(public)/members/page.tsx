@@ -2,7 +2,7 @@ import { getTranslations } from 'next-intl/server';
 import { Users } from 'lucide-react';
 import { eq, asc, sql, and, or, ilike, inArray, desc } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { members, factions, memberVotes, billInitiators, memberFactionHistory } from '@/lib/db/schema';
+import { members, factions, memberVotes, billInitiators, memberFactionHistory, factionCoalitionPeriods } from '@/lib/db/schema';
 import MemberCard from '@/components/members/MemberCard';
 import MembersFilter from '@/components/members/MembersFilter';
 import PaginationNav from '@/components/ui/pagination-nav';
@@ -20,6 +20,7 @@ interface Props {
     gender?: string;
     details?: string;
     page?: string;
+    government?: string;
   }>;
 }
 
@@ -37,6 +38,7 @@ export default async function MembersPage({ searchParams }: Props) {
   const coalitionFilter = params.coalition ?? '';
   const genderFilter = params.gender ?? '';
   const showDetails = params.details === 'true';
+  const governmentFilter = params.government ?? '';
 
   // Get available knesset numbers from faction history (complete) + factions (current)
   const knessetNums = await db
@@ -51,6 +53,43 @@ export default async function MembersPage({ searchParams }: Props) {
   const selectedKnesset = knessetFilter ? Number(knessetFilter) : currentKnesset;
   const isCurrentKnesset = selectedKnesset === currentKnesset;
 
+  // Fetch available governments for the selected knesset from coalition periods
+  const govRows = await db
+    .selectDistinct({
+      governmentNum: factionCoalitionPeriods.governmentNum,
+      startDate: sql<string>`min(${factionCoalitionPeriods.startDate})`,
+      endDate: sql<string>`max(${factionCoalitionPeriods.endDate})`,
+    })
+    .from(factionCoalitionPeriods)
+    .where(eq(factionCoalitionPeriods.knessetNum, selectedKnesset))
+    .groupBy(factionCoalitionPeriods.governmentNum)
+    .orderBy(desc(factionCoalitionPeriods.governmentNum));
+
+  const availableGovernments = govRows.map((g) => ({
+    num: g.governmentNum,
+    startDate: g.startDate,
+    endDate: g.endDate,
+  }));
+
+  // Determine which government to use for coalition filtering
+  const latestGovNum = availableGovernments[0]?.num ?? null;
+  const selectedGovNum = governmentFilter ? Number(governmentFilter) : latestGovNum;
+
+  // Fetch coalition factionIds for the selected government
+  let coalitionFactionDbIds: Set<number> = new Set();
+  if (selectedGovNum != null) {
+    const coalitionRows = await db
+      .select({ factionId: factionCoalitionPeriods.factionId })
+      .from(factionCoalitionPeriods)
+      .where(
+        and(
+          eq(factionCoalitionPeriods.knessetNum, selectedKnesset),
+          eq(factionCoalitionPeriods.governmentNum, selectedGovNum),
+        ),
+      );
+    coalitionFactionDbIds = new Set(coalitionRows.map((r) => r.factionId));
+  }
+
   // For past knessets, pre-fetch member→faction mapping from history.
   // The members table stores only ONE factionId per member (typically latest),
   // but members serve across multiple knessets with different factions.
@@ -59,7 +98,7 @@ export default async function MembersPage({ searchParams }: Props) {
     factionId: number;
     factionName: string | null;
     factionColor: string | null;
-    isCoalition: boolean | null;
+    isCoalition: boolean;
   };
   let historyFactionMap: Map<number, HistoryFactionInfo> | null = null;
 
@@ -70,7 +109,6 @@ export default async function MembersPage({ searchParams }: Props) {
         factionId: factions.id,
         factionName: factions.name,
         factionColor: factions.color,
-        isCoalition: factions.isCoalition,
         startDate: memberFactionHistory.startDate,
       })
       .from(memberFactionHistory)
@@ -86,7 +124,7 @@ export default async function MembersPage({ searchParams }: Props) {
           factionId: row.factionId,
           factionName: row.factionName,
           factionColor: row.factionColor,
-          isCoalition: row.isCoalition,
+          isCoalition: coalitionFactionDbIds.has(row.factionId),
         });
       }
     }
@@ -122,10 +160,9 @@ export default async function MembersPage({ searchParams }: Props) {
         (id) => historyFactionMap!.get(id)?.isCoalition === true,
       );
     } else if (coalitionFilter === 'opposition') {
-      eligibleIds = eligibleIds.filter((id) => {
-        const isCoalition = historyFactionMap!.get(id)?.isCoalition;
-        return isCoalition === false || isCoalition == null;
-      });
+      eligibleIds = eligibleIds.filter(
+        (id) => historyFactionMap!.get(id)?.isCoalition !== true,
+      );
     }
 
     if (partyFilter) {
@@ -161,13 +198,17 @@ export default async function MembersPage({ searchParams }: Props) {
       );
     }
 
-    // Coalition/opposition filter
-    if (coalitionFilter === 'coalition') {
-      conditions.push(eq(factions.isCoalition, true));
+    // Coalition/opposition filter — use period-derived faction IDs
+    if (coalitionFilter === 'coalition' && coalitionFactionDbIds.size > 0) {
+      conditions.push(inArray(members.factionId, [...coalitionFactionDbIds]));
     } else if (coalitionFilter === 'opposition') {
-      conditions.push(
-        or(eq(factions.isCoalition, false), sql`${factions.isCoalition} IS NULL`),
-      );
+      // Opposition = factions NOT in the coalition set
+      const oppositionFactionIds = kfIds.filter((id) => !coalitionFactionDbIds.has(id));
+      if (oppositionFactionIds.length > 0) {
+        conditions.push(inArray(members.factionId, oppositionFactionIds));
+      } else {
+        conditions.push(sql`false`);
+      }
     }
   }
 
@@ -283,10 +324,13 @@ export default async function MembersPage({ searchParams }: Props) {
   // Merge all data — for past knessets, override faction data with history
   const data = memberRows.map((m) => {
     const historyInfo = historyFactionMap?.get(m.id);
+    const isCoalition = historyInfo
+      ? historyInfo.isCoalition
+      : (m.factionId ? coalitionFactionDbIds.has(m.factionId) : false);
     return {
       ...(historyInfo
-        ? { ...m, factionId: historyInfo.factionId, factionName: historyInfo.factionName, factionColor: historyInfo.factionColor, isCoalition: historyInfo.isCoalition }
-        : m),
+        ? { ...m, factionId: historyInfo.factionId, factionName: historyInfo.factionName, factionColor: historyInfo.factionColor, isCoalition }
+        : { ...m, isCoalition }),
       ...(voteStatsMap.get(m.id) ?? { forCount: 0, againstCount: 0, abstainCount: 0, absentCount: 0, totalVotes: 0 }),
       billCount: billCountMap.get(m.id) ?? 0,
     };
@@ -354,6 +398,8 @@ export default async function MembersPage({ searchParams }: Props) {
           currentGender={genderFilter}
           currentKnessetNumber={currentKnesset}
           showDetails={showDetails}
+          governments={availableGovernments}
+          currentGovernment={governmentFilter}
         />
       </div>
 
@@ -376,6 +422,7 @@ export default async function MembersPage({ searchParams }: Props) {
               if (knessetFilter) urlParams.set('knesset', knessetFilter);
               if (coalitionFilter) urlParams.set('coalition', coalitionFilter);
               if (genderFilter) urlParams.set('gender', genderFilter);
+              if (governmentFilter) urlParams.set('government', governmentFilter);
               if (showDetails) urlParams.set('details', 'true');
               if (p > 1) urlParams.set('page', String(p));
               const qs = urlParams.toString();

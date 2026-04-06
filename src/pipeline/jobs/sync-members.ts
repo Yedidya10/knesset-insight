@@ -1,6 +1,6 @@
 import { eq, sql, inArray } from 'drizzle-orm';
 import { db } from '../../lib/db';
-import { members, factions, memberFactionHistory } from '../../lib/db/schema';
+import { members, factions, memberFactionHistory, factionCoalitionPeriods } from '../../lib/db/schema';
 import { fetchOKnessetCSV } from '../../lib/knesset/oknesset-client';
 import { fetchAllOData, fetchOData } from '../../lib/knesset/odata-client';
 import { fetchV4MkIdMapping } from '../../lib/knesset/knesset-api-client';
@@ -330,6 +330,8 @@ interface GovPosition {
   FactionID: number | null;
   FactionName: string | null;
   IsCurrent: boolean;
+  StartDate: string | null;
+  FinishDate: string | null;
 }
 
 /**
@@ -337,10 +339,11 @@ interface GovPosition {
  * government-position holders with their MK faction assignments.
  *
  * For each synced Knesset number:
- * 1. Fetch all positions with GovernmentNum set (universal government membership flag)
+ * 1. Fetch ALL positions with GovernmentNum set (not just IsCurrent — needed for past knessets)
  * 2. Fetch MK positions (PositionID=54) to get PersonID → FactionID mapping
- * 3. Coalition factions = factions that have at least one government-position holder
- * 4. Update parties.isCoalition accordingly
+ * 3. Group government positions by GovernmentNum to derive per-government coalition periods
+ * 4. Upsert into faction_coalition_periods table
+ * 5. Update factions.isCoalition based on the latest government (backward compat)
  */
 async function syncCoalitionStatus(_prevCheckpoint: SyncCheckpoint | null): Promise<number> {
   const { mkPositionId } = appConfig.knesset;
@@ -350,7 +353,6 @@ async function syncCoalitionStatus(_prevCheckpoint: SyncCheckpoint | null): Prom
     // Fetch ALL MK positions for this knesset (including former MKs who became
     // ministers and resigned their seats under the Norwegian Law) to build a
     // comprehensive PersonID → FactionID mapping.
-    // Use small page size — Knesset OData caps responses below 1000.
     const mkPositions = await fetchAllOData<PersonToPosition>(
       'ParliamentInfo',
       'KNS_PersonToPosition',
@@ -361,33 +363,27 @@ async function syncCoalitionStatus(_prevCheckpoint: SyncCheckpoint | null): Prom
     const personToFactionId = new Map<number, number>();
     for (const pos of mkPositions) {
       if (pos.FactionID) {
-        // Prefer the most recent faction (later entries override earlier ones)
         personToFactionId.set(pos.PersonID, pos.FactionID);
       }
     }
 
-    // Fetch all current government-position holders for this Knesset
-    // GovernmentNum is set on any position tied to a specific government
+    // Fetch ALL government-position holders for this Knesset (not just IsCurrent,
+    // so historical knessets also return data)
     const govPositions = await fetchAllOData<GovPosition>(
       'ParliamentInfo',
       'KNS_PersonToPosition',
-      { $filter: `KnessetNum eq ${knessetNum} and IsCurrent eq true and GovernmentNum ne null` },
+      { $filter: `KnessetNum eq ${knessetNum} and GovernmentNum ne null` },
       100,
     );
 
-    // Collect coalition FactionIDs: factions whose members hold government positions
-    const coalitionFactionIds = new Set<number>();
+    // Group by GovernmentNum — each group represents one government's coalition
+    const govGroups = new Map<number, GovPosition[]>();
     for (const pos of govPositions) {
-      // If gov position itself has a FactionID, use it; otherwise look up from MK positions
-      const factionId = pos.FactionID || personToFactionId.get(pos.PersonID);
-      if (factionId) {
-        coalitionFactionIds.add(factionId);
-      }
+      if (pos.GovernmentNum == null) continue;
+      const group = govGroups.get(pos.GovernmentNum) ?? [];
+      group.push(pos);
+      govGroups.set(pos.GovernmentNum, group);
     }
-
-    console.log(
-      `  [coalition] Knesset ${knessetNum}: ${coalitionFactionIds.size} coalition factions from ${govPositions.length} gov positions`,
-    );
 
     // Get faction DB IDs for this knesset
     const knessetFactions = await db
@@ -397,24 +393,98 @@ async function syncCoalitionStatus(_prevCheckpoint: SyncCheckpoint | null): Prom
 
     if (knessetFactions.length === 0) continue;
 
-    // Reset all factions for this knesset to opposition
+    const factionKnessetIdToDbId = new Map(knessetFactions.map((f) => [f.knessetId, f.id]));
+
+    // For each government, derive coalition factions and their date ranges
+    let latestGovNum = 0;
+    const latestCoalitionFactionIds = new Set<number>();
+
+    for (const [govNum, positions] of govGroups) {
+      // Collect coalition factions for this government
+      const factionDates = new Map<number, { start: string | null; end: string | null }>();
+
+      for (const pos of positions) {
+        const factionKnessetId = pos.FactionID || personToFactionId.get(pos.PersonID);
+        if (!factionKnessetId) continue;
+
+        const dbId = factionKnessetIdToDbId.get(factionKnessetId);
+        if (!dbId) continue;
+
+        const existing = factionDates.get(dbId);
+        const posStart = pos.StartDate?.split('T')[0] ?? null;
+        const posEnd = pos.FinishDate?.split('T')[0] ?? null;
+
+        if (!existing) {
+          factionDates.set(dbId, { start: posStart, end: posEnd });
+        } else {
+          // Expand date range: earliest start, latest end
+          if (posStart && (!existing.start || posStart < existing.start)) {
+            existing.start = posStart;
+          }
+          if (posEnd === null) {
+            existing.end = null; // Still active
+          } else if (existing.end !== null && posEnd > existing.end) {
+            existing.end = posEnd;
+          }
+        }
+      }
+
+      // Upsert coalition periods for this government
+      for (const [dbFactionId, dates] of factionDates) {
+        await db
+          .insert(factionCoalitionPeriods)
+          .values({
+            factionId: dbFactionId,
+            knessetNum,
+            governmentNum: govNum,
+            startDate: dates.start,
+            endDate: dates.end,
+          })
+          .onConflictDoUpdate({
+            target: [
+              factionCoalitionPeriods.factionId,
+              factionCoalitionPeriods.knessetNum,
+              factionCoalitionPeriods.governmentNum,
+            ],
+            set: {
+              startDate: sql`excluded.start_date`,
+              endDate: sql`excluded.end_date`,
+              updatedAt: new Date(),
+            },
+          });
+      }
+
+      // Track the latest government for backward-compat isCoalition flag
+      if (govNum > latestGovNum) {
+        latestGovNum = govNum;
+        latestCoalitionFactionIds.clear();
+        for (const dbId of factionDates.keys()) {
+          latestCoalitionFactionIds.add(dbId);
+        }
+      }
+
+      console.log(
+        `  [coalition] Knesset ${knessetNum}, Gov ${govNum}: ${factionDates.size} coalition factions from ${positions.length} gov positions`,
+      );
+    }
+
+    // Update factions.isCoalition based on the latest government (backward compat)
     const allIds = knessetFactions.map((f) => f.id);
     await db
       .update(factions)
       .set({ isCoalition: false, updatedAt: new Date() })
       .where(inArray(factions.id, allIds));
 
-    // Set coalition factions
-    const coalitionDbIds = knessetFactions
-      .filter((f) => coalitionFactionIds.has(f.knessetId))
-      .map((f) => f.id);
-
-    if (coalitionDbIds.length > 0) {
+    if (latestCoalitionFactionIds.size > 0) {
       await db
         .update(factions)
         .set({ isCoalition: true, updatedAt: new Date() })
-        .where(inArray(factions.id, coalitionDbIds));
+        .where(inArray(factions.id, [...latestCoalitionFactionIds]));
     }
+
+    console.log(
+      `  [coalition] Knesset ${knessetNum}: ${govGroups.size} government(s), latest gov ${latestGovNum} has ${latestCoalitionFactionIds.size} coalition factions`,
+    );
 
     updated += knessetFactions.length;
   }

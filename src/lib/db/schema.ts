@@ -146,6 +146,23 @@ export const partyFactionLinks = pgTable(
   (t) => [unique().on(t.partyId, t.factionId)],
 );
 
+export const factionCoalitionPeriods = pgTable(
+  'faction_coalition_periods',
+  {
+    id: serial('id').primaryKey(),
+    factionId: integer('faction_id')
+      .references(() => factions.id, { onDelete: 'cascade' })
+      .notNull(),
+    knessetNum: integer('knesset_num').notNull(),
+    governmentNum: integer('government_num').notNull(),
+    startDate: date('start_date'),
+    endDate: date('end_date'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+  },
+  (t) => [unique().on(t.factionId, t.knessetNum, t.governmentNum)],
+);
+
 export const memberFactionHistory = pgTable(
   'member_faction_history',
   {
@@ -355,6 +372,7 @@ export const factionsRelations = relations(factions, ({ one, many }) => ({
   }),
   partyLinks: many(partyFactionLinks),
   memberHistory: many(memberFactionHistory),
+  coalitionPeriods: many(factionCoalitionPeriods),
 }));
 
 export const membersRelations = relations(members, ({ one, many }) => ({
@@ -431,6 +449,16 @@ export const memberFactionHistoryRelations = relations(
     }),
     faction: one(factions, {
       fields: [memberFactionHistory.factionId],
+      references: [factions.id],
+    }),
+  }),
+);
+
+export const factionCoalitionPeriodsRelations = relations(
+  factionCoalitionPeriods,
+  ({ one }) => ({
+    faction: one(factions, {
+      fields: [factionCoalitionPeriods.factionId],
       references: [factions.id],
     }),
   }),

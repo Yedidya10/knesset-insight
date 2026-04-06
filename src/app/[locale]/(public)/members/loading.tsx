@@ -10,7 +10,21 @@ export default function MembersLoading() {
           <div className="h-4 w-24 animate-pulse rounded bg-muted" />
         </div>
       </div>
-      <div className="mb-6 h-12 animate-pulse rounded-xl bg-muted" />
+      {/* Filter skeleton: knesset+status row, search row, dropdown row */}
+      <div className="mb-6 space-y-3">
+        <div className="flex gap-3">
+          <div className="h-10 w-32 animate-pulse rounded-xl bg-muted" />
+          <div className="h-10 w-48 animate-pulse rounded-xl bg-muted" />
+        </div>
+        <div className="h-10 w-full animate-pulse rounded-xl bg-muted" />
+        <div className="flex flex-wrap gap-2">
+          <div className="h-9 w-28 animate-pulse rounded-xl bg-muted" />
+          <div className="h-9 w-36 animate-pulse rounded-xl bg-muted" />
+          <div className="h-9 w-28 animate-pulse rounded-xl bg-muted" />
+          <div className="h-9 w-28 animate-pulse rounded-xl bg-muted" />
+          <div className="h-9 w-32 animate-pulse rounded-xl bg-muted" />
+        </div>
+      </div>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
         {Array.from({ length: 15 }).map((_, i) => (
           <MemberCardSkeleton key={i} />
