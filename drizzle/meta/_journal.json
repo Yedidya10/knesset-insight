@@ -29,6 +29,13 @@
       "when": 1775400000000,
       "tag": "0003_sync_checkpoint_legacy_vipid",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1775600000000,
+      "tag": "0005_image_attribution",
+      "breakpoints": true
     }
   ]
 }

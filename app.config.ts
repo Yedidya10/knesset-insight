@@ -72,6 +72,25 @@ export const appConfig = {
     pwa: process.env.NEXT_PUBLIC_PWA_ENABLED === 'true',
     aiChat: true, // always on for registered users
   },
+
+  // Image settings
+  images: {
+    /** Thumbnail width for member portraits (px) */
+    thumbWidth: 300,
+    /** Quality for next/image optimization (1-100) */
+    quality: 80,
+    sources: {
+      oknesset: {
+        attribution: 'כנסת פתוחה — הסדנא לידע ציבורי',
+      },
+      wikidata: {
+        attribution: 'Wikimedia Commons (CC BY-SA 4.0)',
+      },
+      knessetOfficial: {
+        attribution: 'אתר הכנסת הרשמי',
+      },
+    },
+  },
 } as const;
 
 export type Locale = (typeof appConfig.i18n.locales)[number];

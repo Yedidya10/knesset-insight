@@ -2,7 +2,7 @@ import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import MemberAvatar from '@/components/members/MemberAvatar';
 import { FileText, BarChart3 } from 'lucide-react';
 
 interface MemberCardProps {
@@ -56,17 +56,12 @@ export default function MemberCard({ member, showDetails = false }: MemberCardPr
           {/* Avatar with gradient ring */}
           <div className="relative">
             <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-primary/30 via-chart-2/20 to-chart-4/30 opacity-0 blur-sm transition-opacity group-hover:opacity-100" />
-            <Avatar className="relative h-20 w-20 ring-2 ring-border/60 transition-all group-hover:ring-primary/40">
-              {member.imageUrl && (
-                <AvatarImage
-                  src={member.imageUrl}
-                  alt={`${member.firstName} ${member.lastName}`}
-                />
-              )}
-              <AvatarFallback className="bg-primary/10 text-lg font-semibold text-primary">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
+            <MemberAvatar
+              member={member}
+              size="lg"
+              className="relative"
+              ring="ring-2 ring-border/60 transition-all group-hover:ring-primary/40"
+            />
           </div>
 
           <div className="text-center">

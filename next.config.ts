@@ -11,7 +11,30 @@ const withSerwist = withSerwistInit({
 });
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'production.oknesset.org',
+      },
+      {
+        protocol: 'https',
+        hostname: 'commons.wikimedia.org',
+      },
+      {
+        protocol: 'https',
+        hostname: 'upload.wikimedia.org',
+      },
+      {
+        protocol: 'https',
+        hostname: 'knesset.gov.il',
+      },
+      {
+        protocol: 'https',
+        hostname: 'main.knesset.gov.il',
+      },
+    ],
+  },
 };
 
 export default withSerwist(withNextIntl(nextConfig));

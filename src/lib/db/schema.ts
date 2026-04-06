@@ -49,6 +49,8 @@ export const members = pgTable('members', {
   gender: text('gender'),
   birthDate: date('birth_date'),
   imageUrl: text('image_url'),
+  imageSource: text('image_source'), // 'oknesset' | 'wikidata' | 'knesset_official' | 'manual'
+  imageAttribution: text('image_attribution'),
   email: text('email'),
   phone: text('phone'),
   startDate: date('start_date'),

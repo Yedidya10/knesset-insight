@@ -27,10 +27,10 @@ import {
 } from '@/lib/db/schema';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import TranslatedText from '@/components/ui/translated-text';
+import MemberAvatar from '@/components/members/MemberAvatar';
 import MemberBillsList from '@/components/members/MemberBillsList';
 
 interface Props {
@@ -177,17 +177,12 @@ export default async function MemberProfilePage({ params }: Props) {
           <CardContent className="flex flex-col items-center gap-4 px-6 pb-6 -mt-12">
             <div className="relative">
               <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-primary/30 to-chart-2/20 blur-sm" />
-              <Avatar className="relative h-28 w-28 ring-4 ring-card">
-                {member.imageUrl && (
-                  <AvatarImage
-                    src={member.imageUrl}
-                    alt={`${member.firstName} ${member.lastName}`}
-                  />
-                )}
-                <AvatarFallback className="bg-primary/10 text-2xl font-semibold text-primary">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
+              <MemberAvatar
+                member={member}
+                size="xl"
+                className="relative"
+                ring="ring-4 ring-card"
+              />
             </div>
 
             <div className="text-center">

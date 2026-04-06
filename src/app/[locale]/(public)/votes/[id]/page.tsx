@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import MemberAvatar from '@/components/members/MemberAvatar';
 import TranslatedText from '@/components/ui/translated-text';
 
 interface Props {
@@ -173,12 +173,10 @@ export default async function VoteDetailPage({ params }: Props) {
           <ul className="space-y-2">
             {voters.map((v) => (
               <li key={v.memberId} className="flex items-center gap-2">
-                <Avatar className="h-7 w-7">
-                  {v.imageUrl && <AvatarImage src={v.imageUrl} alt={`${v.firstName} ${v.lastName}`} />}
-                  <AvatarFallback className="text-xs">
-                    {v.firstName?.[0]}{v.lastName?.[0]}
-                  </AvatarFallback>
-                </Avatar>
+                <MemberAvatar
+                  member={{ firstName: v.firstName, lastName: v.lastName, imageUrl: v.imageUrl }}
+                  size="sm"
+                />
                 <div className="min-w-0 flex-1">
                   <Link href={`/members/${v.memberId}`} className="text-sm text-primary hover:underline">
                     {v.firstName} {v.lastName}

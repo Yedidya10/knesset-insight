@@ -84,6 +84,10 @@ export function transformOKnessetMember(raw: OKnessetMember) {
     gender: raw.mk_individual_gender,
     birthDate: raw.mk_individual_date_of_birth || null,
     imageUrl: raw.mk_individual_photo || null,
+    imageSource: raw.mk_individual_photo ? ('oknesset' as const) : null,
+    imageAttribution: raw.mk_individual_photo
+      ? 'כנסת פתוחה — הסדנא לידע ציבורי'
+      : null,
     email: raw.mk_individual_email || null,
     knessetNum: raw.knesset_num,
   };

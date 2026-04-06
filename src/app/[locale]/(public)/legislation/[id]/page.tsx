@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import MemberAvatar from '@/components/members/MemberAvatar';
 import { BillStagePipeline } from '@/components/legislation/BillStagePipeline';
 import { BillRelationshipBanner } from '@/components/legislation/BillRelationshipBanner';
 import { computeBillStage } from '@/lib/knesset/bill-stages';
@@ -239,13 +239,12 @@ export default async function BillDetailPage({ params }: Props) {
                     href={`/members/${m.memberId}`}
                     className="flex items-center gap-3 py-3 first:pt-0 last:pb-0 transition-colors hover:bg-muted/50 -mx-2 px-2 rounded-lg"
                   >
-                    <Avatar className="h-10 w-10 shrink-0 ring-2 ring-background shadow-sm">
-                      {m.imageUrl && <AvatarImage src={m.imageUrl} alt="" />}
-                      <AvatarFallback className="text-xs font-semibold bg-primary/10 text-primary">
-                        {m.firstName?.[0]}
-                        {m.lastName?.[0]}
-                      </AvatarFallback>
-                    </Avatar>
+                    <MemberAvatar
+                      member={m}
+                      size="sm"
+                      ring="ring-2 ring-background"
+                      className="h-10 w-10 shadow-sm"
+                    />
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold truncate">
                         {m.firstName} {m.lastName}

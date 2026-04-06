@@ -6,6 +6,7 @@
 import { eq, isNull, and, sql } from 'drizzle-orm';
 import { db } from '../../lib/db';
 import { members } from '../../lib/db/schema';
+import { appConfig } from '../../../app.config';
 
 const WIKIDATA_SPARQL = 'https://query.wikidata.org/sparql';
 const COMMONS_THUMB = 'https://commons.wikimedia.org/wiki/Special:FilePath';
@@ -99,7 +100,12 @@ export async function syncMemberImages(): Promise<number> {
     if (imageUrl) {
       await db
         .update(members)
-        .set({ imageUrl, updatedAt: new Date() })
+        .set({
+          imageUrl,
+          imageSource: 'wikidata',
+          imageAttribution: appConfig.images.sources.wikidata.attribution,
+          updatedAt: new Date(),
+        })
         .where(eq(members.id, m.id));
       updated++;
     }

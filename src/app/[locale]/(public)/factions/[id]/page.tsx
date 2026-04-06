@@ -7,10 +7,10 @@ import { db } from '@/lib/db';
 import { factions, members, memberVotes } from '@/lib/db/schema';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import TranslatedText from '@/components/ui/translated-text';
+import MemberAvatar from '@/components/members/MemberAvatar';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -104,18 +104,11 @@ export default async function FactionDetailPage({ params }: Props) {
       {memberList.map((m) => (
         <Link key={m.id} href={`/members/${m.id}`}>
           <div className="flex flex-col items-center gap-2 rounded-xl p-3 transition-all hover:bg-muted/50 hover:shadow-sm">
-            <Avatar className="h-14 w-14 ring-2 ring-border/40">
-              {m.imageUrl && (
-                <AvatarImage
-                  src={m.imageUrl}
-                  alt={`${m.firstName} ${m.lastName}`}
-                />
-              )}
-              <AvatarFallback className="bg-primary/10 text-sm font-semibold text-primary">
-                {m.firstName?.[0]}
-                {m.lastName?.[0]}
-              </AvatarFallback>
-            </Avatar>
+            <MemberAvatar
+              member={m}
+              size="md"
+              ring="ring-2 ring-border/40"
+            />
             <span className="text-center text-sm font-medium leading-tight">
               {m.firstName} {m.lastName}
             </span>
