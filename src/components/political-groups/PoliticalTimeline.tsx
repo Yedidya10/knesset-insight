@@ -4,12 +4,6 @@ import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import { Link } from '@/i18n/navigation';
 import { Button } from '@/components/ui/button';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 
 interface GroupData {
   id: number;
@@ -80,7 +74,7 @@ export default function PoliticalTimeline({ groups, terms }: Props) {
   const svgHeight = HEADER_HEIGHT + visibleGroups.length * ROW_HEIGHT + 20;
 
   return (
-    <TooltipProvider>
+    <>
       <div className="mb-3 flex items-center gap-2">
         <Button
           variant="outline"
@@ -172,29 +166,27 @@ export default function PoliticalTimeline({ groups, terms }: Props) {
                   const cy = y + ROW_HEIGHT / 2;
                   const radius = Math.min(Math.max((term.seats ?? 4) / 2, 6), 18);
 
+                  const tooltipText = [
+                    term.name,
+                    t('knesset', { num: term.knessetNum }),
+                    term.seats ? `${term.seats} ${t('seats')}` : '',
+                    term.isCoalition ? t('coalition') : '',
+                  ].filter(Boolean).join(' · ');
+
                   return (
-                    <Tooltip key={`${group.id}-${term.knessetNum}`}>
-                      <TooltipTrigger>
-                        <circle
-                          cx={cx}
-                          cy={cy}
-                          r={radius}
-                          fill={group.color ?? 'hsl(var(--primary))'}
-                          opacity={0.8}
-                          stroke={term.isCoalition ? 'hsl(var(--chart-1))' : 'transparent'}
-                          strokeWidth={term.isCoalition ? 2 : 0}
-                          className="cursor-pointer transition-all hover:opacity-100"
-                        />
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="font-medium">{term.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {t('knesset', { num: term.knessetNum })}
-                          {term.seats ? ` · ${term.seats} ${t('seats')}` : ''}
-                          {term.isCoalition ? ` · ${t('coalition')}` : ''}
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
+                    <circle
+                      key={`${group.id}-${term.knessetNum}`}
+                      cx={cx}
+                      cy={cy}
+                      r={radius}
+                      fill={group.color ?? 'hsl(var(--primary))'}
+                      opacity={0.8}
+                      stroke={term.isCoalition ? 'hsl(var(--chart-1))' : 'transparent'}
+                      strokeWidth={term.isCoalition ? 2 : 0}
+                      className="cursor-pointer transition-all hover:opacity-100"
+                    >
+                      <title>{tooltipText}</title>
+                    </circle>
                   );
                 })}
               </g>
@@ -202,6 +194,6 @@ export default function PoliticalTimeline({ groups, terms }: Props) {
           })}
         </svg>
       </div>
-    </TooltipProvider>
+    </>
   );
 }
