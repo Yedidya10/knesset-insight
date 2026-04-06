@@ -38,6 +38,7 @@ See `PLAN.md` for the full architecture and feature spec.
 - Use `useTranslations()` from `next-intl` for any displayed text
 - Support dark mode via Tailwind `dark:` prefix
 - Ensure WCAG 2.1 AA accessibility
+- **When adding or changing content in a page/component, always update its corresponding `loading.tsx` skeleton** to match the new structure. The skeleton must reflect the real layout so users see a coherent loading state.
 
 ## When Writing API Endpoints
 
@@ -51,3 +52,7 @@ See `PLAN.md` for the full architecture and feature spec.
 - All DB access through Drizzle ORM — never raw SQL in application code
 - Use tRPC routers for client-facing data
 - Cache heavy queries in Redis with configurable TTL
+
+## Workflow
+
+- **After completing a fix or feature, always create a commit** with a clear conventional-commit message (`feat:`, `fix:`, `style:`, `refactor:`, `chore:`, `i18n:`, `docs:`). Group related changes into a single commit; unrelated changes go into separate commits.
