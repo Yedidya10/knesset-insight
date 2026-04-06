@@ -16,12 +16,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-interface GovernmentInfo {
-  num: number;
-  startDate: string | null;
-  endDate: string | null;
-}
-
 interface MembersFilterProps {
   factions: string[];
   currentFaction: string;
@@ -34,8 +28,6 @@ interface MembersFilterProps {
   currentGender: string;
   currentKnessetNumber: number;
   showDetails: boolean;
-  governments: GovernmentInfo[];
-  currentGovernment: string;
 }
 
 export default function MembersFilter({
@@ -50,8 +42,6 @@ export default function MembersFilter({
   currentGender,
   currentKnessetNumber,
   showDetails,
-  governments,
-  currentGovernment,
 }: MembersFilterProps) {
   const t = useTranslations('members.filter');
   const router = useRouter();
@@ -117,11 +107,10 @@ export default function MembersFilter({
     currentSearch ||
     currentCoalition ||
     currentGender ||
-    currentGovernment ||
     (isCurrentKnesset && currentStatus !== 'current') ||
     Number(currentKnesset) !== currentKnessetNumber;
   const activeFilterCount =
-    [currentFaction, currentSearch, currentCoalition, currentGender, currentGovernment].filter(Boolean).length +
+    [currentFaction, currentSearch, currentCoalition, currentGender].filter(Boolean).length +
     (isCurrentKnesset && currentStatus !== 'current' ? 1 : 0) +
     (Number(currentKnesset) !== currentKnessetNumber ? 1 : 0);
 
@@ -220,41 +209,6 @@ export default function MembersFilter({
             <SelectItem value="opposition">{t('opposition')}</SelectItem>
           </SelectContent>
         </Select>
-
-        {governments.length > 1 && (
-          <Select
-            value={currentGovernment || '_latest'}
-            onValueChange={(val) => updateParam('government', val === '_latest' ? '' : String(val))}
-            items={{
-              _latest: t('latestGovernment'),
-              ...Object.fromEntries(
-                governments.map((g) => {
-                  const dateRange = g.startDate
-                    ? `(${g.startDate.slice(0, 4)}${g.endDate ? '–' + g.endDate.slice(0, 4) : ''})`
-                    : '';
-                  return [String(g.num), `${t('governmentNum')} ${g.num} ${dateRange}`];
-                }),
-              ),
-            }}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="_latest">{t('latestGovernment')}</SelectItem>
-              {governments.map((g) => {
-                const dateRange = g.startDate
-                  ? `(${g.startDate.slice(0, 4)}${g.endDate ? '–' + g.endDate.slice(0, 4) : ''})`
-                  : '';
-                return (
-                  <SelectItem key={g.num} value={String(g.num)}>
-                    {t('governmentNum')} {g.num} {dateRange}
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
-        )}
 
         <Select
           value={currentGender || '_all'}

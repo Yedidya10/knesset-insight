@@ -20,7 +20,6 @@ interface Props {
     gender?: string;
     details?: string;
     page?: string;
-    government?: string;
   }>;
 }
 
@@ -38,7 +37,6 @@ export default async function MembersPage({ searchParams }: Props) {
   const coalitionFilter = params.coalition ?? '';
   const genderFilter = params.gender ?? '';
   const showDetails = params.details === 'true';
-  const governmentFilter = params.government ?? '';
 
   // Get available knesset numbers from faction history (complete) + factions (current)
   const knessetNums = await db
@@ -53,38 +51,23 @@ export default async function MembersPage({ searchParams }: Props) {
   const selectedKnesset = knessetFilter ? Number(knessetFilter) : currentKnesset;
   const isCurrentKnesset = selectedKnesset === currentKnesset;
 
-  // Fetch available governments for the selected knesset from coalition periods
-  const govRows = await db
-    .selectDistinct({
-      governmentNum: factionCoalitionPeriods.governmentNum,
-      startDate: sql<string>`min(${factionCoalitionPeriods.startDate})`,
-      endDate: sql<string>`max(${factionCoalitionPeriods.endDate})`,
-    })
+  // Determine the latest government for the selected knesset
+  const [maxGovRow] = await db
+    .select({ maxGov: sql<number>`max(${factionCoalitionPeriods.governmentNum})` })
     .from(factionCoalitionPeriods)
-    .where(eq(factionCoalitionPeriods.knessetNum, selectedKnesset))
-    .groupBy(factionCoalitionPeriods.governmentNum)
-    .orderBy(desc(factionCoalitionPeriods.governmentNum));
+    .where(eq(factionCoalitionPeriods.knessetNum, selectedKnesset));
+  const latestGovNum = maxGovRow?.maxGov ?? null;
 
-  const availableGovernments = govRows.map((g) => ({
-    num: g.governmentNum,
-    startDate: g.startDate,
-    endDate: g.endDate,
-  }));
-
-  // Determine which government to use for coalition filtering
-  const latestGovNum = availableGovernments[0]?.num ?? null;
-  const selectedGovNum = governmentFilter ? Number(governmentFilter) : latestGovNum;
-
-  // Fetch coalition factionIds for the selected government
+  // Fetch coalition factionIds for the latest government
   let coalitionFactionDbIds: Set<number> = new Set();
-  if (selectedGovNum != null) {
+  if (latestGovNum != null) {
     const coalitionRows = await db
       .select({ factionId: factionCoalitionPeriods.factionId })
       .from(factionCoalitionPeriods)
       .where(
         and(
           eq(factionCoalitionPeriods.knessetNum, selectedKnesset),
-          eq(factionCoalitionPeriods.governmentNum, selectedGovNum),
+          eq(factionCoalitionPeriods.governmentNum, latestGovNum),
         ),
       );
     coalitionFactionDbIds = new Set(coalitionRows.map((r) => r.factionId));
@@ -398,8 +381,6 @@ export default async function MembersPage({ searchParams }: Props) {
           currentGender={genderFilter}
           currentKnessetNumber={currentKnesset}
           showDetails={showDetails}
-          governments={availableGovernments}
-          currentGovernment={governmentFilter}
         />
       </div>
 
@@ -422,7 +403,6 @@ export default async function MembersPage({ searchParams }: Props) {
               if (knessetFilter) urlParams.set('knesset', knessetFilter);
               if (coalitionFilter) urlParams.set('coalition', coalitionFilter);
               if (genderFilter) urlParams.set('gender', genderFilter);
-              if (governmentFilter) urlParams.set('government', governmentFilter);
               if (showDetails) urlParams.set('details', 'true');
               if (p > 1) urlParams.set('page', String(p));
               const qs = urlParams.toString();
