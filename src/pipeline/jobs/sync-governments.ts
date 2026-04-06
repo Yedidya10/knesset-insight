@@ -185,9 +185,20 @@ async function syncGovernmentRecords(): Promise<number> {
     if (!govRow[0]) continue;
     const govDbId = govRow[0].id;
 
+    // Deduplicate positions by unique key (memberKnessetId+positionId+govMinistryId+startDate)
+    const seen = new Set<string>();
+    const uniquePositions: GovPositionRaw[] = [];
+    for (const pos of positions) {
+      const key = `${pos.PersonID}|${pos.PositionID}|${pos.GovMinistryID ?? 0}|${pos.StartDate?.split('T')[0] ?? ''}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        uniquePositions.push(pos);
+      }
+    }
+
     // Upsert positions in batches
-    for (let i = 0; i < positions.length; i += BATCH_SIZE) {
-      const batch = positions.slice(i, i + BATCH_SIZE);
+    for (let i = 0; i < uniquePositions.length; i += BATCH_SIZE) {
+      const batch = uniquePositions.slice(i, i + BATCH_SIZE);
       const rows = batch.map((pos) => ({
         governmentId: govDbId,
         memberId: personToMemberId.get(pos.PersonID) ?? null,
@@ -225,9 +236,9 @@ async function syncGovernmentRecords(): Promise<number> {
         });
     }
 
-    totalPositions += positions.length;
+    totalPositions += uniquePositions.length;
     console.log(
-      `  [governments] Gov ${govNum} (K${knessetNum}): ${positions.length} positions, PM=${pmPersonId ?? 'N/A'}`,
+      `  [governments] Gov ${govNum} (K${knessetNum}): ${uniquePositions.length} positions (${positions.length - uniquePositions.length} dupes removed), PM=${pmPersonId ?? 'N/A'}`,
     );
   }
 
