@@ -68,8 +68,12 @@ export function InteractiveStagePipeline({
 
   // Group votes by stage
   const votesByStage = new Map<string, StageVote[]>();
+  const unassignedVotes: StageVote[] = [];
   for (const vote of votes) {
-    if (vote.billStage == null) continue;
+    if (vote.billStage == null) {
+      unassignedVotes.push(vote);
+      continue;
+    }
     // Find which stage key matches this billStage value
     const stageKey = Object.entries(keyMap).find(
       ([, idx]) => idx === vote.billStage,
@@ -77,6 +81,21 @@ export function InteractiveStagePipeline({
     if (stageKey) {
       if (!votesByStage.has(stageKey)) votesByStage.set(stageKey, []);
       votesByStage.get(stageKey)!.push(vote);
+    } else {
+      unassignedVotes.push(vote);
+    }
+  }
+
+  // Assign untagged votes to the current (or latest completed) stage
+  if (unassignedVotes.length > 0) {
+    const currentStage = stages.find((s) => s.status === 'current');
+    const latestCompleted = [...stages]
+      .reverse()
+      .find((s) => s.status === 'completed');
+    const targetKey = currentStage?.key ?? latestCompleted?.key;
+    if (targetKey) {
+      if (!votesByStage.has(targetKey)) votesByStage.set(targetKey, []);
+      votesByStage.get(targetKey)!.push(...unassignedVotes);
     }
   }
 
@@ -184,7 +203,7 @@ export function InteractiveStagePipeline({
                     {!isLast && (
                       <div
                         className={cn(
-                          'w-[3px] flex-1 min-h-8 rounded-full',
+                          'min-h-8 w-[3px] flex-1 rounded-full',
                           stage.status === 'completed' &&
                             (allCompleted
                               ? 'bg-emerald-500 dark:bg-emerald-400'
@@ -200,18 +219,18 @@ export function InteractiveStagePipeline({
                       />
                     )}
                   </div>
-                  <div className={cn('pb-5 pt-2 flex-1', isLast && 'pb-0')}>
+                  <div className={cn('flex-1 pt-2 pb-5', isLast && 'pb-0')}>
                     <CollapsibleTrigger
                       className="flex w-full items-center justify-between"
                       disabled={!hasVotes}
                     >
                       <div>
-                        <p className="text-[11px] font-medium text-muted-foreground">
+                        <p className="text-muted-foreground text-[11px] font-medium">
                           {t('step', { num: idx + 1 })}
                         </p>
                         <p
                           className={cn(
-                            'text-sm font-semibold leading-snug',
+                            'text-sm leading-snug font-semibold',
                             stage.status === 'completed' && 'text-foreground',
                             stage.status === 'current' &&
                               !isTerminated &&
@@ -231,7 +250,7 @@ export function InteractiveStagePipeline({
                       {hasVotes && (
                         <ChevronDown
                           className={cn(
-                            'h-4 w-4 text-muted-foreground transition-transform',
+                            'text-muted-foreground h-4 w-4 transition-transform',
                             expandedStage === stage.key && 'rotate-180',
                           )}
                         />
@@ -277,7 +296,7 @@ function StageCircle({
           allCompleted
             ? 'bg-emerald-500 text-white shadow-emerald-500/25'
             : 'bg-emerald-500/90 text-white shadow-emerald-500/20',
-          hasVotes && 'ring-2 ring-primary/30',
+          hasVotes && 'ring-primary/30 ring-2',
         )}
       >
         <Check className="h-5 w-5" strokeWidth={3} />
@@ -288,17 +307,17 @@ function StageCircle({
   if (status === 'current' && !isTerminated) {
     return (
       <div className="relative flex h-10 w-10 shrink-0 items-center justify-center">
-        <span className="absolute h-10 w-10 rounded-full bg-primary/10 animate-[pulse_2.5s_ease-in-out_infinite]" />
-        <div className="relative h-10 w-10 rounded-full border-[3px] border-primary/80 bg-background shadow-sm shadow-primary/20 dark:bg-muted" />
-        <div className="absolute h-4 w-4 rounded-full bg-primary" />
+        <span className="bg-primary/10 absolute h-10 w-10 animate-[pulse_2.5s_ease-in-out_infinite] rounded-full" />
+        <div className="border-primary/80 bg-background shadow-primary/20 dark:bg-muted relative h-10 w-10 rounded-full border-[3px] shadow-sm" />
+        <div className="bg-primary absolute h-4 w-4 rounded-full" />
       </div>
     );
   }
 
   if (status === 'current' && isTerminated) {
     return (
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-destructive/10 ring-2 ring-destructive/30">
-        <X className="h-5 w-5 text-destructive" strokeWidth={3} />
+      <div className="bg-destructive/10 ring-destructive/30 flex h-10 w-10 shrink-0 items-center justify-center rounded-full ring-2">
+        <X className="text-destructive h-5 w-5" strokeWidth={3} />
       </div>
     );
   }
@@ -357,10 +376,8 @@ function InteractiveStageNode({
               type="button"
               onClick={hasVotes ? onToggle : undefined}
               className={cn(
-                'flex flex-col items-center gap-2.5 shrink-0 w-[120px] transition-opacity',
-                hasVotes
-                  ? 'cursor-pointer hover:opacity-80'
-                  : 'cursor-default',
+                'flex w-[120px] shrink-0 flex-col items-center gap-2.5 transition-opacity',
+                hasVotes ? 'cursor-pointer hover:opacity-80' : 'cursor-default',
                 isExpanded && 'opacity-100',
               )}
               aria-expanded={isExpanded}
@@ -368,53 +385,53 @@ function InteractiveStageNode({
             />
           }
         >
-            <StageCircle
-              stage={stage}
-              isTerminated={isTerminated}
-              allCompleted={allCompleted}
-              hasVotes={hasVotes}
-            />
-            <div className="flex flex-col items-center gap-0.5">
-              <span className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wide">
-                {t('step', { num: stepNumber })}
-              </span>
+          <StageCircle
+            stage={stage}
+            isTerminated={isTerminated}
+            allCompleted={allCompleted}
+            hasVotes={hasVotes}
+          />
+          <div className="flex flex-col items-center gap-0.5">
+            <span className="text-muted-foreground/70 text-[10px] font-medium tracking-wide uppercase">
+              {t('step', { num: stepNumber })}
+            </span>
+            <span
+              className={cn(
+                'max-w-[108px] text-center text-xs leading-tight font-semibold',
+                status === 'completed' && 'text-foreground',
+                status === 'current' && !isTerminated && 'text-primary',
+                status === 'current' &&
+                  isTerminated &&
+                  'text-destructive line-through',
+                status === 'upcoming' &&
+                  (isTerminated
+                    ? 'text-muted-foreground/25 line-through'
+                    : 'text-muted-foreground/60'),
+              )}
+            >
+              {label}
+            </span>
+            {hasVotes && voteResult && (
               <span
                 className={cn(
-                  'text-center text-xs font-semibold leading-tight max-w-[108px]',
-                  status === 'completed' && 'text-foreground',
-                  status === 'current' && !isTerminated && 'text-primary',
-                  status === 'current' &&
-                    isTerminated &&
-                    'text-destructive line-through',
-                  status === 'upcoming' &&
-                    (isTerminated
-                      ? 'text-muted-foreground/25 line-through'
-                      : 'text-muted-foreground/60'),
+                  'mt-0.5 text-[10px] font-medium',
+                  voteResult === 'accepted'
+                    ? 'text-green-600 dark:text-green-400'
+                    : 'text-red-600 dark:text-red-400',
                 )}
               >
-                {label}
+                {voteResult === 'accepted' ? '✓' : '✗'}
               </span>
-              {hasVotes && voteResult && (
-                <span
-                  className={cn(
-                    'mt-0.5 text-[10px] font-medium',
-                    voteResult === 'accepted'
-                      ? 'text-green-600 dark:text-green-400'
-                      : 'text-red-600 dark:text-red-400',
-                  )}
-                >
-                  {voteResult === 'accepted' ? '✓' : '✗'}
-                </span>
-              )}
-              {hasVotes && (
-                <ChevronDown
-                  className={cn(
-                    'h-3 w-3 text-muted-foreground transition-transform',
-                    isExpanded && 'rotate-180',
-                  )}
-                />
-              )}
-            </div>
+            )}
+            {hasVotes && (
+              <ChevronDown
+                className={cn(
+                  'text-muted-foreground h-3 w-3 transition-transform',
+                  isExpanded && 'rotate-180',
+                )}
+              />
+            )}
+          </div>
         </TooltipTrigger>
         <TooltipContent>
           {label} —{' '}

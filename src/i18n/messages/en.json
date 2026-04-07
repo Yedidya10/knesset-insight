@@ -267,7 +267,6 @@
       "whyRelated": "Why are these bills related?",
       "viewClusters": "Laws",
       "viewIndividual": "Individual Bills",
-      "viewVotes": "Votes",
       "category": {
         "criminal-law": "Criminal Law",
         "civil-law": "Civil Law",
@@ -590,7 +589,8 @@
     "filterByKnesset": "Filter by Knesset",
     "allKnessets": "All Knessets",
     "viewDetails": "View Details",
-    "backToList": "Back to Governments"  },
+    "backToList": "Back to Governments"
+  },
   "politics": {
     "title": "Politics",
     "subtitle": "Factions, registered parties and political movements",
@@ -627,7 +627,8 @@
     "knesset": "Knesset {num}",
     "seats": "Seats",
     "coalition": "Coalition",
-    "opposition": "Opposition"  },
+    "opposition": "Opposition"
+  },
   "integrity": {
     "title": "Integrity & Ethics",
     "noRecords": "No integrity records found for this member",

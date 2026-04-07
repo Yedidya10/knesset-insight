@@ -13,7 +13,15 @@ import {
 } from 'lucide-react';
 import { eq, and, desc, sql, inArray } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { votes, memberVotes, members, factions, bills, billClusters, billClusterMembers } from '@/lib/db/schema';
+import {
+  votes,
+  memberVotes,
+  members,
+  factions,
+  bills,
+  billClusters,
+  billClusterMembers,
+} from '@/lib/db/schema';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -234,7 +242,10 @@ export default async function VoteDetailPage({ params }: Props) {
       const [clusterRow] = await db
         .select({ id: billClusters.id, name: billClusters.name })
         .from(billClusterMembers)
-        .innerJoin(billClusters, eq(billClusterMembers.clusterId, billClusters.id))
+        .innerJoin(
+          billClusters,
+          eq(billClusterMembers.clusterId, billClusters.id),
+        )
         .where(eq(billClusterMembers.billId, vote.billId))
         .limit(1);
       if (clusterRow) cluster = clusterRow;
@@ -249,14 +260,17 @@ export default async function VoteDetailPage({ params }: Props) {
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
       {/* Legislation context breadcrumb */}
       {(cluster || vote.billId) && (
-        <nav className="mb-4 flex flex-wrap items-center gap-1 text-sm text-muted-foreground">
+        <nav className="text-muted-foreground mb-4 flex flex-wrap items-center gap-1 text-sm">
           <Link href="/legislation" className="hover:text-foreground">
             {tLeg('title')}
           </Link>
           {cluster && (
             <>
               <ChevronRight className="h-3 w-3" />
-              <Link href={`/legislation/laws/${cluster.id}`} className="hover:text-foreground">
+              <Link
+                href={`/legislation/laws/${cluster.id}`}
+                className="hover:text-foreground"
+              >
                 {cluster.name}
               </Link>
             </>
@@ -264,7 +278,10 @@ export default async function VoteDetailPage({ params }: Props) {
           {vote.billId && vote.billName && (
             <>
               <ChevronRight className="h-3 w-3" />
-              <Link href={`/legislation/${vote.billId}`} className="hover:text-foreground">
+              <Link
+                href={`/legislation/${vote.billId}`}
+                className="hover:text-foreground"
+              >
                 <TranslatedText text={vote.billName} />
               </Link>
             </>
@@ -278,7 +295,11 @@ export default async function VoteDetailPage({ params }: Props) {
         variant="ghost"
         size="sm"
         className="mb-6"
-        render={<Link href="/legislation?view=votes" />}
+        render={
+          <Link
+            href={vote.billId ? `/legislation/${vote.billId}` : '/legislation'}
+          />
+        }
       >
         {tCommon('back')}
       </Button>

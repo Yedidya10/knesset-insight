@@ -4,7 +4,17 @@ import { Link } from '@/i18n/navigation';
 import { eq, desc, sql, inArray } from 'drizzle-orm';
 import { FileText, Users, Vote, ExternalLink, Layers } from 'lucide-react';
 import { db } from '@/lib/db';
-import { bills, billInitiators, billUnions, billSplits, billNames, members, votes, billClusters, billClusterMembers } from '@/lib/db/schema';
+import {
+  bills,
+  billInitiators,
+  billUnions,
+  billSplits,
+  billNames,
+  members,
+  votes,
+  billClusters,
+  billClusterMembers,
+} from '@/lib/db/schema';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -14,7 +24,10 @@ import { BillStagePipeline } from '@/components/legislation/BillStagePipeline';
 import { BillRelationshipBanner } from '@/components/legislation/BillRelationshipBanner';
 import { InteractiveStagePipeline } from '@/components/legislation/InteractiveStagePipeline';
 import { computeBillStage } from '@/lib/knesset/bill-stages';
-import { getBillStatusText, getKnessetBillUrl } from '@/lib/knesset/bill-status';
+import {
+  getBillStatusText,
+  getKnessetBillUrl,
+} from '@/lib/knesset/bill-status';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -93,7 +106,10 @@ export default async function BillDetailPage({ params }: Props) {
 
       // Name history
       db
-        .select({ name: billNames.name, typeDesc: billNames.nameHistoryTypeDesc })
+        .select({
+          name: billNames.name,
+          typeDesc: billNames.nameHistoryTypeDesc,
+        })
         .from(billNames)
         .where(eq(billNames.billId, billId)),
     ]);
@@ -103,7 +119,10 @@ export default async function BillDetailPage({ params }: Props) {
     ...rawUnions.map((u) => u.mainBillId),
     ...rawSplits.map((s) => s.splitBillId),
   ];
-  const relatedBillMap = new Map<number, { name: string | null; knessetId: number }>();
+  const relatedBillMap = new Map<
+    number,
+    { name: string | null; knessetId: number }
+  >();
   if (relatedBillIds.length > 0) {
     const relatedBills = await db
       .select({ id: bills.id, name: bills.name, knessetId: bills.knessetId })
@@ -131,7 +150,8 @@ export default async function BillDetailPage({ params }: Props) {
   const knessetUrl = bill.knessetId ? getKnessetBillUrl(bill.knessetId) : null;
 
   // Fetch cluster info if bill belongs to one (via billClusterMembers — safe without migration)
-  let cluster: { id: number; name: string; billCount: number | null } | null = null;
+  let cluster: { id: number; name: string; billCount: number | null } | null =
+    null;
   try {
     const [clusterRow] = await db
       .select({
@@ -140,7 +160,10 @@ export default async function BillDetailPage({ params }: Props) {
         billCount: billClusters.billCount,
       })
       .from(billClusterMembers)
-      .innerJoin(billClusters, eq(billClusterMembers.clusterId, billClusters.id))
+      .innerJoin(
+        billClusters,
+        eq(billClusterMembers.clusterId, billClusters.id),
+      )
       .where(eq(billClusterMembers.billId, billId))
       .limit(1);
     if (clusterRow && (clusterRow.billCount ?? 0) > 1) cluster = clusterRow;
@@ -159,13 +182,18 @@ export default async function BillDetailPage({ params }: Props) {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-      <Button variant="ghost" size="sm" className="mb-6" render={<Link href="/legislation" />}>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="mb-6"
+        render={<Link href="/legislation" />}
+      >
         {tCommon('back')}
       </Button>
 
       {/* Main card */}
       <Card className="glass-card mb-6 overflow-hidden">
-        <div className="h-2 bg-gradient-to-r from-primary/40 via-chart-2/30 to-chart-4/30" />
+        <div className="from-primary/40 via-chart-2/30 to-chart-4/30 h-2 bg-gradient-to-r" />
         <CardContent className="p-6">
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <Badge variant="secondary">{statusText}</Badge>
@@ -173,14 +201,16 @@ export default async function BillDetailPage({ params }: Props) {
               <Badge variant="outline">{t(`billType.${billTypeKey}`)}</Badge>
             )}
             {bill.knessetNum && (
-              <Badge variant="outline">{t('knessetNum', { num: bill.knessetNum })}</Badge>
+              <Badge variant="outline">
+                {t('knessetNum', { num: bill.knessetNum })}
+              </Badge>
             )}
           </div>
 
           <h1 className="text-xl font-bold sm:text-2xl">{bill.name}</h1>
 
           {bill.summary && (
-            <p className="mt-2 text-sm text-muted-foreground">{bill.summary}</p>
+            <p className="text-muted-foreground mt-2 text-sm">{bill.summary}</p>
           )}
 
           <Separator className="my-5" />
@@ -206,9 +236,9 @@ export default async function BillDetailPage({ params }: Props) {
             <div className="mt-4">
               <Link
                 href={`/legislation/laws/${cluster.id}`}
-                className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm transition-colors hover:bg-primary/10"
+                className="border-primary/20 bg-primary/5 hover:bg-primary/10 flex items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors"
               >
-                <Layers className="h-4 w-4 shrink-0 text-primary" />
+                <Layers className="text-primary h-4 w-4 shrink-0" />
                 <span className="text-primary">
                   {t('clusters.partOfCluster', { name: cluster.name })}
                 </span>
@@ -222,7 +252,9 @@ export default async function BillDetailPage({ params }: Props) {
           {/* Name history */}
           {nameRows.length > 0 && (
             <div className="mt-4 space-y-1">
-              <p className="text-xs font-medium text-muted-foreground">{t('nameHistory')}</p>
+              <p className="text-muted-foreground text-xs font-medium">
+                {t('nameHistory')}
+              </p>
               {nameRows.map((n, i) => (
                 <div key={i} className="flex items-baseline gap-2 text-sm">
                   {n.typeDesc && (
@@ -243,7 +275,7 @@ export default async function BillDetailPage({ params }: Props) {
                 href={knessetUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-sm text-primary underline-offset-2 hover:underline"
+                className="text-primary inline-flex items-center gap-1.5 text-sm underline-offset-2 hover:underline"
               >
                 <ExternalLink className="h-3.5 w-3.5" />
                 {t('viewOnKnesset')}
@@ -259,10 +291,10 @@ export default async function BillDetailPage({ params }: Props) {
         <Card className="glass-card overflow-hidden">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
-              <Users className="h-5 w-5 text-primary" />
+              <Users className="text-primary h-5 w-5" />
               {t('initiators')}
               {initiatorRows.length > 0 && (
-                <span className="text-sm font-normal text-muted-foreground">
+                <span className="text-muted-foreground text-sm font-normal">
                   ({initiatorRows.length})
                 </span>
               )}
@@ -275,7 +307,7 @@ export default async function BillDetailPage({ params }: Props) {
                   <Link
                     key={m.memberId}
                     href={`/members/${m.memberId}`}
-                    className="flex items-center gap-3 py-3 first:pt-0 last:pb-0 transition-colors hover:bg-muted/50 -mx-2 px-2 rounded-lg"
+                    className="hover:bg-muted/50 -mx-2 flex items-center gap-3 rounded-lg px-2 py-3 transition-colors first:pt-0 last:pb-0"
                   >
                     <MemberAvatar
                       member={m}
@@ -284,7 +316,7 @@ export default async function BillDetailPage({ params }: Props) {
                       className="h-10 w-10 shadow-sm"
                     />
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold truncate">
+                      <p className="truncate text-sm font-semibold">
                         {m.firstName} {m.lastName}
                       </p>
                     </div>
@@ -297,7 +329,7 @@ export default async function BillDetailPage({ params }: Props) {
                 ))}
               </div>
             ) : (
-              <div className="flex flex-col items-center gap-2 py-6 text-muted-foreground">
+              <div className="text-muted-foreground flex flex-col items-center gap-2 py-6">
                 <Users className="h-10 w-10 opacity-20" />
                 <p className="text-sm">{t('noInitiators')}</p>
               </div>
@@ -309,7 +341,7 @@ export default async function BillDetailPage({ params }: Props) {
         <Card className="glass-card overflow-hidden">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
-              <Vote className="h-5 w-5 text-primary" />
+              <Vote className="text-primary h-5 w-5" />
               {t('relatedVotes')}
             </CardTitle>
           </CardHeader>
@@ -330,36 +362,9 @@ export default async function BillDetailPage({ params }: Props) {
                     isAccepted: v.isAccepted,
                   }))}
                 />
-
-                {/* Flat list fallback for all votes (billStage unavailable until migration) */}
-                {relatedVotes.length > 0 && (
-                  <div className="mt-4 space-y-2 border-t pt-4">
-                    <p className="text-xs font-medium text-muted-foreground">{t('relatedVotes')}</p>
-                    {relatedVotes.map((v) => (
-                      <Link
-                        key={v.id}
-                        href={`/votes/${v.id}`}
-                        className="block rounded-lg border p-3 transition-colors hover:bg-muted"
-                      >
-                        <p className="text-sm font-medium">{v.title}</p>
-                        <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-                          {v.voteDate && (
-                            <span>{new Date(v.voteDate).toLocaleDateString()}</span>
-                          )}
-                          <Badge variant={v.isAccepted ? 'default' : 'destructive'} className="text-[10px]">
-                            {v.isAccepted ? t('accepted') : t('rejected')}
-                          </Badge>
-                          <span>
-                            {v.forCount ?? 0}/{v.againstCount ?? 0}
-                          </span>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                )}
               </div>
             ) : (
-              <div className="flex flex-col items-center gap-2 py-6 text-muted-foreground">
+              <div className="text-muted-foreground flex flex-col items-center gap-2 py-6">
                 <Vote className="h-10 w-10 opacity-20" />
                 <p className="text-sm">{t('noVotes')}</p>
               </div>

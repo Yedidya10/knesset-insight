@@ -3,14 +3,16 @@
 import { useTranslations } from 'next-intl';
 import { useRouter, usePathname } from '@/i18n/navigation';
 import { useSearchParams } from 'next/navigation';
-import { Layers, FileText, Vote } from 'lucide-react';
+import { Layers, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface LegislationViewToggleProps {
   currentView: string;
 }
 
-export default function LegislationViewToggle({ currentView }: LegislationViewToggleProps) {
+export default function LegislationViewToggle({
+  currentView,
+}: LegislationViewToggleProps) {
   const t = useTranslations('legislation.clusters');
   const router = useRouter();
   const pathname = usePathname();
@@ -24,7 +26,7 @@ export default function LegislationViewToggle({ currentView }: LegislationViewTo
   };
 
   return (
-    <div className="inline-flex rounded-lg border bg-muted/30 p-1">
+    <div className="bg-muted/30 inline-flex rounded-lg border p-1">
       <button
         type="button"
         onClick={() => switchView('clusters')}
@@ -50,19 +52,6 @@ export default function LegislationViewToggle({ currentView }: LegislationViewTo
       >
         <FileText className="h-4 w-4" />
         {t('viewIndividual')}
-      </button>
-      <button
-        type="button"
-        onClick={() => switchView('votes')}
-        className={cn(
-          'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
-          currentView === 'votes'
-            ? 'bg-background text-foreground shadow-sm'
-            : 'text-muted-foreground hover:text-foreground',
-        )}
-      >
-        <Vote className="h-4 w-4" />
-        {t('viewVotes')}
       </button>
     </div>
   );
