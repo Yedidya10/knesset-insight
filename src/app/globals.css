@@ -131,6 +131,16 @@
   html[lang="ar"] {
     font-family: var(--font-noto-arabic), var(--font-rubik), sans-serif;
   }
+
+  /*
+   * Fixed-format data (dates, times, numbers, countdowns) is always LTR
+   * even inside RTL layouts. This prevents reversed digit order.
+   */
+  time,
+  [dir="rtl"] .data-ltr {
+    direction: ltr;
+    unicode-bidi: isolate;
+  }
 }
 
 /* ── Modern UI utilities ── */
