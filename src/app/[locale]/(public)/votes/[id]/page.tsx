@@ -115,45 +115,69 @@ export default async function VoteDetailPage({ params }: Props) {
   const abstainCount = abstainVoters.length;
   const totalVoters = forCount + againstCount + abstainCount;
 
-  const renderFactionBar = (entries: [string, { for: number; against: number; abstain: number; absent: number; isCoalition: boolean | null }][]) => (
-    <div className="space-y-2.5">
-      {entries.map(([partyName, counts]) => {
-        const total = counts.for + counts.against + counts.abstain;
-        if (total === 0) return null;
-        return (
-          <div key={partyName} className="flex items-center gap-3">
-            <span className="min-w-[120px] text-sm font-medium truncate">{partyName}</span>
-            <div className="flex flex-1 items-center gap-0.5 rounded-full overflow-hidden">
-              {counts.for > 0 && (
-                <div
-                  className="h-5 bg-green-500 transition-all"
-                  style={{ width: `${(counts.for / total) * 100}%` }}
-                  title={`${t('for')}: ${counts.for}`}
-                />
-              )}
-              {counts.against > 0 && (
-                <div
-                  className="h-5 bg-red-500 transition-all"
-                  style={{ width: `${(counts.against / total) * 100}%` }}
-                  title={`${t('against')}: ${counts.against}`}
-                />
-              )}
-              {counts.abstain > 0 && (
-                <div
-                  className="h-5 bg-yellow-500 transition-all"
-                  style={{ width: `${(counts.abstain / total) * 100}%` }}
-                  title={`${t('abstain')}: ${counts.abstain}`}
-                />
-              )}
+  const renderFactionBar = (entries: [string, { for: number; against: number; abstain: number; absent: number; isCoalition: boolean | null }][]) => {
+    const sorted = [...entries].sort((a, b) => (b[1].for + b[1].against + b[1].abstain) - (a[1].for + a[1].against + a[1].abstain));
+    const maxTotal = Math.max(...sorted.map(([, c]) => c.for + c.against + c.abstain), 1);
+
+    return (
+      <div className="space-y-2">
+        {sorted.map(([partyName, counts]) => {
+          const total = counts.for + counts.against + counts.abstain;
+          if (total === 0) return null;
+          const barWidth = (total / maxTotal) * 100;
+          return (
+            <div key={partyName} className="rounded-lg bg-muted/30 px-3 py-2.5 transition-colors hover:bg-muted/50">
+              <div className="mb-1.5 flex items-center justify-between gap-2">
+                <span className="text-sm font-medium truncate">{partyName}</span>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {counts.for > 0 && (
+                    <span className="inline-flex min-w-5 items-center justify-center rounded-md bg-green-100 px-1.5 py-0.5 text-xs font-medium tabular-nums text-green-700 dark:bg-green-950/50 dark:text-green-400">
+                      {counts.for}
+                    </span>
+                  )}
+                  {counts.against > 0 && (
+                    <span className="inline-flex min-w-5 items-center justify-center rounded-md bg-red-100 px-1.5 py-0.5 text-xs font-medium tabular-nums text-red-700 dark:bg-red-950/50 dark:text-red-400">
+                      {counts.against}
+                    </span>
+                  )}
+                  {counts.abstain > 0 && (
+                    <span className="inline-flex min-w-5 items-center justify-center rounded-md bg-yellow-100 px-1.5 py-0.5 text-xs font-medium tabular-nums text-yellow-700 dark:bg-yellow-950/50 dark:text-yellow-400">
+                      {counts.abstain}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="h-2 w-full rounded-full bg-muted/60 overflow-hidden">
+                <div className="flex h-full rounded-full overflow-hidden transition-all" style={{ width: `${barWidth}%` }}>
+                  {counts.for > 0 && (
+                    <div
+                      className="h-full bg-green-500 dark:bg-green-600"
+                      style={{ width: `${(counts.for / total) * 100}%` }}
+                      title={`${t('for')}: ${counts.for}`}
+                    />
+                  )}
+                  {counts.against > 0 && (
+                    <div
+                      className="h-full bg-red-500 dark:bg-red-600"
+                      style={{ width: `${(counts.against / total) * 100}%` }}
+                      title={`${t('against')}: ${counts.against}`}
+                    />
+                  )}
+                  {counts.abstain > 0 && (
+                    <div
+                      className="h-full bg-yellow-500 dark:bg-yellow-600"
+                      style={{ width: `${(counts.abstain / total) * 100}%` }}
+                      title={`${t('abstain')}: ${counts.abstain}`}
+                    />
+                  )}
+                </div>
+              </div>
             </div>
-            <span className="text-xs text-muted-foreground tabular-nums whitespace-nowrap">
-              {counts.for}/{counts.against}/{counts.abstain}
-            </span>
-          </div>
-        );
-      })}
-    </div>
-  );
+          );
+        })}
+      </div>
+    );
+  };
 
   const renderVoterList = (
     voters: typeof voterData,
@@ -301,7 +325,23 @@ export default async function VoteDetailPage({ params }: Props) {
       {/* Faction breakdown — split by coalition / opposition */}
       <Card className="glass-card mb-6 overflow-hidden">
         <CardHeader>
-          <CardTitle className="text-lg">{t('factionBreakdown')}</CardTitle>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <CardTitle className="text-lg">{t('factionBreakdown')}</CardTitle>
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <span className="inline-block h-2.5 w-2.5 rounded-sm bg-green-500" />
+                {t('for')}
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="inline-block h-2.5 w-2.5 rounded-sm bg-red-500" />
+                {t('against')}
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="inline-block h-2.5 w-2.5 rounded-sm bg-yellow-500" />
+                {t('abstain')}
+              </span>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {coalitionFactions.length > 0 || oppositionFactions.length > 0 ? (
