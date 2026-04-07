@@ -132,7 +132,7 @@ export default async function BillDetailPage({ params }: Props) {
 
   // Fetch cluster info if bill belongs to one (via billClusterMembers — safe without migration)
   let cluster: { id: number; name: string; billCount: number | null } | null = null;
-  {
+  try {
     const [clusterRow] = await db
       .select({
         id: billClusters.id,
@@ -144,6 +144,8 @@ export default async function BillDetailPage({ params }: Props) {
       .where(eq(billClusterMembers.billId, billId))
       .limit(1);
     if (clusterRow && (clusterRow.billCount ?? 0) > 1) cluster = clusterRow;
+  } catch {
+    // bill_cluster_members table may not exist yet
   }
 
   const billTypeKey =

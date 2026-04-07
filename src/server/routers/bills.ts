@@ -143,9 +143,9 @@ export const billsRouter = router({
 
       const stageInfo = computeBillStage(bill.status, bill.subTypeId);
 
-      // Cluster context (via billClusterMembers — safe without migration 0008)
+      // Cluster context (via billClusterMembers — gracefully degrade if tables missing)
       let cluster: { id: number; name: string; billCount: number | null } | null = null;
-      {
+      try {
         const [clusterRow] = await db
           .select({
             id: billClusters.id,
@@ -157,6 +157,8 @@ export const billsRouter = router({
           .where(eq(billClusterMembers.billId, input.id))
           .limit(1);
         if (clusterRow) cluster = clusterRow;
+      } catch {
+        // bill_cluster_members table may not exist yet
       }
 
       return { ...bill, initiators, relatedVotes, unions, splits, nameHistory, stageInfo, cluster };

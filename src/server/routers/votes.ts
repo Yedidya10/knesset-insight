@@ -137,16 +137,20 @@ export const votesRouter = router({
           .orderBy(desc(votes.voteDate));
       }
 
-      // Cluster context (via billClusterMembers — safe without migration 0008)
+      // Cluster context — gracefully degrade if tables missing
       let clusterInfo: { id: number; name: string } | null = null;
       if (result[0].billId) {
-        const [clusterRow] = await db
-          .select({ id: billClusters.id, name: billClusters.name })
-          .from(billClusterMembers)
-          .innerJoin(billClusters, eq(billClusterMembers.clusterId, billClusters.id))
-          .where(eq(billClusterMembers.billId, result[0].billId))
-          .limit(1);
-        if (clusterRow) clusterInfo = clusterRow;
+        try {
+          const [clusterRow] = await db
+            .select({ id: billClusters.id, name: billClusters.name })
+            .from(billClusterMembers)
+            .innerJoin(billClusters, eq(billClusterMembers.clusterId, billClusters.id))
+            .where(eq(billClusterMembers.billId, result[0].billId))
+            .limit(1);
+          if (clusterRow) clusterInfo = clusterRow;
+        } catch {
+          // bill_cluster_members table may not exist yet
+        }
       }
 
       return { ...result[0], relatedVotes, cluster: clusterInfo };

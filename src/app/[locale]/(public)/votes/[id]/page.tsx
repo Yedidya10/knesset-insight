@@ -227,16 +227,20 @@ export default async function VoteDetailPage({ params }: Props) {
     </Card>
   );
 
-  // Fetch cluster info for breadcrumb (via billClusterMembers, safe without migration)
+  // Fetch cluster info for breadcrumb — gracefully degrade if tables missing
   let cluster: { id: number; name: string } | null = null;
   if (vote.billId) {
-    const [clusterRow] = await db
-      .select({ id: billClusters.id, name: billClusters.name })
-      .from(billClusterMembers)
-      .innerJoin(billClusters, eq(billClusterMembers.clusterId, billClusters.id))
-      .where(eq(billClusterMembers.billId, vote.billId))
-      .limit(1);
-    if (clusterRow) cluster = clusterRow;
+    try {
+      const [clusterRow] = await db
+        .select({ id: billClusters.id, name: billClusters.name })
+        .from(billClusterMembers)
+        .innerJoin(billClusters, eq(billClusterMembers.clusterId, billClusters.id))
+        .where(eq(billClusterMembers.billId, vote.billId))
+        .limit(1);
+      if (clusterRow) cluster = clusterRow;
+    } catch {
+      // bill_cluster_members table may not exist yet
+    }
   }
 
   const tLeg = await getTranslations('legislation');

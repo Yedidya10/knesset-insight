@@ -45,11 +45,17 @@ export default async function ClusterDetailPage({ params }: Props) {
   if (isNaN(clusterId)) notFound();
 
   // Fetch cluster
-  const [cluster] = await db
-    .select()
-    .from(billClusters)
-    .where(eq(billClusters.id, clusterId))
-    .limit(1);
+  let clusterResult;
+  try {
+    clusterResult = await db
+      .select()
+      .from(billClusters)
+      .where(eq(billClusters.id, clusterId))
+      .limit(1);
+  } catch {
+    notFound();
+  }
+  const [cluster] = clusterResult;
 
   if (!cluster) notFound();
 

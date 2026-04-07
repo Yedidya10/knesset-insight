@@ -24,18 +24,21 @@ export default async function AdminClustersPage() {
   const t = await getTranslations('admin');
   const tStats = await getTranslations('admin.stats');
 
-  // Fetch stats and review queue in parallel
-  const [
-    totalClustersR,
-    aiClustersR,
-    formalClustersR,
-    nameSimilarityR,
-    approvedAiR,
-    totalBillsR,
-    embeddedBillsR,
-    pendingReviewR,
-    queueItems,
-  ] = await Promise.all([
+  // Fetch stats and review queue in parallel — gracefully degrade if tables missing
+  let totalClustersR, aiClustersR, formalClustersR, nameSimilarityR, approvedAiR, totalBillsR, embeddedBillsR, pendingReviewR;
+  let queueItems: { id: number; name: string; description: string | null; billCount: number | null; aiConfidence: number | null; latestKnessetNum: number | null; category: string | null }[] = [];
+  try {
+    [
+      totalClustersR,
+      aiClustersR,
+      formalClustersR,
+      nameSimilarityR,
+      approvedAiR,
+      totalBillsR,
+      embeddedBillsR,
+      pendingReviewR,
+      queueItems,
+    ] = await Promise.all([
     db.select({ count: sql<number>`count(*)` }).from(billClusters),
     db
       .select({ count: sql<number>`count(*)` })
@@ -95,7 +98,18 @@ export default async function AdminClustersPage() {
       )
       .orderBy(billClusters.aiConfidence)
       .limit(20),
-  ]);
+    ]);
+  } catch {
+    // Tables may not exist yet — use empty defaults
+    totalClustersR = [{ count: 0 }];
+    aiClustersR = [{ count: 0 }];
+    formalClustersR = [{ count: 0 }];
+    nameSimilarityR = [{ count: 0 }];
+    approvedAiR = [{ count: 0 }];
+    totalBillsR = [{ count: 0 }];
+    embeddedBillsR = [{ count: 0 }];
+    pendingReviewR = [{ count: 0 }];
+  }
 
   const totalClusters = Number(totalClustersR[0]?.count ?? 0);
   const aiClusters = Number(aiClustersR[0]?.count ?? 0);
