@@ -36,7 +36,7 @@ export default async function LegislationPage({ searchParams }: Props) {
   const t = await getTranslations('legislation');
   const tCommon = await getTranslations('common');
   const params = await searchParams;
-  const view = params.view ?? 'clusters';
+  const view = params.view ?? 'bills';
   const knessetNum = params.knesset ? Number(params.knesset) : undefined;
   const billType = params.type ?? '';
   const statusFilter = params.status ?? '';
