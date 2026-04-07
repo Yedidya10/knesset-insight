@@ -247,7 +247,46 @@
     "knessetNum": "Кнессет {num}",
     "noVotes": "Голосования не найдены",
     "accepted": "Принято",
-    "rejected": "Отклонено"
+    "rejected": "Отклонён",
+    "clusters": {
+      "title": "Законодательные маршруты",
+      "lawJourney": "Законодательный маршрут",
+      "viewFullJourney": "Полный маршрут",
+      "crossTerm": "Межсозывный",
+      "knessetRange": "Кнессет {from}–{to}",
+      "billCount": "{count} законопроектов",
+      "voteCount": "{count} голосований",
+      "initiatorCount": "{count} инициаторов",
+      "relatedBills": "Связанные законопроекты",
+      "relatedBillsAcrossTerms": "Связанные законопроекты разных созывов",
+      "partOfCluster": "Этот законопроект является частью законодательного маршрута: {name}",
+      "aiMatched": "Связь определена ИИ",
+      "aiConfidence": "Уверенность: {percent}%",
+      "aiReasoning": "Объяснение ИИ",
+      "whyRelated": "Почему эти законопроекты связаны?",
+      "viewClusters": "Законы",
+      "viewIndividual": "Отдельные законопроекты",
+      "category": {
+        "criminal-law": "Уголовное право",
+        "civil-law": "Гражданское право",
+        "military": "Армия и безопасность",
+        "economy": "Экономика",
+        "education": "Образование",
+        "health": "Здравоохранение",
+        "environment": "Экология",
+        "governance": "Государственное управление",
+        "social-welfare": "Социальное обеспечение",
+        "other": "Другое"
+      }
+    },
+    "votes": {
+      "stageVote": "Голосование на этапе",
+      "voteAtStage": "Голосование на этапе {stage}",
+      "viewFullVote": "Полное голосование",
+      "factionBreakdown": "По фракциям",
+      "reservations": "Оговорки",
+      "voteTimeline": "Хронология голосований"
+    }
   },
   "parties": {
     "title": "Фракции",

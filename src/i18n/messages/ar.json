@@ -247,7 +247,46 @@
     "knessetNum": "الكنيست {num}",
     "noVotes": "لم يتم العثور على تصويتات",
     "accepted": "مقبول",
-    "rejected": "مرفوض"
+    "rejected": "مرفوض",
+    "clusters": {
+      "title": "رحلات التشريع",
+      "lawJourney": "رحلة التشريع",
+      "viewFullJourney": "عرض الرحلة الكاملة",
+      "crossTerm": "عبر الدورات",
+      "knessetRange": "الكنيست {from}–{to}",
+      "billCount": "{count} مشاريع قوانين",
+      "voteCount": "{count} تصويتات",
+      "initiatorCount": "{count} مبادرون",
+      "relatedBills": "مشاريع قوانين ذات صلة",
+      "relatedBillsAcrossTerms": "مشاريع قوانين ذات صلة عبر دورات الكنيست",
+      "partOfCluster": "مشروع القانون هذا جزء من رحلة تشريعية أوسع: {name}",
+      "aiMatched": "علاقة تم تحديدها بواسطة الذكاء الاصطناعي",
+      "aiConfidence": "ثقة: {percent}%",
+      "aiReasoning": "شرح الذكاء الاصطناعي",
+      "whyRelated": "لماذا مشاريع القوانين هذه مرتبطة؟",
+      "viewClusters": "قوانين",
+      "viewIndividual": "مشاريع قوانين فردية",
+      "category": {
+        "criminal-law": "القانون الجنائي",
+        "civil-law": "القانون المدني",
+        "military": "الجيش والأمن",
+        "economy": "الاقتصاد",
+        "education": "التعليم",
+        "health": "الصحة",
+        "environment": "البيئة",
+        "governance": "الحكم والإدارة",
+        "social-welfare": "الرفاه الاجتماعي",
+        "other": "أخرى"
+      }
+    },
+    "votes": {
+      "stageVote": "تصويت المرحلة",
+      "voteAtStage": "تصويت في {stage}",
+      "viewFullVote": "عرض التصويت الكامل",
+      "factionBreakdown": "تقسيم الكتل",
+      "reservations": "تحفظات",
+      "voteTimeline": "الجدول الزمني للتصويتات"
+    }
   },
   "parties": {
     "title": "الكتل",

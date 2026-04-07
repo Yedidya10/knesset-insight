@@ -159,6 +159,25 @@ export const appConfig = {
     /** Minimum seats to pass electoral threshold */
     thresholdPercent: 3.25,
   },
+
+  // Bill Clusters (unified legislation entities)
+  billClusters: {
+    ai: {
+      provider: 'anthropic' as const,
+      model: process.env.BILL_CLUSTERS_AI_MODEL ?? 'claude-sonnet-4-20250514',
+      maxTokens: Number(process.env.BILL_CLUSTERS_AI_MAX_TOKENS ?? 4096),
+      dailyTokenBudget: Number(process.env.BILL_CLUSTERS_DAILY_TOKEN_BUDGET ?? 500_000),
+    },
+    embedding: {
+      similarityThreshold: Number(process.env.BILL_CLUSTERS_EMBEDDING_SIM_THRESHOLD ?? 0.5),
+      autoConfirmThreshold: Number(process.env.BILL_CLUSTERS_EMBEDDING_AUTO_THRESHOLD ?? 0.85),
+    },
+    nameSimilarityThreshold: Number(process.env.BILL_CLUSTERS_NAME_SIM_THRESHOLD ?? 0.7),
+    aiConfidenceThreshold: Number(process.env.BILL_CLUSTERS_AI_CONFIDENCE_THRESHOLD ?? 0.6),
+    aiBatchSize: Number(process.env.BILL_CLUSTERS_AI_BATCH_SIZE ?? 50),
+    maxCandidatesPerCluster: Number(process.env.BILL_CLUSTERS_MAX_CANDIDATES ?? 10),
+    priorityKnessets: [25, 24, 23, 22, 21, 20] as readonly number[],
+  },
 } as const;
 
 export type Locale = (typeof appConfig.i18n.locales)[number];

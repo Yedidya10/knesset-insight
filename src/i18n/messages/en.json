@@ -247,7 +247,46 @@
     "knessetNum": "Knesset {num}",
     "noVotes": "No votes found",
     "accepted": "Accepted",
-    "rejected": "Rejected"
+    "rejected": "Rejected",
+    "clusters": {
+      "title": "Law Journeys",
+      "lawJourney": "Law Journey",
+      "viewFullJourney": "View Full Journey",
+      "crossTerm": "Cross-Term",
+      "knessetRange": "Knesset {from}–{to}",
+      "billCount": "{count} bills",
+      "voteCount": "{count} votes",
+      "initiatorCount": "{count} initiators",
+      "relatedBills": "Related Bills",
+      "relatedBillsAcrossTerms": "Related bills across Knesset terms",
+      "partOfCluster": "This bill is part of a broader legislative journey: {name}",
+      "aiMatched": "AI-identified relationship",
+      "aiConfidence": "Confidence: {percent}%",
+      "aiReasoning": "AI Explanation",
+      "whyRelated": "Why are these bills related?",
+      "viewClusters": "Laws",
+      "viewIndividual": "Individual Bills",
+      "category": {
+        "criminal-law": "Criminal Law",
+        "civil-law": "Civil Law",
+        "military": "Military & Security",
+        "economy": "Economy",
+        "education": "Education",
+        "health": "Health",
+        "environment": "Environment",
+        "governance": "Governance",
+        "social-welfare": "Social Welfare",
+        "other": "Other"
+      }
+    },
+    "votes": {
+      "stageVote": "Stage Vote",
+      "voteAtStage": "Vote at {stage}",
+      "viewFullVote": "View Full Vote",
+      "factionBreakdown": "Faction Breakdown",
+      "reservations": "Reservations",
+      "voteTimeline": "Vote Timeline"
+    }
   },
   "parties": {
     "title": "Factions",

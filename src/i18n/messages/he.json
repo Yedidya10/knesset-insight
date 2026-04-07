@@ -247,7 +247,46 @@
     "knessetNum": "כנסת {num}",
     "noVotes": "לא נמצאו הצבעות",
     "accepted": "אושרה",
-    "rejected": "נדחתה"
+    "rejected": "נדחתה",
+    "clusters": {
+      "title": "מסעות חקיקה",
+      "lawJourney": "מסע החקיקה",
+      "viewFullJourney": "צפייה במסע המלא",
+      "crossTerm": "חוצה כנסות",
+      "knessetRange": "כנסת {from}–{to}",
+      "billCount": "{count} הצעות חוק",
+      "voteCount": "{count} הצבעות",
+      "initiatorCount": "{count} יוזמים",
+      "relatedBills": "הצעות חוק קשורות",
+      "relatedBillsAcrossTerms": "הצעות חוק קשורות לאורך כנסות",
+      "partOfCluster": "הצעה זו חלק ממסע החקיקה: {name}",
+      "aiMatched": "קשר שזוהה על ידי AI",
+      "aiConfidence": "ביטחון: {percent}%",
+      "aiReasoning": "הסבר AI",
+      "whyRelated": "למה ההצעות האלה קשורות?",
+      "viewClusters": "חוקים",
+      "viewIndividual": "הצעות חוק",
+      "category": {
+        "criminal-law": "משפט פלילי",
+        "civil-law": "משפט אזרחי",
+        "military": "צבא וביטחון",
+        "economy": "כלכלה",
+        "education": "חינוך",
+        "health": "בריאות",
+        "environment": "סביבה",
+        "governance": "ממשל ומנהל",
+        "social-welfare": "רווחה חברתית",
+        "other": "אחר"
+      }
+    },
+    "votes": {
+      "stageVote": "הצבעה בשלב",
+      "voteAtStage": "הצבעה ב{stage}",
+      "viewFullVote": "צפייה בהצבעה המלאה",
+      "factionBreakdown": "פילוח סיעתי",
+      "reservations": "הסתייגויות",
+      "voteTimeline": "ציר זמן הצבעות"
+    }
   },
   "parties": {
     "title": "סיעות",

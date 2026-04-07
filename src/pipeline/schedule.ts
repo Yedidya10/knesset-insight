@@ -15,6 +15,10 @@ import { syncGovMinistries } from './jobs/sync-gov-ministries';
 import { syncGovernments } from './jobs/sync-governments';
 import { syncIntegrityKnesset } from './jobs/sync-integrity-knesset';
 import { syncIntegrityLobbyists } from './jobs/sync-integrity-lobbyists';
+import { linkVotesToBills } from './jobs/link-votes-to-bills';
+import { computeBillClusters } from './jobs/compute-bill-clusters';
+import { generateBillEmbeddings } from './jobs/generate-bill-embeddings';
+import { aiClusterBills } from './jobs/ai-cluster-bills';
 
 export const syncJobs = {
   members: syncMembers,
@@ -34,6 +38,11 @@ export const syncJobs = {
   governments: syncGovernments,
   integrityKnesset: syncIntegrityKnesset,
   integrityLobbyists: syncIntegrityLobbyists,
+  // Bill clustering pipeline (run after sync jobs)
+  linkVotesToBills: linkVotesToBills,
+  computeBillClusters: computeBillClusters,
+  generateBillEmbeddings: generateBillEmbeddings,
+  aiClusterBills: aiClusterBills,
   all: async () => {
     await syncMembers();
     await syncVotes();
@@ -57,6 +66,11 @@ export const syncJobs = {
     // Integrity must run after members + committees
     await syncIntegrityKnesset();
     await syncIntegrityLobbyists();
+    // Bill clustering pipeline (must run after bills + votes synced)
+    await linkVotesToBills();
+    await computeBillClusters();
+    await generateBillEmbeddings();
+    await aiClusterBills();
   },
 } as const;
 

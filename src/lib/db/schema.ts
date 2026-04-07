@@ -12,8 +12,27 @@ import {
   uuid,
   numeric,
   real,
+  customType,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
+
+// Custom pgvector type for embedding storage
+const vector = (name: string, dimensions: number) =>
+  customType<{ data: number[]; driverParam: string }>({
+    dataType() {
+      return `vector(${dimensions})`;
+    },
+    toDriver(value: number[]) {
+      return `[${value.join(',')}]`;
+    },
+    fromDriver(value: unknown) {
+      const str = String(value);
+      return str
+        .slice(1, -1)
+        .split(',')
+        .map(Number);
+    },
+  })(name);
 
 // ──────────────────────────────────────
 // Political Groups (canonical cross-term identities)
@@ -320,6 +339,7 @@ export const bills = pgTable('bills', {
   fullTextUrl: text('full_text_url'),
   aiSummary: text('ai_summary'),
   metadata: jsonb('metadata'),
+  clusterId: integer('cluster_id'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
@@ -340,6 +360,7 @@ export const votes = pgTable('votes', {
   isAccepted: boolean('is_accepted'),
   summary: text('summary'),
   metadata: jsonb('metadata'),
+  billStage: integer('bill_stage'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
@@ -419,6 +440,62 @@ export const billNames = pgTable('bill_names', {
   nameHistoryTypeId: integer('name_history_type_id'),
   nameHistoryTypeDesc: text('name_history_type_desc'),
   lastUpdated: timestamp('last_updated', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+// ──────────────────────────────────────
+// Bill Clusters (unified legislation entities)
+// ──────────────────────────────────────
+
+export const billClusters = pgTable('bill_clusters', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull(),
+  description: text('description'),
+  category: text('category'),
+  primaryBillId: integer('primary_bill_id'),
+  currentStage: integer('current_stage'),
+  specialStatus: text('special_status'),
+  billType: text('bill_type'),
+  latestKnessetNum: integer('latest_knesset_num'),
+  billCount: integer('bill_count').default(1),
+  hasUnions: boolean('has_unions').default(false),
+  hasSplits: boolean('has_splits').default(false),
+  hasCrossTermBills: boolean('has_cross_term_bills').default(false),
+  aiProcessed: boolean('ai_processed').default(false),
+  aiConfidence: real('ai_confidence'),
+  latestUpdate: timestamp('latest_update', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
+export const billClusterMembers = pgTable(
+  'bill_cluster_members',
+  {
+    id: serial('id').primaryKey(),
+    clusterId: integer('cluster_id')
+      .references(() => billClusters.id)
+      .notNull(),
+    billId: integer('bill_id')
+      .references(() => bills.id)
+      .notNull(),
+    relationshipType: text('relationship_type').notNull(),
+    confidence: real('confidence').default(1.0),
+    isOrigin: boolean('is_origin').default(false),
+    isPrimary: boolean('is_primary').default(false),
+    aiReasoning: text('ai_reasoning'),
+    addedAt: timestamp('added_at', { withTimezone: true }).defaultNow(),
+  },
+  (t) => [unique().on(t.billId)],
+);
+
+export const billEmbeddings = pgTable('bill_embeddings', {
+  id: serial('id').primaryKey(),
+  billId: integer('bill_id')
+    .references(() => bills.id)
+    .unique()
+    .notNull(),
+  embedding: vector('embedding', 768),
+  model: text('model').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
 
@@ -877,7 +954,7 @@ export const memberVotesRelations = relations(memberVotes, ({ one }) => ({
   }),
 }));
 
-export const billsRelations = relations(bills, ({ many }) => ({
+export const billsRelations = relations(bills, ({ one, many }) => ({
   initiators: many(billInitiators),
   votes: many(votes),
   unionsAsMain: many(billUnions, { relationName: 'mainBillUnions' }),
@@ -885,6 +962,12 @@ export const billsRelations = relations(bills, ({ many }) => ({
   splitsAsMain: many(billSplits, { relationName: 'mainBillSplits' }),
   splitsAsChild: many(billSplits, { relationName: 'splitBillSplits' }),
   nameHistory: many(billNames),
+  cluster: one(billClusters, {
+    fields: [bills.clusterId],
+    references: [billClusters.id],
+  }),
+  clusterMembership: many(billClusterMembers),
+  embedding: many(billEmbeddings),
 }));
 
 export const billInitiatorsRelations = relations(
@@ -930,6 +1013,32 @@ export const billSplitsRelations = relations(billSplits, ({ one }) => ({
 export const billNamesRelations = relations(billNames, ({ one }) => ({
   bill: one(bills, {
     fields: [billNames.billId],
+    references: [bills.id],
+  }),
+}));
+
+export const billClustersRelations = relations(billClusters, ({ one, many }) => ({
+  primaryBill: one(bills, {
+    fields: [billClusters.primaryBillId],
+    references: [bills.id],
+  }),
+  members: many(billClusterMembers),
+}));
+
+export const billClusterMembersRelations = relations(billClusterMembers, ({ one }) => ({
+  cluster: one(billClusters, {
+    fields: [billClusterMembers.clusterId],
+    references: [billClusters.id],
+  }),
+  bill: one(bills, {
+    fields: [billClusterMembers.billId],
+    references: [bills.id],
+  }),
+}));
+
+export const billEmbeddingsRelations = relations(billEmbeddings, ({ one }) => ({
+  bill: one(bills, {
+    fields: [billEmbeddings.billId],
     references: [bills.id],
   }),
 }));
