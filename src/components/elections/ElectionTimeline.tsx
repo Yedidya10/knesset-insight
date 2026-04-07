@@ -12,6 +12,7 @@ interface TimelineEvent {
 interface ElectionTimelineProps {
   events: TimelineEvent[];
   typeLabels: Record<string, string>;
+  estimatedDateNote?: string;
 }
 
 const typeColor: Record<string, string> = {
@@ -22,7 +23,7 @@ const typeColor: Record<string, string> = {
   milestone: 'bg-emerald-500',
 };
 
-export default function ElectionTimeline({ events, typeLabels }: ElectionTimelineProps) {
+export default function ElectionTimeline({ events, typeLabels, estimatedDateNote }: ElectionTimelineProps) {
   if (events.length === 0) return null;
 
   return (
@@ -78,6 +79,11 @@ export default function ElectionTimeline({ events, typeLabels }: ElectionTimelin
           </div>
         );
       })}
+      {estimatedDateNote && (
+        <p className="mt-4 ps-11 text-[11px] text-muted-foreground/70">
+          {estimatedDateNote}
+        </p>
+      )}
     </div>
   );
 }

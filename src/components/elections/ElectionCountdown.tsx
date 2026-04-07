@@ -9,6 +9,7 @@ interface ElectionCountdownProps {
 
 export default function ElectionCountdown({ electionDate }: ElectionCountdownProps) {
   const t = useTranslations('elections2026.countdown');
+  const tRoot = useTranslations('elections2026');
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
 
   useEffect(() => {
@@ -62,6 +63,9 @@ export default function ElectionCountdown({ electionDate }: ElectionCountdownPro
           </div>
         ))}
       </div>
+      <p className="mt-4 text-center text-[11px] text-muted-foreground/70">
+        {tRoot('estimatedDateNote')}
+      </p>
     </div>
   );
 }

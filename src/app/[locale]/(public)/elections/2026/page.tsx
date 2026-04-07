@@ -226,7 +226,7 @@ export default async function Elections2026Page() {
       {upcomingEvents.length > 0 && (
         <div>
           <h2 className="mb-3 text-lg font-semibold">{t('timeline.upcoming')}</h2>
-          <ElectionTimeline events={upcomingEvents} typeLabels={eventTypeLabels} />
+          <ElectionTimeline events={upcomingEvents} typeLabels={eventTypeLabels} estimatedDateNote={t('estimatedDateNote')} />
         </div>
       )}
     </div>

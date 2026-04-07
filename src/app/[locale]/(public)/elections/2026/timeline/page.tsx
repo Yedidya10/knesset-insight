@@ -50,7 +50,7 @@ export default async function TimelinePage() {
       <p className="mb-8 text-muted-foreground">{t('timeline.description')}</p>
 
       {events.length > 0 ? (
-        <ElectionTimeline events={events} typeLabels={eventTypeLabels} />
+        <ElectionTimeline events={events} typeLabels={eventTypeLabels} estimatedDateNote={t('estimatedDateNote')} />
       ) : (
         <p className="py-12 text-center text-muted-foreground">{t('timeline.noEvents')}</p>
       )}
