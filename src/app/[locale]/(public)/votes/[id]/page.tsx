@@ -1,7 +1,14 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { notFound } from 'next/navigation';
-import { Vote, ThumbsUp, ThumbsDown, Minus, FileText, Link2 } from 'lucide-react';
+import {
+  Vote,
+  ThumbsUp,
+  ThumbsDown,
+  Minus,
+  FileText,
+  Link2,
+} from 'lucide-react';
 import { eq, and, desc, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { votes, memberVotes, members, factions, bills } from '@/lib/db/schema';
@@ -68,16 +75,29 @@ export default async function VoteDetailPage({ params }: Props) {
     .leftJoin(factions, eq(members.factionId, factions.id))
     .where(eq(memberVotes.voteId, vote.id));
 
-  // Fetch related votes (same sessItemId)
-  let relatedVotes: { id: number; title: string; isAccepted: boolean | null; forCount: number | null; againstCount: number | null }[] = [];
+  // Fetch related votes (same sessItemId) — compute counts from member_votes
+  // (cached forCount/againstCount on the votes table may be stale)
+  let relatedVotes: {
+    id: number;
+    title: string;
+    isAccepted: boolean | null;
+    forCount: number;
+    againstCount: number;
+  }[] = [];
   if (vote.sessItemId) {
     relatedVotes = await db
       .select({
         id: votes.id,
         title: votes.title,
         isAccepted: votes.isAccepted,
-        forCount: votes.forCount,
-        againstCount: votes.againstCount,
+        forCount:
+          sql<number>`(SELECT count(*) FROM member_votes WHERE vote_id = ${votes.id} AND vote_value = 'for')`.mapWith(
+            Number,
+          ),
+        againstCount:
+          sql<number>`(SELECT count(*) FROM member_votes WHERE vote_id = ${votes.id} AND vote_value = 'against')`.mapWith(
+            Number,
+          ),
       })
       .from(votes)
       .where(
@@ -90,11 +110,26 @@ export default async function VoteDetailPage({ params }: Props) {
   }
 
   // Group by faction for breakdown, split by coalition/opposition
-  const factionBreakdown = new Map<string, { for: number; against: number; abstain: number; absent: number; isCoalition: boolean | null }>();
+  const factionBreakdown = new Map<
+    string,
+    {
+      for: number;
+      against: number;
+      abstain: number;
+      absent: number;
+      isCoalition: boolean | null;
+    }
+  >();
   for (const v of voterData) {
     const fName = v.factionName ?? '—';
     if (!factionBreakdown.has(fName)) {
-      factionBreakdown.set(fName, { for: 0, against: 0, abstain: 0, absent: 0, isCoalition: v.isCoalition });
+      factionBreakdown.set(fName, {
+        for: 0,
+        against: 0,
+        abstain: 0,
+        absent: 0,
+        isCoalition: v.isCoalition,
+      });
     }
     const counts = factionBreakdown.get(fName)!;
     if (v.voteValue === 'for') counts.for++;
@@ -103,8 +138,12 @@ export default async function VoteDetailPage({ params }: Props) {
     else counts.absent++;
   }
 
-  const coalitionFactions = [...factionBreakdown.entries()].filter(([, c]) => c.isCoalition).sort((a, b) => a[0].localeCompare(b[0]));
-  const oppositionFactions = [...factionBreakdown.entries()].filter(([, c]) => !c.isCoalition).sort((a, b) => a[0].localeCompare(b[0]));
+  const coalitionFactions = [...factionBreakdown.entries()]
+    .filter(([, c]) => c.isCoalition)
+    .sort((a, b) => a[0].localeCompare(b[0]));
+  const oppositionFactions = [...factionBreakdown.entries()]
+    .filter(([, c]) => !c.isCoalition)
+    .sort((a, b) => a[0].localeCompare(b[0]));
 
   const forVoters = voterData.filter((v) => v.voteValue === 'for');
   const againstVoters = voterData.filter((v) => v.voteValue === 'against');
@@ -124,7 +163,9 @@ export default async function VoteDetailPage({ params }: Props) {
   ) => (
     <Card className="glass-card overflow-hidden">
       <CardHeader className="pb-2">
-        <CardTitle className={`flex items-center gap-2 text-base ${colorClass}`}>
+        <CardTitle
+          className={`flex items-center gap-2 text-base ${colorClass}`}
+        >
           {icon}
           {label} ({voters.length})
         </CardTitle>
@@ -135,20 +176,30 @@ export default async function VoteDetailPage({ params }: Props) {
             {voters.map((v) => (
               <li key={v.memberId} className="flex items-center gap-2">
                 <MemberAvatar
-                  member={{ firstName: v.firstName, lastName: v.lastName, imageUrl: v.imageUrl }}
+                  member={{
+                    firstName: v.firstName,
+                    lastName: v.lastName,
+                    imageUrl: v.imageUrl,
+                  }}
                   size="sm"
                 />
                 <div className="min-w-0 flex-1">
-                  <Link href={`/members/${v.memberId}`} className="text-sm text-primary hover:underline">
+                  <Link
+                    href={`/members/${v.memberId}`}
+                    className="text-primary text-sm hover:underline"
+                  >
                     {v.firstName} {v.lastName}
                   </Link>
-                  <span className="text-xs text-muted-foreground"> · {v.factionName}</span>
+                  <span className="text-muted-foreground text-xs">
+                    {' '}
+                    · {v.factionName}
+                  </span>
                 </div>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-muted-foreground">—</p>
+          <p className="text-muted-foreground text-sm">—</p>
         )}
       </CardContent>
     </Card>
@@ -156,13 +207,18 @@ export default async function VoteDetailPage({ params }: Props) {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-      <Button variant="ghost" size="sm" className="mb-6" render={<Link href="/votes" />}>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="mb-6"
+        render={<Link href="/votes" />}
+      >
         {tCommon('back')}
       </Button>
 
       {/* Vote header card */}
       <Card className="glass-card mb-6 overflow-hidden">
-        <div className="h-2 bg-gradient-to-r from-primary/40 via-chart-2/30 to-chart-4/30" />
+        <div className="from-primary/40 via-chart-2/30 to-chart-4/30 h-2 bg-gradient-to-r" />
         <CardContent className="p-6">
           <h1 className="text-xl font-bold sm:text-2xl">
             <TranslatedText text={vote.title} as="span" />
@@ -188,7 +244,7 @@ export default async function VoteDetailPage({ params }: Props) {
           {/* Related bill link */}
           {vote.billId && vote.billName && (
             <div className="mt-4 flex items-center gap-2 text-sm">
-              <FileText className="h-4 w-4 text-muted-foreground" />
+              <FileText className="text-muted-foreground h-4 w-4" />
               <span className="text-muted-foreground">{t('relatedBill')}:</span>
               <Link
                 href={`/legislation/${vote.billId}`}
@@ -205,23 +261,29 @@ export default async function VoteDetailPage({ params }: Props) {
           <div className="grid grid-cols-3 gap-4 text-center">
             <div className="rounded-xl bg-green-50 p-4 dark:bg-green-950/30">
               <ThumbsUp className="mx-auto mb-1.5 h-5 w-5 text-green-600 dark:text-green-400" />
-              <p className="text-2xl font-bold text-green-700 dark:text-green-300">{forCount}</p>
-              <p className="text-xs text-muted-foreground">{t('for')}</p>
+              <p className="text-2xl font-bold text-green-700 dark:text-green-300">
+                {forCount}
+              </p>
+              <p className="text-muted-foreground text-xs">{t('for')}</p>
             </div>
             <div className="rounded-xl bg-red-50 p-4 dark:bg-red-950/30">
               <ThumbsDown className="mx-auto mb-1.5 h-5 w-5 text-red-600 dark:text-red-400" />
-              <p className="text-2xl font-bold text-red-700 dark:text-red-300">{againstCount}</p>
-              <p className="text-xs text-muted-foreground">{t('against')}</p>
+              <p className="text-2xl font-bold text-red-700 dark:text-red-300">
+                {againstCount}
+              </p>
+              <p className="text-muted-foreground text-xs">{t('against')}</p>
             </div>
             <div className="rounded-xl bg-yellow-50 p-4 dark:bg-yellow-950/30">
               <Minus className="mx-auto mb-1.5 h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-              <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">{abstainCount}</p>
-              <p className="text-xs text-muted-foreground">{t('abstain')}</p>
+              <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">
+                {abstainCount}
+              </p>
+              <p className="text-muted-foreground text-xs">{t('abstain')}</p>
             </div>
           </div>
 
           {totalVoters > 0 && (
-            <p className="mt-3 text-center text-sm text-muted-foreground">
+            <p className="text-muted-foreground mt-3 text-center text-sm">
               {t('totalVoters')}: {totalVoters}
             </p>
           )}
@@ -241,13 +303,22 @@ export default async function VoteDetailPage({ params }: Props) {
             <div className="space-y-2">
               {relatedVotes.map((rv) => (
                 <Link key={rv.id} href={`/votes/${rv.id}`}>
-                  <div className="flex items-center justify-between rounded-lg bg-muted/40 px-4 py-2.5 text-sm transition-colors hover:bg-muted">
-                    <span className="min-w-0 flex-1 truncate"><TranslatedText text={rv.title} /></span>
+                  <div className="bg-muted/40 hover:bg-muted flex items-center justify-between rounded-lg px-4 py-2.5 text-sm transition-colors">
+                    <span className="min-w-0 flex-1 truncate">
+                      <TranslatedText text={rv.title} />
+                    </span>
                     <div className="flex items-center gap-2">
-                      <span className="text-green-600 dark:text-green-400">{rv.forCount ?? 0}</span>
+                      <span className="text-green-600 dark:text-green-400">
+                        {rv.forCount}
+                      </span>
                       <span className="text-muted-foreground">/</span>
-                      <span className="text-red-600 dark:text-red-400">{rv.againstCount ?? 0}</span>
-                      <Badge variant={rv.isAccepted ? 'default' : 'secondary'} className="text-xs">
+                      <span className="text-red-600 dark:text-red-400">
+                        {rv.againstCount}
+                      </span>
+                      <Badge
+                        variant={rv.isAccepted ? 'default' : 'secondary'}
+                        className="text-xs"
+                      >
                         {rv.isAccepted ? t('approved') : t('rejected')}
                       </Badge>
                     </div>
@@ -264,7 +335,7 @@ export default async function VoteDetailPage({ params }: Props) {
         <CardHeader>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <CardTitle className="text-lg">{t('factionBreakdown')}</CardTitle>
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <div className="text-muted-foreground flex items-center gap-3 text-xs">
               <span className="flex items-center gap-1">
                 <span className="inline-block h-2.5 w-2.5 rounded-sm bg-green-500" />
                 {t('for')}
