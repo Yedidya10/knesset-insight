@@ -9,7 +9,7 @@ import {
   FileText,
   Link2,
 } from 'lucide-react';
-import { eq, and, desc, sql } from 'drizzle-orm';
+import { eq, and, desc, sql, inArray } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { votes, memberVotes, members, factions, bills } from '@/lib/db/schema';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -85,19 +85,11 @@ export default async function VoteDetailPage({ params }: Props) {
     againstCount: number;
   }[] = [];
   if (vote.sessItemId) {
-    relatedVotes = await db
+    const relatedRows = await db
       .select({
         id: votes.id,
         title: votes.title,
         isAccepted: votes.isAccepted,
-        forCount:
-          sql<number>`(SELECT count(*) FROM member_votes WHERE vote_id = ${votes.id} AND vote_value = 'for')`.mapWith(
-            Number,
-          ),
-        againstCount:
-          sql<number>`(SELECT count(*) FROM member_votes WHERE vote_id = ${votes.id} AND vote_value = 'against')`.mapWith(
-            Number,
-          ),
       })
       .from(votes)
       .where(
@@ -107,6 +99,34 @@ export default async function VoteDetailPage({ params }: Props) {
         ),
       )
       .orderBy(desc(votes.voteDate));
+
+    if (relatedRows.length > 0) {
+      const relatedIds = relatedRows.map((r) => r.id);
+      const tallies = await db
+        .select({
+          voteId: memberVotes.voteId,
+          voteValue: memberVotes.voteValue,
+          count: sql<number>`cast(count(*) as integer)`.mapWith(Number),
+        })
+        .from(memberVotes)
+        .where(inArray(memberVotes.voteId, relatedIds))
+        .groupBy(memberVotes.voteId, memberVotes.voteValue);
+
+      const tallyMap = new Map<number, { for: number; against: number }>();
+      for (const t of tallies) {
+        if (!tallyMap.has(t.voteId))
+          tallyMap.set(t.voteId, { for: 0, against: 0 });
+        const entry = tallyMap.get(t.voteId)!;
+        if (t.voteValue === 'for') entry.for = t.count;
+        else if (t.voteValue === 'against') entry.against = t.count;
+      }
+
+      relatedVotes = relatedRows.map((r) => ({
+        ...r,
+        forCount: tallyMap.get(r.id)?.for ?? 0,
+        againstCount: tallyMap.get(r.id)?.against ?? 0,
+      }));
+    }
   }
 
   // Group by faction for breakdown, split by coalition/opposition
