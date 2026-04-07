@@ -53,7 +53,7 @@ export default function ElectionCountdown({ electionDate }: ElectionCountdownPro
       <h3 className="mb-4 text-center text-sm font-medium text-muted-foreground">
         {t('title')}
       </h3>
-      <div className="flex justify-center gap-4">
+      <div dir="ltr" className="flex justify-center gap-4">
         {units.map((unit) => (
           <div key={unit.label} className="flex flex-col items-center">
             <span className="text-3xl font-bold tabular-nums sm:text-4xl">
