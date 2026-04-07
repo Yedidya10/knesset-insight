@@ -16,6 +16,7 @@ async function seed() {
   const {
     electionCampaigns,
     electionCandidateLists,
+    electionCandidates,
     electionTimelineEvents,
     politicalGroups,
     members,
@@ -163,6 +164,77 @@ async function seed() {
     eventsCreated++;
   }
   console.log(`  Timeline events: ${eventsCreated} created, ${eventsUpdated} updated`);
+
+  // 5. Upsert candidates
+  // Build candidateList slug → id map
+  const allLists = await db
+    .select({ id: electionCandidateLists.id, slug: electionCandidateLists.slug })
+    .from(electionCandidateLists);
+  const listBySlug = new Map(allLists.map((l) => [l.slug, l.id]));
+
+  let candidatesCreated = 0;
+  let candidatesUpdated = 0;
+  const candidatesData = (seedData as Record<string, unknown>).candidates as
+    | Record<string, Array<{
+        firstName: string;
+        lastName: string;
+        slug: string;
+        position: number | null;
+        isLeader: boolean;
+        profession?: string;
+      }>>
+    | undefined;
+
+  if (candidatesData) {
+    for (const [listSlug, candidates] of Object.entries(candidatesData)) {
+      const listId = listBySlug.get(listSlug);
+      if (!listId) {
+        console.warn(`  ⚠ No candidate list found for slug "${listSlug}", skipping`);
+        continue;
+      }
+
+      for (const candidate of candidates) {
+        const memberId = findMember(`${candidate.firstName} ${candidate.lastName}`);
+
+        const existingCandidate = await db
+          .select({ id: electionCandidates.id })
+          .from(electionCandidates)
+          .where(eq(electionCandidates.slug, candidate.slug))
+          .limit(1);
+
+        if (existingCandidate[0]) {
+          await db
+            .update(electionCandidates)
+            .set({
+              candidateListId: listId,
+              firstName: candidate.firstName,
+              lastName: candidate.lastName,
+              position: candidate.position,
+              isLeader: candidate.isLeader,
+              profession: candidate.profession ?? null,
+              memberId,
+              status: 'potential',
+            })
+            .where(eq(electionCandidates.slug, candidate.slug));
+          candidatesUpdated++;
+        } else {
+          await db.insert(electionCandidates).values({
+            candidateListId: listId,
+            slug: candidate.slug,
+            firstName: candidate.firstName,
+            lastName: candidate.lastName,
+            position: candidate.position,
+            isLeader: candidate.isLeader,
+            profession: candidate.profession ?? null,
+            memberId,
+            status: 'potential',
+          });
+          candidatesCreated++;
+        }
+      }
+    }
+  }
+  console.log(`  Candidates: ${candidatesCreated} created, ${candidatesUpdated} updated`);
 
   console.log('Done!');
   process.exit(0);
