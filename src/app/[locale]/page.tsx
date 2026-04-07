@@ -22,7 +22,6 @@ export default async function HomePage() {
 
   const quickLinks = [
     { key: 'members' as const, href: '/members', icon: Users, color: 'text-chart-1', bg: 'bg-chart-1/10', desc: 'quickLinks.membersDesc' as const },
-    { key: 'votes' as const, href: '/votes', icon: Vote, color: 'text-chart-2', bg: 'bg-chart-2/10', desc: 'quickLinks.votesDesc' as const },
     { key: 'legislation' as const, href: '/legislation', icon: Gavel, color: 'text-chart-3', bg: 'bg-chart-3/10', desc: 'quickLinks.legislationDesc' as const },
     { key: 'factions' as const, href: '/factions', icon: Building2, color: 'text-chart-4', bg: 'bg-chart-4/10', desc: 'quickLinks.factionsDesc' as const },
   ];
@@ -86,9 +85,9 @@ export default async function HomePage() {
                   variant="outline"
                   size="lg"
                   className="rounded-xl px-8"
-                  render={<Link href="/votes" />}
+                  render={<Link href="/legislation" />}
                 >
-                  {tNav('votes')}
+                  {tNav('legislation')}
                 </Button>
               </div>
             </AnimatedSection>
@@ -119,7 +118,7 @@ export default async function HomePage() {
 
       {/* Quick links */}
       <section className="mx-auto w-full max-w-7xl px-4 pb-20 sm:px-6">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 stagger-children">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 stagger-children">
           {quickLinks.map(({ key, href, icon: Icon, color, bg, desc }) => (
             <Link key={key} href={href}>
               <Card className="group h-full glass-card hover-lift overflow-hidden">

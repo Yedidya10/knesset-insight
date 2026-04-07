@@ -2,7 +2,7 @@ import { z } from 'zod/v4';
 import { eq, desc, asc, sql, ilike, and, gte, lte } from 'drizzle-orm';
 import { router, publicProcedure } from '../trpc';
 import { db } from '../../lib/db';
-import { votes, memberVotes, members, factions, bills, billClusters } from '../../lib/db/schema';
+import { votes, memberVotes, members, factions, bills, billClusters, billClusterMembers } from '../../lib/db/schema';
 
 export const votesRouter = router({
   list: publicProcedure
@@ -108,8 +108,6 @@ export const votesRouter = router({
           summary: votes.summary,
           billId: votes.billId,
           billName: bills.name,
-          billStage: votes.billStage,
-          billClusterId: bills.clusterId,
         })
         .from(votes)
         .leftJoin(bills, eq(votes.billId, bills.id))
@@ -139,13 +137,14 @@ export const votesRouter = router({
           .orderBy(desc(votes.voteDate));
       }
 
-      // Cluster context
+      // Cluster context (via billClusterMembers — safe without migration 0008)
       let clusterInfo: { id: number; name: string } | null = null;
-      if (result[0].billClusterId) {
+      if (result[0].billId) {
         const [clusterRow] = await db
           .select({ id: billClusters.id, name: billClusters.name })
-          .from(billClusters)
-          .where(eq(billClusters.id, result[0].billClusterId))
+          .from(billClusterMembers)
+          .innerJoin(billClusters, eq(billClusterMembers.clusterId, billClusters.id))
+          .where(eq(billClusterMembers.billId, result[0].billId))
           .limit(1);
         if (clusterRow) clusterInfo = clusterRow;
       }

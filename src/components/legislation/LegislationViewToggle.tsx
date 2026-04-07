@@ -3,7 +3,7 @@
 import { useTranslations } from 'next-intl';
 import { useRouter, usePathname } from '@/i18n/navigation';
 import { useSearchParams } from 'next/navigation';
-import { Layers, FileText } from 'lucide-react';
+import { Layers, FileText, Vote } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface LegislationViewToggleProps {
@@ -43,13 +43,26 @@ export default function LegislationViewToggle({ currentView }: LegislationViewTo
         onClick={() => switchView('bills')}
         className={cn(
           'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
-          currentView !== 'clusters'
+          currentView === 'bills'
             ? 'bg-background text-foreground shadow-sm'
             : 'text-muted-foreground hover:text-foreground',
         )}
       >
         <FileText className="h-4 w-4" />
         {t('viewIndividual')}
+      </button>
+      <button
+        type="button"
+        onClick={() => switchView('votes')}
+        className={cn(
+          'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+          currentView === 'votes'
+            ? 'bg-background text-foreground shadow-sm'
+            : 'text-muted-foreground hover:text-foreground',
+        )}
+      >
+        <Vote className="h-4 w-4" />
+        {t('viewVotes')}
       </button>
     </div>
   );

@@ -4,7 +4,7 @@ import { Link } from '@/i18n/navigation';
 import { eq, desc, sql, inArray } from 'drizzle-orm';
 import { FileText, Users, Vote, ExternalLink, Layers } from 'lucide-react';
 import { db } from '@/lib/db';
-import { bills, billInitiators, billUnions, billSplits, billNames, members, votes, billClusters } from '@/lib/db/schema';
+import { bills, billInitiators, billUnions, billSplits, billNames, members, votes, billClusters, billClusterMembers } from '@/lib/db/schema';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -43,7 +43,6 @@ export default async function BillDetailPage({ params }: Props) {
       proposedDate: bills.proposedDate,
       lastUpdate: bills.lastUpdate,
       fullTextUrl: bills.fullTextUrl,
-      clusterId: bills.clusterId,
     })
     .from(bills)
     .where(eq(bills.id, billId))
@@ -75,7 +74,6 @@ export default async function BillDetailPage({ params }: Props) {
           forCount: votes.forCount,
           againstCount: votes.againstCount,
           abstainCount: votes.abstainCount,
-          billStage: votes.billStage,
         })
         .from(votes)
         .where(eq(votes.billId, billId))
@@ -132,17 +130,18 @@ export default async function BillDetailPage({ params }: Props) {
   const statusText = getBillStatusText(bill.status);
   const knessetUrl = bill.knessetId ? getKnessetBillUrl(bill.knessetId) : null;
 
-  // Fetch cluster info if bill belongs to one
+  // Fetch cluster info if bill belongs to one (via billClusterMembers — safe without migration)
   let cluster: { id: number; name: string; billCount: number | null } | null = null;
-  if (bill.clusterId) {
+  {
     const [clusterRow] = await db
       .select({
         id: billClusters.id,
         name: billClusters.name,
         billCount: billClusters.billCount,
       })
-      .from(billClusters)
-      .where(eq(billClusters.id, bill.clusterId))
+      .from(billClusterMembers)
+      .innerJoin(billClusters, eq(billClusterMembers.clusterId, billClusters.id))
+      .where(eq(billClusterMembers.billId, billId))
       .limit(1);
     if (clusterRow && (clusterRow.billCount ?? 0) > 1) cluster = clusterRow;
   }
@@ -327,15 +326,14 @@ export default async function BillDetailPage({ params }: Props) {
                     againstCount: v.againstCount ?? 0,
                     abstainCount: v.abstainCount ?? 0,
                     isAccepted: v.isAccepted,
-                    billStage: v.billStage,
                   }))}
                 />
 
-                {/* Flat list fallback for votes not assigned to stages */}
-                {relatedVotes.filter((v) => v.billStage == null).length > 0 && (
+                {/* Flat list fallback for all votes (billStage unavailable until migration) */}
+                {relatedVotes.length > 0 && (
                   <div className="mt-4 space-y-2 border-t pt-4">
                     <p className="text-xs font-medium text-muted-foreground">{t('relatedVotes')}</p>
-                    {relatedVotes.filter((v) => v.billStage == null).map((v) => (
+                    {relatedVotes.map((v) => (
                       <Link
                         key={v.id}
                         href={`/votes/${v.id}`}

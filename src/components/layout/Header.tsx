@@ -7,7 +7,6 @@ import {
   Menu,
   Landmark,
   Users,
-  Vote,
   Gavel,
   Building2,
   Home,
@@ -30,7 +29,6 @@ import ThemeToggle from './ThemeToggle';
 const navLinks = [
   { key: 'home', href: '/', icon: Home },
   { key: 'members', href: '/members', icon: Users },
-  { key: 'votes', href: '/votes', icon: Vote },
   { key: 'legislation', href: '/legislation', icon: Gavel },
   { key: 'politics', href: '/politics', icon: Building2 },
   { key: 'elections', href: '/elections', icon: BookOpen },

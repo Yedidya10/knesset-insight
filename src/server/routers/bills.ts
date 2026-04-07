@@ -143,17 +143,18 @@ export const billsRouter = router({
 
       const stageInfo = computeBillStage(bill.status, bill.subTypeId);
 
-      // Cluster context
+      // Cluster context (via billClusterMembers — safe without migration 0008)
       let cluster: { id: number; name: string; billCount: number | null } | null = null;
-      if (bill.clusterId) {
+      {
         const [clusterRow] = await db
           .select({
             id: billClusters.id,
             name: billClusters.name,
             billCount: billClusters.billCount,
           })
-          .from(billClusters)
-          .where(eq(billClusters.id, bill.clusterId))
+          .from(billClusterMembers)
+          .innerJoin(billClusters, eq(billClusterMembers.clusterId, billClusters.id))
+          .where(eq(billClusterMembers.billId, input.id))
           .limit(1);
         if (clusterRow) cluster = clusterRow;
       }

@@ -99,7 +99,6 @@ export default async function ClusterDetailPage({ params }: Props) {
             title: votes.title,
             voteDate: votes.voteDate,
             billId: votes.billId,
-            billStage: votes.billStage,
             knessetNum: votes.knessetNum,
             forCount: votes.forCount,
             againstCount: votes.againstCount,
@@ -109,7 +108,7 @@ export default async function ClusterDetailPage({ params }: Props) {
           .from(votes)
           .where(sql`${votes.billId} IN ${billIds}`)
           .orderBy(desc(votes.voteDate))
-      : Promise.resolve([] as { id: number; knessetId: number; title: string; voteDate: Date; billId: number | null; billStage: number | null; knessetNum: number | null; forCount: number | null; againstCount: number | null; abstainCount: number | null; isAccepted: boolean | null }[]),
+      : Promise.resolve([] as { id: number; knessetId: number; title: string; voteDate: Date; billId: number | null; knessetNum: number | null; forCount: number | null; againstCount: number | null; abstainCount: number | null; isAccepted: boolean | null }[]),
     billIds.length > 0
       ? db
           .select({

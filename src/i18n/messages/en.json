@@ -36,6 +36,7 @@
     "budget": "Budget",
     "committees": "Committees",
     "governments": "Governments",
+    "factions": "Factions",
     "compare": "Compare",
     "search": "Search",
     "dashboard": "Dashboard",
@@ -266,6 +267,7 @@
       "whyRelated": "Why are these bills related?",
       "viewClusters": "Laws",
       "viewIndividual": "Individual Bills",
+      "viewVotes": "Votes",
       "category": {
         "criminal-law": "Criminal Law",
         "civil-law": "Civil Law",

@@ -143,7 +143,6 @@ export const billClustersRouter = router({
                 title: votes.title,
                 voteDate: votes.voteDate,
                 billId: votes.billId,
-                billStage: votes.billStage,
                 forCount: votes.forCount,
                 againstCount: votes.againstCount,
                 abstainCount: votes.abstainCount,
@@ -331,10 +330,6 @@ export const billClustersRouter = router({
           await tx
             .delete(billClusterMembers)
             .where(eq(billClusterMembers.clusterId, input.clusterId));
-          await tx
-            .update(bills)
-            .set({ clusterId: null })
-            .where(eq(bills.clusterId, input.clusterId));
           await tx
             .delete(billClusters)
             .where(eq(billClusters.id, input.clusterId));

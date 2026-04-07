@@ -36,6 +36,7 @@
     "budget": "תקציב",
     "committees": "ועדות",
     "governments": "ממשלות",
+    "factions": "סיעות",
     "compare": "השוואה",
     "search": "חיפוש",
     "dashboard": "דשבורד",
@@ -266,6 +267,7 @@
       "whyRelated": "למה ההצעות האלה קשורות?",
       "viewClusters": "חוקים",
       "viewIndividual": "הצעות חוק",
+      "viewVotes": "הצבעות",
       "category": {
         "criminal-law": "משפט פלילי",
         "civil-law": "משפט אזרחי",

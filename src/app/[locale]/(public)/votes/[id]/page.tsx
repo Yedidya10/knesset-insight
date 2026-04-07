@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { eq, and, desc, sql, inArray } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { votes, memberVotes, members, factions, bills, billClusters } from '@/lib/db/schema';
+import { votes, memberVotes, members, factions, bills, billClusters, billClusterMembers } from '@/lib/db/schema';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -52,8 +52,6 @@ export default async function VoteDetailPage({ params }: Props) {
       summary: votes.summary,
       billId: votes.billId,
       billName: bills.name,
-      billStage: votes.billStage,
-      billClusterId: bills.clusterId,
     })
     .from(votes)
     .leftJoin(bills, eq(votes.billId, bills.id))
@@ -229,13 +227,14 @@ export default async function VoteDetailPage({ params }: Props) {
     </Card>
   );
 
-  // Fetch cluster info for breadcrumb
+  // Fetch cluster info for breadcrumb (via billClusterMembers, safe without migration)
   let cluster: { id: number; name: string } | null = null;
-  if (vote.billClusterId) {
+  if (vote.billId) {
     const [clusterRow] = await db
       .select({ id: billClusters.id, name: billClusters.name })
-      .from(billClusters)
-      .where(eq(billClusters.id, vote.billClusterId))
+      .from(billClusterMembers)
+      .innerJoin(billClusters, eq(billClusterMembers.clusterId, billClusters.id))
+      .where(eq(billClusterMembers.billId, vote.billId))
       .limit(1);
     if (clusterRow) cluster = clusterRow;
   }
@@ -275,7 +274,7 @@ export default async function VoteDetailPage({ params }: Props) {
         variant="ghost"
         size="sm"
         className="mb-6"
-        render={<Link href="/votes" />}
+        render={<Link href="/legislation?view=votes" />}
       >
         {tCommon('back')}
       </Button>

@@ -36,6 +36,7 @@
     "budget": "الميزانية",
     "committees": "اللجان",
     "governments": "الحكومات",
+    "factions": "الكتل",
     "compare": "مقارنة",
     "search": "بحث",
     "dashboard": "لوحة التحكم",
@@ -266,6 +267,7 @@
       "whyRelated": "لماذا مشاريع القوانين هذه مرتبطة؟",
       "viewClusters": "قوانين",
       "viewIndividual": "مشاريع قوانين فردية",
+      "viewVotes": "التصويتات",
       "category": {
         "criminal-law": "القانون الجنائي",
         "civil-law": "القانون المدني",
