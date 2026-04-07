@@ -25,6 +25,7 @@ import {
 import { cn } from '@/lib/utils';
 import { appConfig } from '../../../app.config';
 import LanguageSwitcher from './LanguageSwitcher';
+import ThemeToggle from './ThemeToggle';
 
 const navLinks = [
   { key: 'home', href: '/', icon: Home },
@@ -103,6 +104,7 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
+          <ThemeToggle />
           <LanguageSwitcher />
 
           <Sheet open={open} onOpenChange={setOpen}>

@@ -20,6 +20,12 @@
     "showMore": "הצג עוד",
     "showLess": "הצג פחות"
   },
+  "theme": {
+    "light": "בהיר",
+    "dark": "כהה",
+    "system": "מערכת",
+    "toggle": "שנה ערכת נושא"
+  },
   "nav": {
     "home": "דף הבית",
     "members": "חברי כנסת",

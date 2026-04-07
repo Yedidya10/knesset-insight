@@ -20,6 +20,12 @@
     "showMore": "Show more",
     "showLess": "Show less"
   },
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System",
+    "toggle": "Toggle theme"
+  },
   "nav": {
     "home": "Home",
     "members": "MKs",

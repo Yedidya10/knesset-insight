@@ -7,6 +7,7 @@ import { routing } from '@/i18n/routing';
 import { appConfig } from '../../../app.config';
 import Header from '../../components/layout/Header';
 import Footer from '../../components/layout/Footer';
+import { ThemeProvider } from '../../components/layout/ThemeProvider';
 
 const rubik = Rubik({
   variable: '--font-rubik',
@@ -54,13 +55,15 @@ export default async function LocaleLayout({ children, params }: Props) {
   return (
     <html lang={locale} dir={isRTL ? 'rtl' : 'ltr'} className={`${rubik.variable} ${jetbrainsMono.variable} ${locale === 'ar' ? notoArabic.variable : ''}`} suppressHydrationWarning>
       <body className="antialiased">
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          <div className="flex min-h-screen flex-col">
-            <Header />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
-        </NextIntlClientProvider>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <NextIntlClientProvider locale={locale} messages={messages}>
+            <div className="flex min-h-screen flex-col">
+              <Header />
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </div>
+          </NextIntlClientProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
