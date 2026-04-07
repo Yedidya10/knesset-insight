@@ -11,6 +11,7 @@ import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import MemberAvatar from '@/components/members/MemberAvatar';
 import TranslatedText from '@/components/ui/translated-text';
+import FactionBreakdown from '@/components/votes/FactionBreakdown';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -114,70 +115,6 @@ export default async function VoteDetailPage({ params }: Props) {
   const againstCount = againstVoters.length;
   const abstainCount = abstainVoters.length;
   const totalVoters = forCount + againstCount + abstainCount;
-
-  const renderFactionBar = (entries: [string, { for: number; against: number; abstain: number; absent: number; isCoalition: boolean | null }][]) => {
-    const sorted = [...entries].sort((a, b) => (b[1].for + b[1].against + b[1].abstain) - (a[1].for + a[1].against + a[1].abstain));
-    const maxTotal = Math.max(...sorted.map(([, c]) => c.for + c.against + c.abstain), 1);
-
-    return (
-      <div className="space-y-2">
-        {sorted.map(([partyName, counts]) => {
-          const total = counts.for + counts.against + counts.abstain;
-          if (total === 0) return null;
-          const barWidth = (total / maxTotal) * 100;
-          return (
-            <div key={partyName} className="rounded-lg bg-muted/30 px-3 py-2.5 transition-colors hover:bg-muted/50">
-              <div className="mb-1.5 flex items-center justify-between gap-2">
-                <span className="text-sm font-medium truncate">{partyName}</span>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  {counts.for > 0 && (
-                    <span className="inline-flex min-w-5 items-center justify-center rounded-md bg-green-100 px-1.5 py-0.5 text-xs font-medium tabular-nums text-green-700 dark:bg-green-950/50 dark:text-green-400">
-                      {counts.for}
-                    </span>
-                  )}
-                  {counts.against > 0 && (
-                    <span className="inline-flex min-w-5 items-center justify-center rounded-md bg-red-100 px-1.5 py-0.5 text-xs font-medium tabular-nums text-red-700 dark:bg-red-950/50 dark:text-red-400">
-                      {counts.against}
-                    </span>
-                  )}
-                  {counts.abstain > 0 && (
-                    <span className="inline-flex min-w-5 items-center justify-center rounded-md bg-yellow-100 px-1.5 py-0.5 text-xs font-medium tabular-nums text-yellow-700 dark:bg-yellow-950/50 dark:text-yellow-400">
-                      {counts.abstain}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="h-2 w-full rounded-full bg-muted/60 overflow-hidden">
-                <div className="flex h-full rounded-full overflow-hidden transition-all" style={{ width: `${barWidth}%` }}>
-                  {counts.for > 0 && (
-                    <div
-                      className="h-full bg-green-500 dark:bg-green-600"
-                      style={{ width: `${(counts.for / total) * 100}%` }}
-                      title={`${t('for')}: ${counts.for}`}
-                    />
-                  )}
-                  {counts.against > 0 && (
-                    <div
-                      className="h-full bg-red-500 dark:bg-red-600"
-                      style={{ width: `${(counts.against / total) * 100}%` }}
-                      title={`${t('against')}: ${counts.against}`}
-                    />
-                  )}
-                  {counts.abstain > 0 && (
-                    <div
-                      className="h-full bg-yellow-500 dark:bg-yellow-600"
-                      style={{ width: `${(counts.abstain / total) * 100}%` }}
-                      title={`${t('abstain')}: ${counts.abstain}`}
-                    />
-                  )}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
 
   const renderVoterList = (
     voters: typeof voterData,
@@ -344,24 +281,10 @@ export default async function VoteDetailPage({ params }: Props) {
           </div>
         </CardHeader>
         <CardContent>
-          {coalitionFactions.length > 0 || oppositionFactions.length > 0 ? (
-            <div className="space-y-6">
-              {coalitionFactions.length > 0 && (
-                <div>
-                  <h3 className="mb-3 text-sm font-semibold text-muted-foreground">{t('coalitionBreakdown')}</h3>
-                  {renderFactionBar(coalitionFactions)}
-                </div>
-              )}
-              {oppositionFactions.length > 0 && (
-                <div>
-                  <h3 className="mb-3 text-sm font-semibold text-muted-foreground">{t('oppositionBreakdown')}</h3>
-                  {renderFactionBar(oppositionFactions)}
-                </div>
-              )}
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">{tCommon('loading')}</p>
-          )}
+          <FactionBreakdown
+            coalitionFactions={coalitionFactions}
+            oppositionFactions={oppositionFactions}
+          />
         </CardContent>
       </Card>
 
