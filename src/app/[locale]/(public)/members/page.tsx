@@ -355,8 +355,8 @@ export default async function MembersPage({ searchParams }: Props) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       <div className="mb-8 flex items-center gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
-          <Users className="h-6 w-6 text-primary" />
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
+          <Users className="h-7 w-7 text-primary" />
         </div>
         <div>
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">

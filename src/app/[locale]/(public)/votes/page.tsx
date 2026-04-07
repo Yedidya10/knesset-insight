@@ -153,7 +153,7 @@ export default async function VotesPage({ searchParams }: Props) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       {/* Header */}
-      <div className="mb-6 flex items-center gap-3">
+      <div className="mb-8 flex items-center gap-3">
         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
           <Vote className="h-7 w-7 text-primary" />
         </div>

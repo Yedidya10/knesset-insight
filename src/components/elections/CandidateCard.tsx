@@ -1,5 +1,6 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Link } from '@/i18n/navigation';
+import MemberAvatar from '@/components/members/MemberAvatar';
 import ElectionStatusBadge from './ElectionStatusBadge';
 
 interface CandidateCardProps {
@@ -38,20 +39,10 @@ export default function CandidateCard({
       <Card className="glass-card hover-lift transition-colors">
         <CardContent className="flex items-center gap-3 p-3">
           {/* Avatar */}
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted">
-            {imageUrl ? (
-              <img
-                src={imageUrl}
-                alt={`${firstName} ${lastName}`}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              <span className="text-sm font-semibold text-muted-foreground">
-                {firstName[0]}
-                {lastName[0]}
-              </span>
-            )}
-          </div>
+          <MemberAvatar
+            member={{ firstName, lastName, imageUrl }}
+            size="sm"
+          />
 
           {/* Info */}
           <div className="min-w-0 flex-1">

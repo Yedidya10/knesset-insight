@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import MemberAvatar from '@/components/members/MemberAvatar';
 
 interface CandidateProfileProps {
   firstName: string;
@@ -47,16 +48,10 @@ export default function CandidateProfile({
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-        <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted">
-          {imageUrl ? (
-            <img src={imageUrl} alt={fullName} className="h-full w-full object-cover" />
-          ) : (
-            <span className="text-2xl font-bold text-muted-foreground">
-              {firstName[0]}
-              {lastName[0]}
-            </span>
-          )}
-        </div>
+        <MemberAvatar
+          member={{ firstName, lastName, imageUrl }}
+          size="xl"
+        />
         <div>
           <h1 className="text-2xl font-bold">{fullName}</h1>
           <div className="mt-1 flex flex-wrap items-center gap-2">

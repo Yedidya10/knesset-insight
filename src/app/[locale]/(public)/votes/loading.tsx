@@ -3,7 +3,7 @@ import { VoteCardSkeleton } from '@/components/ui/card-skeleton';
 export default function VotesLoading() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-      <div className="mb-6 flex items-center gap-3">
+      <div className="mb-8 flex items-center gap-3">
         <div className="h-14 w-14 animate-pulse rounded-2xl bg-muted" />
         <div className="space-y-2">
           <div className="h-7 w-40 animate-pulse rounded bg-muted" />
