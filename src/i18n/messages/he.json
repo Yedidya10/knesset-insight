@@ -685,5 +685,38 @@
       "committee_attendance": "נוכחות בוועדה",
       "registered_contact": "קשר רשום"
     }
+  },
+  "admin": {
+    "title": "ניהול מערכת",
+    "clusterReview": "סקירת מסעות חקיקה",
+    "reviewQueue": "תור בדיקה",
+    "pendingReview": "{count} ממתינים לבדיקה",
+    "confidence": "רמת ביטחון",
+    "approve": "אשר",
+    "reject": "דחה",
+    "approved": "אושר",
+    "rejected": "נדחה",
+    "manualLink": "קישור ידני",
+    "addBillToCluster": "הוסף הצעת חוק לקבוצה",
+    "billId": "מזהה הצעת חוק",
+    "clusterId": "מזהה קבוצה",
+    "link": "קשר",
+    "aiReasoning": "הסבר AI",
+    "memberBills": "הצעות חוק בקבוצה",
+    "stats": {
+      "title": "סטטיסטיקות",
+      "totalClusters": "סה\"כ קבוצות",
+      "aiClusters": "קבוצות AI",
+      "formalClusters": "קבוצות פורמליות",
+      "nameSimilarity": "דמיון שמות",
+      "aiAccuracy": "דיוק AI",
+      "totalBills": "סה\"כ הצעות חוק",
+      "embeddedBills": "הצעות עם embeddings",
+      "embeddingCoverage": "כיסוי embeddings",
+      "pendingReview": "ממתינים לבדיקה"
+    },
+    "noItemsInQueue": "אין פריטים בתור הבדיקה",
+    "relationshipType": "סוג קשר",
+    "actions": "פעולות"
   }
 }

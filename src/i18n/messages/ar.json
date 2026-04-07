@@ -683,5 +683,38 @@
       "committee_attendance": "حضور لجنة",
       "registered_contact": "اتصال مسجل"
     }
+  },
+  "admin": {
+    "title": "إدارة النظام",
+    "clusterReview": "مراجعة مجموعات التشريع",
+    "reviewQueue": "قائمة المراجعة",
+    "pendingReview": "{count} بانتظار المراجعة",
+    "confidence": "مستوى الثقة",
+    "approve": "موافقة",
+    "reject": "رفض",
+    "approved": "تمت الموافقة",
+    "rejected": "تم الرفض",
+    "manualLink": "ربط يدوي",
+    "addBillToCluster": "إضافة مشروع قانون إلى المجموعة",
+    "billId": "معرف مشروع القانون",
+    "clusterId": "معرف المجموعة",
+    "link": "ربط",
+    "aiReasoning": "تفسير AI",
+    "memberBills": "مشاريع القوانين في المجموعة",
+    "stats": {
+      "title": "إحصائيات",
+      "totalClusters": "إجمالي المجموعات",
+      "aiClusters": "مجموعات AI",
+      "formalClusters": "مجموعات رسمية",
+      "nameSimilarity": "تشابه أسماء",
+      "aiAccuracy": "دقة AI",
+      "totalBills": "إجمالي مشاريع القوانين",
+      "embeddedBills": "مشاريع مع embeddings",
+      "embeddingCoverage": "تغطية embeddings",
+      "pendingReview": "بانتظار المراجعة"
+    },
+    "noItemsInQueue": "لا توجد عناصر في قائمة المراجعة",
+    "relationshipType": "نوع العلاقة",
+    "actions": "إجراءات"
   }
 }

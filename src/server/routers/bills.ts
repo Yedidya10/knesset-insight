@@ -2,7 +2,7 @@ import { z } from 'zod/v4';
 import { eq, desc, sql, ilike, inArray } from 'drizzle-orm';
 import { router, publicProcedure } from '../trpc';
 import { db } from '../../lib/db';
-import { bills, billInitiators, billUnions, billSplits, billNames, members, votes } from '../../lib/db/schema';
+import { bills, billInitiators, billUnions, billSplits, billNames, members, votes, billClusters, billClusterMembers } from '../../lib/db/schema';
 import { computeBillStage } from '../../lib/knesset/bill-stages';
 
 export const billsRouter = router({
@@ -143,6 +143,21 @@ export const billsRouter = router({
 
       const stageInfo = computeBillStage(bill.status, bill.subTypeId);
 
-      return { ...bill, initiators, relatedVotes, unions, splits, nameHistory, stageInfo };
+      // Cluster context
+      let cluster: { id: number; name: string; billCount: number | null } | null = null;
+      if (bill.clusterId) {
+        const [clusterRow] = await db
+          .select({
+            id: billClusters.id,
+            name: billClusters.name,
+            billCount: billClusters.billCount,
+          })
+          .from(billClusters)
+          .where(eq(billClusters.id, bill.clusterId))
+          .limit(1);
+        if (clusterRow) cluster = clusterRow;
+      }
+
+      return { ...bill, initiators, relatedVotes, unions, splits, nameHistory, stageInfo, cluster };
     }),
 });

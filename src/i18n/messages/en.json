@@ -683,5 +683,38 @@
       "committee_attendance": "Committee Attendance",
       "registered_contact": "Registered Contact"
     }
+  },
+  "admin": {
+    "title": "System Administration",
+    "clusterReview": "Legislation Cluster Review",
+    "reviewQueue": "Review Queue",
+    "pendingReview": "{count} pending review",
+    "confidence": "Confidence",
+    "approve": "Approve",
+    "reject": "Reject",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "manualLink": "Manual Link",
+    "addBillToCluster": "Add bill to cluster",
+    "billId": "Bill ID",
+    "clusterId": "Cluster ID",
+    "link": "Link",
+    "aiReasoning": "AI Reasoning",
+    "memberBills": "Member Bills",
+    "stats": {
+      "title": "Statistics",
+      "totalClusters": "Total Clusters",
+      "aiClusters": "AI Clusters",
+      "formalClusters": "Formal Clusters",
+      "nameSimilarity": "Name Similarity",
+      "aiAccuracy": "AI Accuracy",
+      "totalBills": "Total Bills",
+      "embeddedBills": "Embedded Bills",
+      "embeddingCoverage": "Embedding Coverage",
+      "pendingReview": "Pending Review"
+    },
+    "noItemsInQueue": "No items in the review queue",
+    "relationshipType": "Relationship Type",
+    "actions": "Actions"
   }
 }

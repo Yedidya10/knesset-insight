@@ -1,16 +1,18 @@
 import { z } from 'zod/v4';
-import { eq, desc, sql, ilike, and } from 'drizzle-orm';
+import { eq, desc, sql, ilike, and, lt, count as drizzleCount, isNotNull } from 'drizzle-orm';
 import { router, publicProcedure } from '../trpc';
 import { db } from '../../lib/db';
 import {
   bills,
   billClusters,
   billClusterMembers,
+  billEmbeddings,
   billInitiators,
   members,
   votes,
 } from '../../lib/db/schema';
 import { computeBillStage } from '../../lib/knesset/bill-stages';
+import { appConfig } from '../../../app.config';
 
 export const billClustersRouter = router({
   /** Paginated cluster list with filters */
@@ -205,4 +207,252 @@ export const billClustersRouter = router({
         .orderBy(desc(billClusters.billCount))
         .limit(input.limit);
     }),
+
+  // --- Admin procedures ---
+  // TODO: Replace publicProcedure with adminProcedure once auth is implemented
+
+  /** Admin review queue — low-confidence AI clusters needing review */
+  adminQueue: publicProcedure
+    .input(
+      z.object({
+        page: z.number().min(1).default(1),
+        pageSize: z.number().min(1).max(100).default(20),
+        maxConfidence: z.number().min(0).max(1).default(
+          appConfig.billClusters.aiConfidenceThreshold,
+        ),
+      }),
+    )
+    .query(async ({ input }) => {
+      const { page, pageSize, maxConfidence } = input;
+      const offset = (page - 1) * pageSize;
+
+      const conditions = [
+        eq(billClusters.aiProcessed, true),
+        lt(billClusters.aiConfidence, maxConfidence),
+      ];
+
+      const [items, countResult] = await Promise.all([
+        db
+          .select({
+            id: billClusters.id,
+            name: billClusters.name,
+            description: billClusters.description,
+            billCount: billClusters.billCount,
+            aiConfidence: billClusters.aiConfidence,
+            latestKnessetNum: billClusters.latestKnessetNum,
+            category: billClusters.category,
+            createdAt: billClusters.createdAt,
+          })
+          .from(billClusters)
+          .where(and(...conditions))
+          .orderBy(billClusters.aiConfidence)
+          .limit(pageSize)
+          .offset(offset),
+        db
+          .select({ count: sql<number>`count(*)` })
+          .from(billClusters)
+          .where(and(...conditions)),
+      ]);
+
+      // Get member bills for each queue item
+      const itemsWithBills = await Promise.all(
+        items.map(async (item) => {
+          const memberBills = await db
+            .select({
+              billId: billClusterMembers.billId,
+              billName: bills.name,
+              relationshipType: billClusterMembers.relationshipType,
+              confidence: billClusterMembers.confidence,
+              aiReasoning: billClusterMembers.aiReasoning,
+            })
+            .from(billClusterMembers)
+            .innerJoin(bills, eq(billClusterMembers.billId, bills.id))
+            .where(eq(billClusterMembers.clusterId, item.id));
+
+          return { ...item, bills: memberBills };
+        }),
+      );
+
+      return {
+        items: itemsWithBills,
+        total: Number(countResult[0]?.count ?? 0),
+        page,
+        pageSize,
+      };
+    }),
+
+  /** Approve an AI cluster — sets confidence to 1.0, relationship to manual */
+  approve: publicProcedure
+    .input(z.object({ clusterId: z.number() }))
+    .mutation(async ({ input }) => {
+      await db.transaction(async (tx) => {
+        await tx
+          .update(billClusterMembers)
+          .set({ relationshipType: 'manual', confidence: 1.0 })
+          .where(eq(billClusterMembers.clusterId, input.clusterId));
+
+        await tx
+          .update(billClusters)
+          .set({
+            aiConfidence: 1.0,
+            updatedAt: new Date(),
+          })
+          .where(eq(billClusters.id, input.clusterId));
+      });
+
+      return { success: true };
+    }),
+
+  /** Reject an AI cluster — removes AI-created member links */
+  reject: publicProcedure
+    .input(z.object({ clusterId: z.number() }))
+    .mutation(async ({ input }) => {
+      await db.transaction(async (tx) => {
+        // Remove AI-linked members (keep formal/union/split links)
+        await tx
+          .delete(billClusterMembers)
+          .where(
+            and(
+              eq(billClusterMembers.clusterId, input.clusterId),
+              sql`${billClusterMembers.relationshipType} IN ('ai', 'name-similarity')`,
+            ),
+          );
+
+        // Check remaining members
+        const remaining = await tx
+          .select({ count: sql<number>`count(*)` })
+          .from(billClusterMembers)
+          .where(eq(billClusterMembers.clusterId, input.clusterId));
+
+        const remainingCount = Number(remaining[0]?.count ?? 0);
+
+        if (remainingCount <= 1) {
+          // Delete singleton cluster
+          await tx
+            .delete(billClusterMembers)
+            .where(eq(billClusterMembers.clusterId, input.clusterId));
+          await tx
+            .update(bills)
+            .set({ clusterId: null })
+            .where(eq(bills.clusterId, input.clusterId));
+          await tx
+            .delete(billClusters)
+            .where(eq(billClusters.id, input.clusterId));
+        } else {
+          await tx
+            .update(billClusters)
+            .set({
+              billCount: remainingCount,
+              aiProcessed: true,
+              aiConfidence: 1.0,
+              updatedAt: new Date(),
+            })
+            .where(eq(billClusters.id, input.clusterId));
+        }
+      });
+
+      return { success: true };
+    }),
+
+  /** Manually link a bill to a cluster */
+  manualLink: publicProcedure
+    .input(
+      z.object({
+        clusterId: z.number(),
+        billId: z.number(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      await db.transaction(async (tx) => {
+        await tx.insert(billClusterMembers).values({
+          clusterId: input.clusterId,
+          billId: input.billId,
+          relationshipType: 'manual',
+          confidence: 1.0,
+        });
+
+        await tx
+          .update(bills)
+          .set({ clusterId: input.clusterId })
+          .where(eq(bills.id, input.billId));
+
+        await tx
+          .update(billClusters)
+          .set({
+            billCount: sql`${billClusters.billCount} + 1`,
+            updatedAt: new Date(),
+          })
+          .where(eq(billClusters.id, input.clusterId));
+      });
+
+      return { success: true };
+    }),
+
+  /** Dashboard stats — cluster counts, AI accuracy, embedding coverage */
+  stats: publicProcedure.query(async () => {
+    const [
+      totalClusters,
+      aiClusters,
+      formalClusters,
+      nameSimilarityClusters,
+      approvedAiCount,
+      totalBills,
+      embeddedBills,
+      pendingReview,
+    ] = await Promise.all([
+      db.select({ count: sql<number>`count(*)` }).from(billClusters),
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(billClusters)
+        .where(eq(billClusters.aiProcessed, true)),
+      db
+        .select({ count: sql<number>`count(distinct ${billClusterMembers.clusterId})` })
+        .from(billClusterMembers)
+        .where(sql`${billClusterMembers.relationshipType} IN ('union', 'split')`),
+      db
+        .select({ count: sql<number>`count(distinct ${billClusterMembers.clusterId})` })
+        .from(billClusterMembers)
+        .where(eq(billClusterMembers.relationshipType, 'name-similarity')),
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(billClusters)
+        .where(
+          and(
+            eq(billClusters.aiProcessed, true),
+            sql`${billClusters.aiConfidence} >= 1.0`,
+          ),
+        ),
+      db.select({ count: sql<number>`count(*)` }).from(bills),
+      db.select({ count: sql<number>`count(*)` }).from(billEmbeddings),
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(billClusters)
+        .where(
+          and(
+            eq(billClusters.aiProcessed, true),
+            lt(billClusters.aiConfidence, appConfig.billClusters.aiConfidenceThreshold),
+          ),
+        ),
+    ]);
+
+    const totalAi = Number(aiClusters[0]?.count ?? 0);
+    const approved = Number(approvedAiCount[0]?.count ?? 0);
+
+    return {
+      totalClusters: Number(totalClusters[0]?.count ?? 0),
+      aiClusters: totalAi,
+      formalClusters: Number(formalClusters[0]?.count ?? 0),
+      nameSimilarityClusters: Number(nameSimilarityClusters[0]?.count ?? 0),
+      aiAccuracy: totalAi > 0 ? Math.round((approved / totalAi) * 100) : 0,
+      totalBills: Number(totalBills[0]?.count ?? 0),
+      embeddedBills: Number(embeddedBills[0]?.count ?? 0),
+      embeddingCoverage:
+        Number(totalBills[0]?.count ?? 0) > 0
+          ? Math.round(
+              (Number(embeddedBills[0]?.count ?? 0) / Number(totalBills[0]?.count ?? 0)) * 100,
+            )
+          : 0,
+      pendingReview: Number(pendingReview[0]?.count ?? 0),
+    };
+  }),
 });

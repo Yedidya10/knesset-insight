@@ -8,10 +8,12 @@ import {
   Minus,
   FileText,
   Link2,
+  Layers,
+  ChevronRight,
 } from 'lucide-react';
 import { eq, and, desc, sql, inArray } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { votes, memberVotes, members, factions, bills } from '@/lib/db/schema';
+import { votes, memberVotes, members, factions, bills, billClusters } from '@/lib/db/schema';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -50,6 +52,8 @@ export default async function VoteDetailPage({ params }: Props) {
       summary: votes.summary,
       billId: votes.billId,
       billName: bills.name,
+      billStage: votes.billStage,
+      billClusterId: bills.clusterId,
     })
     .from(votes)
     .leftJoin(bills, eq(votes.billId, bills.id))
@@ -225,8 +229,48 @@ export default async function VoteDetailPage({ params }: Props) {
     </Card>
   );
 
+  // Fetch cluster info for breadcrumb
+  let cluster: { id: number; name: string } | null = null;
+  if (vote.billClusterId) {
+    const [clusterRow] = await db
+      .select({ id: billClusters.id, name: billClusters.name })
+      .from(billClusters)
+      .where(eq(billClusters.id, vote.billClusterId))
+      .limit(1);
+    if (clusterRow) cluster = clusterRow;
+  }
+
+  const tLeg = await getTranslations('legislation');
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+      {/* Legislation context breadcrumb */}
+      {(cluster || vote.billId) && (
+        <nav className="mb-4 flex flex-wrap items-center gap-1 text-sm text-muted-foreground">
+          <Link href="/legislation" className="hover:text-foreground">
+            {tLeg('title')}
+          </Link>
+          {cluster && (
+            <>
+              <ChevronRight className="h-3 w-3" />
+              <Link href={`/legislation/laws/${cluster.id}`} className="hover:text-foreground">
+                {cluster.name}
+              </Link>
+            </>
+          )}
+          {vote.billId && vote.billName && (
+            <>
+              <ChevronRight className="h-3 w-3" />
+              <Link href={`/legislation/${vote.billId}`} className="hover:text-foreground">
+                <TranslatedText text={vote.billName} />
+              </Link>
+            </>
+          )}
+          <ChevronRight className="h-3 w-3" />
+          <span className="text-foreground">{t('title')}</span>
+        </nav>
+      )}
+
       <Button
         variant="ghost"
         size="sm"

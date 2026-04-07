@@ -2,9 +2,9 @@ import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
 import { eq, desc, sql, inArray } from 'drizzle-orm';
-import { FileText, Users, Vote, ExternalLink } from 'lucide-react';
+import { FileText, Users, Vote, ExternalLink, Layers } from 'lucide-react';
 import { db } from '@/lib/db';
-import { bills, billInitiators, billUnions, billSplits, billNames, members, votes } from '@/lib/db/schema';
+import { bills, billInitiators, billUnions, billSplits, billNames, members, votes, billClusters } from '@/lib/db/schema';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import MemberAvatar from '@/components/members/MemberAvatar';
 import { BillStagePipeline } from '@/components/legislation/BillStagePipeline';
 import { BillRelationshipBanner } from '@/components/legislation/BillRelationshipBanner';
+import { InteractiveStagePipeline } from '@/components/legislation/InteractiveStagePipeline';
 import { computeBillStage } from '@/lib/knesset/bill-stages';
 import { getBillStatusText, getKnessetBillUrl } from '@/lib/knesset/bill-status';
 
@@ -42,6 +43,7 @@ export default async function BillDetailPage({ params }: Props) {
       proposedDate: bills.proposedDate,
       lastUpdate: bills.lastUpdate,
       fullTextUrl: bills.fullTextUrl,
+      clusterId: bills.clusterId,
     })
     .from(bills)
     .where(eq(bills.id, billId))
@@ -72,6 +74,8 @@ export default async function BillDetailPage({ params }: Props) {
           isAccepted: votes.isAccepted,
           forCount: votes.forCount,
           againstCount: votes.againstCount,
+          abstainCount: votes.abstainCount,
+          billStage: votes.billStage,
         })
         .from(votes)
         .where(eq(votes.billId, billId))
@@ -128,6 +132,21 @@ export default async function BillDetailPage({ params }: Props) {
   const statusText = getBillStatusText(bill.status);
   const knessetUrl = bill.knessetId ? getKnessetBillUrl(bill.knessetId) : null;
 
+  // Fetch cluster info if bill belongs to one
+  let cluster: { id: number; name: string; billCount: number | null } | null = null;
+  if (bill.clusterId) {
+    const [clusterRow] = await db
+      .select({
+        id: billClusters.id,
+        name: billClusters.name,
+        billCount: billClusters.billCount,
+      })
+      .from(billClusters)
+      .where(eq(billClusters.id, bill.clusterId))
+      .limit(1);
+    if (clusterRow && (clusterRow.billCount ?? 0) > 1) cluster = clusterRow;
+  }
+
   const billTypeKey =
     bill.subTypeId === 53
       ? 'government'
@@ -180,6 +199,24 @@ export default async function BillDetailPage({ params }: Props) {
               splits={splitRows}
             />
           </div>
+
+          {/* Cluster banner */}
+          {cluster && (
+            <div className="mt-4">
+              <Link
+                href={`/legislation/laws/${cluster.id}`}
+                className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-sm transition-colors hover:bg-primary/10"
+              >
+                <Layers className="h-4 w-4 shrink-0 text-primary" />
+                <span className="text-primary">
+                  {t('clusters.partOfCluster', { name: cluster.name })}
+                </span>
+                <Badge variant="outline" className="ms-auto text-[10px]">
+                  {t('clusters.billCount', { count: cluster.billCount ?? 0 })}
+                </Badge>
+              </Link>
+            </div>
+          )}
 
           {/* Name history */}
           {nameRows.length > 0 && (
@@ -267,7 +304,7 @@ export default async function BillDetailPage({ params }: Props) {
           </CardContent>
         </Card>
 
-        {/* Related votes */}
+        {/* Related votes — interactive stage pipeline */}
         <Card className="glass-card overflow-hidden">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
@@ -277,27 +314,49 @@ export default async function BillDetailPage({ params }: Props) {
           </CardHeader>
           <CardContent>
             {relatedVotes.length > 0 ? (
-              <div className="space-y-3">
-                {relatedVotes.map((v) => (
-                  <Link
-                    key={v.id}
-                    href={`/votes/${v.id}`}
-                    className="block rounded-lg border p-3 transition-colors hover:bg-muted"
-                  >
-                    <p className="text-sm font-medium">{v.title}</p>
-                    <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-                      {v.voteDate && (
-                        <span>{new Date(v.voteDate).toLocaleDateString()}</span>
-                      )}
-                      <Badge variant={v.isAccepted ? 'default' : 'destructive'} className="text-[10px]">
-                        {v.isAccepted ? t('accepted') : t('rejected')}
-                      </Badge>
-                      <span>
-                        {v.forCount ?? 0}/{v.againstCount ?? 0}
-                      </span>
-                    </div>
-                  </Link>
-                ))}
+              <div className="space-y-4">
+                {/* Stage-grouped interactive pipeline with vote panels */}
+                <InteractiveStagePipeline
+                  stages={stageInfo.stages}
+                  specialStatus={stageInfo.specialStatus}
+                  votes={relatedVotes.map((v) => ({
+                    id: v.id,
+                    title: v.title,
+                    voteDate: v.voteDate?.toISOString() ?? null,
+                    forCount: v.forCount ?? 0,
+                    againstCount: v.againstCount ?? 0,
+                    abstainCount: v.abstainCount ?? 0,
+                    isAccepted: v.isAccepted,
+                    billStage: v.billStage,
+                  }))}
+                />
+
+                {/* Flat list fallback for votes not assigned to stages */}
+                {relatedVotes.filter((v) => v.billStage == null).length > 0 && (
+                  <div className="mt-4 space-y-2 border-t pt-4">
+                    <p className="text-xs font-medium text-muted-foreground">{t('relatedVotes')}</p>
+                    {relatedVotes.filter((v) => v.billStage == null).map((v) => (
+                      <Link
+                        key={v.id}
+                        href={`/votes/${v.id}`}
+                        className="block rounded-lg border p-3 transition-colors hover:bg-muted"
+                      >
+                        <p className="text-sm font-medium">{v.title}</p>
+                        <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                          {v.voteDate && (
+                            <span>{new Date(v.voteDate).toLocaleDateString()}</span>
+                          )}
+                          <Badge variant={v.isAccepted ? 'default' : 'destructive'} className="text-[10px]">
+                            {v.isAccepted ? t('accepted') : t('rejected')}
+                          </Badge>
+                          <span>
+                            {v.forCount ?? 0}/{v.againstCount ?? 0}
+                          </span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
               </div>
             ) : (
               <div className="flex flex-col items-center gap-2 py-6 text-muted-foreground">

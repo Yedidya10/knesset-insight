@@ -685,5 +685,38 @@
       "committee_attendance": "Участие в комиссии",
       "registered_contact": "Зарегистрированный контакт"
     }
+  },
+  "admin": {
+    "title": "Администрирование",
+    "clusterReview": "Обзор кластеров законодательства",
+    "reviewQueue": "Очередь проверки",
+    "pendingReview": "{count} ожидают проверки",
+    "confidence": "Уверенность",
+    "approve": "Одобрить",
+    "reject": "Отклонить",
+    "approved": "Одобрено",
+    "rejected": "Отклонено",
+    "manualLink": "Ручная связь",
+    "addBillToCluster": "Добавить законопроект в кластер",
+    "billId": "ID законопроекта",
+    "clusterId": "ID кластера",
+    "link": "Связать",
+    "aiReasoning": "Объяснение AI",
+    "memberBills": "Законопроекты в кластере",
+    "stats": {
+      "title": "Статистика",
+      "totalClusters": "Всего кластеров",
+      "aiClusters": "Кластеры AI",
+      "formalClusters": "Формальные кластеры",
+      "nameSimilarity": "Сходство названий",
+      "aiAccuracy": "Точность AI",
+      "totalBills": "Всего законопроектов",
+      "embeddedBills": "С эмбеддингами",
+      "embeddingCoverage": "Покрытие эмбеддингами",
+      "pendingReview": "Ожидают проверки"
+    },
+    "noItemsInQueue": "Нет элементов в очереди проверки",
+    "relationshipType": "Тип связи",
+    "actions": "Действия"
   }
 }
