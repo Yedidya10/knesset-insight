@@ -129,31 +129,33 @@ export default async function LegislationPage({ searchParams }: Props) {
         <>
           <div className="space-y-3 stagger-children">
             {data.map((bill) => (
-              <Link key={bill.id} href={`/legislation/${bill.id}`}>
-                <Card className="glass-card hover-lift overflow-hidden border-s-4 border-s-primary/30">
-                  <CardContent className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-semibold leading-tight"><TranslatedText text={bill.name} /></h3>
-                      <div className="mt-1.5 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                        {bill.proposedDate && (
-                          <span>
-                            {new Date(bill.proposedDate).toLocaleDateString('he-IL')}
-                          </span>
-                        )}
-                        {bill.knessetNum && <span>• {t('knesset')} {bill.knessetNum}</span>}
+              <div key={bill.id}>
+                <Link href={`/legislation/${bill.id}`}>
+                  <Card className="glass-card hover-lift overflow-hidden border-s-4 border-s-primary/30">
+                    <CardContent className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-semibold leading-tight"><TranslatedText text={bill.name} /></h3>
+                        <div className="mt-1.5 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                          {bill.proposedDate && (
+                            <span>
+                              {new Date(bill.proposedDate).toLocaleDateString('he-IL')}
+                            </span>
+                          )}
+                          {bill.knessetNum && <span>• {t('knesset')} {bill.knessetNum}</span>}
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      {bill.billType && (
-                        <Badge variant="outline"><TranslatedText text={bill.billType} /></Badge>
-                      )}
-                      {bill.status && (
-                        <Badge variant="secondary"><TranslatedText text={getBillStatusText(bill.status)} /></Badge>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
+                      <div className="flex items-center gap-3">
+                        {bill.billType && (
+                          <Badge variant="outline"><TranslatedText text={bill.billType} /></Badge>
+                        )}
+                        {bill.status && (
+                          <Badge variant="secondary"><TranslatedText text={getBillStatusText(bill.status)} /></Badge>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              </div>
             ))}
           </div>
 
