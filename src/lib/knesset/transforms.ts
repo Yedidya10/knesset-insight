@@ -45,10 +45,25 @@ export function mapVoteValue(
 /**
  * Transform OData vote header to our votes table shape.
  */
+/** Generic vote titles that should be enriched with the session item description */
+const GENERIC_VOTE_TITLES = new Set([
+  'הסתייגות', 'להעביר את הצעת החוק לוועדה', 'קריאה שנייה',
+  'אישור החוק', 'הצעת ועדה', 'הצעת ועדת הכנסת',
+  'להעביר את הנושא לוועדה', 'הצבעה', 'שם החוק',
+  'להעביר את הצעת החוק לוועדה שתקבע ועדת הכנסת',
+  'העברת הנושא לוועדה שתקבע ועדת הכנסת',
+  'להחיל דין רציפות',
+]);
+
 export function transformVoteHeader(raw: ODataVoteHeader) {
+  // Build enriched title: prepend sess_item_dscr when vote_item_dscr is generic
+  let title = raw.vote_item_dscr;
+  if (raw.sess_item_dscr?.trim() && GENERIC_VOTE_TITLES.has(raw.vote_item_dscr.trim())) {
+    title = `${raw.sess_item_dscr.trim()} — ${raw.vote_item_dscr.trim()}`;
+  }
   return {
     knessetId: raw.vote_id,
-    title: raw.vote_item_dscr,
+    title,
     voteDate: new Date(raw.vote_date),
     voteType: String(raw.vote_type),
     knessetNum: raw.knesset_num,

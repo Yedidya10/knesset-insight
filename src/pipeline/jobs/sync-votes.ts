@@ -463,6 +463,7 @@ function csvHeaderToOData(row: CSVVoteHeader): ODataVoteHeader {
     sess_item_nbr: parseInt(row.sess_item_nbr, 10) || 0,
     sess_item_id: parseInt(row.sess_item_id, 10) || 0,
     vote_item_dscr: row.vote_item_dscr || '',
+    sess_item_dscr: row.sess_item_dscr || '',
     vote_date: row.vote_date,
     vote_time: row.vote_time || '',
     is_elctrnc_vote: parseInt(row.is_elctrnc_vote, 10) || 0,

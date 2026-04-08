@@ -37,6 +37,7 @@ export interface ODataVoteHeader {
   vote_date: string;
   vote_time: string;
   vote_item_dscr: string;
+  sess_item_dscr?: string;
   sess_item_nbr: number;
   sess_item_id: number;
   total_for: number;

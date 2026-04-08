@@ -5,7 +5,7 @@
 import { config } from 'dotenv';
 config({ path: '.env.local' });
 
-const job = process.argv[2] as 'members' | 'votes' | 'bills' | 'billInitiators' | 'committees' | 'images' | 'parties' | 'elections' | 'links' | 'linkVotes' | 'all' | undefined;
+const job = process.argv[2] as 'members' | 'votes' | 'bills' | 'billInitiators' | 'committees' | 'images' | 'parties' | 'elections' | 'links' | 'linkVotes' | 'enrichTitles' | 'all' | undefined;
 
 async function main() {
   // Dynamic imports so env vars are loaded before DB module initializes
@@ -19,6 +19,7 @@ async function main() {
   const { syncElectoralLists } = await import('../pipeline/jobs/sync-electoral-lists');
   const { syncPoliticalLinks } = await import('../pipeline/jobs/sync-political-links');
   const { linkVotesToBills } = await import('../pipeline/jobs/link-votes-to-bills');
+  const { enrichVoteTitles } = await import('../pipeline/jobs/enrich-vote-titles');
 
   const target = job ?? 'all';
   console.log(`Starting sync: ${target}`);
@@ -62,6 +63,10 @@ async function main() {
 
   if (target === 'linkVotes' || target === 'all') {
     await linkVotesToBills();
+  }
+
+  if (target === 'enrichTitles') {
+    await enrichVoteTitles();
   }
 
   console.log(`Sync complete in ${((Date.now() - start) / 1000).toFixed(1)}s`);
