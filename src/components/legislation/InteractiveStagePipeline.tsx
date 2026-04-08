@@ -54,7 +54,6 @@ export function InteractiveStagePipeline({
   stageKeyToIndex,
 }: InteractiveStagePipelineProps) {
   const t = useTranslations('legislation.stages');
-  const [expandedStage, setExpandedStage] = useState<string | null>(null);
 
   const keyMap = stageKeyToIndex ?? DEFAULT_STAGE_KEY_MAP;
 
@@ -100,6 +99,18 @@ export function InteractiveStagePipeline({
     }
   }
 
+  // Default to the latest stage that has votes
+  const defaultStage = (() => {
+    for (let i = stages.length - 1; i >= 0; i--) {
+      if (votesByStage.has(stages[i].key)) return stages[i].key;
+    }
+    return null;
+  })();
+
+  const [selectedStage, setSelectedStage] = useState<string | null>(
+    defaultStage,
+  );
+
   return (
     <div className="w-full">
       {/* Desktop: horizontal stepper */}
@@ -126,12 +137,8 @@ export function InteractiveStagePipeline({
                     isTerminated={isTerminated}
                     allCompleted={allCompleted}
                     hasVotes={hasVotes}
-                    isExpanded={expandedStage === stage.key}
-                    onToggle={() =>
-                      setExpandedStage(
-                        expandedStage === stage.key ? null : stage.key,
-                      )
-                    }
+                    isExpanded={selectedStage === stage.key}
+                    onToggle={() => setSelectedStage(stage.key)}
                     voteResult={
                       hasVotes
                         ? stageVotes[0].isAccepted
@@ -167,11 +174,11 @@ export function InteractiveStagePipeline({
         </div>
 
         {/* Expanded vote panel below pipeline */}
-        {expandedStage && votesByStage.has(expandedStage) && (
+        {selectedStage && votesByStage.has(selectedStage) && (
           <div className="mt-4">
             <StageVotePanel
-              stageName={t(expandedStage)}
-              votes={votesByStage.get(expandedStage)!}
+              stageName={t(selectedStage)}
+              votes={votesByStage.get(selectedStage)!}
             />
           </div>
         )}
@@ -188,9 +195,9 @@ export function InteractiveStagePipeline({
             return (
               <Collapsible
                 key={stage.key}
-                open={expandedStage === stage.key}
+                open={selectedStage === stage.key}
                 onOpenChange={(open) =>
-                  setExpandedStage(open ? stage.key : null)
+                  setSelectedStage(open ? stage.key : null)
                 }
               >
                 <div className="flex gap-4">
@@ -252,7 +259,7 @@ export function InteractiveStagePipeline({
                         <ChevronDown
                           className={cn(
                             'text-muted-foreground h-4 w-4 transition-transform',
-                            expandedStage === stage.key && 'rotate-180',
+                            selectedStage === stage.key && 'rotate-180',
                           )}
                         />
                       )}

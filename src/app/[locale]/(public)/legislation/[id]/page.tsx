@@ -2,7 +2,7 @@ import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
 import { eq, desc, sql, inArray } from 'drizzle-orm';
-import { FileText, Users, Vote, ExternalLink, Layers } from 'lucide-react';
+import { Users, ExternalLink, Layers } from 'lucide-react';
 import { db } from '@/lib/db';
 import {
   bills,
@@ -22,7 +22,6 @@ import { Button } from '@/components/ui/button';
 import MemberAvatar from '@/components/members/MemberAvatar';
 import { BillRelationshipBanner } from '@/components/legislation/BillRelationshipBanner';
 import { InteractiveStagePipeline } from '@/components/legislation/InteractiveStagePipeline';
-import { MiniVoteCard } from '@/components/legislation/MiniVoteCard';
 import { computeBillStage } from '@/lib/knesset/bill-stages';
 import {
   getBillStatusText,
@@ -288,96 +287,48 @@ export default async function BillDetailPage({ params }: Props) {
         </CardContent>
       </Card>
 
-      {/* Bottom grid: initiators + votes */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* Initiators */}
-        <Card className="glass-card overflow-hidden">
+      {/* Initiators */}
+      {initiatorRows.length > 0 && (
+        <Card className="glass-card mb-6 overflow-hidden">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <Users className="text-primary h-5 w-5" />
               {t('initiators')}
-              {initiatorRows.length > 0 && (
-                <span className="text-muted-foreground text-sm font-normal">
-                  ({initiatorRows.length})
-                </span>
-              )}
+              <span className="text-muted-foreground text-sm font-normal">
+                ({initiatorRows.length})
+              </span>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {initiatorRows.length > 0 ? (
-              <div className="divide-y">
-                {initiatorRows.map((m) => (
-                  <Link
-                    key={m.memberId}
-                    href={`/members/${m.memberId}`}
-                    className="hover:bg-muted/50 -mx-2 flex items-center gap-3 rounded-lg px-2 py-3 transition-colors first:pt-0 last:pb-0"
-                  >
-                    <MemberAvatar
-                      member={m}
-                      size="sm"
-                      ring="ring-2 ring-background"
-                      className="h-10 w-10 shadow-sm"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold">
-                        {m.firstName} {m.lastName}
-                      </p>
-                    </div>
-                    {m.isPrimary && (
-                      <Badge variant="default" className="shrink-0 text-[10px]">
-                        {t('primaryInitiator')}
-                      </Badge>
-                    )}
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <div className="text-muted-foreground flex flex-col items-center gap-2 py-6">
-                <Users className="h-10 w-10 opacity-20" />
-                <p className="text-sm">{t('noInitiators')}</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Related votes — flat list */}
-        <Card className="glass-card overflow-hidden">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Vote className="text-primary h-5 w-5" />
-              {t('relatedVotes')}
-              {relatedVotes.length > 0 && (
-                <span className="text-muted-foreground text-sm font-normal">
-                  ({relatedVotes.length})
-                </span>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {relatedVotes.length > 0 ? (
-              <div className="space-y-2">
-                {relatedVotes.map((v) => (
-                  <MiniVoteCard
-                    key={v.id}
-                    id={v.id}
-                    title={v.title}
-                    voteDate={v.voteDate?.toISOString() ?? null}
-                    forCount={v.forCount ?? 0}
-                    againstCount={v.againstCount ?? 0}
-                    abstainCount={v.abstainCount ?? 0}
-                    isAccepted={v.isAccepted}
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {initiatorRows.map((m) => (
+                <Link
+                  key={m.memberId}
+                  href={`/members/${m.memberId}`}
+                  className="hover:bg-muted/50 flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors"
+                >
+                  <MemberAvatar
+                    member={m}
+                    size="sm"
+                    ring="ring-2 ring-background"
+                    className="h-10 w-10 shadow-sm"
                   />
-                ))}
-              </div>
-            ) : (
-              <div className="text-muted-foreground flex flex-col items-center gap-2 py-6">
-                <Vote className="h-10 w-10 opacity-20" />
-                <p className="text-sm">{t('noVotes')}</p>
-              </div>
-            )}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold">
+                      {m.firstName} {m.lastName}
+                    </p>
+                  </div>
+                  {m.isPrimary && (
+                    <Badge variant="default" className="shrink-0 text-[10px]">
+                      {t('primaryInitiator')}
+                    </Badge>
+                  )}
+                </Link>
+              ))}
+            </div>
           </CardContent>
         </Card>
-      </div>
+      )}
     </div>
   );
 }
