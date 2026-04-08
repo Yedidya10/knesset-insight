@@ -5,9 +5,15 @@ import { runSyncJob } from '../utils';
 
 /** Generic vote titles that need enrichment from sess_item_dscr */
 const GENERIC_TITLES = [
-  'הסתייגות', 'להעביר את הצעת החוק לוועדה', 'קריאה שנייה',
-  'אישור החוק', 'הצעת ועדה', 'הצעת ועדת הכנסת',
-  'להעביר את הנושא לוועדה', 'הצבעה', 'שם החוק',
+  'הסתייגות',
+  'להעביר את הצעת החוק לוועדה',
+  'קריאה שנייה',
+  'אישור החוק',
+  'הצעת ועדה',
+  'הצעת ועדת הכנסת',
+  'להעביר את הנושא לוועדה',
+  'הצבעה',
+  'שם החוק',
   'להעביר את הצעת החוק לוועדה שתקבע ועדת הכנסת',
   'העברת הנושא לוועדה שתקבע ועדת הכנסת',
   'להחיל דין רציפות',
@@ -18,7 +24,9 @@ const REQUEST_DELAY = 300; // ms between API requests to be polite
 /**
  * Fetch one vote from the legacy Votes.svc to get sess_item_dscr for a sessItemId.
  */
-async function fetchSessItemDescription(sessItemId: number): Promise<string | null> {
+async function fetchSessItemDescription(
+  sessItemId: number,
+): Promise<string | null> {
   const url = `https://knesset.gov.il/Odata/Votes.svc/View_vote_rslts_hdr_Approved?$filter=sess_item_id eq ${sessItemId}&$top=1&$select=sess_item_dscr&$format=json`;
   const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
   if (!res.ok) return null;
@@ -43,7 +51,10 @@ export async function enrichVoteTitles(): Promise<void> {
     const groups = await db.execute<{ sess_item_id: number; cnt: string }>(sql`
       SELECT sess_item_id, COUNT(*) as cnt
       FROM votes
-      WHERE title IN (${sql.join(GENERIC_TITLES.map((t) => sql`${t}`), sql`, `)})
+      WHERE title IN (${sql.join(
+        GENERIC_TITLES.map((t) => sql`${t}`),
+        sql`, `,
+      )})
         AND knesset_num <= 24
         AND sess_item_id IS NOT NULL
       GROUP BY sess_item_id
@@ -51,7 +62,9 @@ export async function enrichVoteTitles(): Promise<void> {
     `);
 
     const totalVotes = groups.reduce((sum, g) => sum + Number(g.cnt), 0);
-    console.log(`[enrich-vote-titles] ${groups.length} unique sessItemIds covering ${totalVotes} votes`);
+    console.log(
+      `[enrich-vote-titles] ${groups.length} unique sessItemIds covering ${totalVotes} votes`,
+    );
     if (groups.length === 0) return 0;
 
     let enrichedCount = 0;
@@ -74,13 +87,18 @@ export async function enrichVoteTitles(): Promise<void> {
           SET title = ${description} || ' — ' || title,
               updated_at = NOW()
           WHERE sess_item_id = ${sessItemId}
-            AND title IN (${sql.join(GENERIC_TITLES.map((t) => sql`${t}`), sql`, `)})
+            AND title IN (${sql.join(
+              GENERIC_TITLES.map((t) => sql`${t}`),
+              sql`, `,
+            )})
         `);
 
         enrichedCount += Number(cnt);
       } catch (err: any) {
         failedCount += Number(cnt);
-        console.warn(`[enrich-vote-titles] sessItemId=${sessItemId} failed: ${err.message}`);
+        console.warn(
+          `[enrich-vote-titles] sessItemId=${sessItemId} failed: ${err.message}`,
+        );
       }
 
       if ((i + 1) % 50 === 0 || i === groups.length - 1) {
@@ -96,16 +114,28 @@ export async function enrichVoteTitles(): Promise<void> {
     }
 
     // Also update votes without sessItemId — fetch individually
-    const noSessVotes = await db.execute<{ id: number; knesset_id: number; title: string }>(sql`
+    const noSessVotes = await db.execute<{
+      id: number;
+      knesset_id: number;
+      title: string;
+    }>(sql`
       SELECT id, knesset_id, title FROM votes
-      WHERE title IN (${sql.join(GENERIC_TITLES.map((t) => sql`${t}`), sql`, `)})
+      WHERE title IN (${sql.join(
+        GENERIC_TITLES.map((t) => sql`${t}`),
+        sql`, `,
+      )})
         AND knesset_num <= 24
         AND sess_item_id IS NULL
     `);
 
     if (noSessVotes.length > 0) {
-      console.log(`[enrich-vote-titles] ${noSessVotes.length} votes without sessItemId — fetching individually`);
-      for (const vote of noSessVotes) {
+      console.log(
+        `[enrich-vote-titles] ${noSessVotes.length} votes without sessItemId — fetching individually`,
+      );
+      let individualEnriched = 0;
+      let individualFailed = 0;
+      for (let j = 0; j < noSessVotes.length; j++) {
+        const vote = noSessVotes[j];
         try {
           const url = `https://knesset.gov.il/Odata/Votes.svc/View_vote_rslts_hdr_Approved?$filter=vote_id eq ${vote.knesset_id}&$top=1&$select=sess_item_dscr&$format=json`;
           const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
@@ -114,11 +144,21 @@ export async function enrichVoteTitles(): Promise<void> {
           const items = data.d?.results ?? data.value ?? [];
           const dscr = items[0]?.sess_item_dscr?.trim();
           if (dscr) {
-            await db.update(votes).set({ title: `${dscr} — ${vote.title}` }).where(eq(votes.id, vote.id));
+            await db
+              .update(votes)
+              .set({ title: `${dscr} — ${vote.title}` })
+              .where(eq(votes.id, vote.id));
             enrichedCount++;
+            individualEnriched++;
           }
         } catch {
           failedCount++;
+          individualFailed++;
+        }
+        if ((j + 1) % 200 === 0 || j === noSessVotes.length - 1) {
+          console.log(
+            `[enrich-vote-titles] Individual: ${j + 1}/${noSessVotes.length} (enriched: ${individualEnriched}, failed: ${individualFailed})`,
+          );
         }
         await new Promise((r) => setTimeout(r, REQUEST_DELAY));
       }

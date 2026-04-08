@@ -1,165 +1,221 @@
-import { sql, eq, isNull, and, isNotNull } from 'drizzle-orm';
+import { sql, eq, isNull, isNotNull, and, inArray } from 'drizzle-orm';
 import { db } from '../../lib/db';
-import { votes, bills } from '../../lib/db/schema';
+import { votes, bills, billNames } from '../../lib/db/schema';
 import { BillStage } from '../../lib/knesset/bill-stages';
 import { runSyncJob } from '../utils';
 
-const BATCH_SIZE = 500;
+const UPDATE_BATCH = 200;
 
 /**
- * Regex to extract bill name from vote titles.
- * Matches patterns like:
- *   "הצעת חוק לתיקון פקודת הבנקאות (מס' 33) ... התשע"ח-2018"
- *   "הצעת חוק השיפוט הצבאי (תיקון מס' 43), התשס"ד-2003"
- */
-const BILL_NAME_RE = /הצעת חוק\s+(.+?)(?:,\s*הת|$)/;
-
-/**
- * Stage keywords found in vote titles → BillStage enum value.
- * Order matters: check more specific patterns first.
- */
-const STAGE_KEYWORDS: { pattern: RegExp; stage: BillStage }[] = [
-  { pattern: /קריאה שנייה ושלישית|קריאה שניה ושלישית/, stage: BillStage.SECOND_THIRD_READING },
-  { pattern: /קריאה ראשונה/, stage: BillStage.FIRST_READING },
-  { pattern: /דיון מוקדם/, stage: BillStage.PRELIMINARY },
-  { pattern: /הצעת חוק.*ועדה|ועדה.*הצעת חוק/, stage: BillStage.COMMITTEE_FIRST },
-];
-
-/**
- * Derive bill_stage from vote title keywords.
- */
-function deriveBillStage(title: string): BillStage | null {
-  for (const { pattern, stage } of STAGE_KEYWORDS) {
-    if (pattern.test(title)) return stage;
-  }
-  return null;
-}
-
-/**
- * Link votes to bills using a multi-layer matching strategy:
- *   Layer 1: Extract bill name from vote title → exact match against bills.name
- *   Layer 2: pg_trgm title similarity > 0.6 (also checks bill_names table)
- *   Layer 3: Propagate via sessItemId groups
- *   Layer 4: Derive bill_stage from vote title keywords
+ * Link votes to bills using a hybrid in-memory + SQL strategy:
+ *   Layer 1: In-memory substring matching (bill.name appears in vote.title)
+ *   Layer 2: pg_trgm similarity per knesset (avoids Supabase timeout)
+ *   Layer 3: Propagate via sessItemId groups (bulk SQL)
+ *   Layer 4: Derive bill_stage from vote title keywords (bulk SQL)
  */
 export async function linkVotesToBills(): Promise<void> {
   await runSyncJob('link-votes-to-bills', async () => {
-    let exactCount = 0;
-    let similarityCount = 0;
+    const [{ cnt: unlinkedBefore }] = await db.execute<{ cnt: string }>(sql`
+      SELECT count(*)::text AS cnt FROM votes WHERE bill_id IS NULL
+    `);
+    console.log(`[link-votes-to-bills] ${unlinkedBefore} unlinked votes`);
 
-    // Only process votes that don't already have a billId
+    // ── Load data into memory ───────────────────────────────────
+    console.log(`[link-votes-to-bills] Loading bills...`);
+    const allBills = await db
+      .select({ id: bills.id, name: bills.name, knessetNum: bills.knessetNum })
+      .from(bills);
+    console.log(`[link-votes-to-bills] Loaded ${allBills.length} bills`);
+
+    console.log(`[link-votes-to-bills] Loading bill_names...`);
+    const allBillNameRows = await db
+      .select({ billId: billNames.billId, name: billNames.name })
+      .from(billNames);
+    console.log(
+      `[link-votes-to-bills] Loaded ${allBillNameRows.length} bill_names`,
+    );
+
+    console.log(`[link-votes-to-bills] Loading unlinked votes...`);
     const unlinkedVotes = await db
       .select({
         id: votes.id,
         title: votes.title,
         knessetNum: votes.knessetNum,
-        sessItemId: votes.sessItemId,
       })
       .from(votes)
       .where(isNull(votes.billId));
+    console.log(
+      `[link-votes-to-bills] Loaded ${unlinkedVotes.length} unlinked votes`,
+    );
 
-    console.log(`[link-votes-to-bills] ${unlinkedVotes.length} unlinked votes to process`);
-
-    for (let i = 0; i < unlinkedVotes.length; i += BATCH_SIZE) {
-      const batch = unlinkedVotes.slice(i, i + BATCH_SIZE);
-
-      for (const vote of batch) {
-        let matched = false;
-
-        // Layer 1: Extract bill name from vote title → exact match
-        const nameMatch = BILL_NAME_RE.exec(vote.title);
-        if (nameMatch) {
-          const extractedName = nameMatch[1].trim();
-          const exactMatches = await db.execute<{ id: number }>(sql`
-            SELECT b.id FROM bills b
-            WHERE b.knesset_num = ${vote.knessetNum}
-              AND b.name ILIKE ${'%' + extractedName + '%'}
-            LIMIT 1
-          `);
-          if (exactMatches.length > 0) {
-            await db.update(votes).set({ billId: exactMatches[0].id }).where(eq(votes.id, vote.id));
-            exactCount++;
-            matched = true;
-          }
-        }
-
-        // Layer 2: pg_trgm similarity matching against bills.name + bill_names.name
-        if (!matched) {
-          const simMatches = await db.execute<{ id: number; sim: number }>(sql`
-            SELECT id, sim FROM (
-              SELECT b.id, similarity(b.name, ${vote.title}) AS sim
-              FROM bills b
-              WHERE b.knesset_num = ${vote.knessetNum}
-                AND similarity(b.name, ${vote.title}) > 0.6
-              UNION ALL
-              SELECT bn.bill_id AS id, similarity(bn.name, ${vote.title}) AS sim
-              FROM bill_names bn
-              INNER JOIN bills b ON b.id = bn.bill_id
-              WHERE b.knesset_num = ${vote.knessetNum}
-                AND similarity(bn.name, ${vote.title}) > 0.6
-            ) matches
-            ORDER BY sim DESC
-            LIMIT 1
-          `);
-
-          if (simMatches.length > 0) {
-            await db.update(votes).set({ billId: simMatches[0].id }).where(eq(votes.id, vote.id));
-            similarityCount++;
-          }
-        }
-      }
-
-      const processed = Math.min(i + BATCH_SIZE, unlinkedVotes.length);
-      console.log(
-        `[link-votes-to-bills] Processed ${processed}/${unlinkedVotes.length} (exact: ${exactCount}, similarity: ${similarityCount})`,
-      );
+    // Index bills by knesset_num for fast lookup
+    const billsByKnesset = new Map<number, { id: number; name: string }[]>();
+    for (const b of allBills) {
+      if (!b.name || b.name.length <= 10) continue;
+      const arr = billsByKnesset.get(b.knessetNum) ?? [];
+      arr.push({ id: b.id, name: b.name });
+      billsByKnesset.set(b.knessetNum, arr);
     }
 
-    // Layer 3: Propagate billId via sessItemId groups
-    const propagated = await db.execute<{ id: number }>(sql`
+    // Index bill_names by bill → lookup knesset from allBills
+    const billKnessetMap = new Map<number, number>();
+    for (const b of allBills) billKnessetMap.set(b.id, b.knessetNum);
+    for (const bn of allBillNameRows) {
+      if (!bn.name || bn.name.length <= 10) continue;
+      const kn = billKnessetMap.get(bn.billId);
+      if (kn == null) continue;
+      const arr = billsByKnesset.get(kn) ?? [];
+      arr.push({ id: bn.billId, name: bn.name });
+      billsByKnesset.set(kn, arr);
+    }
+
+    // Sort each knesset's bills by name length DESC (longest match first)
+    for (const arr of billsByKnesset.values()) {
+      arr.sort((a, b) => b.name.length - a.name.length);
+    }
+
+    // ── Layer 1: In-memory substring match ──────────────────────
+    console.log(`[link-votes-to-bills] Running Layer 1 in-memory matching...`);
+    const layer1Updates: { voteId: number; billId: number }[] = [];
+    const stillUnlinked: typeof unlinkedVotes = [];
+
+    for (const vote of unlinkedVotes) {
+      const candidates = billsByKnesset.get(vote.knessetNum) ?? [];
+      const titleLower = vote.title.toLowerCase();
+      let matched = false;
+      for (const bill of candidates) {
+        if (titleLower.includes(bill.name.toLowerCase())) {
+          layer1Updates.push({ voteId: vote.id, billId: bill.id });
+          matched = true;
+          break; // longest already sorted first
+        }
+      }
+      if (!matched) stillUnlinked.push(vote);
+    }
+    console.log(
+      `[link-votes-to-bills] Layer 1 found ${layer1Updates.length} matches, writing to DB...`,
+    );
+
+    // Batch update Layer 1 matches — use sequential batches of 50 to avoid connection pool exhaustion
+    for (let i = 0; i < layer1Updates.length; i += 50) {
+      const batch = layer1Updates.slice(i, i + 50);
+      await Promise.all(
+        batch.map(({ voteId, billId }) =>
+          db.update(votes).set({ billId }).where(eq(votes.id, voteId)),
+        ),
+      );
+      if ((i + 50) % 500 === 0 || i + 50 >= layer1Updates.length) {
+        console.log(
+          `[link-votes-to-bills] Layer 1 written ${Math.min(i + 50, layer1Updates.length)}/${layer1Updates.length}`,
+        );
+      }
+    }
+    console.log(
+      `[link-votes-to-bills] Layer 1 (name substring): ${layer1Updates.length}`,
+    );
+
+    // ── Layer 2: pg_trgm similarity (batched by vote IDs) ──────
+    // Batch small groups of vote IDs instead of whole knessets to avoid Supabase timeout
+    const LAYER2_BATCH = 150;
+    console.log(
+      `[link-votes-to-bills] Layer 2: processing ${stillUnlinked.length} votes in batches of ${LAYER2_BATCH}...`,
+    );
+    let layer2Count = 0;
+    for (let i = 0; i < stillUnlinked.length; i += LAYER2_BATCH) {
+      const batch = stillUnlinked.slice(i, i + LAYER2_BATCH);
+      const idList = sql.join(
+        batch.map((v) => sql`${v.id}`),
+        sql`, `,
+      );
+      try {
+        const result = await db.execute<{ id: number }>(sql`
+          WITH best AS (
+            SELECT DISTINCT ON (v.id) v.id AS vote_id, sub.bill_id
+            FROM votes v
+            CROSS JOIN LATERAL (
+              SELECT b.id AS bill_id, similarity(b.name, v.title) AS sim
+              FROM bills b
+              WHERE b.knesset_num = v.knesset_num
+                AND similarity(b.name, v.title) > 0.3
+              ORDER BY sim DESC
+              LIMIT 1
+            ) sub
+            WHERE v.id IN (${idList})
+              AND v.bill_id IS NULL
+            ORDER BY v.id
+          )
+          UPDATE votes v SET bill_id = best.bill_id
+          FROM best WHERE v.id = best.vote_id
+          RETURNING v.id
+        `);
+        layer2Count += result.length;
+      } catch (err) {
+        console.warn(
+          `[link-votes-to-bills] Layer 2 batch ${i}: error`,
+          (err as Error).message,
+        );
+      }
+      if (
+        (i + LAYER2_BATCH) % 1500 === 0 ||
+        i + LAYER2_BATCH >= stillUnlinked.length
+      ) {
+        console.log(
+          `[link-votes-to-bills] Layer 2 progress: ${Math.min(i + LAYER2_BATCH, stillUnlinked.length)}/${stillUnlinked.length}, ${layer2Count} matched`,
+        );
+      }
+    }
+    console.log(
+      `[link-votes-to-bills] Layer 2 (similarity) total: ${layer2Count}`,
+    );
+
+    // ── Layer 3: Propagate via sessItemId ───────────────────────
+    const layer3 = await db.execute<{ id: number }>(sql`
       WITH linked AS (
-        SELECT DISTINCT sess_item_id, bill_id
+        SELECT DISTINCT ON (sess_item_id) sess_item_id, bill_id
         FROM votes
-        WHERE sess_item_id IS NOT NULL
-          AND bill_id IS NOT NULL
+        WHERE sess_item_id IS NOT NULL AND bill_id IS NOT NULL
       )
       UPDATE votes v
       SET bill_id = l.bill_id
       FROM linked l
-      WHERE v.sess_item_id = l.sess_item_id
-        AND v.bill_id IS NULL
+      WHERE v.sess_item_id = l.sess_item_id AND v.bill_id IS NULL
       RETURNING v.id
     `);
-
-    const propagatedCount = propagated.length;
-    console.log(`[link-votes-to-bills] Propagated ${propagatedCount} via sessItemId`);
-
-    // Layer 4: Derive bill_stage from vote title keywords
-    const votesWithBills = await db
-      .select({ id: votes.id, title: votes.title })
-      .from(votes)
-      .where(and(isNotNull(votes.billId), isNull(votes.billStage)));
-
-    let stageCount = 0;
-    for (let i = 0; i < votesWithBills.length; i += BATCH_SIZE) {
-      const batch = votesWithBills.slice(i, i + BATCH_SIZE);
-      for (const vote of batch) {
-        const stage = deriveBillStage(vote.title);
-        if (stage !== null) {
-          await db
-            .update(votes)
-            .set({ billStage: stage })
-            .where(eq(votes.id, vote.id));
-          stageCount++;
-        }
-      }
-    }
-
-    console.log(`[link-votes-to-bills] Derived bill_stage for ${stageCount} votes`);
     console.log(
-      `[link-votes-to-bills] TOTAL: exact=${exactCount} similarity=${similarityCount} propagated=${propagatedCount} staged=${stageCount}`,
+      `[link-votes-to-bills] Layer 3 (sessItemId propagation): ${layer3.length}`,
     );
 
-    return exactCount + similarityCount + propagatedCount;
+    // ── Layer 4: Derive bill_stage from title keywords (bulk) ───
+    const layer4 = await db.execute<{ id: number }>(sql`
+      UPDATE votes
+      SET bill_stage = CASE
+        WHEN title ~* 'קריאה שנייה ושלישית|קריאה שניה ושלישית'
+          THEN ${BillStage.SECOND_THIRD_READING}::int
+        WHEN title ~* 'קריאה ראשונה'
+          THEN ${BillStage.FIRST_READING}::int
+        WHEN title ~* 'דיון מוקדם'
+          THEN ${BillStage.PRELIMINARY}::int
+        WHEN title ~* 'הסתייגות|הסתייגויות'
+          THEN ${BillStage.SECOND_THIRD_READING}::int
+        WHEN title ~* 'אישור החוק'
+          THEN ${BillStage.PASSED}::int
+      END
+      WHERE bill_id IS NOT NULL AND bill_stage IS NULL
+        AND title ~* 'קריאה שנייה ושלישית|קריאה שניה ושלישית|קריאה ראשונה|דיון מוקדם|הסתייגות|הסתייגויות|אישור החוק'
+      RETURNING id
+    `);
+    console.log(
+      `[link-votes-to-bills] Layer 4 (bill_stage derivation): ${layer4.length}`,
+    );
+
+    const [{ cnt: unlinkedAfter }] = await db.execute<{ cnt: string }>(sql`
+      SELECT count(*)::text AS cnt FROM votes WHERE bill_id IS NULL
+    `);
+    const totalLinked = Number(unlinkedBefore) - Number(unlinkedAfter);
+    console.log(
+      `[link-votes-to-bills] TOTAL: ${totalLinked} newly linked (${unlinkedAfter} still unlinked)`,
+    );
+
+    return totalLinked;
   });
 }
