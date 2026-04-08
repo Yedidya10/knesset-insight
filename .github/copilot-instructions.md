@@ -54,6 +54,12 @@ See `PLAN.md` for the full architecture and feature spec.
 - Use tRPC routers for client-facing data
 - Cache heavy queries in Redis with configurable TTL
 
+## When Writing Scripts (`src/scripts/`)
+
+- **Environment variables live in `.env.local`** (not `.env`). Load them with `import { config } from 'dotenv'; config({ path: '.env.local' });` at the very top.
+- **All app imports (`../lib/db`, `../lib/db/schema`, etc.) must be dynamic** (`await import(...)`) inside an `async function main()`. Static `import` is hoisted before `dotenv` runs, so the DB module will see `undefined` for `DATABASE_URL`.
+- Follow the pattern used in `src/scripts/sync.ts`: dotenv config at top, then dynamic imports inside `main()`.
+
 ## Workflow
 
 - **After completing a fix or feature, always create a commit** with a clear conventional-commit message (`feat:`, `fix:`, `style:`, `refactor:`, `chore:`, `i18n:`, `docs:`). Group related changes into a single commit; unrelated changes go into separate commits.

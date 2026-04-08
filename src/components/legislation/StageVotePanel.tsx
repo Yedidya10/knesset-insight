@@ -1,12 +1,10 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { Link } from '@/i18n/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Vote } from 'lucide-react';
 import { MiniVoteCard } from './MiniVoteCard';
-import { VoteTalliesBar } from './VoteTalliesBar';
 
 interface StageVote {
   id: number;
@@ -24,81 +22,89 @@ interface StageVotePanelProps {
   votes: StageVote[];
 }
 
+/** Regex to detect reservation votes by title */
+const RESERVATION_RE = /הסתייגו/;
+
 export function StageVotePanel({ stageName, votes }: StageVotePanelProps) {
   const t = useTranslations('legislation');
 
   if (votes.length === 0) return null;
 
-  // Aggregate totals for the stage
-  const totalFor = votes.reduce((s, v) => s + (v.forCount ?? 0), 0);
-  const totalAgainst = votes.reduce((s, v) => s + (v.againstCount ?? 0), 0);
-  const totalAbstain = votes.reduce((s, v) => s + (v.abstainCount ?? 0), 0);
+  // Classify votes by title pattern — not by participation count
+  const mainVotes: StageVote[] = [];
+  const reservations: StageVote[] = [];
+  for (const v of votes) {
+    if (RESERVATION_RE.test(v.title)) {
+      reservations.push(v);
+    } else {
+      mainVotes.push(v);
+    }
+  }
 
-  // Identify main vote (highest total participation) vs reservations
-  const sorted = [...votes].sort(
+  // Sort: main votes by date desc, reservations by title number
+  mainVotes.sort(
     (a, b) =>
-      (b.forCount + b.againstCount + b.abstainCount) -
-      (a.forCount + a.againstCount + a.abstainCount),
+      new Date(b.voteDate ?? 0).getTime() - new Date(a.voteDate ?? 0).getTime(),
   );
-  const mainVote = sorted[0];
-  const reservations = sorted.slice(1);
+  reservations.sort(
+    (a, b) =>
+      new Date(b.voteDate ?? 0).getTime() - new Date(a.voteDate ?? 0).getTime(),
+  );
+
+  const reservationCount = reservations.length;
 
   return (
-    <Card className="border-s-4 border-s-primary/30 bg-muted/10">
+    <Card className="border-s-primary/30 bg-muted/10 border-s-4">
       <CardHeader className="pb-2">
         <CardTitle className="flex items-center gap-2 text-sm">
-          <Vote className="h-4 w-4 text-primary" />
+          <Vote className="text-primary h-4 w-4" />
           {t('votes.voteAtStage', { stage: stageName })}
-          <Badge variant="outline" className="text-[10px]">
-            {votes.length > 1 ? `${votes.length} ${t('votes.reservations')}` : ''}
-          </Badge>
+          {reservationCount > 0 && (
+            <Badge variant="outline" className="text-[10px]">
+              {reservationCount} {t('votes.reservations')}
+            </Badge>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        {/* Main vote with full bar */}
-        <div>
+        {/* Main votes */}
+        {mainVotes.map((v) => (
           <MiniVoteCard
-            id={mainVote.id}
-            title={mainVote.title}
-            voteDate={mainVote.voteDate}
-            forCount={mainVote.forCount}
-            againstCount={mainVote.againstCount}
-            abstainCount={mainVote.abstainCount}
-            isAccepted={mainVote.isAccepted}
+            key={v.id}
+            id={v.id}
+            title={v.title}
+            voteDate={v.voteDate}
+            forCount={v.forCount}
+            againstCount={v.againstCount}
+            abstainCount={v.abstainCount}
+            isAccepted={v.isAccepted}
           />
-        </div>
+        ))}
 
-        {/* Reservations */}
-        {reservations.length > 0 && (
-          <div className="space-y-2 ps-3 border-s-2 border-muted">
-            <p className="text-xs font-medium text-muted-foreground">
-              {t('votes.reservations')} ({reservations.length})
-            </p>
-            {reservations.map((v) => (
-              <MiniVoteCard
-                key={v.id}
-                id={v.id}
-                title={v.title}
-                voteDate={v.voteDate}
-                forCount={v.forCount}
-                againstCount={v.againstCount}
-                abstainCount={v.abstainCount}
-                isAccepted={v.isAccepted}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Aggregated bar for entire stage */}
-        {votes.length > 1 && (
-          <div className="pt-2 border-t">
-            <p className="mb-1 text-xs text-muted-foreground">{t('votes.stageVote')}</p>
-            <VoteTalliesBar
-              forCount={totalFor}
-              againstCount={totalAgainst}
-              abstainCount={totalAbstain}
-            />
-          </div>
+        {/* Reservations — collapsible list */}
+        {reservationCount > 0 && (
+          <details className="group">
+            <summary className="text-muted-foreground hover:bg-muted/40 flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-xs font-medium">
+              {t('votes.reservations')} ({reservationCount})
+              <span className="transition-transform group-open:rotate-90">
+                ▸
+              </span>
+            </summary>
+            <div className="border-muted mt-2 space-y-2 border-s-2 ps-3">
+              {reservations.map((v) => (
+                <MiniVoteCard
+                  key={v.id}
+                  id={v.id}
+                  title={v.title}
+                  voteDate={v.voteDate}
+                  forCount={v.forCount}
+                  againstCount={v.againstCount}
+                  abstainCount={v.abstainCount}
+                  isAccepted={v.isAccepted}
+                />
+              ))}
+            </div>
+          </details>
         )}
       </CardContent>
     </Card>

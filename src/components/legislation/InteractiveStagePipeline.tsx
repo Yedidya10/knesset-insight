@@ -86,16 +86,45 @@ export function InteractiveStagePipeline({
     }
   }
 
-  // Assign untagged votes to the current (or latest completed) stage
+  // Assign untagged votes by inferring stage from title keywords
   if (unassignedVotes.length > 0) {
-    const currentStage = stages.find((s) => s.status === 'current');
-    const latestCompleted = [...stages]
-      .reverse()
-      .find((s) => s.status === 'completed');
-    const targetKey = currentStage?.key ?? latestCompleted?.key;
-    if (targetKey) {
-      if (!votesByStage.has(targetKey)) votesByStage.set(targetKey, []);
-      votesByStage.get(targetKey)!.push(...unassignedVotes);
+    const titlePatterns: Array<{ re: RegExp; stageIndex: number }> = [
+      {
+        re: /קריאה שנייה ושלישית|קריאה שניה ושלישית|הסתייגו/,
+        stageIndex: BillStage.SECOND_THIRD_READING,
+      },
+      { re: /קריאה ראשונה/, stageIndex: BillStage.FIRST_READING },
+      { re: /דיון מוקדם/, stageIndex: BillStage.PRELIMINARY },
+      { re: /אישור החוק/, stageIndex: BillStage.PASSED },
+    ];
+
+    const still: StageVote[] = [];
+    for (const vote of unassignedVotes) {
+      const match = titlePatterns.find((p) => p.re.test(vote.title));
+      if (match) {
+        const stageKey = Object.entries(keyMap).find(
+          ([, idx]) => idx === match.stageIndex,
+        )?.[0];
+        if (stageKey) {
+          if (!votesByStage.has(stageKey)) votesByStage.set(stageKey, []);
+          votesByStage.get(stageKey)!.push(vote);
+          continue;
+        }
+      }
+      still.push(vote);
+    }
+
+    // Remaining truly unclassifiable votes go to latest completed stage
+    if (still.length > 0) {
+      const currentStage = stages.find((s) => s.status === 'current');
+      const latestCompleted = [...stages]
+        .reverse()
+        .find((s) => s.status === 'completed');
+      const targetKey = currentStage?.key ?? latestCompleted?.key;
+      if (targetKey) {
+        if (!votesByStage.has(targetKey)) votesByStage.set(targetKey, []);
+        votesByStage.get(targetKey)!.push(...still);
+      }
     }
   }
 
