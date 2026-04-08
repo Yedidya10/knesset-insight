@@ -20,9 +20,9 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import MemberAvatar from '@/components/members/MemberAvatar';
-import { BillStagePipeline } from '@/components/legislation/BillStagePipeline';
 import { BillRelationshipBanner } from '@/components/legislation/BillRelationshipBanner';
 import { InteractiveStagePipeline } from '@/components/legislation/InteractiveStagePipeline';
+import { MiniVoteCard } from '@/components/legislation/MiniVoteCard';
 import { computeBillStage } from '@/lib/knesset/bill-stages';
 import {
   getBillStatusText,
@@ -158,13 +158,11 @@ export default async function BillDetailPage({ params }: Props) {
       billCount: billClusters.billCount,
     })
     .from(billClusterMembers)
-    .innerJoin(
-      billClusters,
-      eq(billClusterMembers.clusterId, billClusters.id),
-    )
+    .innerJoin(billClusters, eq(billClusterMembers.clusterId, billClusters.id))
     .where(eq(billClusterMembers.billId, billId))
     .limit(1);
-  const cluster = clusterRow && (clusterRow.billCount ?? 0) > 1 ? clusterRow : null;
+  const cluster =
+    clusterRow && (clusterRow.billCount ?? 0) > 1 ? clusterRow : null;
 
   const billTypeKey =
     bill.subTypeId === 53
@@ -210,10 +208,20 @@ export default async function BillDetailPage({ params }: Props) {
 
           <Separator className="my-5" />
 
-          {/* Stage pipeline */}
-          <BillStagePipeline
+          {/* Interactive stage pipeline — single stepper with vote drill-down */}
+          <InteractiveStagePipeline
             stages={stageInfo.stages}
             specialStatus={stageInfo.specialStatus}
+            votes={relatedVotes.map((v) => ({
+              id: v.id,
+              title: v.title,
+              voteDate: v.voteDate?.toISOString() ?? null,
+              forCount: v.forCount ?? 0,
+              againstCount: v.againstCount ?? 0,
+              abstainCount: v.abstainCount ?? 0,
+              isAccepted: v.isAccepted,
+              billStage: v.billStage,
+            }))}
           />
 
           {/* Relationship banners */}
@@ -332,32 +340,34 @@ export default async function BillDetailPage({ params }: Props) {
           </CardContent>
         </Card>
 
-        {/* Related votes — interactive stage pipeline */}
+        {/* Related votes — flat list */}
         <Card className="glass-card overflow-hidden">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <Vote className="text-primary h-5 w-5" />
               {t('relatedVotes')}
+              {relatedVotes.length > 0 && (
+                <span className="text-muted-foreground text-sm font-normal">
+                  ({relatedVotes.length})
+                </span>
+              )}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {relatedVotes.length > 0 ? (
-              <div className="space-y-4">
-                {/* Stage-grouped interactive pipeline with vote panels */}
-                <InteractiveStagePipeline
-                  stages={stageInfo.stages}
-                  specialStatus={stageInfo.specialStatus}
-                  votes={relatedVotes.map((v) => ({
-                    id: v.id,
-                    title: v.title,
-                    voteDate: v.voteDate?.toISOString() ?? null,
-                    forCount: v.forCount ?? 0,
-                    againstCount: v.againstCount ?? 0,
-                    abstainCount: v.abstainCount ?? 0,
-                    isAccepted: v.isAccepted,
-                    billStage: v.billStage,
-                  }))}
-                />
+              <div className="space-y-2">
+                {relatedVotes.map((v) => (
+                  <MiniVoteCard
+                    key={v.id}
+                    id={v.id}
+                    title={v.title}
+                    voteDate={v.voteDate?.toISOString() ?? null}
+                    forCount={v.forCount ?? 0}
+                    againstCount={v.againstCount ?? 0}
+                    abstainCount={v.abstainCount ?? 0}
+                    isAccepted={v.isAccepted}
+                  />
+                ))}
               </div>
             ) : (
               <div className="text-muted-foreground flex flex-col items-center gap-2 py-6">
