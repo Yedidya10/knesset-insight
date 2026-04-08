@@ -143,23 +143,18 @@ export const billsRouter = router({
 
       const stageInfo = computeBillStage(bill.status, bill.subTypeId);
 
-      // Cluster context (via billClusterMembers — gracefully degrade if tables missing)
-      let cluster: { id: number; name: string; billCount: number | null } | null = null;
-      try {
-        const [clusterRow] = await db
-          .select({
-            id: billClusters.id,
-            name: billClusters.name,
-            billCount: billClusters.billCount,
-          })
-          .from(billClusterMembers)
-          .innerJoin(billClusters, eq(billClusterMembers.clusterId, billClusters.id))
-          .where(eq(billClusterMembers.billId, input.id))
-          .limit(1);
-        if (clusterRow) cluster = clusterRow;
-      } catch {
-        // bill_cluster_members table may not exist yet
-      }
+      // Cluster context
+      const [clusterRow] = await db
+        .select({
+          id: billClusters.id,
+          name: billClusters.name,
+          billCount: billClusters.billCount,
+        })
+        .from(billClusterMembers)
+        .innerJoin(billClusters, eq(billClusterMembers.clusterId, billClusters.id))
+        .where(eq(billClusterMembers.billId, input.id))
+        .limit(1);
+      const cluster = clusterRow ?? null;
 
       return { ...bill, initiators, relatedVotes, unions, splits, nameHistory, stageInfo, cluster };
     }),

@@ -36,6 +36,13 @@
       "when": 1775600000000,
       "tag": "0005_image_attribution",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1775800000000,
+      "tag": "0008_bill_clusters",
+      "breakpoints": true
     }
   ]
 }

@@ -1,25 +1,34 @@
 import { sql, eq, isNull, and, isNotNull } from 'drizzle-orm';
 import { db } from '../../lib/db';
 import { votes, bills } from '../../lib/db/schema';
+import { BillStage } from '../../lib/knesset/bill-stages';
 import { runSyncJob } from '../utils';
 
 const BATCH_SIZE = 500;
 
 /**
+ * Regex to extract bill name from vote titles.
+ * Matches patterns like:
+ *   "הצעת חוק לתיקון פקודת הבנקאות (מס' 33) ... התשע"ח-2018"
+ *   "הצעת חוק השיפוט הצבאי (תיקון מס' 43), התשס"ד-2003"
+ */
+const BILL_NAME_RE = /הצעת חוק\s+(.+?)(?:,\s*הת|$)/;
+
+/**
  * Stage keywords found in vote titles → BillStage enum value.
  * Order matters: check more specific patterns first.
  */
-const STAGE_KEYWORDS: { pattern: RegExp; stage: number }[] = [
-  { pattern: /קריאה שנייה ושלישית|קריאה שניה ושלישית/, stage: 5 },
-  { pattern: /קריאה ראשונה/, stage: 3 },
-  { pattern: /דיון מוקדם/, stage: 1 },
-  { pattern: /הצעת חוק.*ועדה|ועדה.*הצעת חוק/, stage: 2 },
+const STAGE_KEYWORDS: { pattern: RegExp; stage: BillStage }[] = [
+  { pattern: /קריאה שנייה ושלישית|קריאה שניה ושלישית/, stage: BillStage.SECOND_THIRD_READING },
+  { pattern: /קריאה ראשונה/, stage: BillStage.FIRST_READING },
+  { pattern: /דיון מוקדם/, stage: BillStage.PRELIMINARY },
+  { pattern: /הצעת חוק.*ועדה|ועדה.*הצעת חוק/, stage: BillStage.COMMITTEE_FIRST },
 ];
 
 /**
  * Derive bill_stage from vote title keywords.
  */
-function deriveBillStage(title: string): number | null {
+function deriveBillStage(title: string): BillStage | null {
   for (const { pattern, stage } of STAGE_KEYWORDS) {
     if (pattern.test(title)) return stage;
   }
@@ -27,14 +36,17 @@ function deriveBillStage(title: string): number | null {
 }
 
 /**
- * Link votes to bills using pg_trgm title similarity,
- * then propagate via sessItemId groups.
+ * Link votes to bills using a multi-layer matching strategy:
+ *   Layer 1: Extract bill name from vote title → exact match against bills.name
+ *   Layer 2: pg_trgm title similarity > 0.6 (also checks bill_names table)
+ *   Layer 3: Propagate via sessItemId groups
+ *   Layer 4: Derive bill_stage from vote title keywords
  */
 export async function linkVotesToBills(): Promise<void> {
   await runSyncJob('link-votes-to-bills', async () => {
-    let totalLinked = 0;
+    let exactCount = 0;
+    let similarityCount = 0;
 
-    // Step 1: Title similarity matching using pg_trgm
     // Only process votes that don't already have a billId
     const unlinkedVotes = await db
       .select({
@@ -52,36 +64,59 @@ export async function linkVotesToBills(): Promise<void> {
       const batch = unlinkedVotes.slice(i, i + BATCH_SIZE);
 
       for (const vote of batch) {
-        // Use pg_trgm to find best matching bill by title similarity
-        const matches = await db.execute<{
-          id: number;
-          similarity: number;
-        }>(sql`
-          SELECT b.id, similarity(b.name, ${vote.title}) AS similarity
-          FROM bills b
-          WHERE b.knesset_num = ${vote.knessetNum}
-            AND similarity(b.name, ${vote.title}) > 0.6
-          ORDER BY similarity DESC
-          LIMIT 1
-        `);
+        let matched = false;
 
-        if (matches.length > 0) {
-          await db
-            .update(votes)
-            .set({ billId: matches[0].id })
-            .where(eq(votes.id, vote.id));
-          totalLinked++;
+        // Layer 1: Extract bill name from vote title → exact match
+        const nameMatch = BILL_NAME_RE.exec(vote.title);
+        if (nameMatch) {
+          const extractedName = nameMatch[1].trim();
+          const exactMatches = await db.execute<{ id: number }>(sql`
+            SELECT b.id FROM bills b
+            WHERE b.knesset_num = ${vote.knessetNum}
+              AND b.name ILIKE ${'%' + extractedName + '%'}
+            LIMIT 1
+          `);
+          if (exactMatches.length > 0) {
+            await db.update(votes).set({ billId: exactMatches[0].id }).where(eq(votes.id, vote.id));
+            exactCount++;
+            matched = true;
+          }
+        }
+
+        // Layer 2: pg_trgm similarity matching against bills.name + bill_names.name
+        if (!matched) {
+          const simMatches = await db.execute<{ id: number; sim: number }>(sql`
+            SELECT id, sim FROM (
+              SELECT b.id, similarity(b.name, ${vote.title}) AS sim
+              FROM bills b
+              WHERE b.knesset_num = ${vote.knessetNum}
+                AND similarity(b.name, ${vote.title}) > 0.6
+              UNION ALL
+              SELECT bn.bill_id AS id, similarity(bn.name, ${vote.title}) AS sim
+              FROM bill_names bn
+              INNER JOIN bills b ON b.id = bn.bill_id
+              WHERE b.knesset_num = ${vote.knessetNum}
+                AND similarity(bn.name, ${vote.title}) > 0.6
+            ) matches
+            ORDER BY sim DESC
+            LIMIT 1
+          `);
+
+          if (simMatches.length > 0) {
+            await db.update(votes).set({ billId: simMatches[0].id }).where(eq(votes.id, vote.id));
+            similarityCount++;
+          }
         }
       }
 
+      const processed = Math.min(i + BATCH_SIZE, unlinkedVotes.length);
       console.log(
-        `[link-votes-to-bills] Processed ${Math.min(i + BATCH_SIZE, unlinkedVotes.length)}/${unlinkedVotes.length} votes (${totalLinked} linked)`,
+        `[link-votes-to-bills] Processed ${processed}/${unlinkedVotes.length} (exact: ${exactCount}, similarity: ${similarityCount})`,
       );
     }
 
-    // Step 2: Propagate billId via sessItemId groups
-    // If one vote in a sessItemId group has billId, propagate to siblings
-    const propagated = await db.execute<{ count: number }>(sql`
+    // Layer 3: Propagate billId via sessItemId groups
+    const propagated = await db.execute<{ id: number }>(sql`
       WITH linked AS (
         SELECT DISTINCT sess_item_id, bill_id
         FROM votes
@@ -97,10 +132,9 @@ export async function linkVotesToBills(): Promise<void> {
     `);
 
     const propagatedCount = propagated.length;
-    totalLinked += propagatedCount;
     console.log(`[link-votes-to-bills] Propagated ${propagatedCount} via sessItemId`);
 
-    // Step 3: Derive bill_stage from vote title keywords
+    // Layer 4: Derive bill_stage from vote title keywords
     const votesWithBills = await db
       .select({ id: votes.id, title: votes.title })
       .from(votes)
@@ -122,7 +156,10 @@ export async function linkVotesToBills(): Promise<void> {
     }
 
     console.log(`[link-votes-to-bills] Derived bill_stage for ${stageCount} votes`);
+    console.log(
+      `[link-votes-to-bills] TOTAL: exact=${exactCount} similarity=${similarityCount} propagated=${propagatedCount} staged=${stageCount}`,
+    );
 
-    return totalLinked;
+    return exactCount + similarityCount + propagatedCount;
   });
 }

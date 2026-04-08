@@ -87,6 +87,7 @@ export default async function BillDetailPage({ params }: Props) {
           forCount: votes.forCount,
           againstCount: votes.againstCount,
           abstainCount: votes.abstainCount,
+          billStage: votes.billStage,
         })
         .from(votes)
         .where(eq(votes.billId, billId))
@@ -149,27 +150,21 @@ export default async function BillDetailPage({ params }: Props) {
   const statusText = getBillStatusText(bill.status);
   const knessetUrl = bill.knessetId ? getKnessetBillUrl(bill.knessetId) : null;
 
-  // Fetch cluster info if bill belongs to one (via billClusterMembers — safe without migration)
-  let cluster: { id: number; name: string; billCount: number | null } | null =
-    null;
-  try {
-    const [clusterRow] = await db
-      .select({
-        id: billClusters.id,
-        name: billClusters.name,
-        billCount: billClusters.billCount,
-      })
-      .from(billClusterMembers)
-      .innerJoin(
-        billClusters,
-        eq(billClusterMembers.clusterId, billClusters.id),
-      )
-      .where(eq(billClusterMembers.billId, billId))
-      .limit(1);
-    if (clusterRow && (clusterRow.billCount ?? 0) > 1) cluster = clusterRow;
-  } catch {
-    // bill_cluster_members table may not exist yet
-  }
+  // Fetch cluster info if bill belongs to one
+  const [clusterRow] = await db
+    .select({
+      id: billClusters.id,
+      name: billClusters.name,
+      billCount: billClusters.billCount,
+    })
+    .from(billClusterMembers)
+    .innerJoin(
+      billClusters,
+      eq(billClusterMembers.clusterId, billClusters.id),
+    )
+    .where(eq(billClusterMembers.billId, billId))
+    .limit(1);
+  const cluster = clusterRow && (clusterRow.billCount ?? 0) > 1 ? clusterRow : null;
 
   const billTypeKey =
     bill.subTypeId === 53
@@ -360,6 +355,7 @@ export default async function BillDetailPage({ params }: Props) {
                     againstCount: v.againstCount ?? 0,
                     abstainCount: v.abstainCount ?? 0,
                     isAccepted: v.isAccepted,
+                    billStage: v.billStage,
                   }))}
                 />
               </div>

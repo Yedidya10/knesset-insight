@@ -58,56 +58,52 @@ export default async function LegislationPage({ searchParams }: Props) {
     }[] = [];
     let clusterTotal = 0;
 
-    try {
-      const clusterConditions = [];
-      if (knessetNum)
-        clusterConditions.push(eq(billClusters.latestKnessetNum, knessetNum));
-      if (billType) clusterConditions.push(eq(billClusters.billType, billType));
-      if (searchQuery)
-        clusterConditions.push(ilike(billClusters.name, `%${searchQuery}%`));
-      const clusterWhere =
-        clusterConditions.length > 0 ? and(...clusterConditions) : undefined;
+    const clusterConditions = [];
+    if (knessetNum)
+      clusterConditions.push(eq(billClusters.latestKnessetNum, knessetNum));
+    if (billType) clusterConditions.push(eq(billClusters.billType, billType));
+    if (searchQuery)
+      clusterConditions.push(ilike(billClusters.name, `%${searchQuery}%`));
+    const clusterWhere =
+      clusterConditions.length > 0 ? and(...clusterConditions) : undefined;
 
-      const clusterOrder =
-        sortBy === 'dateAsc'
-          ? asc(billClusters.latestUpdate)
-          : sortBy === 'nameAsc'
-            ? asc(billClusters.name)
-            : sortBy === 'nameDesc'
-              ? desc(billClusters.name)
-              : desc(billClusters.latestUpdate);
+    const clusterOrder =
+      sortBy === 'dateAsc'
+        ? asc(billClusters.latestUpdate)
+        : sortBy === 'nameAsc'
+          ? asc(billClusters.name)
+          : sortBy === 'nameDesc'
+            ? desc(billClusters.name)
+            : desc(billClusters.latestUpdate);
 
-      const [data, countResult] = await Promise.all([
-        db
-          .select({
-            id: billClusters.id,
-            name: billClusters.name,
-            description: billClusters.description,
-            category: billClusters.category,
-            currentStage: billClusters.currentStage,
-            billType: billClusters.billType,
-            latestKnessetNum: billClusters.latestKnessetNum,
-            billCount: billClusters.billCount,
-            hasCrossTermBills: billClusters.hasCrossTermBills,
-            aiProcessed: billClusters.aiProcessed,
-            aiConfidence: billClusters.aiConfidence,
-            latestUpdate: billClusters.latestUpdate,
-          })
-          .from(billClusters)
-          .where(clusterWhere)
-          .orderBy(clusterOrder)
-          .limit(PAGE_SIZE)
-          .offset(offset),
-        db
-          .select({ count: sql<number>`count(*)::int` })
-          .from(billClusters)
-          .where(clusterWhere),
-      ]);
-      clusterData = data;
-      clusterTotal = countResult[0]?.count ?? 0;
-    } catch {
-      // bill_clusters table may not exist yet
-    }
+    const [data, countResult] = await Promise.all([
+      db
+        .select({
+          id: billClusters.id,
+          name: billClusters.name,
+          description: billClusters.description,
+          category: billClusters.category,
+          currentStage: billClusters.currentStage,
+          billType: billClusters.billType,
+          latestKnessetNum: billClusters.latestKnessetNum,
+          billCount: billClusters.billCount,
+          hasCrossTermBills: billClusters.hasCrossTermBills,
+          aiProcessed: billClusters.aiProcessed,
+          aiConfidence: billClusters.aiConfidence,
+          latestUpdate: billClusters.latestUpdate,
+        })
+        .from(billClusters)
+        .where(clusterWhere)
+        .orderBy(clusterOrder)
+        .limit(PAGE_SIZE)
+        .offset(offset),
+      db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(billClusters)
+        .where(clusterWhere),
+    ]);
+    clusterData = data;
+    clusterTotal = countResult[0]?.count ?? 0;
     const clusterTotalPages = Math.ceil(clusterTotal / PAGE_SIZE);
 
     return (

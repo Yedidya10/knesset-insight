@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
 import { StageVotePanel } from './StageVotePanel';
+import { BillStage } from '@/lib/knesset/bill-stages';
 import type { StageInfo, SpecialStatus } from '@/lib/knesset/bill-stages';
 
 interface StageVote {
@@ -37,13 +38,13 @@ interface InteractiveStagePipelineProps {
 }
 
 const DEFAULT_STAGE_KEY_MAP: Record<string, number> = {
-  submitted: 0,
-  preliminary: 118,
-  committeeFirst: 120,
-  firstReading: 122,
-  committeeSecond: 126,
-  secondThirdReading: 128,
-  passed: 150,
+  submitted: BillStage.SUBMITTED,
+  preliminary: BillStage.PRELIMINARY,
+  committeeFirst: BillStage.COMMITTEE_FIRST,
+  firstReading: BillStage.FIRST_READING,
+  committeeSecond: BillStage.COMMITTEE_SECOND,
+  secondThirdReading: BillStage.SECOND_THIRD_READING,
+  passed: BillStage.PASSED,
 };
 
 export function InteractiveStagePipeline({
