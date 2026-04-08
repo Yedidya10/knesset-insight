@@ -2,7 +2,14 @@
 
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
-import { GitMerge, GitBranch, Pause, ArrowRightLeft, Ban, CalendarOff } from 'lucide-react';
+import {
+  GitMerge,
+  GitBranch,
+  Pause,
+  ArrowRightLeft,
+  Ban,
+  CalendarOff,
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { SpecialStatus } from '@/lib/knesset/bill-stages';
 
@@ -20,11 +27,27 @@ interface BillSplitInfo {
   splitBillKnessetId: number;
 }
 
+interface BillSplitFromInfo {
+  id: number;
+  mainBillId: number;
+  mainBillName: string | null;
+  mainBillKnessetId: number;
+}
+
+interface BillMergedFromInfo {
+  id: number;
+  unionBillId: number;
+  unionBillName: string | null;
+  unionBillKnessetId: number;
+}
+
 interface BillRelationshipBannerProps {
   specialStatus: SpecialStatus;
   isContinuationBill: boolean | null;
   unions: BillUnionInfo[];
   splits: BillSplitInfo[];
+  splitFrom?: BillSplitFromInfo[];
+  mergedFrom?: BillMergedFromInfo[];
 }
 
 export function BillRelationshipBanner({
@@ -32,6 +55,8 @@ export function BillRelationshipBanner({
   isContinuationBill,
   unions,
   splits,
+  splitFrom = [],
+  mergedFrom = [],
 }: BillRelationshipBannerProps) {
   const t = useTranslations('legislation.special');
 
@@ -45,7 +70,9 @@ export function BillRelationshipBanner({
         className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm dark:border-amber-800 dark:bg-amber-950/30"
       >
         <CalendarOff className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
-        <span className="text-amber-800 dark:text-amber-200">{t('continuity')}</span>
+        <span className="text-amber-800 dark:text-amber-200">
+          {t('continuity')}
+        </span>
       </div>,
     );
   }
@@ -60,7 +87,9 @@ export function BillRelationshipBanner({
         <GitMerge className="h-4 w-4 shrink-0 text-violet-600 dark:text-violet-400" />
         {unions.length > 0 ? (
           <>
-            <span className="text-violet-800 dark:text-violet-200">{t('mergedWith')}</span>
+            <span className="text-violet-800 dark:text-violet-200">
+              {t('mergedWith')}
+            </span>
             {unions.map((u) => (
               <Link
                 key={u.id}
@@ -72,13 +101,15 @@ export function BillRelationshipBanner({
             ))}
           </>
         ) : (
-          <span className="text-violet-800 dark:text-violet-200">{t('merged')}</span>
+          <span className="text-violet-800 dark:text-violet-200">
+            {t('merged')}
+          </span>
         )}
       </div>,
     );
   }
 
-  // Split banner
+  // Split banner (this bill was split into children)
   if (splits.length > 0) {
     banners.push(
       <div
@@ -100,14 +131,60 @@ export function BillRelationshipBanner({
     );
   }
 
+  // Split-from banner (this bill was split FROM a parent)
+  if (splitFrom.length > 0) {
+    banners.push(
+      <div
+        key="splitFrom"
+        className="flex flex-wrap items-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-3 py-2 text-sm dark:border-sky-800 dark:bg-sky-950/30"
+      >
+        <GitBranch className="h-4 w-4 shrink-0 text-sky-600 dark:text-sky-400" />
+        <span className="text-sky-800 dark:text-sky-200">{t('splitFrom')}</span>
+        {splitFrom.map((sf) => (
+          <Link
+            key={sf.id}
+            href={`/legislation/${sf.mainBillId}`}
+            className="font-medium text-sky-700 underline underline-offset-2 hover:text-sky-900 dark:text-sky-300 dark:hover:text-sky-100"
+          >
+            {sf.mainBillName ?? `#${sf.mainBillKnessetId}`}
+          </Link>
+        ))}
+      </div>,
+    );
+  }
+
+  // Merged-from banner (other bills were absorbed INTO this one)
+  if (mergedFrom.length > 0) {
+    banners.push(
+      <div
+        key="mergedFrom"
+        className="flex flex-wrap items-center gap-2 rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-sm dark:border-violet-800 dark:bg-violet-950/30"
+      >
+        <GitMerge className="h-4 w-4 shrink-0 text-violet-600 dark:text-violet-400" />
+        <span className="text-violet-800 dark:text-violet-200">
+          {t('includesMerge')}
+        </span>
+        {mergedFrom.map((mf) => (
+          <Link
+            key={mf.id}
+            href={`/legislation/${mf.unionBillId}`}
+            className="font-medium text-violet-700 underline underline-offset-2 hover:text-violet-900 dark:text-violet-300 dark:hover:text-violet-100"
+          >
+            {mf.unionBillName ?? `#${mf.unionBillKnessetId}`}
+          </Link>
+        ))}
+      </div>,
+    );
+  }
+
   // Stopped
   if (specialStatus === 'stopped') {
     banners.push(
       <div
         key="stopped"
-        className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm"
+        className="border-destructive/30 bg-destructive/5 flex items-center gap-2 rounded-lg border px-3 py-2 text-sm"
       >
-        <Pause className="h-4 w-4 shrink-0 text-destructive" />
+        <Pause className="text-destructive h-4 w-4 shrink-0" />
         <span className="text-destructive">{t('stopped')}</span>
       </div>,
     );
@@ -121,7 +198,9 @@ export function BillRelationshipBanner({
         className="flex items-center gap-2 rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-sm dark:border-orange-800 dark:bg-orange-950/30"
       >
         <ArrowRightLeft className="h-4 w-4 shrink-0 text-orange-600 dark:text-orange-400" />
-        <span className="text-orange-800 dark:text-orange-200">{t('converted')}</span>
+        <span className="text-orange-800 dark:text-orange-200">
+          {t('converted')}
+        </span>
       </div>,
     );
   }
@@ -131,9 +210,9 @@ export function BillRelationshipBanner({
     banners.push(
       <div
         key="continuityRejected"
-        className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm"
+        className="border-destructive/30 bg-destructive/5 flex items-center gap-2 rounded-lg border px-3 py-2 text-sm"
       >
-        <Ban className="h-4 w-4 shrink-0 text-destructive" />
+        <Ban className="text-destructive h-4 w-4 shrink-0" />
         <span className="text-destructive">{t('continuityRejected')}</span>
       </div>,
     );
@@ -144,9 +223,9 @@ export function BillRelationshipBanner({
     banners.push(
       <div
         key="removed"
-        className="flex items-center gap-2 rounded-lg border border-muted bg-muted/30 px-3 py-2 text-sm"
+        className="border-muted bg-muted/30 flex items-center gap-2 rounded-lg border px-3 py-2 text-sm"
       >
-        <Ban className="h-4 w-4 shrink-0 text-muted-foreground" />
+        <Ban className="text-muted-foreground h-4 w-4 shrink-0" />
         <span className="text-muted-foreground">{t('removedFromAgenda')}</span>
       </div>,
     );

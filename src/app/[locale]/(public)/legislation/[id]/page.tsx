@@ -92,13 +92,13 @@ export default async function BillDetailPage({ params }: Props) {
         .where(eq(votes.billId, billId))
         .orderBy(desc(votes.voteDate)),
 
-      // Unions where this bill was absorbed
+      // Unions where this bill was absorbed (this bill → merged into main)
       db
         .select({ id: billUnions.id, mainBillId: billUnions.mainBillId })
         .from(billUnions)
         .where(eq(billUnions.unionBillId, billId)),
 
-      // Splits where this bill is the origin
+      // Splits where this bill is the origin (this bill → split into children)
       db
         .select({ id: billSplits.id, splitBillId: billSplits.splitBillId })
         .from(billSplits)
@@ -114,10 +114,27 @@ export default async function BillDetailPage({ params }: Props) {
         .where(eq(billNames.billId, billId)),
     ]);
 
-  // Resolve bill names for unions/splits in a single lookup
+  // Reverse relationships (parallel)
+  const [rawSplitFrom, rawMergedFrom] = await Promise.all([
+    // This bill was split FROM a parent bill
+    db
+      .select({ id: billSplits.id, mainBillId: billSplits.mainBillId })
+      .from(billSplits)
+      .where(eq(billSplits.splitBillId, billId)),
+
+    // Bills that were absorbed INTO this bill
+    db
+      .select({ id: billUnions.id, unionBillId: billUnions.unionBillId })
+      .from(billUnions)
+      .where(eq(billUnions.mainBillId, billId)),
+  ]);
+
+  // Resolve bill names for all relationships in a single lookup
   const relatedBillIds = [
     ...rawUnions.map((u) => u.mainBillId),
     ...rawSplits.map((s) => s.splitBillId),
+    ...rawSplitFrom.map((sf) => sf.mainBillId),
+    ...rawMergedFrom.map((mf) => mf.unionBillId),
   ];
   const relatedBillMap = new Map<
     number,
@@ -143,6 +160,18 @@ export default async function BillDetailPage({ params }: Props) {
     splitBillId: s.splitBillId,
     splitBillName: relatedBillMap.get(s.splitBillId)?.name ?? null,
     splitBillKnessetId: relatedBillMap.get(s.splitBillId)?.knessetId ?? 0,
+  }));
+  const splitFromRows = rawSplitFrom.map((sf) => ({
+    id: sf.id,
+    mainBillId: sf.mainBillId,
+    mainBillName: relatedBillMap.get(sf.mainBillId)?.name ?? null,
+    mainBillKnessetId: relatedBillMap.get(sf.mainBillId)?.knessetId ?? 0,
+  }));
+  const mergedFromRows = rawMergedFrom.map((mf) => ({
+    id: mf.id,
+    unionBillId: mf.unionBillId,
+    unionBillName: relatedBillMap.get(mf.unionBillId)?.name ?? null,
+    unionBillKnessetId: relatedBillMap.get(mf.unionBillId)?.knessetId ?? 0,
   }));
 
   const stageInfo = computeBillStage(bill.status, bill.subTypeId);
@@ -230,6 +259,8 @@ export default async function BillDetailPage({ params }: Props) {
               isContinuationBill={bill.isContinuationBill}
               unions={unionRows}
               splits={splitRows}
+              splitFrom={splitFromRows}
+              mergedFrom={mergedFromRows}
             />
           </div>
 

@@ -2,7 +2,17 @@ import { z } from 'zod/v4';
 import { eq, desc, sql, ilike, inArray } from 'drizzle-orm';
 import { router, publicProcedure } from '../trpc';
 import { db } from '../../lib/db';
-import { bills, billInitiators, billUnions, billSplits, billNames, members, votes, billClusters, billClusterMembers } from '../../lib/db/schema';
+import {
+  bills,
+  billInitiators,
+  billUnions,
+  billSplits,
+  billNames,
+  members,
+  votes,
+  billClusters,
+  billClusterMembers,
+} from '../../lib/db/schema';
 import { computeBillStage } from '../../lib/knesset/bill-stages';
 
 export const billsRouter = router({
@@ -109,23 +119,48 @@ export const billsRouter = router({
             .where(eq(billSplits.mainBillId, input.id)),
 
           db
-            .select({ name: billNames.name, typeDesc: billNames.nameHistoryTypeDesc })
+            .select({
+              name: billNames.name,
+              typeDesc: billNames.nameHistoryTypeDesc,
+            })
             .from(billNames)
             .where(eq(billNames.billId, input.id)),
         ]);
+
+      // Reverse relationships
+      const [rawSplitFrom, rawMergedFrom] = await Promise.all([
+        db
+          .select({ id: billSplits.id, mainBillId: billSplits.mainBillId })
+          .from(billSplits)
+          .where(eq(billSplits.splitBillId, input.id)),
+        db
+          .select({ id: billUnions.id, unionBillId: billUnions.unionBillId })
+          .from(billUnions)
+          .where(eq(billUnions.mainBillId, input.id)),
+      ]);
 
       // Resolve related bill names
       const relatedIds = [
         ...rawUnions.map((u) => u.mainBillId),
         ...rawSplits.map((s) => s.splitBillId),
+        ...rawSplitFrom.map((sf) => sf.mainBillId),
+        ...rawMergedFrom.map((mf) => mf.unionBillId),
       ];
-      const billMap = new Map<number, { name: string | null; knessetId: number }>();
+      const billMap = new Map<
+        number,
+        { name: string | null; knessetId: number }
+      >();
       if (relatedIds.length > 0) {
         const rows = await db
-          .select({ id: bills.id, name: bills.name, knessetId: bills.knessetId })
+          .select({
+            id: bills.id,
+            name: bills.name,
+            knessetId: bills.knessetId,
+          })
           .from(bills)
           .where(inArray(bills.id, relatedIds));
-        for (const r of rows) billMap.set(r.id, { name: r.name, knessetId: r.knessetId });
+        for (const r of rows)
+          billMap.set(r.id, { name: r.name, knessetId: r.knessetId });
       }
 
       const unions = rawUnions.map((u) => ({
@@ -140,6 +175,18 @@ export const billsRouter = router({
         splitBillName: billMap.get(s.splitBillId)?.name ?? null,
         splitBillKnessetId: billMap.get(s.splitBillId)?.knessetId ?? 0,
       }));
+      const splitFrom = rawSplitFrom.map((sf) => ({
+        id: sf.id,
+        mainBillId: sf.mainBillId,
+        mainBillName: billMap.get(sf.mainBillId)?.name ?? null,
+        mainBillKnessetId: billMap.get(sf.mainBillId)?.knessetId ?? 0,
+      }));
+      const mergedFrom = rawMergedFrom.map((mf) => ({
+        id: mf.id,
+        unionBillId: mf.unionBillId,
+        unionBillName: billMap.get(mf.unionBillId)?.name ?? null,
+        unionBillKnessetId: billMap.get(mf.unionBillId)?.knessetId ?? 0,
+      }));
 
       const stageInfo = computeBillStage(bill.status, bill.subTypeId);
 
@@ -151,11 +198,25 @@ export const billsRouter = router({
           billCount: billClusters.billCount,
         })
         .from(billClusterMembers)
-        .innerJoin(billClusters, eq(billClusterMembers.clusterId, billClusters.id))
+        .innerJoin(
+          billClusters,
+          eq(billClusterMembers.clusterId, billClusters.id),
+        )
         .where(eq(billClusterMembers.billId, input.id))
         .limit(1);
       const cluster = clusterRow ?? null;
 
-      return { ...bill, initiators, relatedVotes, unions, splits, nameHistory, stageInfo, cluster };
+      return {
+        ...bill,
+        initiators,
+        relatedVotes,
+        unions,
+        splits,
+        splitFrom,
+        mergedFrom,
+        nameHistory,
+        stageInfo,
+        cluster,
+      };
     }),
 });
