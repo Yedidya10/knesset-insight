@@ -107,6 +107,36 @@ const STAGE_KEYS: Record<BillStage, string> = {
 const BILL_SUBTYPE_GOVERNMENT = 53;
 const BILL_SUBTYPE_COMMITTEE = 55;
 
+// ── Visual pipelines per bill type ──────────────────────────────
+// Matches the Knesset website stepper: SUBMITTED is never shown visually.
+// Government (53): 4 stages — skips PRELIMINARY + COMMITTEE_FIRST
+// Committee  (55): 5 stages — skips PRELIMINARY
+// Private    (54): 6 stages — full except SUBMITTED
+
+const GOVERNMENT_STAGES = [
+  BillStage.FIRST_READING,
+  BillStage.COMMITTEE_SECOND,
+  BillStage.SECOND_THIRD_READING,
+  BillStage.PASSED,
+] as const;
+
+const COMMITTEE_STAGES = [
+  BillStage.COMMITTEE_FIRST,
+  BillStage.FIRST_READING,
+  BillStage.COMMITTEE_SECOND,
+  BillStage.SECOND_THIRD_READING,
+  BillStage.PASSED,
+] as const;
+
+const PRIVATE_STAGES = [
+  BillStage.PRELIMINARY,
+  BillStage.COMMITTEE_FIRST,
+  BillStage.FIRST_READING,
+  BillStage.COMMITTEE_SECOND,
+  BillStage.SECOND_THIRD_READING,
+  BillStage.PASSED,
+] as const;
+
 // ── Main computation ────────────────────────────────────────────
 
 function getSpecialStatus(statusId: string): SpecialStatus {
@@ -129,15 +159,34 @@ function inferStageForSpecialStatus(statusId: string): BillStage {
   if (MERGED_STATUSES.has(statusId)) return BillStage.COMMITTEE_FIRST;
   // Split usually happens after first reading
   if (SPLIT_STATUSES.has(statusId)) return BillStage.FIRST_READING;
-  // Continuity statuses — bill is in early stages
-  if (CONTINUITY_PENDING_STATUSES.has(statusId) || CONTINUITY_REJECTED_STATUSES.has(statusId))
+  // Continuity statuses — bill is in early stages (pre-pipeline)
+  if (
+    CONTINUITY_PENDING_STATUSES.has(statusId) ||
+    CONTINUITY_REJECTED_STATUSES.has(statusId)
+  )
     return BillStage.SUBMITTED;
-  // Stopped/converted/removed — assume submitted
+  // Stopped/converted/removed — assume pre-pipeline
   return BillStage.SUBMITTED;
 }
 
 /**
+ * Select the visual stage pipeline for a bill type.
+ */
+function getVisualStages(
+  subTypeId: number | null | undefined,
+): readonly BillStage[] {
+  if (subTypeId === BILL_SUBTYPE_GOVERNMENT) return GOVERNMENT_STAGES;
+  if (subTypeId === BILL_SUBTYPE_COMMITTEE) return COMMITTEE_STAGES;
+  return PRIVATE_STAGES;
+}
+
+/**
  * Compute the visual stage pipeline for a bill.
+ *
+ * The visual stepper mirrors the Knesset website:
+ * - Government (53): 4 stages (first reading → passed)
+ * - Committee  (55): 5 stages (committee prep → passed)
+ * - Private    (54): 6 stages (preliminary → passed)
  *
  * @param statusId - The bill's current StatusID (as string)
  * @param subTypeId - The bill's SubTypeID (53=government, 54=private, 55=committee)
@@ -157,36 +206,25 @@ export function computeBillStage(
     currentStage = STATUS_TO_STAGE[sid] ?? BillStage.SUBMITTED;
   }
 
-  // Build stages array — skip PRELIMINARY for government/committee bills
-  const skipPreliminary =
-    subTypeId === BILL_SUBTYPE_GOVERNMENT || subTypeId === BILL_SUBTYPE_COMMITTEE;
-
-  const allStages = skipPreliminary
-    ? [
-        BillStage.SUBMITTED,
-        BillStage.COMMITTEE_FIRST,
-        BillStage.FIRST_READING,
-        BillStage.COMMITTEE_SECOND,
-        BillStage.SECOND_THIRD_READING,
-        BillStage.PASSED,
-      ]
-    : [
-        BillStage.SUBMITTED,
-        BillStage.PRELIMINARY,
-        BillStage.COMMITTEE_FIRST,
-        BillStage.FIRST_READING,
-        BillStage.COMMITTEE_SECOND,
-        BillStage.SECOND_THIRD_READING,
-        BillStage.PASSED,
-      ];
+  // Build visual stages array based on bill type
+  const allStages = getVisualStages(subTypeId);
+  const firstVisibleStage = allStages[0];
 
   const stages: StageInfo[] = allStages.map((stage) => {
     let status: StageStatus;
-    if (stage < currentStage) {
+
+    // If currentStage is before the first visible stage (e.g. SUBMITTED),
+    // all visible stages are "upcoming"
+    if (currentStage < firstVisibleStage) {
+      status = 'upcoming';
+    } else if (stage < currentStage) {
       status = 'completed';
     } else if (stage === currentStage) {
       // PASSED is the terminal stage — treat it as completed, not "current/pending"
-      status = specialStatus || currentStage === BillStage.PASSED ? 'completed' : 'current';
+      status =
+        specialStatus || currentStage === BillStage.PASSED
+          ? 'completed'
+          : 'current';
     } else {
       status = 'upcoming';
     }
