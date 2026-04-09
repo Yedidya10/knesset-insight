@@ -208,6 +208,26 @@ export const appConfig = {
         process.env.BILL_SUMMARY_DAILY_TOKEN_BUDGET ?? 300_000,
       ),
     },
+    webSearch: {
+      /** Tavily search depth: 'basic' (1 credit) or 'advanced' (2 credits) */
+      searchDepth: (process.env.BILL_SUMMARY_SEARCH_DEPTH ?? 'basic') as
+        | 'basic'
+        | 'advanced',
+      /** Max search results to feed as context */
+      maxResults: Number(process.env.BILL_SUMMARY_SEARCH_MAX_RESULTS ?? 5),
+      /** Domains to prioritize in search */
+      includeDomains: [
+        'knesset.gov.il',
+        'main.knesset.gov.il',
+        'ynet.co.il',
+        'mako.co.il',
+        'kan.org.il',
+        'walla.co.il',
+        'haaretz.co.il',
+        'globes.co.il',
+        'calcalist.co.il',
+      ],
+    },
     /** Only generate summaries for bills in these knessets */
     targetKnessets: [25, 24, 23] as readonly number[],
     /** Batch size for AI summary generation */

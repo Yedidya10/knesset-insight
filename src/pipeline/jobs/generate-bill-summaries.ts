@@ -1,7 +1,8 @@
-import { sql, eq, and, isNull, inArray, or } from 'drizzle-orm';
+import { sql, eq, and, isNull, inArray, or, like } from 'drizzle-orm';
 import { db } from '../../lib/db';
 import { bills } from '../../lib/db/schema';
 import { generateBillSummary } from '../../lib/ai/legislation/summary-generator';
+import { detectBudgetBillType } from '../../lib/ai/legislation/budget-bill-utils';
 import { appConfig } from '../../../app.config';
 import { runSyncJob, type SyncCheckpoint } from '../utils';
 
@@ -94,15 +95,43 @@ export async function generateBillSummaries(): Promise<void> {
       }
 
       try {
-        const result = await generateBillSummary({
-          id: bill.id,
-          knessetId: bill.knessetId,
-          name: bill.name,
-          knessetNum: bill.knessetNum,
-          billType: bill.billType,
-          status: bill.status,
-          proposedDate: bill.proposedDate,
-        });
+        // For parent omnibus budget bills, fetch the chapter names from the DB
+        let chapterNames: string[] | undefined;
+        const budgetType = detectBudgetBillType(bill.name);
+        if (budgetType === 'parent') {
+          // Extract the identifying part of the bill name to find its chapters
+          // Chapters contain "מתוך" + a substring of the parent name
+          const parentKeywords = bill.name
+            .replace(/^הצעת /, '')
+            .replace(/^חוק /, '')
+            .slice(0, 60);
+          const chapters = await db
+            .select({ name: bills.name })
+            .from(bills)
+            .where(
+              and(
+                like(bills.name, `%מתוך%${parentKeywords.slice(0, 30)}%`),
+                eq(bills.knessetNum, bill.knessetNum!),
+              ),
+            )
+            .limit(50);
+          if (chapters.length > 0) {
+            chapterNames = chapters.map((c) => c.name.split('מתוך')[0].trim());
+          }
+        }
+
+        const result = await generateBillSummary(
+          {
+            id: bill.id,
+            knessetId: bill.knessetId,
+            name: bill.name,
+            knessetNum: bill.knessetNum,
+            billType: bill.billType,
+            status: bill.status,
+            proposedDate: bill.proposedDate,
+          },
+          chapterNames,
+        );
 
         tokensUsedToday += result.tokensUsed;
 
@@ -113,6 +142,7 @@ export async function generateBillSummaries(): Promise<void> {
           const updatedMetadata = {
             ...existingMetadata,
             aiSummaryGeneratedAt: new Date().toISOString(),
+            ...(result.budgetType && { budgetBillType: result.budgetType }),
           };
 
           await db
