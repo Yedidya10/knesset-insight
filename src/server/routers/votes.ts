@@ -2,7 +2,15 @@ import { z } from 'zod/v4';
 import { eq, desc, asc, sql, ilike, and, gte, lte } from 'drizzle-orm';
 import { router, publicProcedure } from '../trpc';
 import { db } from '../../lib/db';
-import { votes, memberVotes, members, factions, bills, billClusters, billClusterMembers } from '../../lib/db/schema';
+import {
+  votes,
+  memberVotes,
+  members,
+  factions,
+  bills,
+  billClusters,
+  billClusterMembers,
+} from '../../lib/db/schema';
 
 export const votesRouter = router({
   list: publicProcedure
@@ -15,11 +23,22 @@ export const votesRouter = router({
         knessetNum: z.number().optional(),
         dateFrom: z.string().optional(),
         dateTo: z.string().optional(),
-        sortBy: z.enum(['dateDesc', 'dateAsc', 'mostVotes', 'mostControversial']).default('dateDesc'),
+        sortBy: z
+          .enum(['dateDesc', 'dateAsc', 'mostVotes', 'mostControversial'])
+          .default('dateDesc'),
       }),
     )
     .query(async ({ input }) => {
-      const { page, pageSize, search, isAccepted, knessetNum, dateFrom, dateTo, sortBy } = input;
+      const {
+        page,
+        pageSize,
+        search,
+        isAccepted,
+        knessetNum,
+        dateFrom,
+        dateTo,
+        sortBy,
+      } = input;
       const offset = (page - 1) * pageSize;
 
       const conditions = [];
@@ -39,7 +58,8 @@ export const votesRouter = router({
         conditions.push(lte(votes.voteDate, new Date(dateTo)));
       }
 
-      const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+      const whereClause =
+        conditions.length > 0 ? and(...conditions) : undefined;
 
       let orderByClause;
       switch (sortBy) {
@@ -47,10 +67,14 @@ export const votesRouter = router({
           orderByClause = asc(votes.voteDate);
           break;
         case 'mostVotes':
-          orderByClause = desc(sql`${votes.forCount} + ${votes.againstCount} + ${votes.abstainCount}`);
+          orderByClause = desc(
+            sql`${votes.forCount} + ${votes.againstCount} + ${votes.abstainCount}`,
+          );
           break;
         case 'mostControversial':
-          orderByClause = asc(sql`abs(${votes.forCount} - ${votes.againstCount})`);
+          orderByClause = asc(
+            sql`abs(${votes.forCount} - ${votes.againstCount})`,
+          );
           break;
         default:
           orderByClause = desc(votes.voteDate);
@@ -76,7 +100,10 @@ export const votesRouter = router({
           .orderBy(orderByClause)
           .limit(pageSize)
           .offset(offset),
-        db.select({ count: sql<number>`count(*)::int` }).from(votes).where(whereClause),
+        db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(votes)
+          .where(whereClause),
       ]);
 
       return {
@@ -117,7 +144,13 @@ export const votesRouter = router({
       if (!result[0]) return null;
 
       // Fetch related votes (same sessItemId)
-      let relatedVotes: { id: number; title: string; isAccepted: boolean | null; forCount: number | null; againstCount: number | null }[] = [];
+      let relatedVotes: {
+        id: number;
+        title: string;
+        isAccepted: boolean | null;
+        forCount: number | null;
+        againstCount: number | null;
+      }[] = [];
       if (result[0].sessItemId) {
         relatedVotes = await db
           .select({
@@ -143,7 +176,10 @@ export const votesRouter = router({
         const [clusterRow] = await db
           .select({ id: billClusters.id, name: billClusters.name })
           .from(billClusterMembers)
-          .innerJoin(billClusters, eq(billClusterMembers.clusterId, billClusters.id))
+          .innerJoin(
+            billClusters,
+            eq(billClusterMembers.clusterId, billClusters.id),
+          )
           .where(eq(billClusterMembers.billId, result[0].billId))
           .limit(1);
         if (clusterRow) clusterInfo = clusterRow;
@@ -189,5 +225,65 @@ export const votesRouter = router({
         .innerJoin(factions, eq(members.factionId, factions.id))
         .where(eq(memberVotes.voteId, input.voteId))
         .groupBy(factions.name, factions.color, factions.isCoalition);
+    }),
+
+  /** Compact detail for inline expansion — faction breakdown + voter list */
+  detail: publicProcedure
+    .input(z.object({ voteId: z.number() }))
+    .query(async ({ input }) => {
+      const rows = await db
+        .select({
+          memberId: members.id,
+          firstName: members.firstName,
+          lastName: members.lastName,
+          imageUrl: members.imageUrl,
+          voteValue: memberVotes.voteValue,
+          factionName: factions.name,
+          factionColor: factions.color,
+          isCoalition: factions.isCoalition,
+        })
+        .from(memberVotes)
+        .innerJoin(members, eq(memberVotes.memberId, members.id))
+        .leftJoin(factions, eq(members.factionId, factions.id))
+        .where(eq(memberVotes.voteId, input.voteId));
+
+      // Build faction breakdown from the same data
+      const factionMap = new Map<
+        string,
+        {
+          factionName: string;
+          factionColor: string | null;
+          isCoalition: boolean | null;
+          for: number;
+          against: number;
+          abstain: number;
+          absent: number;
+        }
+      >();
+
+      for (const r of rows) {
+        const key = r.factionName ?? 'unknown';
+        if (!factionMap.has(key)) {
+          factionMap.set(key, {
+            factionName: key,
+            factionColor: r.factionColor,
+            isCoalition: r.isCoalition,
+            for: 0,
+            against: 0,
+            abstain: 0,
+            absent: 0,
+          });
+        }
+        const f = factionMap.get(key)!;
+        if (r.voteValue === 'for') f.for++;
+        else if (r.voteValue === 'against') f.against++;
+        else if (r.voteValue === 'abstain') f.abstain++;
+        else f.absent++;
+      }
+
+      return {
+        voters: rows,
+        factions: Array.from(factionMap.values()),
+      };
     }),
 });

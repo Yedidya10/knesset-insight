@@ -191,6 +191,8 @@ export async function linkVotesToBills(): Promise<void> {
       SET bill_stage = CASE
         WHEN title ~* 'קריאה שנייה ושלישית|קריאה שניה ושלישית'
           THEN ${BillStage.SECOND_THIRD_READING}::int
+        WHEN title ~* 'קריאה שנייה|קריאה שניה'
+          THEN ${BillStage.SECOND_THIRD_READING}::int
         WHEN title ~* 'קריאה ראשונה'
           THEN ${BillStage.FIRST_READING}::int
         WHEN title ~* 'דיון מוקדם'
@@ -201,7 +203,7 @@ export async function linkVotesToBills(): Promise<void> {
           THEN ${BillStage.PASSED}::int
       END
       WHERE bill_id IS NOT NULL AND bill_stage IS NULL
-        AND title ~* 'קריאה שנייה ושלישית|קריאה שניה ושלישית|קריאה ראשונה|דיון מוקדם|הסתייגות|הסתייגויות|אישור החוק'
+        AND title ~* 'קריאה שנייה ושלישית|קריאה שניה ושלישית|קריאה שנייה|קריאה שניה|קריאה ראשונה|דיון מוקדם|הסתייגות|הסתייגויות|אישור החוק'
       RETURNING id
     `);
     console.log(

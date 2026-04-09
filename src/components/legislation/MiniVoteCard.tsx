@@ -1,10 +1,16 @@
 'use client';
 
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Link } from '@/i18n/navigation';
-import { ExternalLink } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import { VoteTalliesBar } from './VoteTalliesBar';
+import { InlineVoteDetail } from './InlineVoteDetail';
 
 interface MiniVoteCardProps {
   id: number;
@@ -27,41 +33,50 @@ export function MiniVoteCard({
   isAccepted,
 }: MiniVoteCardProps) {
   const t = useTranslations('legislation');
+  const [open, setOpen] = useState(false);
 
   return (
-    <div className="rounded-lg border bg-muted/20 p-3 transition-colors hover:bg-muted/40">
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium">{title}</p>
-          <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-            {voteDate && (
-              <span>{new Date(voteDate).toLocaleDateString()}</span>
-            )}
-            <Badge
-              variant={isAccepted ? 'default' : 'destructive'}
-              className="text-[10px]"
-            >
-              {isAccepted ? t('accepted') : t('rejected')}
-            </Badge>
-          </div>
-        </div>
-        <Link
-          href={`/votes/${id}`}
-          className="shrink-0 text-muted-foreground hover:text-primary"
-          aria-label={t('votes.viewFullVote')}
+    <Collapsible open={open} onOpenChange={setOpen}>
+      <div className="bg-muted/20 hover:bg-muted/40 rounded-lg border transition-colors">
+        <CollapsibleTrigger
+          render={<button className="w-full cursor-pointer p-3 text-start" />}
         >
-          <ExternalLink className="h-3.5 w-3.5" />
-        </Link>
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium">{title}</p>
+              <div className="text-muted-foreground mt-1 flex items-center gap-2 text-xs">
+                {voteDate && (
+                  <span>{new Date(voteDate).toLocaleDateString()}</span>
+                )}
+                <Badge
+                  variant={isAccepted ? 'default' : 'destructive'}
+                  className="text-[10px]"
+                >
+                  {isAccepted ? t('accepted') : t('rejected')}
+                </Badge>
+              </div>
+            </div>
+            <ChevronDown
+              className={`text-muted-foreground h-4 w-4 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`}
+            />
+          </div>
+          <div className="mt-2">
+            <VoteTalliesBar
+              forCount={forCount}
+              againstCount={againstCount}
+              abstainCount={abstainCount}
+              isAccepted={isAccepted}
+              compact
+            />
+          </div>
+        </CollapsibleTrigger>
+
+        <CollapsibleContent>
+          <div className="border-t px-3 pb-3">
+            <InlineVoteDetail voteId={id} />
+          </div>
+        </CollapsibleContent>
       </div>
-      <div className="mt-2">
-        <VoteTalliesBar
-          forCount={forCount}
-          againstCount={againstCount}
-          abstainCount={abstainCount}
-          isAccepted={isAccepted}
-          compact
-        />
-      </div>
-    </div>
+    </Collapsible>
   );
 }

@@ -93,6 +93,10 @@ export function InteractiveStagePipeline({
         re: /קריאה שנייה ושלישית|קריאה שניה ושלישית|הסתייגו/,
         stageIndex: BillStage.SECOND_THIRD_READING,
       },
+      {
+        re: /קריאה שנייה|קריאה שניה/,
+        stageIndex: BillStage.SECOND_THIRD_READING,
+      },
       { re: /קריאה ראשונה/, stageIndex: BillStage.FIRST_READING },
       { re: /דיון מוקדם/, stageIndex: BillStage.PRELIMINARY },
       { re: /אישור החוק/, stageIndex: BillStage.PASSED },

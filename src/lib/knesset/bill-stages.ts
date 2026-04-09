@@ -160,18 +160,36 @@ function inferStageForSpecialStatus(statusId: string): BillStage {
   // Split usually happens after first reading
   if (SPLIT_STATUSES.has(statusId)) return BillStage.FIRST_READING;
   // Continuity statuses — bill is in early stages (pre-pipeline)
-  if (CONTINUITY_PENDING_STATUSES.has(statusId) || CONTINUITY_REJECTED_STATUSES.has(statusId))
+  if (
+    CONTINUITY_PENDING_STATUSES.has(statusId) ||
+    CONTINUITY_REJECTED_STATUSES.has(statusId)
+  )
     return BillStage.SUBMITTED;
   // Stopped/converted/removed — assume pre-pipeline
   return BillStage.SUBMITTED;
 }
 
+// ── BillType text → pipeline mapping (fallback when subTypeId is null) ──
+
+const BILL_TYPE_TEXT_GOVERNMENT = new Set(['ממשלתית', 'government']);
+const BILL_TYPE_TEXT_COMMITTEE = new Set(['ועדה', 'committee']);
+
 /**
  * Select the visual stage pipeline for a bill type.
+ * Uses subTypeId when available, falls back to billType text.
  */
-function getVisualStages(subTypeId: number | null | undefined): readonly BillStage[] {
+function getVisualStages(
+  subTypeId: number | null | undefined,
+  billType: string | null | undefined,
+): readonly BillStage[] {
   if (subTypeId === BILL_SUBTYPE_GOVERNMENT) return GOVERNMENT_STAGES;
   if (subTypeId === BILL_SUBTYPE_COMMITTEE) return COMMITTEE_STAGES;
+  if (subTypeId != null) return PRIVATE_STAGES;
+
+  // Fallback: use billType text when subTypeId is not populated
+  const bt = billType?.trim().toLowerCase();
+  if (bt && BILL_TYPE_TEXT_GOVERNMENT.has(bt)) return GOVERNMENT_STAGES;
+  if (bt && BILL_TYPE_TEXT_COMMITTEE.has(bt)) return COMMITTEE_STAGES;
   return PRIVATE_STAGES;
 }
 
@@ -185,10 +203,12 @@ function getVisualStages(subTypeId: number | null | undefined): readonly BillSta
  *
  * @param statusId - The bill's current StatusID (as string)
  * @param subTypeId - The bill's SubTypeID (53=government, 54=private, 55=committee)
+ * @param billType  - The bill's type description text (fallback when subTypeId is null)
  */
 export function computeBillStage(
   statusId: string | null | undefined,
   subTypeId: number | null | undefined,
+  billType?: string | null,
 ): ComputedBillStage {
   const sid = statusId ?? '';
   const specialStatus = getSpecialStatus(sid);
@@ -202,7 +222,7 @@ export function computeBillStage(
   }
 
   // Build visual stages array based on bill type
-  const allStages = getVisualStages(subTypeId);
+  const allStages = getVisualStages(subTypeId, billType);
   const firstVisibleStage = allStages[0];
 
   const stages: StageInfo[] = allStages.map((stage) => {
@@ -216,7 +236,10 @@ export function computeBillStage(
       status = 'completed';
     } else if (stage === currentStage) {
       // PASSED is the terminal stage — treat it as completed, not "current/pending"
-      status = specialStatus || currentStage === BillStage.PASSED ? 'completed' : 'current';
+      status =
+        specialStatus || currentStage === BillStage.PASSED
+          ? 'completed'
+          : 'current';
     } else {
       status = 'upcoming';
     }

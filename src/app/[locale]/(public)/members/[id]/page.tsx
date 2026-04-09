@@ -76,94 +76,106 @@ export default async function MemberProfilePage({ params }: Props) {
   if (!member) notFound();
 
   // Parallel data fetching
-  const [recentVotesData, voteStats, initiatedBills, chairedCommittees, factionHistory, integrityData, corporateAff, lobbyistConn] =
-    await Promise.all([
-      // Recent votes by this member
-      db
-        .select({
-          voteId: votes.id,
-          voteTitle: votes.title,
-          voteDate: votes.voteDate,
-          voteValue: memberVotes.voteValue,
-          isAccepted: votes.isAccepted,
-        })
-        .from(memberVotes)
-        .innerJoin(votes, eq(memberVotes.voteId, votes.id))
-        .where(eq(memberVotes.memberId, member.id))
-        .orderBy(desc(votes.voteDate))
-        .limit(30),
+  const [
+    recentVotesData,
+    voteStats,
+    initiatedBills,
+    chairedCommittees,
+    factionHistory,
+    integrityData,
+    corporateAff,
+    lobbyistConn,
+  ] = await Promise.all([
+    // Recent votes by this member
+    db
+      .select({
+        voteId: votes.id,
+        voteTitle: votes.title,
+        voteDate: votes.voteDate,
+        voteValue: memberVotes.voteValue,
+        isAccepted: votes.isAccepted,
+        billId: votes.billId,
+      })
+      .from(memberVotes)
+      .innerJoin(votes, eq(memberVotes.voteId, votes.id))
+      .where(eq(memberVotes.memberId, member.id))
+      .orderBy(desc(votes.voteDate))
+      .limit(30),
 
-      // Vote stats
-      db
-        .select({
-          value: memberVotes.voteValue,
-          count: sql<number>`count(*)::int`,
-        })
-        .from(memberVotes)
-        .where(eq(memberVotes.memberId, member.id))
-        .groupBy(memberVotes.voteValue),
+    // Vote stats
+    db
+      .select({
+        value: memberVotes.voteValue,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(memberVotes)
+      .where(eq(memberVotes.memberId, member.id))
+      .groupBy(memberVotes.voteValue),
 
-      // Bills initiated
-      db
-        .select({
-          billId: bills.id,
-          billName: bills.name,
-          billStatus: bills.status,
-          billKnessetNum: bills.knessetNum,
-          proposedDate: bills.proposedDate,
-          isPrimary: billInitiators.isPrimary,
-        })
-        .from(billInitiators)
-        .innerJoin(bills, eq(billInitiators.billId, bills.id))
-        .where(eq(billInitiators.memberId, member.id))
-        .orderBy(desc(bills.proposedDate)),
+    // Bills initiated
+    db
+      .select({
+        billId: bills.id,
+        billName: bills.name,
+        billStatus: bills.status,
+        billKnessetNum: bills.knessetNum,
+        proposedDate: bills.proposedDate,
+        isPrimary: billInitiators.isPrimary,
+      })
+      .from(billInitiators)
+      .innerJoin(bills, eq(billInitiators.billId, bills.id))
+      .where(eq(billInitiators.memberId, member.id))
+      .orderBy(desc(bills.proposedDate)),
 
-      // Committees chaired
-      db
-        .select({
-          id: committees.id,
-          name: committees.name,
-          committeeType: committees.committeeType,
-          isActive: committees.isActive,
-        })
-        .from(committees)
-        .where(eq(committees.chairmanId, member.id)),
+    // Committees chaired
+    db
+      .select({
+        id: committees.id,
+        name: committees.name,
+        committeeType: committees.committeeType,
+        isActive: committees.isActive,
+      })
+      .from(committees)
+      .where(eq(committees.chairmanId, member.id)),
 
-      // Faction history across Knessets
-      db
-        .select({
-          knessetNum: memberFactionHistory.knessetNum,
-          factionName: factions.name,
-          startDate: memberFactionHistory.startDate,
-          endDate: memberFactionHistory.endDate,
-        })
-        .from(memberFactionHistory)
-        .innerJoin(factions, eq(memberFactionHistory.factionId, factions.id))
-        .where(eq(memberFactionHistory.memberId, member.id))
-        .orderBy(desc(memberFactionHistory.knessetNum), asc(memberFactionHistory.startDate)),
+    // Faction history across Knessets
+    db
+      .select({
+        knessetNum: memberFactionHistory.knessetNum,
+        factionName: factions.name,
+        startDate: memberFactionHistory.startDate,
+        endDate: memberFactionHistory.endDate,
+      })
+      .from(memberFactionHistory)
+      .innerJoin(factions, eq(memberFactionHistory.factionId, factions.id))
+      .where(eq(memberFactionHistory.memberId, member.id))
+      .orderBy(
+        desc(memberFactionHistory.knessetNum),
+        asc(memberFactionHistory.startDate),
+      ),
 
-      // Integrity cases
-      db
-        .select()
-        .from(integrityCases)
-        .where(eq(integrityCases.memberId, member.id))
-        .orderBy(desc(integrityCases.eventDate)),
+    // Integrity cases
+    db
+      .select()
+      .from(integrityCases)
+      .where(eq(integrityCases.memberId, member.id))
+      .orderBy(desc(integrityCases.eventDate)),
 
-      // Corporate affiliations
-      db
-        .select()
-        .from(memberCorporateAffiliations)
-        .where(eq(memberCorporateAffiliations.memberId, member.id))
-        .orderBy(desc(memberCorporateAffiliations.startDate)),
+    // Corporate affiliations
+    db
+      .select()
+      .from(memberCorporateAffiliations)
+      .where(eq(memberCorporateAffiliations.memberId, member.id))
+      .orderBy(desc(memberCorporateAffiliations.startDate)),
 
-      // Lobbyist connections
-      db
-        .select()
-        .from(memberLobbyistConnections)
-        .where(eq(memberLobbyistConnections.memberId, member.id))
-        .orderBy(desc(memberLobbyistConnections.eventDate))
-        .limit(20),
-    ]);
+    // Lobbyist connections
+    db
+      .select()
+      .from(memberLobbyistConnections)
+      .where(eq(memberLobbyistConnections.memberId, member.id))
+      .orderBy(desc(memberLobbyistConnections.eventDate))
+      .limit(20),
+  ]);
 
   const stats = { for: 0, against: 0, abstain: 0, absent: 0 };
   for (const s of voteStats) {
@@ -175,24 +187,33 @@ export default async function MemberProfilePage({ params }: Props) {
     totalVotes > 0 ? Math.round((participationCount / totalVotes) * 100) : 0;
 
   // Compute integrity case summary (group by category+severity)
-  const caseSummaryMap = new Map<string, { category: string; severity: string; count: number }>();
+  const caseSummaryMap = new Map<
+    string,
+    { category: string; severity: string; count: number }
+  >();
   for (const c of integrityData) {
     const key = `${c.category}-${c.severity}`;
     const existing = caseSummaryMap.get(key);
     if (existing) {
       existing.count++;
     } else {
-      caseSummaryMap.set(key, { category: c.category, severity: c.severity, count: 1 });
+      caseSummaryMap.set(key, {
+        category: c.category,
+        severity: c.severity,
+        count: 1,
+      });
     }
   }
   const caseSummary = Array.from(caseSummaryMap.values());
 
   const initials = `${member.firstName?.[0] ?? ''}${member.lastName?.[0] ?? ''}`;
 
-  // Compute age
+  // Compute age (server component — Date.now() is safe here)
+  // eslint-disable-next-line react-hooks/purity
+  const now = Date.now();
   const age = member.birthDate
     ? Math.floor(
-        (Date.now() - new Date(member.birthDate).getTime()) /
+        (now - new Date(member.birthDate).getTime()) /
           (365.25 * 24 * 60 * 60 * 1000),
       )
     : null;
@@ -212,10 +233,10 @@ export default async function MemberProfilePage({ params }: Props) {
         {/* Profile card — hero style */}
         <Card className="glass-card overflow-hidden lg:col-span-1">
           {/* Gradient header bg */}
-          <div className="h-20 bg-gradient-to-br from-primary/20 via-chart-2/10 to-chart-4/10" />
-          <CardContent className="flex flex-col items-center gap-4 px-6 pb-6 -mt-12">
+          <div className="from-primary/20 via-chart-2/10 to-chart-4/10 h-20 bg-gradient-to-br" />
+          <CardContent className="-mt-12 flex flex-col items-center gap-4 px-6 pb-6">
             <div className="relative">
-              <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-primary/30 to-chart-2/20 blur-sm" />
+              <div className="from-primary/30 to-chart-2/20 absolute -inset-1 rounded-full bg-gradient-to-br blur-sm" />
               <MemberAvatar
                 member={member}
                 size="xl"
@@ -231,7 +252,7 @@ export default async function MemberProfilePage({ params }: Props) {
               {member.factionName && (
                 <Link
                   href={`/factions/${member.factionId}`}
-                  className="text-sm text-primary hover:underline"
+                  className="text-primary text-sm hover:underline"
                 >
                   {member.factionName}
                 </Link>
@@ -240,9 +261,7 @@ export default async function MemberProfilePage({ params }: Props) {
 
             <div className="flex flex-wrap justify-center gap-2">
               {member.isCoalition !== null && (
-                <Badge
-                  variant={member.isCoalition ? 'default' : 'secondary'}
-                >
+                <Badge variant={member.isCoalition ? 'default' : 'secondary'}>
                   {member.isCoalition
                     ? t('coalitionMember')
                     : t('oppositionMember')}
@@ -258,7 +277,7 @@ export default async function MemberProfilePage({ params }: Props) {
             {/* Overview info */}
             <div className="w-full space-y-3 text-sm">
               {member.factionName && (
-                <div className="flex items-center gap-2 text-muted-foreground">
+                <div className="text-muted-foreground flex items-center gap-2">
                   <Building2 className="h-4 w-4 shrink-0" />
                   <span>
                     {t('party')}: {member.factionName}
@@ -266,7 +285,7 @@ export default async function MemberProfilePage({ params }: Props) {
                 </div>
               )}
               {member.gender && (
-                <div className="flex items-center gap-2 text-muted-foreground">
+                <div className="text-muted-foreground flex items-center gap-2">
                   <User className="h-4 w-4 shrink-0" />
                   <span>
                     {t('gender')}:{' '}
@@ -277,7 +296,7 @@ export default async function MemberProfilePage({ params }: Props) {
                 </div>
               )}
               {member.birthDate && (
-                <div className="flex items-center gap-2 text-muted-foreground">
+                <div className="text-muted-foreground flex items-center gap-2">
                   <Calendar className="h-4 w-4 shrink-0" />
                   <span>
                     {t('birthDate')}:{' '}
@@ -287,7 +306,7 @@ export default async function MemberProfilePage({ params }: Props) {
                 </div>
               )}
               {member.knessetNum && (
-                <div className="flex items-center gap-2 text-muted-foreground">
+                <div className="text-muted-foreground flex items-center gap-2">
                   <Gavel className="h-4 w-4 shrink-0" />
                   <span>
                     {t('knessetNum')}: {member.knessetNum}
@@ -295,7 +314,7 @@ export default async function MemberProfilePage({ params }: Props) {
                 </div>
               )}
               {member.startDate && (
-                <div className="flex items-center gap-2 text-muted-foreground">
+                <div className="text-muted-foreground flex items-center gap-2">
                   <Calendar className="h-4 w-4 shrink-0" />
                   <span>
                     {t('startDate')}:{' '}
@@ -304,7 +323,7 @@ export default async function MemberProfilePage({ params }: Props) {
                 </div>
               )}
               {member.endDate && (
-                <div className="flex items-center gap-2 text-muted-foreground">
+                <div className="text-muted-foreground flex items-center gap-2">
                   <Calendar className="h-4 w-4 shrink-0" />
                   <span>
                     {t('endDate')}:{' '}
@@ -313,7 +332,7 @@ export default async function MemberProfilePage({ params }: Props) {
                 </div>
               )}
               {member.email && (
-                <div className="flex items-center gap-2 text-muted-foreground">
+                <div className="text-muted-foreground flex items-center gap-2">
                   <Mail className="h-4 w-4 shrink-0" />
                   <a
                     href={`mailto:${member.email}`}
@@ -324,7 +343,7 @@ export default async function MemberProfilePage({ params }: Props) {
                 </div>
               )}
               {member.phone && (
-                <div className="flex items-center gap-2 text-muted-foreground">
+                <div className="text-muted-foreground flex items-center gap-2">
                   <Phone className="h-4 w-4 shrink-0" />
                   <a
                     href={`tel:${member.phone}`}
@@ -370,7 +389,7 @@ export default async function MemberProfilePage({ params }: Props) {
                           {entries.map((entry, i) => (
                             <p
                               key={i}
-                              className="text-xs text-muted-foreground ps-2"
+                              className="text-muted-foreground ps-2 text-xs"
                             >
                               {entry.factionName}
                             </p>
@@ -398,7 +417,7 @@ export default async function MemberProfilePage({ params }: Props) {
                   <p className="text-2xl font-bold text-green-700 dark:text-green-300">
                     {stats.for}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     {tVotes('for')}
                   </p>
                 </div>
@@ -406,7 +425,7 @@ export default async function MemberProfilePage({ params }: Props) {
                   <p className="text-2xl font-bold text-red-700 dark:text-red-300">
                     {stats.against}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     {tVotes('against')}
                   </p>
                 </div>
@@ -414,13 +433,13 @@ export default async function MemberProfilePage({ params }: Props) {
                   <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">
                     {stats.abstain}
                   </p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     {tVotes('abstain')}
                   </p>
                 </div>
-                <div className="rounded-xl bg-muted p-3 ring-1 ring-border/30">
+                <div className="bg-muted ring-border/30 rounded-xl p-3 ring-1">
                   <p className="text-2xl font-bold">{stats.absent}</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     {tVotes('absent')}
                   </p>
                 </div>
@@ -435,13 +454,13 @@ export default async function MemberProfilePage({ params }: Props) {
                     </span>
                     <span className="font-semibold">{participationRate}%</span>
                   </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-muted">
+                  <div className="bg-muted h-2 overflow-hidden rounded-full">
                     <div
-                      className="h-full rounded-full bg-primary transition-all"
+                      className="bg-primary h-full rounded-full transition-all"
                       style={{ width: `${participationRate}%` }}
                     />
                   </div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     {t('totalVotes')}: {totalVotes}
                   </p>
                 </div>
@@ -492,18 +511,20 @@ export default async function MemberProfilePage({ params }: Props) {
               <Separator className="my-4" />
 
               {/* Recent votes */}
-              <h3 className="mb-3 text-sm font-semibold">
-                {t('recentVotes')}
-              </h3>
+              <h3 className="mb-3 text-sm font-semibold">{t('recentVotes')}</h3>
               {recentVotesData.length > 0 ? (
                 <div className="space-y-2">
                   {recentVotesData.map((v) => (
                     <Link
                       key={v.voteId}
-                      href={`/votes/${v.voteId}`}
+                      href={
+                        v.billId
+                          ? `/legislation/${v.billId}`
+                          : `/votes/${v.voteId}`
+                      }
                       className="block"
                     >
-                      <div className="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-muted/50">
+                      <div className="hover:bg-muted/50 flex items-center gap-3 rounded-lg p-2 transition-colors">
                         {v.voteValue === 'for' && (
                           <ThumbsUp className="h-4 w-4 shrink-0 text-green-600" />
                         )}
@@ -514,25 +535,21 @@ export default async function MemberProfilePage({ params }: Props) {
                           <Minus className="h-4 w-4 shrink-0 text-yellow-600" />
                         )}
                         {v.voteValue === 'absent' && (
-                          <User className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          <User className="text-muted-foreground h-4 w-4 shrink-0" />
                         )}
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-medium">
                             <TranslatedText text={v.voteTitle} />
                           </p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-muted-foreground text-xs">
                             {v.voteDate
-                              ? new Date(v.voteDate).toLocaleDateString(
-                                  'he-IL',
-                                )
+                              ? new Date(v.voteDate).toLocaleDateString('he-IL')
                               : ''}
                           </p>
                         </div>
                         {v.isAccepted !== null && (
                           <Badge
-                            variant={
-                              v.isAccepted ? 'default' : 'secondary'
-                            }
+                            variant={v.isAccepted ? 'default' : 'secondary'}
                             className="shrink-0 text-xs"
                           >
                             {v.isAccepted
@@ -545,9 +562,7 @@ export default async function MemberProfilePage({ params }: Props) {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">
-                  {t('noVotes')}
-                </p>
+                <p className="text-muted-foreground text-sm">{t('noVotes')}</p>
               )}
             </CardContent>
           </Card>
@@ -581,7 +596,9 @@ export default async function MemberProfilePage({ params }: Props) {
                       key={c.id}
                       className="flex items-center justify-between rounded-lg p-2"
                     >
-                      <span className="text-sm font-medium"><TranslatedText text={c.name} /></span>
+                      <span className="text-sm font-medium">
+                        <TranslatedText text={c.name} />
+                      </span>
                       <div className="flex gap-2">
                         {c.committeeType && (
                           <Badge variant="outline" className="text-xs">
@@ -590,14 +607,10 @@ export default async function MemberProfilePage({ params }: Props) {
                         )}
                         {c.isActive !== null && (
                           <Badge
-                            variant={
-                              c.isActive ? 'default' : 'secondary'
-                            }
+                            variant={c.isActive ? 'default' : 'secondary'}
                             className="text-xs"
                           >
-                            {c.isActive
-                              ? tCommon('yes')
-                              : tCommon('no')}
+                            {c.isActive ? tCommon('yes') : tCommon('no')}
                           </Badge>
                         )}
                       </div>
