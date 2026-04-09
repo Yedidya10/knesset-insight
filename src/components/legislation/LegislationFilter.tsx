@@ -161,7 +161,7 @@ export default function LegislationFilter({
             onValueChange={(val) => updateParam('type', val === '_all' ? '' : String(val))}
             items={{
               _all: t('filter.allTypes'),
-              ...Object.fromEntries(billTypes.map((bt) => [bt, bt])),
+              ...Object.fromEntries(billTypes.map((bt) => [bt, t(`billType.${bt}`)])),
             }}
           >
             <SelectTrigger>
@@ -171,7 +171,7 @@ export default function LegislationFilter({
               <SelectItem value="_all">{t('filter.allTypes')}</SelectItem>
               {billTypes.map((bt) => (
                 <SelectItem key={bt} value={bt}>
-                  {bt}
+                  {t(`billType.${bt}`)}
                 </SelectItem>
               ))}
             </SelectContent>

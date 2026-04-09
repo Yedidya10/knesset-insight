@@ -114,21 +114,25 @@ export default async function MembersPage({ searchParams }: Props) {
   }
 
   // Faction list for filter dropdown
-  let factionList: string[];
+  let factionList: Array<{ id: number; name: string }>;
   if (historyFactionMap) {
-    const factionNames = new Set<string>();
+    const factionEntries = new Map<number, string>();
     for (const info of historyFactionMap.values()) {
-      if (info.factionName) factionNames.add(info.factionName);
+      if (info.factionName && !factionEntries.has(info.factionId)) {
+        factionEntries.set(info.factionId, info.factionName);
+      }
     }
-    factionList = [...factionNames].sort();
+    factionList = [...factionEntries.entries()]
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
   } else {
     const factionRows = await db
-      .selectDistinct({ name: factions.name })
+      .selectDistinct({ id: factions.id, name: factions.name })
       .from(factions)
       .innerJoin(members, eq(members.factionId, factions.id))
       .where(eq(factions.knessetNum, selectedKnesset))
       .orderBy(factions.name);
-    factionList = factionRows.map((f) => f.name).filter(Boolean);
+    factionList = factionRows.filter((f) => f.name).map((f) => ({ id: f.id, name: f.name }));
   }
 
   // Build member conditions
@@ -149,8 +153,9 @@ export default async function MembersPage({ searchParams }: Props) {
     }
 
     if (partyFilter) {
+      const partyId = Number(partyFilter);
       eligibleIds = eligibleIds.filter(
-        (id) => historyFactionMap!.get(id)?.factionName === partyFilter,
+        (id) => historyFactionMap!.get(id)?.factionId === partyId,
       );
     }
 
@@ -203,13 +208,9 @@ export default async function MembersPage({ searchParams }: Props) {
   }
 
   if (!historyFactionMap && partyFilter) {
-    const matchingFactions = await db
-      .select({ id: factions.id })
-      .from(factions)
-      .where(eq(factions.name, partyFilter));
-    const factionIds = matchingFactions.map((f) => f.id);
-    if (factionIds.length > 0) {
-      conditions.push(inArray(members.factionId, factionIds));
+    const partyId = Number(partyFilter);
+    if (!isNaN(partyId)) {
+      conditions.push(eq(members.factionId, partyId));
     } else {
       conditions.push(sql`false`);
     }

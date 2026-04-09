@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/select';
 
 interface MembersFilterProps {
-  factions: string[];
+  factions: Array<{ id: number; name: string }>;
   currentFaction: string;
   currentSort: string;
   currentStatus: string;
@@ -180,16 +180,16 @@ export default function MembersFilter({
         <Select
           value={currentFaction || '_all'}
           onValueChange={(val) => updateParam('party', val === '_all' ? '' : String(val))}
-          items={{ _all: t('allFactions'), ...Object.fromEntries(factions.map((name) => [name, name])) }}
+          items={{ _all: t('allFactions'), ...Object.fromEntries(factions.map((f) => [String(f.id), f.name])) }}
         >
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
           <SelectContent alignItemWithTrigger={false}>
             <SelectItem value="_all">{t('allFactions')}</SelectItem>
-            {factions.map((name) => (
-              <SelectItem key={name} value={name}>
-                {name}
+            {factions.map((f) => (
+              <SelectItem key={f.id} value={String(f.id)}>
+                {f.name}
               </SelectItem>
             ))}
           </SelectContent>

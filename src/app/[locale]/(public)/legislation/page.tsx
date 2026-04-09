@@ -13,6 +13,12 @@ import { BillClusterCard } from '@/components/legislation/BillClusterCard';
 import LegislationViewToggle from '@/components/legislation/LegislationViewToggle';
 import { getBillStatusText } from '@/lib/knesset/bill-status';
 
+// Mapping between URL-friendly English slugs and Knesset SubTypeID / Hebrew billType
+const BILL_TYPE_SLUGS = ['government', 'private', 'committee'] as const;
+type BillTypeSlug = (typeof BILL_TYPE_SLUGS)[number];
+const SLUG_TO_SUBTYPE_ID: Record<BillTypeSlug, number> = { government: 53, private: 54, committee: 55 };
+const SLUG_TO_HEBREW: Record<BillTypeSlug, string> = { government: 'ממשלתית', private: 'פרטית', committee: 'ועדה' };
+
 interface Props {
   searchParams: Promise<{
     view?: string;
@@ -61,7 +67,7 @@ export default async function LegislationPage({ searchParams }: Props) {
     const clusterConditions = [];
     if (knessetNum)
       clusterConditions.push(eq(billClusters.latestKnessetNum, knessetNum));
-    if (billType) clusterConditions.push(eq(billClusters.billType, billType));
+    if (billType && billType in SLUG_TO_HEBREW) clusterConditions.push(eq(billClusters.billType, SLUG_TO_HEBREW[billType as BillTypeSlug]));
     if (searchQuery)
       clusterConditions.push(ilike(billClusters.name, `%${searchQuery}%`));
     const clusterWhere =
@@ -192,7 +198,7 @@ export default async function LegislationPage({ searchParams }: Props) {
 
   const conditions = [];
   if (knessetNum) conditions.push(eq(bills.knessetNum, knessetNum));
-  if (billType) conditions.push(eq(bills.billType, billType));
+  if (billType && billType in SLUG_TO_SUBTYPE_ID) conditions.push(eq(bills.subTypeId, SLUG_TO_SUBTYPE_ID[billType as BillTypeSlug]));
   if (statusFilter) conditions.push(eq(bills.status, statusFilter));
   if (searchQuery) conditions.push(ilike(bills.name, `%${searchQuery}%`));
 
@@ -232,12 +238,7 @@ export default async function LegislationPage({ searchParams }: Props) {
   const totalCount = countResult[0]?.count ?? 0;
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
-  // Distinct bill types for filter
-  const billTypes = await db
-    .selectDistinct({ billType: bills.billType })
-    .from(bills)
-    .where(sql`${bills.billType} IS NOT NULL`)
-    .orderBy(bills.billType);
+  // Bill type slugs for filter (static list — no DB query needed)
 
   // Distinct statuses for filter
   const rawStatuses = await db
@@ -277,9 +278,7 @@ export default async function LegislationPage({ searchParams }: Props) {
           currentBillType={billType}
           currentStatus={statusFilter}
           currentSort={sortBy}
-          billTypes={billTypes
-            .map((bt) => bt.billType)
-            .filter((v): v is string => !!v)}
+          billTypes={[...BILL_TYPE_SLUGS]}
           statusOptions={statusOptions}
         />
       </div>
