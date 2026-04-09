@@ -43,6 +43,13 @@
       "when": 1775800000000,
       "tag": "0008_bill_clusters",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1776000000000,
+      "tag": "0009_admin_activity_log",
+      "breakpoints": true
     }
   ]
 }
