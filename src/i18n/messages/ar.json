@@ -796,6 +796,11 @@
       "noActivity": "لا يوجد نشاط بعد",
       "noReason": "بدون سبب"
     },
+    "entityActivity": {
+      "title": "إجراءات المدير الأخيرة",
+      "noActivity": "لا توجد إجراءات مدير على هذا العنصر",
+      "showMore": "عرض المزيد"
+    },
     "inline": {
       "relinkVote": "تغيير ربط التصويت",
       "billId": "معرف القانون",

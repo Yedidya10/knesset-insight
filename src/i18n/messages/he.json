@@ -796,6 +796,11 @@
       "noActivity": "אין פעולות עדיין",
       "noReason": "ללא נימוק"
     },
+    "entityActivity": {
+      "title": "פעולות אדמין אחרונות",
+      "noActivity": "אין פעולות אדמין על פריט זה",
+      "showMore": "הצג עוד"
+    },
     "inline": {
       "relinkVote": "שינוי שיוך הצבעה",
       "billId": "מזהה חוק",

@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { BillStagePipeline } from './BillStagePipeline';
 import { MiniVoteCard } from './MiniVoteCard';
 import { AIConfidenceBadge } from './AIConfidenceBadge';
+import EntityActivityPopover from '@/components/admin/inline/EntityActivityPopover';
 import type { StageInfo, SpecialStatus } from '@/lib/knesset/bill-stages';
 
 interface BillVote {
@@ -65,53 +66,61 @@ export function BillInClusterCard({
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
       <Card
         className={cn(
-          'overflow-hidden transition-all',
+          'group overflow-hidden transition-all',
           isPrimary && 'ring-2 ring-primary/30',
         )}
       >
-        <CollapsibleTrigger render={<CardHeader className="cursor-pointer hover:bg-muted/30 transition-colors pb-3" />}>
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0 flex-1">
-                <CardTitle className="text-sm font-semibold leading-snug line-clamp-2">
-                  {name}
-                </CardTitle>
-                <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                  {isPrimary && (
-                    <Badge variant="default" className="text-[10px]">
-                      {t('primaryInitiator')}
-                    </Badge>
-                  )}
-                  {knessetNum && (
-                    <Badge variant="outline" className="text-[10px]">
-                      {t('knessetNum', { num: knessetNum })}
-                    </Badge>
-                  )}
-                  {proposedDate && (
-                    <span className="text-[10px] text-muted-foreground">
-                      {new Date(proposedDate).toLocaleDateString()}
-                    </span>
-                  )}
-                  {relationshipType === 'ai' && (
-                    <AIConfidenceBadge
-                      confidence={confidence}
-                      reasoning={aiReasoning}
-                    />
-                  )}
-                  {votes.length > 0 && (
-                    <Badge variant="secondary" className="text-[10px]">
-                      {t('clusters.voteCount', { count: votes.length })}
-                    </Badge>
-                  )}
+        <div className="relative">
+          <CollapsibleTrigger render={<CardHeader className="cursor-pointer hover:bg-muted/30 transition-colors pb-3" />}>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <CardTitle className="text-sm font-semibold leading-snug line-clamp-2">
+                    {name}
+                  </CardTitle>
+                  <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                    {isPrimary && (
+                      <Badge variant="default" className="text-[10px]">
+                        {t('primaryInitiator')}
+                      </Badge>
+                    )}
+                    {knessetNum && (
+                      <Badge variant="outline" className="text-[10px]">
+                        {t('knessetNum', { num: knessetNum })}
+                      </Badge>
+                    )}
+                    {proposedDate && (
+                      <span className="text-[10px] text-muted-foreground">
+                        {new Date(proposedDate).toLocaleDateString()}
+                      </span>
+                    )}
+                    {relationshipType === 'ai' && (
+                      <AIConfidenceBadge
+                        confidence={confidence}
+                        reasoning={aiReasoning}
+                      />
+                    )}
+                    {votes.length > 0 && (
+                      <Badge variant="secondary" className="text-[10px]">
+                        {t('clusters.voteCount', { count: votes.length })}
+                      </Badge>
+                    )}
+                  </div>
                 </div>
+                <ChevronDown
+                  className={cn(
+                    'h-4 w-4 shrink-0 text-muted-foreground transition-transform',
+                    isOpen && 'rotate-180',
+                  )}
+                />
               </div>
-              <ChevronDown
-                className={cn(
-                  'h-4 w-4 shrink-0 text-muted-foreground transition-transform',
-                  isOpen && 'rotate-180',
-                )}
-              />
-            </div>
-        </CollapsibleTrigger>
+          </CollapsibleTrigger>
+          <div className="absolute top-2 inset-e-8 z-10">
+            <EntityActivityPopover
+              entityType="bill"
+              entityId={String(id)}
+            />
+          </div>
+        </div>
 
         <CollapsibleContent>
           <CardContent className="space-y-4 pt-0">

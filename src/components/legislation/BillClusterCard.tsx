@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Layers, Vote, ArrowRight, Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AIConfidenceBadge } from './AIConfidenceBadge';
+import EntityActivityPopover from '@/components/admin/inline/EntityActivityPopover';
 
 interface BillClusterCardProps {
   id: number;
@@ -41,8 +42,9 @@ export function BillClusterCard({
   const t = useTranslations('legislation');
 
   return (
-    <Link href={`/legislation/laws/${id}`}>
-      <Card className="glass-card hover-lift group overflow-hidden transition-all">
+    <div className="group relative">
+      <Link href={`/legislation/laws/${id}`}>
+        <Card className="glass-card hover-lift overflow-hidden transition-all">
         <div className="h-1 bg-gradient-to-r from-primary/40 via-chart-2/30 to-chart-4/30" />
         <CardContent className="p-4">
           {/* Title */}
@@ -105,5 +107,12 @@ export function BillClusterCard({
         </CardContent>
       </Card>
     </Link>
+    <div className="absolute top-2 inset-e-2 z-10">
+      <EntityActivityPopover
+        entityType="cluster"
+        entityId={String(id)}
+      />
+    </div>
+  </div>
   );
 }

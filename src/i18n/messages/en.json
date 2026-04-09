@@ -796,6 +796,11 @@
       "noActivity": "No activity yet",
       "noReason": "No reason provided"
     },
+    "entityActivity": {
+      "title": "Recent Admin Actions",
+      "noActivity": "No admin actions on this item",
+      "showMore": "Show more"
+    },
     "inline": {
       "relinkVote": "Change Vote Link",
       "billId": "Bill ID",

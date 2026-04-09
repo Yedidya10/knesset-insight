@@ -91,6 +91,30 @@ export const adminRouter = router({
       };
     }),
 
+  // ─── Entity Activity (for hover popover) ────────
+  entityActivity: adminProcedure
+    .input(
+      z.object({
+        entityType: z.string(),
+        entityId: z.string(),
+        limit: z.number().min(1).max(20).default(4),
+      }),
+    )
+    .query(async ({ input }) => {
+      const { entityType, entityId, limit } = input;
+      return db
+        .select()
+        .from(adminActivityLog)
+        .where(
+          and(
+            eq(adminActivityLog.entityType, entityType),
+            eq(adminActivityLog.entityId, entityId),
+          ),
+        )
+        .orderBy(desc(adminActivityLog.createdAt))
+        .limit(limit);
+    }),
+
   // ─── Sync Status ────────────────────────────────
   syncStatus: adminProcedure.query(async () => {
     return db.select().from(syncLog).orderBy(desc(syncLog.lastSyncAt));

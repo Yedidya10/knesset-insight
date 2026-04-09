@@ -11,6 +11,7 @@ import PaginationNav from '@/components/ui/pagination-nav';
 import LegislationFilter from '@/components/legislation/LegislationFilter';
 import { BillClusterCard } from '@/components/legislation/BillClusterCard';
 import LegislationViewToggle from '@/components/legislation/LegislationViewToggle';
+import EntityActivityPopover from '@/components/admin/inline/EntityActivityPopover';
 import { getBillStatusText } from '@/lib/knesset/bill-status';
 
 // Mapping between URL-friendly English slugs and Hebrew billType stored in DB
@@ -313,7 +314,7 @@ export default async function LegislationPage({ searchParams }: Props) {
         <>
           <div className="stagger-children space-y-3">
             {data.map((bill) => (
-              <div key={bill.id}>
+              <div key={bill.id} className="group relative">
                 <Link href={`/legislation/${bill.id}`}>
                   <Card className="glass-card hover-lift border-s-primary/30 overflow-hidden border-s-4">
                     <CardContent className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
@@ -353,6 +354,12 @@ export default async function LegislationPage({ searchParams }: Props) {
                     </CardContent>
                   </Card>
                 </Link>
+                <div className="absolute top-2 inset-e-2 z-10">
+                  <EntityActivityPopover
+                    entityType="bill"
+                    entityId={String(bill.id)}
+                  />
+                </div>
               </div>
             ))}
           </div>
