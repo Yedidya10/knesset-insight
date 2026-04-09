@@ -275,6 +275,7 @@ export async function computeBillClusters(): Promise<void> {
         const stageInfo = computeBillStage(
           bill.status,
           bill.subTypeId ?? undefined,
+          bill.billType ?? undefined,
         );
 
         const [inserted] = await db
@@ -329,7 +330,7 @@ function buildClusterFromBills(
   // Primary = bill with most advanced stage
   const withStages = memberBills.map((b) => ({
     ...b,
-    stageInfo: computeBillStage(b.status, b.subTypeId ?? undefined),
+    stageInfo: computeBillStage(b.status, b.subTypeId ?? undefined, b.billType ?? undefined),
   }));
 
   withStages.sort((a, z) => z.stageInfo.currentStage - a.stageInfo.currentStage);

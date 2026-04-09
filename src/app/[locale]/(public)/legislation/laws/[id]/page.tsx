@@ -74,6 +74,7 @@ export default async function ClusterDetailPage({ params }: Props) {
     const stageInfo = computeBillStage(
       row.bill.status,
       row.bill.subTypeId ?? undefined,
+      row.bill.billType ?? undefined,
     );
     return {
       ...row.bill,

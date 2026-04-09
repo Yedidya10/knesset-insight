@@ -174,7 +174,7 @@ export default async function BillDetailPage({ params }: Props) {
     unionBillKnessetId: relatedBillMap.get(mf.unionBillId)?.knessetId ?? 0,
   }));
 
-  const stageInfo = computeBillStage(bill.status, bill.subTypeId);
+  const stageInfo = computeBillStage(bill.status, bill.subTypeId, bill.billType);
   const statusText = getBillStatusText(bill.status);
   const knessetUrl = bill.knessetId ? getKnessetBillUrl(bill.knessetId) : null;
 

@@ -160,10 +160,7 @@ function inferStageForSpecialStatus(statusId: string): BillStage {
   // Split usually happens after first reading
   if (SPLIT_STATUSES.has(statusId)) return BillStage.FIRST_READING;
   // Continuity statuses — bill is in early stages (pre-pipeline)
-  if (
-    CONTINUITY_PENDING_STATUSES.has(statusId) ||
-    CONTINUITY_REJECTED_STATUSES.has(statusId)
-  )
+  if (CONTINUITY_PENDING_STATUSES.has(statusId) || CONTINUITY_REJECTED_STATUSES.has(statusId))
     return BillStage.SUBMITTED;
   // Stopped/converted/removed — assume pre-pipeline
   return BillStage.SUBMITTED;
@@ -172,9 +169,7 @@ function inferStageForSpecialStatus(statusId: string): BillStage {
 /**
  * Select the visual stage pipeline for a bill type.
  */
-function getVisualStages(
-  subTypeId: number | null | undefined,
-): readonly BillStage[] {
+function getVisualStages(subTypeId: number | null | undefined): readonly BillStage[] {
   if (subTypeId === BILL_SUBTYPE_GOVERNMENT) return GOVERNMENT_STAGES;
   if (subTypeId === BILL_SUBTYPE_COMMITTEE) return COMMITTEE_STAGES;
   return PRIVATE_STAGES;
@@ -221,10 +216,7 @@ export function computeBillStage(
       status = 'completed';
     } else if (stage === currentStage) {
       // PASSED is the terminal stage — treat it as completed, not "current/pending"
-      status =
-        specialStatus || currentStage === BillStage.PASSED
-          ? 'completed'
-          : 'current';
+      status = specialStatus || currentStage === BillStage.PASSED ? 'completed' : 'current';
     } else {
       status = 'upcoming';
     }
