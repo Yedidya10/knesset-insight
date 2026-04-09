@@ -718,6 +718,99 @@
     },
     "noItemsInQueue": "لا توجد عناصر في قائمة المراجعة",
     "relationshipType": "نوع العلاقة",
-    "actions": "إجراءات"
+    "actions": "إجراءات",
+    "nav": {
+      "title": "لوحة الإدارة",
+      "overview": "نظرة عامة",
+      "aiReview": "مراجعة AI",
+      "integrity": "النزاهة",
+      "syncStatus": "حالة المزامنة",
+      "activityLog": "سجل النشاط",
+      "logout": "تسجيل خروج"
+    },
+    "login": {
+      "title": "دخول المدير",
+      "placeholder": "أدخل كلمة سر المدير",
+      "submit": "دخول",
+      "invalidSecret": "كلمة سر غير صحيحة",
+      "networkError": "خطأ في الشبكة"
+    },
+    "overview": {
+      "title": "نظرة عامة",
+      "members": "أعضاء الكنيست",
+      "bills": "مشاريع القوانين",
+      "votes": "التصويتات",
+      "clusters": "مجموعات التشريع",
+      "pendingIntegrity": "النزاهة — معلقة",
+      "syncStatus": "حالة المزامنة",
+      "noSyncData": "لا توجد بيانات مزامنة",
+      "entity": "الكيان",
+      "lastSync": "آخر مزامنة",
+      "records": "السجلات",
+      "status": "الحالة",
+      "recentActivity": "النشاط الأخير",
+      "noActivity": "لا يوجد نشاط بعد"
+    },
+    "aiReview": {
+      "title": "مراجعة AI",
+      "description": "مراجعة والتحقق من مخرجات AI — مجموعات التشريع وحالات النزاهة",
+      "sections": {
+        "clusters": "مجموعات التشريع",
+        "clustersDescription": "مراجعة المجموعات المحددة بواسطة AI بثقة منخفضة",
+        "integrity": "حالات النزاهة",
+        "integrityDescription": "التحقق من حالات النزاهة وتصنيفها"
+      }
+    },
+    "integrity": {
+      "title": "مراجعة النزاهة",
+      "pendingCount": "{count} حالات بانتظار التحقق",
+      "total": "إجمالي الحالات",
+      "verified": "تم التحقق",
+      "pending": "معلقة",
+      "noPendingCases": "لا توجد حالات معلقة",
+      "verify": "تحقق",
+      "reject": "رفض",
+      "verifyTitle": "التحقق من حالة النزاهة",
+      "rejectTitle": "رفض حالة النزاهة",
+      "reasonPlaceholder": "سبب الإجراء...",
+      "cancel": "إلغاء"
+    },
+    "sync": {
+      "title": "حالة المزامنة",
+      "totalEntities": "إجمالي الكيانات",
+      "successful": "ناجحة",
+      "failed": "فشلت",
+      "entities": "الكيانات المتزامنة",
+      "noData": "لا توجد بيانات مزامنة",
+      "entity": "الكيان",
+      "lastSync": "آخر مزامنة",
+      "records": "السجلات",
+      "status": "الحالة",
+      "error": "خطأ"
+    },
+    "activity": {
+      "title": "سجل النشاط",
+      "totalActions": "{count} إجراءات إجمالية",
+      "recentActions": "الإجراءات الأخيرة",
+      "noActivity": "لا يوجد نشاط بعد"
+    },
+    "inline": {
+      "relinkVote": "تغيير ربط التصويت",
+      "billId": "معرف القانون",
+      "billIdPlaceholder": "أدخل معرف القانون...",
+      "reason": "السبب",
+      "reasonPlaceholder": "سبب التغيير...",
+      "save": "حفظ",
+      "remove": "إزالة",
+      "overrideStage": "تغيير مرحلة التشريع",
+      "currentStage": "المرحلة الحالية",
+      "newStage": "المرحلة الجديدة",
+      "selectStage": "اختر مرحلة",
+      "editClusterMembership": "تعديل عضوية المجموعة",
+      "moveToCluster": "نقل إلى مجموعة",
+      "removeFromCluster": "إزالة من المجموعة",
+      "targetClusterId": "معرف المجموعة الهدف",
+      "clusterIdPlaceholder": "أدخل معرف المجموعة..."
+    }
   }
 }

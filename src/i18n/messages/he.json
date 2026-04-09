@@ -718,6 +718,99 @@
     },
     "noItemsInQueue": "אין פריטים בתור הבדיקה",
     "relationshipType": "סוג קשר",
-    "actions": "פעולות"
+    "actions": "פעולות",
+    "nav": {
+      "title": "ניהול מערכת",
+      "overview": "סקירה כללית",
+      "aiReview": "סקירת AI",
+      "integrity": "יושרה",
+      "syncStatus": "סנכרון נתונים",
+      "activityLog": "יומן פעולות",
+      "logout": "יציאה"
+    },
+    "login": {
+      "title": "כניסת מנהל",
+      "placeholder": "הזן סיסמת מנהל",
+      "submit": "כניסה",
+      "invalidSecret": "סיסמה שגויה",
+      "networkError": "שגיאת רשת"
+    },
+    "overview": {
+      "title": "סקירה כללית",
+      "members": "חברי כנסת",
+      "bills": "הצעות חוק",
+      "votes": "הצבעות",
+      "clusters": "אשכולות חקיקה",
+      "pendingIntegrity": "יושרה — ממתינים",
+      "syncStatus": "סטטוס סנכרון",
+      "noSyncData": "אין נתוני סנכרון",
+      "entity": "ישות",
+      "lastSync": "סנכרון אחרון",
+      "records": "רשומות",
+      "status": "סטטוס",
+      "recentActivity": "פעולות אחרונות",
+      "noActivity": "אין פעולות עדיין"
+    },
+    "aiReview": {
+      "title": "סקירת AI",
+      "description": "סקירה ואישור של תוצאות AI — אשכולות חקיקה ואירועי יושרה",
+      "sections": {
+        "clusters": "אשכולות חקיקה",
+        "clustersDescription": "סקירת אשכולות שזוהו ע\"י AI עם רמת ביטחון נמוכה",
+        "integrity": "אירועי יושרה",
+        "integrityDescription": "אימות ומיון אירועי יושרה שזוהו"
+      }
+    },
+    "integrity": {
+      "title": "סקירת יושרה",
+      "pendingCount": "{count} אירועים ממתינים לאימות",
+      "total": "סה\"כ אירועים",
+      "verified": "מאומתים",
+      "pending": "ממתינים",
+      "noPendingCases": "אין אירועים ממתינים",
+      "verify": "אמת",
+      "reject": "דחה",
+      "verifyTitle": "אימות אירוע יושרה",
+      "rejectTitle": "דחיית אירוע יושרה",
+      "reasonPlaceholder": "נימוק לפעולה...",
+      "cancel": "ביטול"
+    },
+    "sync": {
+      "title": "סטטוס סנכרון",
+      "totalEntities": "סה\"כ ישויות",
+      "successful": "הצליחו",
+      "failed": "נכשלו",
+      "entities": "ישויות מסונכרנות",
+      "noData": "אין נתוני סנכרון",
+      "entity": "ישות",
+      "lastSync": "סנכרון אחרון",
+      "records": "רשומות",
+      "status": "סטטוס",
+      "error": "שגיאה"
+    },
+    "activity": {
+      "title": "יומן פעולות",
+      "totalActions": "{count} פעולות סה\"כ",
+      "recentActions": "פעולות אחרונות",
+      "noActivity": "אין פעולות עדיין"
+    },
+    "inline": {
+      "relinkVote": "שינוי שיוך הצבעה",
+      "billId": "מזהה חוק",
+      "billIdPlaceholder": "הזן מזהה חוק...",
+      "reason": "נימוק",
+      "reasonPlaceholder": "נימוק לשינוי...",
+      "save": "שמור",
+      "remove": "הסר",
+      "overrideStage": "שינוי שלב חקיקה",
+      "currentStage": "שלב נוכחי",
+      "newStage": "שלב חדש",
+      "selectStage": "בחר שלב",
+      "editClusterMembership": "עריכת שיוך לאשכול",
+      "moveToCluster": "העבר לאשכול",
+      "removeFromCluster": "הסר מאשכול",
+      "targetClusterId": "מזהה אשכול יעד",
+      "clusterIdPlaceholder": "הזן מזהה אשכול..."
+    }
   }
 }

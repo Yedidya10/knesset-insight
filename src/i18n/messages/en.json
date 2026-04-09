@@ -718,6 +718,99 @@
     },
     "noItemsInQueue": "No items in the review queue",
     "relationshipType": "Relationship Type",
-    "actions": "Actions"
+    "actions": "Actions",
+    "nav": {
+      "title": "Admin Panel",
+      "overview": "Overview",
+      "aiReview": "AI Review",
+      "integrity": "Integrity",
+      "syncStatus": "Sync Status",
+      "activityLog": "Activity Log",
+      "logout": "Logout"
+    },
+    "login": {
+      "title": "Admin Login",
+      "placeholder": "Enter admin secret",
+      "submit": "Login",
+      "invalidSecret": "Invalid secret",
+      "networkError": "Network error"
+    },
+    "overview": {
+      "title": "Overview",
+      "members": "MKs",
+      "bills": "Bills",
+      "votes": "Votes",
+      "clusters": "Legislation Clusters",
+      "pendingIntegrity": "Integrity — Pending",
+      "syncStatus": "Sync Status",
+      "noSyncData": "No sync data",
+      "entity": "Entity",
+      "lastSync": "Last Sync",
+      "records": "Records",
+      "status": "Status",
+      "recentActivity": "Recent Activity",
+      "noActivity": "No activity yet"
+    },
+    "aiReview": {
+      "title": "AI Review",
+      "description": "Review and verify AI outputs — legislation clusters and integrity cases",
+      "sections": {
+        "clusters": "Legislation Clusters",
+        "clustersDescription": "Review AI-identified clusters with low confidence",
+        "integrity": "Integrity Cases",
+        "integrityDescription": "Verify and classify integrity cases"
+      }
+    },
+    "integrity": {
+      "title": "Integrity Review",
+      "pendingCount": "{count} cases pending verification",
+      "total": "Total Cases",
+      "verified": "Verified",
+      "pending": "Pending",
+      "noPendingCases": "No pending cases",
+      "verify": "Verify",
+      "reject": "Reject",
+      "verifyTitle": "Verify Integrity Case",
+      "rejectTitle": "Reject Integrity Case",
+      "reasonPlaceholder": "Reason for action...",
+      "cancel": "Cancel"
+    },
+    "sync": {
+      "title": "Sync Status",
+      "totalEntities": "Total Entities",
+      "successful": "Successful",
+      "failed": "Failed",
+      "entities": "Synced Entities",
+      "noData": "No sync data",
+      "entity": "Entity",
+      "lastSync": "Last Sync",
+      "records": "Records",
+      "status": "Status",
+      "error": "Error"
+    },
+    "activity": {
+      "title": "Activity Log",
+      "totalActions": "{count} total actions",
+      "recentActions": "Recent Actions",
+      "noActivity": "No activity yet"
+    },
+    "inline": {
+      "relinkVote": "Change Vote Link",
+      "billId": "Bill ID",
+      "billIdPlaceholder": "Enter bill ID...",
+      "reason": "Reason",
+      "reasonPlaceholder": "Reason for change...",
+      "save": "Save",
+      "remove": "Remove",
+      "overrideStage": "Override Bill Stage",
+      "currentStage": "Current stage",
+      "newStage": "New stage",
+      "selectStage": "Select stage",
+      "editClusterMembership": "Edit Cluster Membership",
+      "moveToCluster": "Move to Cluster",
+      "removeFromCluster": "Remove from Cluster",
+      "targetClusterId": "Target Cluster ID",
+      "clusterIdPlaceholder": "Enter cluster ID..."
+    }
   }
 }

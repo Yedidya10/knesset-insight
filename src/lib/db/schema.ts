@@ -1252,3 +1252,17 @@ export const electionTimelineEventsRelations = relations(
     }),
   }),
 );
+
+// ──────────────────────────────────────
+// Admin
+// ──────────────────────────────────────
+
+export const adminActivityLog = pgTable('admin_activity_log', {
+  id: serial('id').primaryKey(),
+  action: text('action').notNull(), // e.g. 'inline_relink_vote', 'approve_cluster', 'verify_integrity'
+  entityType: text('entity_type').notNull(), // 'vote', 'bill', 'cluster', 'integrity_case', 'member'
+  entityId: text('entity_id').notNull(),
+  details: jsonb('details'), // JSON with old/new values, reason, etc.
+  adminIdentifier: text('admin_identifier').notNull(), // who performed the action
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});

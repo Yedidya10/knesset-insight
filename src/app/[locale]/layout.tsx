@@ -8,6 +8,7 @@ import { appConfig } from '../../../app.config';
 import Header from '../../components/layout/Header';
 import Footer from '../../components/layout/Footer';
 import { ThemeProvider } from '../../components/layout/ThemeProvider';
+import { AdminEditProvider } from '../../components/admin/AdminEditProvider';
 
 const rubik = Rubik({
   variable: '--font-rubik',
@@ -57,11 +58,13 @@ export default async function LocaleLayout({ children, params }: Props) {
       <body className="antialiased">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <NextIntlClientProvider locale={locale} messages={messages}>
-            <div className="flex min-h-screen flex-col">
-              <Header />
-              <main className="flex-1">{children}</main>
-              <Footer />
-            </div>
+            <AdminEditProvider>
+              <div className="flex min-h-screen flex-col">
+                <Header />
+                <main className="flex-1">{children}</main>
+                <Footer />
+              </div>
+            </AdminEditProvider>
           </NextIntlClientProvider>
         </ThemeProvider>
       </body>

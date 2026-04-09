@@ -718,6 +718,99 @@
     },
     "noItemsInQueue": "Нет элементов в очереди проверки",
     "relationshipType": "Тип связи",
-    "actions": "Действия"
+    "actions": "Действия",
+    "nav": {
+      "title": "Панель администратора",
+      "overview": "Обзор",
+      "aiReview": "Проверка AI",
+      "integrity": "Честность",
+      "syncStatus": "Статус синхронизации",
+      "activityLog": "Журнал действий",
+      "logout": "Выход"
+    },
+    "login": {
+      "title": "Вход администратора",
+      "placeholder": "Введите секрет администратора",
+      "submit": "Войти",
+      "invalidSecret": "Неверный секрет",
+      "networkError": "Ошибка сети"
+    },
+    "overview": {
+      "title": "Обзор",
+      "members": "Депутаты",
+      "bills": "Законопроекты",
+      "votes": "Голосования",
+      "clusters": "Кластеры законодательства",
+      "pendingIntegrity": "Честность — ожидают",
+      "syncStatus": "Статус синхронизации",
+      "noSyncData": "Нет данных синхронизации",
+      "entity": "Сущность",
+      "lastSync": "Последняя синхр.",
+      "records": "Записи",
+      "status": "Статус",
+      "recentActivity": "Последние действия",
+      "noActivity": "Нет действий"
+    },
+    "aiReview": {
+      "title": "Проверка AI",
+      "description": "Проверка и валидация результатов AI — кластеры законодательства и случаи честности",
+      "sections": {
+        "clusters": "Кластеры законодательства",
+        "clustersDescription": "Проверка кластеров AI с низкой уверенностью",
+        "integrity": "Случаи честности",
+        "integrityDescription": "Верификация и классификация случаев честности"
+      }
+    },
+    "integrity": {
+      "title": "Проверка честности",
+      "pendingCount": "{count} случаев ожидают верификации",
+      "total": "Всего случаев",
+      "verified": "Верифицировано",
+      "pending": "Ожидают",
+      "noPendingCases": "Нет ожидающих случаев",
+      "verify": "Верифицировать",
+      "reject": "Отклонить",
+      "verifyTitle": "Верифицировать случай",
+      "rejectTitle": "Отклонить случай",
+      "reasonPlaceholder": "Причина действия...",
+      "cancel": "Отмена"
+    },
+    "sync": {
+      "title": "Статус синхронизации",
+      "totalEntities": "Всего сущностей",
+      "successful": "Успешных",
+      "failed": "Неудачных",
+      "entities": "Синхронизированные сущности",
+      "noData": "Нет данных синхронизации",
+      "entity": "Сущность",
+      "lastSync": "Последняя синхр.",
+      "records": "Записи",
+      "status": "Статус",
+      "error": "Ошибка"
+    },
+    "activity": {
+      "title": "Журнал действий",
+      "totalActions": "{count} действий всего",
+      "recentActions": "Последние действия",
+      "noActivity": "Нет действий"
+    },
+    "inline": {
+      "relinkVote": "Изменить привязку голосования",
+      "billId": "ID законопроекта",
+      "billIdPlaceholder": "Введите ID законопроекта...",
+      "reason": "Причина",
+      "reasonPlaceholder": "Причина изменения...",
+      "save": "Сохранить",
+      "remove": "Удалить",
+      "overrideStage": "Изменить стадию законопроекта",
+      "currentStage": "Текущая стадия",
+      "newStage": "Новая стадия",
+      "selectStage": "Выберите стадию",
+      "editClusterMembership": "Редактировать членство в кластере",
+      "moveToCluster": "Переместить в кластер",
+      "removeFromCluster": "Удалить из кластера",
+      "targetClusterId": "ID целевого кластера",
+      "clusterIdPlaceholder": "Введите ID кластера..."
+    }
   }
 }
