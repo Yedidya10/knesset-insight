@@ -19,6 +19,7 @@ import { linkVotesToBills } from './jobs/link-votes-to-bills';
 import { computeBillClusters } from './jobs/compute-bill-clusters';
 import { generateBillEmbeddings } from './jobs/generate-bill-embeddings';
 import { aiClusterBills } from './jobs/ai-cluster-bills';
+import { generateBillSummaries } from './jobs/generate-bill-summaries';
 
 export const syncJobs = {
   members: syncMembers,
@@ -43,6 +44,7 @@ export const syncJobs = {
   computeBillClusters: computeBillClusters,
   generateBillEmbeddings: generateBillEmbeddings,
   aiClusterBills: aiClusterBills,
+  generateBillSummaries: generateBillSummaries,
   all: async () => {
     await syncMembers();
     await syncVotes();
@@ -71,6 +73,8 @@ export const syncJobs = {
     await computeBillClusters();
     await generateBillEmbeddings();
     await aiClusterBills();
+    // AI bill summaries (must run after bills synced)
+    await generateBillSummaries();
   },
 } as const;
 

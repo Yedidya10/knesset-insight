@@ -10,9 +10,13 @@ export const appConfig = {
   ai: {
     provider: (process.env.AI_PROVIDER ?? 'gemini') as 'gemini' | 'openai',
     defaultModel: process.env.AI_DEFAULT_MODEL ?? 'gemini-2.5-flash',
-    fallbackProvider: (process.env.AI_FALLBACK_PROVIDER ?? 'openai') as 'gemini' | 'openai',
+    fallbackProvider: (process.env.AI_FALLBACK_PROVIDER ?? 'openai') as
+      | 'gemini'
+      | 'openai',
     fallbackModel: process.env.AI_FALLBACK_MODEL ?? 'gpt-4o',
-    embeddingProvider: (process.env.EMBEDDING_PROVIDER ?? 'gemini') as 'gemini' | 'openai',
+    embeddingProvider: (process.env.EMBEDDING_PROVIDER ?? 'gemini') as
+      | 'gemini'
+      | 'openai',
     embeddingModel: process.env.EMBEDDING_MODEL ?? 'text-embedding-004',
     embeddingDimensions: Number(process.env.EMBEDDING_DIMENSIONS ?? 768),
     dailyChatLimit: Number(process.env.AI_DAILY_CHAT_LIMIT ?? 20),
@@ -29,14 +33,18 @@ export const appConfig = {
     knessetOdata:
       process.env.KNESSET_ODATA_BASE_URL ?? 'https://knesset.gov.il/Odata',
     knessetWebsiteApi:
-      process.env.KNESSET_WEBSITE_API_URL ?? 'https://knesset.gov.il/WebSiteApi/knessetapi',
+      process.env.KNESSET_WEBSITE_API_URL ??
+      'https://knesset.gov.il/WebSiteApi/knessetapi',
     knessetOdataV4:
-      process.env.KNESSET_ODATA_V4_URL ?? 'https://knesset.gov.il/OdataV4/ParliamentInfo',
+      process.env.KNESSET_ODATA_V4_URL ??
+      'https://knesset.gov.il/OdataV4/ParliamentInfo',
     oknessetData:
-      process.env.OKNESSET_DATA_URL ?? 'https://production.oknesset.org/pipelines/data',
+      process.env.OKNESSET_DATA_URL ??
+      'https://production.oknesset.org/pipelines/data',
     budgetApi: process.env.BUDGET_API_URL ?? 'https://next.obudget.org/api',
     govPartyRegistrar:
-      process.env.GOV_PARTY_REGISTRAR_URL ?? 'https://www.gov.il/he/departments/dynamiccollectors/parties-db',
+      process.env.GOV_PARTY_REGISTRAR_URL ??
+      'https://www.gov.il/he/departments/dynamiccollectors/parties-db',
     electionResults:
       process.env.ELECTION_RESULTS_URL ?? 'https://votes{N}.bechirot.gov.il',
   },
@@ -51,11 +59,11 @@ export const appConfig = {
     mkPositionId: 54,
     /** Government-related position IDs from KNS_Position */
     govPositionIds: {
-      primeMinister: 45,       // ראש הממשלה
-      alternatePm: 73,         // ראש הממשלה החלופי
-      actingPm: 51,            // מ"מ ראש הממשלה
+      primeMinister: 45, // ראש הממשלה
+      alternatePm: 73, // ראש הממשלה החלופי
+      actingPm: 51, // מ"מ ראש הממשלה
       deputyPm: [31, 50, 65], // משנה/סגן/סגנית לראש הממשלה
-      minister: [39, 57],      // שר / שרה
+      minister: [39, 57], // שר / שרה
       deputyMinister: [40, 59, 285079], // סגן שר / סגנית שר / סגן שרה
     },
     /**
@@ -119,8 +127,7 @@ export const appConfig = {
         process.env.INTEGRITY_KNESSET_ETHICS_URL ??
         'https://knesset.gov.il/Odata/ParliamentInfo.svc/KNS_CmtSessionItem',
       stateComptroller:
-        process.env.INTEGRITY_COMPTROLLER_URL ??
-        'https://www.mevaker.gov.il',
+        process.env.INTEGRITY_COMPTROLLER_URL ?? 'https://www.mevaker.gov.il',
       lobbyistRegistry:
         process.env.INTEGRITY_LOBBYIST_URL ??
         'https://production.oknesset.org/pipelines/data/lobbyists/list/datapackage.json',
@@ -166,17 +173,45 @@ export const appConfig = {
       provider: 'anthropic' as const,
       model: process.env.BILL_CLUSTERS_AI_MODEL ?? 'claude-sonnet-4-20250514',
       maxTokens: Number(process.env.BILL_CLUSTERS_AI_MAX_TOKENS ?? 4096),
-      dailyTokenBudget: Number(process.env.BILL_CLUSTERS_DAILY_TOKEN_BUDGET ?? 500_000),
+      dailyTokenBudget: Number(
+        process.env.BILL_CLUSTERS_DAILY_TOKEN_BUDGET ?? 500_000,
+      ),
     },
     embedding: {
-      similarityThreshold: Number(process.env.BILL_CLUSTERS_EMBEDDING_SIM_THRESHOLD ?? 0.5),
-      autoConfirmThreshold: Number(process.env.BILL_CLUSTERS_EMBEDDING_AUTO_THRESHOLD ?? 0.85),
+      similarityThreshold: Number(
+        process.env.BILL_CLUSTERS_EMBEDDING_SIM_THRESHOLD ?? 0.5,
+      ),
+      autoConfirmThreshold: Number(
+        process.env.BILL_CLUSTERS_EMBEDDING_AUTO_THRESHOLD ?? 0.85,
+      ),
     },
-    nameSimilarityThreshold: Number(process.env.BILL_CLUSTERS_NAME_SIM_THRESHOLD ?? 0.7),
-    aiConfidenceThreshold: Number(process.env.BILL_CLUSTERS_AI_CONFIDENCE_THRESHOLD ?? 0.6),
+    nameSimilarityThreshold: Number(
+      process.env.BILL_CLUSTERS_NAME_SIM_THRESHOLD ?? 0.7,
+    ),
+    aiConfidenceThreshold: Number(
+      process.env.BILL_CLUSTERS_AI_CONFIDENCE_THRESHOLD ?? 0.6,
+    ),
     aiBatchSize: Number(process.env.BILL_CLUSTERS_AI_BATCH_SIZE ?? 50),
-    maxCandidatesPerCluster: Number(process.env.BILL_CLUSTERS_MAX_CANDIDATES ?? 10),
+    maxCandidatesPerCluster: Number(
+      process.env.BILL_CLUSTERS_MAX_CANDIDATES ?? 10,
+    ),
     priorityKnessets: [25, 24, 23, 22, 21, 20] as readonly number[],
+  },
+
+  // Bill AI summaries — generated when no official SummaryLaw exists
+  billSummary: {
+    ai: {
+      provider: 'anthropic' as const,
+      model: process.env.BILL_SUMMARY_AI_MODEL ?? 'claude-sonnet-4-20250514',
+      maxTokens: Number(process.env.BILL_SUMMARY_AI_MAX_TOKENS ?? 2048),
+      dailyTokenBudget: Number(
+        process.env.BILL_SUMMARY_DAILY_TOKEN_BUDGET ?? 300_000,
+      ),
+    },
+    /** Only generate summaries for bills in these knessets */
+    targetKnessets: [25, 24, 23] as readonly number[],
+    /** Batch size for AI summary generation */
+    batchSize: Number(process.env.BILL_SUMMARY_BATCH_SIZE ?? 10),
   },
 } as const;
 

@@ -55,6 +55,7 @@ export default async function BillDetailPage({ params }: Props) {
       proposedDate: bills.proposedDate,
       lastUpdate: bills.lastUpdate,
       fullTextUrl: bills.fullTextUrl,
+      aiSummary: bills.aiSummary,
     })
     .from(bills)
     .where(eq(bills.id, billId))
@@ -174,7 +175,11 @@ export default async function BillDetailPage({ params }: Props) {
     unionBillKnessetId: relatedBillMap.get(mf.unionBillId)?.knessetId ?? 0,
   }));
 
-  const stageInfo = computeBillStage(bill.status, bill.subTypeId, bill.billType);
+  const stageInfo = computeBillStage(
+    bill.status,
+    bill.subTypeId,
+    bill.billType,
+  );
   const statusText = getBillStatusText(bill.status);
   const knessetUrl = bill.knessetId ? getKnessetBillUrl(bill.knessetId) : null;
 
@@ -230,8 +235,20 @@ export default async function BillDetailPage({ params }: Props) {
 
           <h1 className="text-xl font-bold sm:text-2xl">{bill.name}</h1>
 
-          {bill.summary && (
-            <p className="text-muted-foreground mt-2 text-sm">{bill.summary}</p>
+          {(bill.summary || bill.aiSummary) && (
+            <div className="bg-muted/50 mt-3 rounded-lg border p-4">
+              <h2 className="text-sm font-semibold">
+                {t('summary')}
+                {!bill.summary && bill.aiSummary && (
+                  <Badge variant="outline" className="ms-2 text-xs font-normal">
+                    {t('aiSummary')}
+                  </Badge>
+                )}
+              </h2>
+              <p className="text-muted-foreground mt-1 text-sm leading-relaxed">
+                {bill.summary ?? bill.aiSummary}
+              </p>
+            </div>
           )}
 
           <Separator className="my-5" />

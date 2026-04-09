@@ -17,6 +17,7 @@ interface ODataBill {
   StatusID: number;
   CommitteeID: number | null;
   IsContinuationBill: boolean | null;
+  SummaryLaw: string | null;
   PublicationDate: string | null;
   LastUpdatedDate: string;
 }
@@ -26,12 +27,14 @@ interface ODataBill {
  * Uses checkpoint-based incremental sync: picks up from the max LastUpdatedDate
  * of previously processed bills rather than the wall-clock sync start time.
  */
-async function syncBillRecords(prevCheckpoint: SyncCheckpoint | null): Promise<{ count: number; checkpoint: SyncCheckpoint }> {
+async function syncBillRecords(
+  prevCheckpoint: SyncCheckpoint | null,
+): Promise<{ count: number; checkpoint: SyncCheckpoint }> {
   // Prefer checkpoint's item timestamp over the sync start time for incremental
   const checkpointDate = prevCheckpoint?.lastItemTimestamp
     ? new Date(prevCheckpoint.lastItemTimestamp as string)
     : null;
-  const lastSync = checkpointDate ?? await getLastSyncTime('bills');
+  const lastSync = checkpointDate ?? (await getLastSyncTime('bills'));
 
   let rawBills: ODataBill[];
   if (lastSync) {
@@ -40,7 +43,10 @@ async function syncBillRecords(prevCheckpoint: SyncCheckpoint | null): Promise<{
       'KNS_Bill',
       lastSync,
       'LastUpdatedDate',
-      { $select: 'BillID,KnessetNum,Name,SubTypeID,SubTypeDesc,StatusID,CommitteeID,IsContinuationBill,PublicationDate,LastUpdatedDate' },
+      {
+        $select:
+          'BillID,KnessetNum,Name,SubTypeID,SubTypeDesc,StatusID,CommitteeID,IsContinuationBill,SummaryLaw,PublicationDate,LastUpdatedDate',
+      },
     );
   } else {
     rawBills = [];
@@ -51,12 +57,15 @@ async function syncBillRecords(prevCheckpoint: SyncCheckpoint | null): Promise<{
         const page = await fetchOData<ODataBill>('ParliamentInfo', 'KNS_Bill', {
           $filter: `KnessetNum eq ${kn}`,
           $orderby: 'LastUpdatedDate desc',
-          $select: 'BillID,KnessetNum,Name,SubTypeID,SubTypeDesc,StatusID,CommitteeID,IsContinuationBill,PublicationDate,LastUpdatedDate',
+          $select:
+            'BillID,KnessetNum,Name,SubTypeID,SubTypeDesc,StatusID,CommitteeID,IsContinuationBill,SummaryLaw,PublicationDate,LastUpdatedDate',
           $top: PAGE_SIZE,
           $skip: skip,
         });
         rawBills.push(...page);
-        console.log(`  [bills] Knesset ${kn}: page ${skip / PAGE_SIZE + 1}, +${page.length} (total: ${rawBills.length})`);
+        console.log(
+          `  [bills] Knesset ${kn}: page ${skip / PAGE_SIZE + 1}, +${page.length} (total: ${rawBills.length})`,
+        );
         if (page.length < PAGE_SIZE) break;
         skip += PAGE_SIZE;
       }
@@ -66,7 +75,10 @@ async function syncBillRecords(prevCheckpoint: SyncCheckpoint | null): Promise<{
   // Track the max LastUpdatedDate from processed items for the checkpoint
   let maxLastUpdated = prevCheckpoint?.lastItemTimestamp as string | undefined;
   const rows = rawBills.map((raw) => {
-    if (raw.LastUpdatedDate && (!maxLastUpdated || raw.LastUpdatedDate > maxLastUpdated)) {
+    if (
+      raw.LastUpdatedDate &&
+      (!maxLastUpdated || raw.LastUpdatedDate > maxLastUpdated)
+    ) {
       maxLastUpdated = raw.LastUpdatedDate;
     }
     return {
@@ -77,8 +89,11 @@ async function syncBillRecords(prevCheckpoint: SyncCheckpoint | null): Promise<{
       subTypeId: raw.SubTypeID ?? null,
       isContinuationBill: raw.IsContinuationBill ?? null,
       committeeId: raw.CommitteeID ?? null,
+      summary: raw.SummaryLaw ?? null,
       knessetNum: raw.KnessetNum,
-      proposedDate: raw.PublicationDate ? raw.PublicationDate.split('T')[0] : null,
+      proposedDate: raw.PublicationDate
+        ? raw.PublicationDate.split('T')[0]
+        : null,
       lastUpdate: raw.LastUpdatedDate ? new Date(raw.LastUpdatedDate) : null,
     };
   });
@@ -97,6 +112,7 @@ async function syncBillRecords(prevCheckpoint: SyncCheckpoint | null): Promise<{
           subTypeId: sql`excluded.sub_type_id`,
           isContinuationBill: sql`excluded.is_continuation_bill`,
           committeeId: sql`excluded.committee_id`,
+          summary: sql`excluded.summary`,
           knessetNum: sql`excluded.knesset_num`,
           proposedDate: sql`excluded.proposed_date`,
           lastUpdate: sql`excluded.last_update`,
@@ -105,7 +121,10 @@ async function syncBillRecords(prevCheckpoint: SyncCheckpoint | null): Promise<{
       });
   }
 
-  const maxBillId = rawBills.reduce((max, b) => Math.max(max, b.BillID), prevCheckpoint?.lastItemId as number ?? 0);
+  const maxBillId = rawBills.reduce(
+    (max, b) => Math.max(max, b.BillID),
+    (prevCheckpoint?.lastItemId as number) ?? 0,
+  );
   const checkpoint: SyncCheckpoint = {
     lastItemId: maxBillId,
     lastItemTimestamp: maxLastUpdated,
