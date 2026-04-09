@@ -1,9 +1,9 @@
 import { getTranslations } from 'next-intl/server';
 import { Gavel } from 'lucide-react';
-import { desc, asc, eq, sql, ilike, and } from 'drizzle-orm';
+import { desc, asc, eq, sql, ilike, and, or, exists } from 'drizzle-orm';
 import { Link } from '@/i18n/navigation';
 import { db } from '@/lib/db';
-import { bills, billClusters } from '@/lib/db/schema';
+import { bills, billClusters, billNames } from '@/lib/db/schema';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import TranslatedText from '@/components/ui/translated-text';
@@ -16,7 +16,11 @@ import { getBillStatusText } from '@/lib/knesset/bill-status';
 // Mapping between URL-friendly English slugs and Hebrew billType stored in DB
 const BILL_TYPE_SLUGS = ['government', 'private', 'committee'] as const;
 type BillTypeSlug = (typeof BILL_TYPE_SLUGS)[number];
-const SLUG_TO_HEBREW: Record<BillTypeSlug, string> = { government: 'ממשלתית', private: 'פרטית', committee: 'ועדה' };
+const SLUG_TO_HEBREW: Record<BillTypeSlug, string> = {
+  government: 'ממשלתית',
+  private: 'פרטית',
+  committee: 'ועדה',
+};
 
 interface Props {
   searchParams: Promise<{
@@ -66,7 +70,10 @@ export default async function LegislationPage({ searchParams }: Props) {
     const clusterConditions = [];
     if (knessetNum)
       clusterConditions.push(eq(billClusters.latestKnessetNum, knessetNum));
-    if (billType && billType in SLUG_TO_HEBREW) clusterConditions.push(eq(billClusters.billType, SLUG_TO_HEBREW[billType as BillTypeSlug]));
+    if (billType && billType in SLUG_TO_HEBREW)
+      clusterConditions.push(
+        eq(billClusters.billType, SLUG_TO_HEBREW[billType as BillTypeSlug]),
+      );
     if (searchQuery)
       clusterConditions.push(ilike(billClusters.name, `%${searchQuery}%`));
     const clusterWhere =
@@ -197,9 +204,29 @@ export default async function LegislationPage({ searchParams }: Props) {
 
   const conditions = [];
   if (knessetNum) conditions.push(eq(bills.knessetNum, knessetNum));
-  if (billType && billType in SLUG_TO_HEBREW) conditions.push(eq(bills.billType, SLUG_TO_HEBREW[billType as BillTypeSlug]));
+  if (billType && billType in SLUG_TO_HEBREW)
+    conditions.push(
+      eq(bills.billType, SLUG_TO_HEBREW[billType as BillTypeSlug]),
+    );
   if (statusFilter) conditions.push(eq(bills.status, statusFilter));
-  if (searchQuery) conditions.push(ilike(bills.name, `%${searchQuery}%`));
+  if (searchQuery) {
+    conditions.push(
+      or(
+        ilike(bills.name, `%${searchQuery}%`),
+        exists(
+          db
+            .select({ one: sql`1` })
+            .from(billNames)
+            .where(
+              and(
+                eq(billNames.billId, bills.id),
+                ilike(billNames.name, `%${searchQuery}%`),
+              ),
+            ),
+        ),
+      ),
+    );
+  }
 
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 

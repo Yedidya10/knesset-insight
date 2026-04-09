@@ -1,5 +1,5 @@
 import { z } from 'zod/v4';
-import { eq, desc, sql, ilike, inArray } from 'drizzle-orm';
+import { eq, desc, sql, ilike, inArray, or, exists, and } from 'drizzle-orm';
 import { router, publicProcedure } from '../trpc';
 import { db } from '../../lib/db';
 import {
@@ -45,7 +45,22 @@ export const billsRouter = router({
         .$dynamic();
 
       if (search) {
-        query = query.where(ilike(bills.name, `%${search}%`)) as typeof query;
+        query = query.where(
+          or(
+            ilike(bills.name, `%${search}%`),
+            exists(
+              db
+                .select({ one: sql`1` })
+                .from(billNames)
+                .where(
+                  and(
+                    eq(billNames.billId, bills.id),
+                    ilike(billNames.name, `%${search}%`),
+                  ),
+                ),
+            ),
+          ),
+        ) as typeof query;
       }
       if (status) {
         query = query.where(eq(bills.status, status)) as typeof query;
@@ -188,7 +203,11 @@ export const billsRouter = router({
         unionBillKnessetId: billMap.get(mf.unionBillId)?.knessetId ?? 0,
       }));
 
-      const stageInfo = computeBillStage(bill.status, bill.subTypeId, bill.billType);
+      const stageInfo = computeBillStage(
+        bill.status,
+        bill.subTypeId,
+        bill.billType,
+      );
 
       // Cluster context
       const [clusterRow] = await db
