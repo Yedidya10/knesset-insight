@@ -43,6 +43,18 @@ export interface ComputedBillStage {
   specialStatus: SpecialStatus;
 }
 
+// ── KNS_BillName NameHistoryTypeID → Stage mapping ──────────────
+// Maps the official name-history types to the legislative stage they belong to.
+// Used by link-votes-to-bills to assign bill_stage via name matching.
+
+export const NAME_TYPE_TO_STAGE: Record<number, BillStage> = {
+  5200: BillStage.PRELIMINARY,           // בדיון המוקדם
+  5201: BillStage.FIRST_READING,         // בקריאה הראשונה
+  5202: BillStage.SECOND_THIRD_READING,  // בקריאה השנייה והשלישית
+  5203: BillStage.SECOND_THIRD_READING,  // לקריאה השלישית
+  10062: BillStage.PASSED,               // לחוק שהתקבל
+};
+
 // ── StatusID → Stage mapping ────────────────────────────────────
 
 const STATUS_TO_STAGE: Record<string, BillStage> = {

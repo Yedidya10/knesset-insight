@@ -1,7 +1,7 @@
 import { sql, eq, isNull, isNotNull, and, inArray } from 'drizzle-orm';
 import { db } from '../../lib/db';
 import { votes, bills, billNames } from '../../lib/db/schema';
-import { BillStage } from '../../lib/knesset/bill-stages';
+import { BillStage, NAME_TYPE_TO_STAGE } from '../../lib/knesset/bill-stages';
 import { runSyncJob } from '../utils';
 
 const UPDATE_BATCH = 200;
@@ -11,7 +11,8 @@ const UPDATE_BATCH = 200;
  *   Layer 1: In-memory substring matching (bill.name appears in vote.title)
  *   Layer 2: pg_trgm similarity per knesset (avoids Supabase timeout)
  *   Layer 3: Propagate via sessItemId groups (bulk SQL)
- *   Layer 4: Derive bill_stage from vote title keywords (bulk SQL)
+ *   Layer 4: Name-history stage matching (bill_names.nameHistoryTypeId → BillStage)
+ *   Layer 5: Keyword fallback for bill_stage (bulk SQL)
  */
 export async function linkVotesToBills(): Promise<void> {
   await runSyncJob('link-votes-to-bills', async () => {
@@ -185,8 +186,90 @@ export async function linkVotesToBills(): Promise<void> {
       `[link-votes-to-bills] Layer 3 (sessItemId propagation): ${layer3.length}`,
     );
 
-    // ── Layer 4: Derive bill_stage from title keywords (bulk) ───
-    const layer4 = await db.execute<{ id: number }>(sql`
+    // ── Layer 4: Name-history stage matching ───────────────────
+    // Match vote titles against bill_names that have known stage types
+    // (nameHistoryTypeId → BillStage). This is far more accurate than
+    // keyword matching because bill names change between stages.
+    console.log(
+      `[link-votes-to-bills] Layer 4: loading stage-specific bill names...`,
+    );
+
+    const stageTypeIds = Object.keys(NAME_TYPE_TO_STAGE).map(Number);
+    const stageBillNames = await db
+      .select({
+        billId: billNames.billId,
+        name: billNames.name,
+        nameHistoryTypeId: billNames.nameHistoryTypeId,
+      })
+      .from(billNames)
+      .where(inArray(billNames.nameHistoryTypeId, stageTypeIds));
+
+    // Index by billId: { name, stage }[]
+    const stageNamesByBill = new Map<
+      number,
+      { name: string; stage: BillStage }[]
+    >();
+    for (const sn of stageBillNames) {
+      const stage = NAME_TYPE_TO_STAGE[sn.nameHistoryTypeId!];
+      if (stage == null) continue;
+      const arr = stageNamesByBill.get(sn.billId) ?? [];
+      arr.push({ name: sn.name, stage });
+      stageNamesByBill.set(sn.billId, arr);
+    }
+    // Sort each bill's names by length DESC (longest substring match first)
+    for (const arr of stageNamesByBill.values()) {
+      arr.sort((a, b) => b.name.length - a.name.length);
+    }
+
+    console.log(
+      `[link-votes-to-bills] Layer 4: ${stageBillNames.length} stage names for ${stageNamesByBill.size} bills`,
+    );
+
+    // Load votes that have a bill_id but no bill_stage yet
+    const votesNeedStage = await db
+      .select({
+        id: votes.id,
+        title: votes.title,
+        billId: votes.billId,
+      })
+      .from(votes)
+      .where(and(isNotNull(votes.billId), isNull(votes.billStage)));
+
+    console.log(
+      `[link-votes-to-bills] Layer 4: ${votesNeedStage.length} votes need stage assignment`,
+    );
+
+    const nameStageUpdates: { voteId: number; stage: number }[] = [];
+    for (const vote of votesNeedStage) {
+      const names = stageNamesByBill.get(vote.billId!) ?? [];
+      if (names.length === 0) continue;
+      const titleLower = vote.title.toLowerCase();
+      for (const { name, stage } of names) {
+        if (titleLower.includes(name.toLowerCase())) {
+          nameStageUpdates.push({ voteId: vote.id, stage });
+          break; // longest match first (sorted)
+        }
+      }
+    }
+
+    // Batch update
+    for (let i = 0; i < nameStageUpdates.length; i += 50) {
+      const batch = nameStageUpdates.slice(i, i + 50);
+      await Promise.all(
+        batch.map(({ voteId, stage }) =>
+          db
+            .update(votes)
+            .set({ billStage: stage })
+            .where(eq(votes.id, voteId)),
+        ),
+      );
+    }
+    console.log(
+      `[link-votes-to-bills] Layer 4 (name-history stage): ${nameStageUpdates.length}`,
+    );
+
+    // ── Layer 5: Keyword fallback for bill_stage (bulk SQL) ─────
+    const layer5 = await db.execute<{ id: number }>(sql`
       UPDATE votes
       SET bill_stage = CASE
         WHEN title ~* 'קריאה שנייה ושלישית|קריאה שניה ושלישית'
@@ -207,7 +290,7 @@ export async function linkVotesToBills(): Promise<void> {
       RETURNING id
     `);
     console.log(
-      `[link-votes-to-bills] Layer 4 (bill_stage derivation): ${layer4.length}`,
+      `[link-votes-to-bills] Layer 5 (keyword fallback): ${layer5.length}`,
     );
 
     const [{ cnt: unlinkedAfter }] = await db.execute<{ cnt: string }>(sql`
