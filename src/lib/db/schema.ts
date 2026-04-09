@@ -27,10 +27,7 @@ const vector = (name: string, dimensions: number) =>
     },
     fromDriver(value: unknown) {
       const str = String(value);
-      return str
-        .slice(1, -1)
-        .split(',')
-        .map(Number);
+      return str.slice(1, -1).split(',').map(Number);
     },
   })(name);
 
@@ -337,7 +334,8 @@ export const bills = pgTable('bills', {
   lastUpdate: timestamp('last_update', { withTimezone: true }),
   category: text('category'),
   fullTextUrl: text('full_text_url'),
-  aiSummary: text('ai_summary'),
+  aiSummary: jsonb('ai_summary').$type<Record<string, string>>(),
+  aiTopics: jsonb('ai_topics').$type<Record<string, string[]>>(),
   metadata: jsonb('metadata'),
   clusterId: integer('cluster_id'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
@@ -970,19 +968,16 @@ export const billsRelations = relations(bills, ({ one, many }) => ({
   embedding: many(billEmbeddings),
 }));
 
-export const billInitiatorsRelations = relations(
-  billInitiators,
-  ({ one }) => ({
-    bill: one(bills, {
-      fields: [billInitiators.billId],
-      references: [bills.id],
-    }),
-    member: one(members, {
-      fields: [billInitiators.memberId],
-      references: [members.id],
-    }),
+export const billInitiatorsRelations = relations(billInitiators, ({ one }) => ({
+  bill: one(bills, {
+    fields: [billInitiators.billId],
+    references: [bills.id],
   }),
-);
+  member: one(members, {
+    fields: [billInitiators.memberId],
+    references: [members.id],
+  }),
+}));
 
 export const billUnionsRelations = relations(billUnions, ({ one }) => ({
   mainBill: one(bills, {
@@ -1017,24 +1012,30 @@ export const billNamesRelations = relations(billNames, ({ one }) => ({
   }),
 }));
 
-export const billClustersRelations = relations(billClusters, ({ one, many }) => ({
-  primaryBill: one(bills, {
-    fields: [billClusters.primaryBillId],
-    references: [bills.id],
+export const billClustersRelations = relations(
+  billClusters,
+  ({ one, many }) => ({
+    primaryBill: one(bills, {
+      fields: [billClusters.primaryBillId],
+      references: [bills.id],
+    }),
+    members: many(billClusterMembers),
   }),
-  members: many(billClusterMembers),
-}));
+);
 
-export const billClusterMembersRelations = relations(billClusterMembers, ({ one }) => ({
-  cluster: one(billClusters, {
-    fields: [billClusterMembers.clusterId],
-    references: [billClusters.id],
+export const billClusterMembersRelations = relations(
+  billClusterMembers,
+  ({ one }) => ({
+    cluster: one(billClusters, {
+      fields: [billClusterMembers.clusterId],
+      references: [billClusters.id],
+    }),
+    bill: one(bills, {
+      fields: [billClusterMembers.billId],
+      references: [bills.id],
+    }),
   }),
-  bill: one(bills, {
-    fields: [billClusterMembers.billId],
-    references: [bills.id],
-  }),
-}));
+);
 
 export const billEmbeddingsRelations = relations(billEmbeddings, ({ one }) => ({
   bill: one(bills, {
@@ -1065,30 +1066,24 @@ export const committeeSessionsRelations = relations(
 // Government Relations
 // ──────────────────────────────────────
 
-export const govMinistriesRelations = relations(
-  govMinistries,
-  ({ many }) => ({
-    positions: many(governmentPositions),
-  }),
-);
+export const govMinistriesRelations = relations(govMinistries, ({ many }) => ({
+  positions: many(governmentPositions),
+}));
 
-export const governmentsRelations = relations(
-  governments,
-  ({ one, many }) => ({
-    pm: one(members, {
-      fields: [governments.pmMemberId],
-      references: [members.id],
-      relationName: 'governmentPm',
-    }),
-    alternatePm: one(members, {
-      fields: [governments.alternatePmMemberId],
-      references: [members.id],
-      relationName: 'governmentAlternatePm',
-    }),
-    positions: many(governmentPositions),
-    coalitionPeriods: many(factionCoalitionPeriods),
+export const governmentsRelations = relations(governments, ({ one, many }) => ({
+  pm: one(members, {
+    fields: [governments.pmMemberId],
+    references: [members.id],
+    relationName: 'governmentPm',
   }),
-);
+  alternatePm: one(members, {
+    fields: [governments.alternatePmMemberId],
+    references: [members.id],
+    relationName: 'governmentAlternatePm',
+  }),
+  positions: many(governmentPositions),
+  coalitionPeriods: many(factionCoalitionPeriods),
+}));
 
 export const governmentPositionsRelations = relations(
   governmentPositions,

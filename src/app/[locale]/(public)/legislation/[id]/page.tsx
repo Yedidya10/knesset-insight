@@ -1,4 +1,4 @@
-import { getTranslations } from 'next-intl/server';
+import { getTranslations, getLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
 import { eq, desc, sql, inArray } from 'drizzle-orm';
@@ -39,6 +39,7 @@ export default async function BillDetailPage({ params }: Props) {
 
   const t = await getTranslations('legislation');
   const tCommon = await getTranslations('common');
+  const locale = await getLocale();
 
   const result = await db
     .select({
@@ -56,6 +57,7 @@ export default async function BillDetailPage({ params }: Props) {
       lastUpdate: bills.lastUpdate,
       fullTextUrl: bills.fullTextUrl,
       aiSummary: bills.aiSummary,
+      aiTopics: bills.aiTopics,
     })
     .from(bills)
     .where(eq(bills.id, billId))
@@ -246,8 +248,23 @@ export default async function BillDetailPage({ params }: Props) {
                 )}
               </h2>
               <p className="text-muted-foreground mt-1 text-sm leading-relaxed">
-                {bill.summary ?? bill.aiSummary}
+                {bill.summary ?? bill.aiSummary?.[locale] ?? bill.aiSummary?.he}
               </p>
+              {bill.aiTopics && (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {(bill.aiTopics[locale] ?? bill.aiTopics.he ?? []).map(
+                    (topic) => (
+                      <Badge
+                        key={topic}
+                        variant="secondary"
+                        className="text-xs"
+                      >
+                        {topic}
+                      </Badge>
+                    ),
+                  )}
+                </div>
+              )}
             </div>
           )}
 

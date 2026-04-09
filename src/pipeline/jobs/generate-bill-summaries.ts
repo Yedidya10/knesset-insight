@@ -107,7 +107,7 @@ export async function generateBillSummaries(): Promise<void> {
         tokensUsedToday += result.tokensUsed;
 
         if (result.summary) {
-          // Store summary + track generation timestamp in metadata
+          // Store summary + topics + track generation timestamp in metadata
           const existingMetadata =
             (bill.metadata as Record<string, unknown>) ?? {};
           const updatedMetadata = {
@@ -119,6 +119,7 @@ export async function generateBillSummaries(): Promise<void> {
             .update(bills)
             .set({
               aiSummary: result.summary,
+              aiTopics: result.topics ?? {},
               metadata: updatedMetadata,
               updatedAt: new Date(),
             })

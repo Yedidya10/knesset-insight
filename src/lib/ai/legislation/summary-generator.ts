@@ -20,7 +20,8 @@ export interface BillForSummary {
 
 export interface SummaryResult {
   billId: number;
-  summary: string | null;
+  summary: Record<string, string> | null;
+  topics: Record<string, string[]> | null;
   tokensUsed: number;
 }
 
@@ -89,14 +90,66 @@ Search for this bill on the Knesset website and news sources. Focus on the bill'
     console.log(
       `[bill-summary] No summary generated for bill ${bill.knessetId} (${bill.name})`,
     );
-    return { billId: bill.id, summary: null, tokensUsed };
+    return { billId: bill.id, summary: null, topics: null, tokensUsed };
+  }
+
+  // Parse JSON response: { summary: {he, en, ar, ru}, topics: {he: [...], ...} }
+  let summary: Record<string, string> | null = null;
+  let topics: Record<string, string[]> | null = null;
+  try {
+    const parsed = JSON.parse(trimmed);
+
+    // Validate summary object has at least Hebrew
+    if (
+      parsed.summary &&
+      typeof parsed.summary === 'object' &&
+      parsed.summary.he
+    ) {
+      summary = parsed.summary;
+    } else if (typeof parsed.summary === 'string') {
+      // Fallback: model returned flat string summary
+      summary = { he: parsed.summary };
+    }
+
+    // Validate topics object
+    if (
+      parsed.topics &&
+      typeof parsed.topics === 'object' &&
+      !Array.isArray(parsed.topics)
+    ) {
+      topics = {};
+      for (const [lang, tags] of Object.entries(parsed.topics)) {
+        if (Array.isArray(tags)) {
+          topics[lang] = (tags as unknown[]).filter(
+            (t): t is string => typeof t === 'string' && t.length > 0,
+          );
+        }
+      }
+      if (Object.keys(topics).length === 0) topics = null;
+    } else if (Array.isArray(parsed.topics)) {
+      // Fallback: model returned flat Hebrew topics array
+      topics = {
+        he: parsed.topics.filter(
+          (t: unknown): t is string => typeof t === 'string' && t.length > 0,
+        ),
+      };
+    }
+  } catch {
+    // Fallback: model returned plain text instead of JSON
+    summary = { he: trimmed };
+  }
+
+  if (!summary || !summary.he || summary.he.length < 10) {
+    return { billId: bill.id, summary: null, topics: null, tokensUsed };
   }
 
   console.log(
-    `[bill-summary] Generated summary for bill ${bill.knessetId}: ${trimmed.slice(0, 80)}...` +
+    `[bill-summary] Generated summary for bill ${bill.knessetId}: ${summary.he.slice(0, 80)}...` +
+      ` [${Object.keys(summary).length} langs]` +
+      (topics ? ` [${Object.keys(topics).length} lang topics]` : '') +
       (sources?.length ? ` (${sources.length} sources)` : '') +
       ` [${tokensUsed} tokens]`,
   );
 
-  return { billId: bill.id, summary: trimmed, tokensUsed };
+  return { billId: bill.id, summary, topics, tokensUsed };
 }
