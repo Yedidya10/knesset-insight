@@ -222,7 +222,8 @@
       "passed": "Принят",
       "completed": "Завершён",
       "current": "Текущий этап",
-      "upcoming": "Ожидается"
+      "upcoming": "Ожидается",
+      "adminOverrideStage": "Изменить этап (админ)"
     },
     "special": {
       "merged": "Объединён с другим законопроектом",
@@ -810,7 +811,8 @@
       "moveToCluster": "Переместить в кластер",
       "removeFromCluster": "Удалить из кластера",
       "targetClusterId": "ID целевого кластера",
-      "clusterIdPlaceholder": "Введите ID кластера..."
+      "clusterIdPlaceholder": "Введите ID кластера...",
+      "reassignVoteStage": "Переназначить этап голосования"
     }
   }
 }

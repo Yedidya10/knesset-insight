@@ -250,6 +250,8 @@ export default async function BillDetailPage({ params }: Props) {
               isAccepted: v.isAccepted,
               billStage: v.billStage,
             }))}
+            billId={billId}
+            currentStatusId={bill.status}
           />
 
           {/* Relationship banners */}

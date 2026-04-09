@@ -222,7 +222,8 @@
       "passed": "Passed",
       "completed": "Completed",
       "current": "Current stage",
-      "upcoming": "Upcoming"
+      "upcoming": "Upcoming",
+      "adminOverrideStage": "Override stage (admin)"
     },
     "special": {
       "merged": "Merged with another bill",
@@ -810,7 +811,8 @@
       "moveToCluster": "Move to Cluster",
       "removeFromCluster": "Remove from Cluster",
       "targetClusterId": "Target Cluster ID",
-      "clusterIdPlaceholder": "Enter cluster ID..."
+      "clusterIdPlaceholder": "Enter cluster ID...",
+      "reassignVoteStage": "Reassign vote stage"
     }
   }
 }

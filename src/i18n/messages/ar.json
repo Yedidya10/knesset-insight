@@ -222,7 +222,8 @@
       "passed": "تمت الموافقة",
       "completed": "مكتمل",
       "current": "المرحلة الحالية",
-      "upcoming": "قادم"
+      "upcoming": "قادم",
+      "adminOverrideStage": "تغيير المرحلة (مدير)"
     },
     "special": {
       "merged": "دُمج مع مشروع قانون آخر",
@@ -810,7 +811,8 @@
       "moveToCluster": "نقل إلى مجموعة",
       "removeFromCluster": "إزالة من المجموعة",
       "targetClusterId": "معرف المجموعة الهدف",
-      "clusterIdPlaceholder": "أدخل معرف المجموعة..."
+      "clusterIdPlaceholder": "أدخل معرف المجموعة...",
+      "reassignVoteStage": "إعادة تعيين مرحلة التصويت"
     }
   }
 }

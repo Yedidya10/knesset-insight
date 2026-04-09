@@ -2,15 +2,24 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, Pencil } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { VoteTalliesBar } from './VoteTalliesBar';
 import { InlineVoteDetail } from './InlineVoteDetail';
+import { useAdminEdit } from '@/components/admin/AdminEditProvider';
+import VoteBillLinker from '@/components/admin/inline/VoteBillLinker';
+import VoteStageReassign from '@/components/admin/inline/VoteStageReassign';
 
 interface MiniVoteCardProps {
   id: number;
@@ -21,6 +30,7 @@ interface MiniVoteCardProps {
   abstainCount: number;
   isAccepted: boolean | null;
   billStage?: number | null;
+  billId?: number;
 }
 
 export function MiniVoteCard({
@@ -31,9 +41,13 @@ export function MiniVoteCard({
   againstCount,
   abstainCount,
   isAccepted,
+  billStage,
+  billId,
 }: MiniVoteCardProps) {
   const t = useTranslations('legislation');
+  const tAdmin = useTranslations('admin.inline');
   const [open, setOpen] = useState(false);
+  const { isAdmin } = useAdminEdit();
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
@@ -76,6 +90,38 @@ export function MiniVoteCard({
             <InlineVoteDetail voteId={id} />
           </div>
         </CollapsibleContent>
+
+        {/* Admin actions */}
+        {isAdmin && (
+          <div className="border-t px-3 py-2 flex gap-2">
+            <Popover>
+              <PopoverTrigger
+                render={
+                  <Button variant="outline" size="sm" className="gap-1 text-[11px] h-7">
+                    <Pencil className="h-3 w-3" />
+                    {tAdmin('relinkVote')}
+                  </Button>
+                }
+              />
+              <PopoverContent side="bottom" className="w-72">
+                <VoteBillLinker voteId={id} currentBillId={billId ?? null} />
+              </PopoverContent>
+            </Popover>
+            <Popover>
+              <PopoverTrigger
+                render={
+                  <Button variant="outline" size="sm" className="gap-1 text-[11px] h-7">
+                    <Pencil className="h-3 w-3" />
+                    {tAdmin('reassignVoteStage')}
+                  </Button>
+                }
+              />
+              <PopoverContent side="bottom" className="w-72">
+                <VoteStageReassign voteId={id} currentStage={billStage ?? null} />
+              </PopoverContent>
+            </Popover>
+          </div>
+        )}
       </div>
     </Collapsible>
   );

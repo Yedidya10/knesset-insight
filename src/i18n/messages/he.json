@@ -222,7 +222,8 @@
       "passed": "התקבלה",
       "completed": "הושלם",
       "current": "שלב נוכחי",
-      "upcoming": "ממתין"
+      "upcoming": "ממתין",
+      "adminOverrideStage": "שינוי שלב (מנהל)"
     },
     "special": {
       "merged": "מוזגה עם הצעת חוק אחרת",
@@ -810,7 +811,8 @@
       "moveToCluster": "העבר לאשכול",
       "removeFromCluster": "הסר מאשכול",
       "targetClusterId": "מזהה אשכול יעד",
-      "clusterIdPlaceholder": "הזן מזהה אשכול..."
+      "clusterIdPlaceholder": "הזן מזהה אשכול...",
+      "reassignVoteStage": "שינוי שלב הצבעה"
     }
   }
 }

@@ -6,7 +6,6 @@ import { useTranslations } from 'next-intl';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-
 import {
   Select,
   SelectContent,
@@ -16,38 +15,37 @@ import {
 } from '@/components/ui/select';
 import { trpc } from '@/lib/trpc';
 
-/** Representative StatusID values for each canonical stage. */
-const STATUS_ID_OPTIONS = [
-  { value: '104', label: 'הגשה (104)' },
-  { value: '150', label: 'דיון מוקדם (150)' },
-  { value: '106', label: 'ועדה — קריאה ראשונה (106)' },
-  { value: '111', label: 'קריאה ראשונה (111)' },
-  { value: '113', label: 'ועדה — קריאה 2+3 (113)' },
-  { value: '117', label: 'לדיון במליאה לקריאה 2+3 (117)' },
-  { value: '114', label: 'קריאה שנייה ושלישית (114)' },
-  { value: '118', label: 'חוק שהתקבל (118)' },
+const VOTE_STAGES = [
+  { value: '0', labelKey: 'submitted' },
+  { value: '1', labelKey: 'preliminary' },
+  { value: '2', labelKey: 'committeeFirst' },
+  { value: '3', labelKey: 'firstReading' },
+  { value: '4', labelKey: 'committeeSecond' },
+  { value: '5', labelKey: 'secondThirdReading' },
+  { value: '6', labelKey: 'passed' },
 ] as const;
 
 interface Props {
-  billId: number;
-  currentStatusId: string | null;
+  voteId: number;
+  currentStage: number | null;
 }
 
-export default function BillStageOverride({ billId, currentStatusId }: Props) {
+export default function VoteStageReassign({ voteId, currentStage }: Props) {
   const t = useTranslations('admin.inline');
+  const tStages = useTranslations('legislation.stages');
   const router = useRouter();
-  const [newStatusId, setNewStatusId] = useState(currentStatusId ?? '');
+  const [newStage, setNewStage] = useState(String(currentStage ?? ''));
   const [reason, setReason] = useState('');
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!reason.trim() || !newStatusId) return;
+    if (!reason.trim() || newStage === '') return;
     setLoading(true);
     try {
-      await trpc.admin.overrideBillStage.mutate({
-        billId,
-        newStatusId,
+      await trpc.admin.reassignVoteStage.mutate({
+        voteId,
+        newStage: Number(newStage),
         reason,
       });
       router.refresh();
@@ -56,24 +54,26 @@ export default function BillStageOverride({ billId, currentStatusId }: Props) {
     }
   }
 
-  const currentLabel = STATUS_ID_OPTIONS.find((s) => s.value === currentStatusId)?.label ?? currentStatusId;
+  const currentLabel = currentStage != null
+    ? tStages(VOTE_STAGES.find((s) => s.value === String(currentStage))?.labelKey ?? 'submitted')
+    : '—';
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      <h4 className="font-medium text-sm">{t('overrideStage')}</h4>
+      <h4 className="font-medium text-sm">{t('reassignVoteStage')}</h4>
       <div>
-        <span className="text-xs">{t('currentStage')}: {currentLabel ?? '—'}</span>
+        <span className="text-xs">{t('currentStage')}: {currentLabel}</span>
       </div>
       <div>
         <span className="text-xs font-medium">{t('newStage')}</span>
-        <Select value={newStatusId} onValueChange={(val) => setNewStatusId(val ?? '')}>
+        <Select value={newStage} onValueChange={(val) => setNewStage(val ?? '')}>
           <SelectTrigger className="mt-1">
             <SelectValue placeholder={t('selectStage')} />
           </SelectTrigger>
           <SelectContent>
-            {STATUS_ID_OPTIONS.map((stage) => (
+            {VOTE_STAGES.map((stage) => (
               <SelectItem key={stage.value} value={stage.value}>
-                {stage.label}
+                {stage.value} — {tStages(stage.labelKey)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -89,7 +89,7 @@ export default function BillStageOverride({ billId, currentStatusId }: Props) {
           className="mt-1"
         />
       </div>
-      <Button type="submit" size="sm" disabled={loading || !reason.trim() || !newStatusId} className="w-full">
+      <Button type="submit" size="sm" disabled={loading || !reason.trim() || newStage === ''} className="w-full">
         {loading && <Loader2 className="h-4 w-4 animate-spin me-2" />}
         {t('save')}
       </Button>

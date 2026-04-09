@@ -238,7 +238,7 @@ export const adminRouter = router({
     .input(
       z.object({
         billId: z.number(),
-        newStatusId: z.number(),
+        newStatusId: z.string().min(1),
         reason: z.string().min(1),
       }),
     )
@@ -246,7 +246,7 @@ export const adminRouter = router({
       const { billId, newStatusId, reason } = input;
 
       const [existingBill] = await db
-        .select({ subTypeId: bills.subTypeId })
+        .select({ status: bills.status })
         .from(bills)
         .where(eq(bills.id, billId));
 
@@ -256,7 +256,7 @@ export const adminRouter = router({
 
       await db
         .update(bills)
-        .set({ subTypeId: newStatusId, updatedAt: new Date() })
+        .set({ status: newStatusId, updatedAt: new Date() })
         .where(eq(bills.id, billId));
 
       await db.insert(adminActivityLog).values({
@@ -264,8 +264,49 @@ export const adminRouter = router({
         entityType: 'bill',
         entityId: String(billId),
         details: {
-          oldStatusId: existingBill.subTypeId,
+          oldStatusId: existingBill.status,
           newStatusId,
+          reason,
+        },
+        adminIdentifier: 'admin',
+      });
+
+      return { success: true };
+    }),
+
+  // ─── Inline Edit: Vote stage reassignment ──────
+  reassignVoteStage: adminProcedure
+    .input(
+      z.object({
+        voteId: z.number(),
+        newStage: z.number().min(0).max(6),
+        reason: z.string().min(1),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const { voteId, newStage, reason } = input;
+
+      const [existingVote] = await db
+        .select({ billStage: votes.billStage })
+        .from(votes)
+        .where(eq(votes.id, voteId));
+
+      if (!existingVote) {
+        throw new Error('Vote not found');
+      }
+
+      await db
+        .update(votes)
+        .set({ billStage: newStage, updatedAt: new Date() })
+        .where(eq(votes.id, voteId));
+
+      await db.insert(adminActivityLog).values({
+        action: 'inline_reassign_vote_stage',
+        entityType: 'vote',
+        entityId: String(voteId),
+        details: {
+          oldStage: existingVote.billStage,
+          newStage,
           reason,
         },
         adminIdentifier: 'admin',

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Check, X, ChevronDown } from 'lucide-react';
+import { Check, X, ChevronDown, Pencil } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
@@ -14,10 +14,18 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { StageVotePanel } from './StageVotePanel';
 import { BillStage } from '@/lib/knesset/bill-stages';
 import type { StageInfo, SpecialStatus } from '@/lib/knesset/bill-stages';
+import { useAdminEdit } from '@/components/admin/AdminEditProvider';
+import BillStageOverride from '@/components/admin/inline/BillStageOverride';
 
 interface StageVote {
   id: number;
@@ -35,6 +43,8 @@ interface InteractiveStagePipelineProps {
   specialStatus: SpecialStatus;
   votes: StageVote[];
   stageKeyToIndex?: Record<string, number>;
+  billId?: number;
+  currentStatusId?: string | null;
 }
 
 const DEFAULT_STAGE_KEY_MAP: Record<string, number> = {
@@ -52,8 +62,11 @@ export function InteractiveStagePipeline({
   specialStatus,
   votes,
   stageKeyToIndex,
+  billId,
+  currentStatusId,
 }: InteractiveStagePipelineProps) {
   const t = useTranslations('legislation.stages');
+  const { isAdmin } = useAdminEdit();
 
   const keyMap = stageKeyToIndex ?? DEFAULT_STAGE_KEY_MAP;
 
@@ -146,6 +159,25 @@ export function InteractiveStagePipeline({
 
   return (
     <div className="w-full">
+      {/* Admin stage override */}
+      {isAdmin && billId && (
+        <div className="mb-3 flex justify-end">
+          <Popover>
+            <PopoverTrigger
+              render={
+                <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+                  <Pencil className="h-3 w-3" />
+                  {t('adminOverrideStage')}
+                </Button>
+              }
+            />
+            <PopoverContent side="bottom" align="end" className="w-80">
+              <BillStageOverride billId={billId} currentStatusId={currentStatusId ?? null} />
+            </PopoverContent>
+          </Popover>
+        </div>
+      )}
+
       {/* Desktop: horizontal stepper */}
       <div className="hidden md:block">
         <div
@@ -212,6 +244,7 @@ export function InteractiveStagePipeline({
             <StageVotePanel
               stageName={t(selectedStage)}
               votes={votesByStage.get(selectedStage)!}
+              billId={billId}
             />
           </div>
         )}
@@ -301,6 +334,7 @@ export function InteractiveStagePipeline({
                       <StageVotePanel
                         stageName={t(stage.key)}
                         votes={stageVotes}
+                        billId={billId}
                       />
                     </CollapsibleContent>
                   </div>

@@ -20,12 +20,13 @@ interface StageVote {
 interface StageVotePanelProps {
   stageName: string;
   votes: StageVote[];
+  billId?: number;
 }
 
 /** Regex to detect reservation votes by title */
 const RESERVATION_RE = /הסתייגו/;
 
-export function StageVotePanel({ stageName, votes }: StageVotePanelProps) {
+export function StageVotePanel({ stageName, votes, billId }: StageVotePanelProps) {
   const t = useTranslations('legislation');
 
   if (votes.length === 0) return null;
@@ -78,6 +79,8 @@ export function StageVotePanel({ stageName, votes }: StageVotePanelProps) {
             againstCount={v.againstCount}
             abstainCount={v.abstainCount}
             isAccepted={v.isAccepted}
+            billStage={v.billStage}
+            billId={billId}
           />
         ))}
 
@@ -101,6 +104,8 @@ export function StageVotePanel({ stageName, votes }: StageVotePanelProps) {
                   againstCount={v.againstCount}
                   abstainCount={v.abstainCount}
                   isAccepted={v.isAccepted}
+                  billStage={v.billStage}
+                  billId={billId}
                 />
               ))}
             </div>
