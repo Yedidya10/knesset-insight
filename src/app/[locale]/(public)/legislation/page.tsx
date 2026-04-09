@@ -13,10 +13,9 @@ import { BillClusterCard } from '@/components/legislation/BillClusterCard';
 import LegislationViewToggle from '@/components/legislation/LegislationViewToggle';
 import { getBillStatusText } from '@/lib/knesset/bill-status';
 
-// Mapping between URL-friendly English slugs and Knesset SubTypeID / Hebrew billType
+// Mapping between URL-friendly English slugs and Hebrew billType stored in DB
 const BILL_TYPE_SLUGS = ['government', 'private', 'committee'] as const;
 type BillTypeSlug = (typeof BILL_TYPE_SLUGS)[number];
-const SLUG_TO_SUBTYPE_ID: Record<BillTypeSlug, number> = { government: 53, private: 54, committee: 55 };
 const SLUG_TO_HEBREW: Record<BillTypeSlug, string> = { government: 'ממשלתית', private: 'פרטית', committee: 'ועדה' };
 
 interface Props {
@@ -198,7 +197,7 @@ export default async function LegislationPage({ searchParams }: Props) {
 
   const conditions = [];
   if (knessetNum) conditions.push(eq(bills.knessetNum, knessetNum));
-  if (billType && billType in SLUG_TO_SUBTYPE_ID) conditions.push(eq(bills.subTypeId, SLUG_TO_SUBTYPE_ID[billType as BillTypeSlug]));
+  if (billType && billType in SLUG_TO_HEBREW) conditions.push(eq(bills.billType, SLUG_TO_HEBREW[billType as BillTypeSlug]));
   if (statusFilter) conditions.push(eq(bills.status, statusFilter));
   if (searchQuery) conditions.push(ilike(bills.name, `%${searchQuery}%`));
 
