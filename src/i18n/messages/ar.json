@@ -793,7 +793,8 @@
       "title": "سجل النشاط",
       "totalActions": "{count} إجراءات إجمالية",
       "recentActions": "الإجراءات الأخيرة",
-      "noActivity": "لا يوجد نشاط بعد"
+      "noActivity": "لا يوجد نشاط بعد",
+      "noReason": "بدون سبب"
     },
     "inline": {
       "relinkVote": "تغيير ربط التصويت",
@@ -812,7 +813,15 @@
       "removeFromCluster": "إزالة من المجموعة",
       "targetClusterId": "معرف المجموعة الهدف",
       "clusterIdPlaceholder": "أدخل معرف المجموعة...",
-      "reassignVoteStage": "إعادة تعيين مرحلة التصويت"
+      "reassignVoteStage": "إعادة تعيين مرحلة التصويت",
+      "reasonPresets": {
+        "wrongStage": "مرحلة خاطئة — تصحيح التعيين",
+        "dataFix": "تصحيح بيانات يدوي",
+        "manualOverride": "تجاوز يدوي للقيمة التلقائية",
+        "syncError": "إصلاح خطأ المزامنة",
+        "userReport": "بناءً على تقرير مستخدم",
+        "custom": "أخرى…"
+      }
     }
   }
 }

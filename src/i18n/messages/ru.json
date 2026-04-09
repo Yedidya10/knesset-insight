@@ -793,7 +793,8 @@
       "title": "Журнал действий",
       "totalActions": "{count} действий всего",
       "recentActions": "Последние действия",
-      "noActivity": "Нет действий"
+      "noActivity": "Нет действий",
+      "noReason": "Причина не указана"
     },
     "inline": {
       "relinkVote": "Изменить привязку голосования",
@@ -812,7 +813,15 @@
       "removeFromCluster": "Удалить из кластера",
       "targetClusterId": "ID целевого кластера",
       "clusterIdPlaceholder": "Введите ID кластера...",
-      "reassignVoteStage": "Переназначить этап голосования"
+      "reassignVoteStage": "Переназначить этап голосования",
+      "reasonPresets": {
+        "wrongStage": "Неверный этап — исправление",
+        "dataFix": "Ручная корректировка данных",
+        "manualOverride": "Ручная замена автоматического значения",
+        "syncError": "Исправление ошибки синхронизации",
+        "userReport": "По обращению пользователя",
+        "custom": "Другое…"
+      }
     }
   }
 }

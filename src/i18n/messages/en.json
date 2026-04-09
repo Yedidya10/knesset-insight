@@ -793,7 +793,8 @@
       "title": "Activity Log",
       "totalActions": "{count} total actions",
       "recentActions": "Recent Actions",
-      "noActivity": "No activity yet"
+      "noActivity": "No activity yet",
+      "noReason": "No reason provided"
     },
     "inline": {
       "relinkVote": "Change Vote Link",
@@ -812,7 +813,15 @@
       "removeFromCluster": "Remove from Cluster",
       "targetClusterId": "Target Cluster ID",
       "clusterIdPlaceholder": "Enter cluster ID...",
-      "reassignVoteStage": "Reassign vote stage"
+      "reassignVoteStage": "Reassign vote stage",
+      "reasonPresets": {
+        "wrongStage": "Wrong stage — fixing assignment",
+        "dataFix": "Manual data correction",
+        "manualOverride": "Manual override of automatic value",
+        "syncError": "Fixing sync error",
+        "userReport": "Following user report",
+        "custom": "Other…"
+      }
     }
   }
 }

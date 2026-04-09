@@ -428,6 +428,35 @@ export const adminRouter = router({
       return { success: true };
     }),
 
+  // ─── Update activity log reason ──────────────
+  updateActivityReason: adminProcedure
+    .input(
+      z.object({
+        logId: z.number(),
+        reason: z.string().min(1),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const { logId, reason } = input;
+
+      const [entry] = await db
+        .select()
+        .from(adminActivityLog)
+        .where(eq(adminActivityLog.id, logId));
+
+      if (!entry) {
+        throw new Error('Activity log entry not found');
+      }
+
+      const oldDetails = (entry.details as Record<string, unknown>) ?? {};
+      await db
+        .update(adminActivityLog)
+        .set({ details: { ...oldDetails, reason } })
+        .where(eq(adminActivityLog.id, logId));
+
+      return { success: true };
+    }),
+
   // ─── Check admin status (for client) ───────────
   checkAuth: publicProcedure.query(({ ctx }) => {
     return { isAdmin: ctx.isAdmin };

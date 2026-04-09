@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import ReasonInput from './ReasonInput';
 import {
   Select,
   SelectContent,
@@ -79,16 +79,7 @@ export default function VoteStageReassign({ voteId, currentStage }: Props) {
           </SelectContent>
         </Select>
       </div>
-      <div>
-        <span className="text-xs font-medium">{t('reason')}</span>
-        <Input
-          value={reason}
-          onChange={(e) => setReason(e.target.value)}
-          placeholder={t('reasonPlaceholder')}
-          required
-          className="mt-1"
-        />
-      </div>
+      <ReasonInput value={reason} onChange={setReason} />
       <Button type="submit" size="sm" disabled={loading || !reason.trim() || newStage === ''} className="w-full">
         {loading && <Loader2 className="h-4 w-4 animate-spin me-2" />}
         {t('save')}

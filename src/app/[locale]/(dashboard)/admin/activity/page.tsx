@@ -5,6 +5,7 @@ import { db } from '@/lib/db';
 import { adminActivityLog } from '@/lib/db/schema';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import ActivityLogReasonEditor from '@/components/admin/inline/ActivityLogReasonEditor';
 
 export default async function AdminActivityPage() {
   const t = await getTranslations('admin.activity');
@@ -57,11 +58,10 @@ export default async function AdminActivityPage() {
                           {item.entityType} #{item.entityId}
                         </Badge>
                       </div>
-                      {details?.reason ? (
-                        <p className="mt-1 text-sm text-muted-foreground">
-                          {String(details.reason)}
-                        </p>
-                      ) : null}
+                      <ActivityLogReasonEditor
+                        logId={item.id}
+                        currentReason={details?.reason ? String(details.reason) : null}
+                      />
                     </div>
                     <span className="shrink-0 text-xs text-muted-foreground">
                       {item.createdAt
