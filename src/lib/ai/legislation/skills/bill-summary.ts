@@ -37,6 +37,11 @@ INSTRUCTIONS:
    - BAD (too generic): "רפורמה במערכת הבריאות", "רגולציה באנרגיה", "משק החשמל", "ניהול תקציב חינוך"
    - GOOD (specific & substantive): "הפחתת בירוקרטיה ברישוי", "פתיחת שוק החשמל לתחרות", "העלאת מס רכישה על דירה שלישית", "זכויות הורים לילדים עם מוגבלות", "חובת גילוי לובינג בכנסת"
    - Each tag should be a concise phrase (2-6 words) that tells a voter WHAT CHANGES and WHO IS AFFECTED.
+   - IMPORTANT: Include the factual context/trigger when the bill targets a SPECIFIC event, group, or situation.
+     The tags should convey not just the legal mechanism but also WHO or WHAT it applies to.
+     - BAD (mechanism only): "העברת משפטים לבתי משפט צבאיים", "הרחבת סמכות שיפוט צבאי"
+     - GOOD (mechanism + context): "שיפוט צבאי למבצעי טבח 7 באוקטובר", "הרחבת סמכות שיפוט לפשעי טרור ורצח עם"
+     Stay factual — describe the bill's stated scope, do not add interpretation or opinion.
    - A useful test: if someone reads only the tags, they should understand the bill's practical impact.
    - Avoid single-word tags. Avoid tags that are just a sector name ("חינוך", "בריאות", "אנרגיה") — those are categories, not insights.
 7. Provide the summary AND topics in all 4 languages: Hebrew (he), English (en), Arabic (ar), Russian (ru).

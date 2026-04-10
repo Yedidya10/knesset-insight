@@ -88,9 +88,10 @@ async function main() {
     console.log(`   Fetched ${billDocs.length} documents`);
 
     for (const d of billDocs) {
-      const filePath = d.FilePath?.startsWith('http')
-        ? d.FilePath
-        : `https://fs.knesset.gov.il/${d.FilePath}`;
+      const rawPath = (d.FilePath ?? '').replace(/\\/g, '/').replace(/^\//, '');
+      const filePath = rawPath.startsWith('http')
+        ? rawPath
+        : `https://fs.knesset.gov.il/${rawPath}`;
       console.log(
         `   📎 Type ${d.GroupTypeID} — ${d.GroupTypeDesc} — ${d.ApplicationDesc} — ${filePath.slice(0, 80)}`,
       );

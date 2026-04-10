@@ -17,6 +17,14 @@ async function main() {
   `);
   console.log('Fixed double prefixes');
 
+  // Fix backslash paths from OData v4
+  await db.execute(
+    sql.raw(
+      `UPDATE bill_documents SET file_path = REPLACE(file_path, E'\\\\', '/') WHERE file_path LIKE E'%\\\\%'`,
+    ),
+  );
+  console.log('Fixed backslash paths');
+
   const samples = await db
     .select({ path: billDocuments.filePath, type: billDocuments.groupTypeId })
     .from(billDocuments)
