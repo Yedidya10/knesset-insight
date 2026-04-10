@@ -60,6 +60,104 @@ Example: `https://fs.knesset.gov.il/25/law/25_ls2_12079291.pdf`
 Note: Backslashes in OData responses (`\25\law\...`) must be normalized to
 forward slashes for HTTP access.
 
+## Stage Versioning (תקצירים לפי שלב חקיקה)
+
+### Problem
+
+Bills progress through legislative stages over time. A bill may first appear
+at "preliminary discussion" (דיון מוקדם), later reach "first reading", and
+eventually pass at "2nd+3rd reading". Each stage has its own document and
+context. Two scenarios exist:
+
+1. **Backfill** — historical bills already have all their documents. We process
+   the highest-priority document and generate a single summary.
+2. **Real-time (cron)** — ongoing bills get new documents as they progress.
+   When a bill moves from first reading to third reading, we must **update**
+   with the new document but **preserve** the earlier stage summary for the
+   stepper UI.
+
+### Design: Separate `bill_stage_summaries` Table
+
+Keep `bills.aiSummary` and `bills.aiTopics` as the **current/latest** values
+(backward compatible — no existing queries break). Store per-stage history in
+a dedicated table:
+
+```sql
+CREATE TABLE bill_stage_summaries (
+  id SERIAL PRIMARY KEY,
+  bill_id INTEGER REFERENCES bills(id) NOT NULL,
+  stage INTEGER NOT NULL,                    -- BillStage enum (0-6)
+  summary JSONB NOT NULL,                    -- { he, en, ar, ru }
+  topics JSONB,                              -- { he: [...], en: [...], ... }
+  source_doc_type INTEGER,                   -- GroupTypeID of the document used
+  source_doc_id INTEGER,                     -- FK to bill_documents.id
+  generated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(bill_id, stage)
+);
+CREATE INDEX idx_bill_stage_summaries_bill ON bill_stage_summaries(bill_id);
+```
+
+### Document Type → Stage Mapping
+
+| GroupTypeID | Document                  | BillStage                  |
+| ----------- | ------------------------- | -------------------------- |
+| 1           | הצעת חוק לדיון מוקדם      | PRELIMINARY (1)            |
+| 2           | הצעת חוק לקריאה הראשונה   | FIRST_READING (3)          |
+| 3           | נוסח מתוקן לקריאה ראשונה  | FIRST_READING (3)          |
+| 4           | הצעת חוק לקריאה ב'+ג'     | SECOND_THIRD_READING (5)   |
+| 60          | נוסח לדיון בוועדה (ב'+ג') | COMMITTEE_SECOND (4)       |
+| 59          | חומר רקע                  | (use bill's current stage) |
+| 12          | מסמך מרכז מחקר ומידע      | (use bill's current stage) |
+| 17          | החלטת ממשלה               | SUBMITTED (0)              |
+
+### Write Logic
+
+```
+On summary generation:
+├── Determine stage from document type (see mapping above)
+├── UPSERT into bill_stage_summaries (bill_id, stage)
+│   → Overwrites if same stage is regenerated (e.g. corrected doc)
+├── If this is the HIGHEST stage so far for this bill:
+│   ├── Update bills.aiSummary ← new summary
+│   └── Update bills.aiTopics  ← new topics
+└── If NOT the highest stage:
+    └── Only write to bill_stage_summaries (don't overwrite latest)
+```
+
+### Read Logic (Stepper UI)
+
+```
+InteractiveStagePipeline
+├── Receives bill.aiSummary as "current" summary (always shown)
+├── Query bill_stage_summaries WHERE bill_id = ? ORDER BY stage
+├── For each completed stage in the stepper:
+│   └── If a stage summary exists → show it in the stage detail panel
+│       (e.g. tooltip, expandable section, or StageVotePanel)
+└── Stages without a dedicated summary show nothing extra
+```
+
+### Topic Update Policy
+
+- **Always store** topics alongside the stage summary in `bill_stage_summaries`
+- **Update `bills.aiTopics`** (the "current" set) only when:
+  1. Processing a **higher stage** than what was previously stored, OR
+  2. Topics changed **significantly** (>50% new tags vs previous)
+- Rationale: topic classifications rarely shift between stages unless the bill
+  text was substantially amended in committee. Preliminary → first reading
+  usually has the same topics. But committee rewrites (e.g. הצעת חוק הסדרים
+  chapters restructured) can change classifications meaningfully.
+
+### Backfill vs. Cron Behavior
+
+| Scenario                                       | Behavior                                                                                                                                                 |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Backfill** (historical bill, all docs exist) | Process highest-priority doc → write to `bills.aiSummary` + `bill_stage_summaries`. Optionally process lower-stage docs too for richer stepper data.     |
+| **Cron** (new doc appears for existing bill)   | Determine stage → UPSERT into `bill_stage_summaries`. If highest stage → also update `bills.aiSummary/aiTopics`. Previous stage summaries are preserved. |
+| **Cron** (brand new bill, first doc)           | Normal flow — write to both tables.                                                                                                                      |
+| **Regeneration** (manual re-run)               | Same as backfill. UPSERT replaces old stage summary.                                                                                                     |
+
+---
+
 ## Architecture
 
 ### Phase 1: Sync Bill Documents (new job)
@@ -121,24 +219,44 @@ src/lib/ai/legislation/document-reader.ts
 - No reason to burn tokens on text extraction
 - `mammoth` converts DOCX→text; `officeparser` handles old `.doc` format
 
-### Phase 3: Enhanced Summary Generator
+### Phase 3: Enhanced Summary Generator (Stage-Aware)
 
-Update `summary-generator.ts` to incorporate document text:
+Update `summary-generator.ts` to incorporate document text and per-stage storage:
 
 ```
 generateBillSummary(bill, chapterNames?)
-├── 1. Check bill_documents for available docs
+├── 1. Fetch bill_documents ordered by type priority
 │      Prioritize: Type 4 > 2 > 1 > 3 > 60 > 59 > 12
-├── 2. Read highest-priority document (if exists)
-│      Extract "דברי הסבר" section if present
-├── 3. Tavily web search (existing, unchanged)
-├── 4. Build enhanced prompt:
-│      ├── Bill metadata (existing)
-│      ├── [NEW] Document text / דברי הסבר
-│      ├── Budget context (existing, if applicable)
-│      └── Web search results (existing)
-├── 5. Claude Sonnet → summary + topics in 4 languages
-└── 6. Store results (existing)
+├── 2. Group documents by stage (DocType → BillStage mapping)
+├── 3. For each stage with unprocessed documents (or highest only for backfill):
+│      ├── Read document (PDF via Gemini / DOC via officeparser)
+│      ├── Extract "דברי הסבר" section if present
+│      ├── Tavily web search (existing, unchanged)
+│      ├── Build enhanced prompt with document context
+│      ├── Claude Sonnet → summary + topics in 4 languages
+│      ├── UPSERT into bill_stage_summaries (bill_id, stage)
+│      └── If this is the highest stage:
+│            ├── Update bills.aiSummary
+│            └── Update bills.aiTopics (if significantly changed)
+└── 4. Return results
+```
+
+**Determining "highest stage":**
+
+```typescript
+// Query the max stage already stored for this bill
+const maxExistingStage = await db
+  .select({ max: max(billStageSummaries.stage) })
+  .from(billStageSummaries)
+  .where(eq(billStageSummaries.billId, billId));
+
+// Only update bills.aiSummary if new stage >= max existing
+if (newStage >= (maxExistingStage ?? -1)) {
+  await db
+    .update(bills)
+    .set({ aiSummary, aiTopics })
+    .where(eq(bills.id, billId));
+}
 ```
 
 **Document context section in prompt:**
@@ -184,14 +302,15 @@ vs. current approach without documents: **~$154** (Tavily + Claude)
 
 ## Implementation Order
 
-1. **Migration** — `bill_documents` table
+1. **Migration** — `bill_documents` + `bill_stage_summaries` tables
 2. **sync-bill-documents.ts** — OData sync job
 3. **document-reader.ts** — PDF (Gemini) + DOC (officeparser) reading
-4. **Update summary-generator.ts** — incorporate document context
+4. **Update summary-generator.ts** — incorporate document context + stage-aware writes
 5. **Update bill-summary.ts prompt** — document priority instructions
 6. **Update app.config.ts** — document reading config (Gemini model, max pages)
-7. **Test run** — small batch with document context
-8. **Full run** — all K25/24/23 bills
+7. **Test run** — small batch with document context + verify stage summaries
+8. **Full run** — all K25/24/23 bills (backfill: highest-priority doc per bill)
+9. **Stepper integration** — query `bill_stage_summaries` in InteractiveStagePipeline
 
 ## Configuration (app.config.ts additions)
 
