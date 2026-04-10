@@ -1,0 +1,248 @@
+import { generateText } from 'ai';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { eq, and, inArray, sql } from 'drizzle-orm';
+import { appConfig } from '../../../../app.config';
+import { db } from '../../db';
+import { billDocuments } from '../../db/schema';
+import { BillStage } from '../../knesset/bill-stages';
+
+// ── Types ───────────────────────────────────────────────────────
+
+export interface BillDocument {
+  id: number;
+  knessetDocId: number;
+  billId: number | null;
+  groupTypeId: number;
+  groupTypeDesc: string;
+  applicationDesc: string;
+  filePath: string;
+}
+
+export interface DocumentReadResult {
+  text: string;
+  documentId: number;
+  groupTypeId: number;
+  stage: BillStage;
+}
+
+// ── GroupTypeID → BillStage mapping ─────────────────────────────
+
+const DOC_TYPE_TO_STAGE: Record<number, BillStage> = {
+  1: BillStage.PRELIMINARY,
+  2: BillStage.FIRST_READING,
+  3: BillStage.FIRST_READING,
+  4: BillStage.SECOND_THIRD_READING,
+  60: BillStage.COMMITTEE_SECOND,
+  17: BillStage.SUBMITTED,
+};
+
+/**
+ * Determine the BillStage a document belongs to.
+ * Types 59 (background) and 12 (research) don't map to a specific stage
+ * — returns null, and caller should use the bill's current stage.
+ */
+export function getDocumentStage(groupTypeId: number): BillStage | null {
+  return DOC_TYPE_TO_STAGE[groupTypeId] ?? null;
+}
+
+// ── Fetch documents for a bill ──────────────────────────────────
+
+/**
+ * Fetch and sort bill documents by type priority (highest first).
+ */
+export async function fetchBillDocuments(
+  billId: number,
+): Promise<BillDocument[]> {
+  const { typePriority } = appConfig.billSummary.documentReader;
+
+  const docs = await db
+    .select({
+      id: billDocuments.id,
+      knessetDocId: billDocuments.knessetDocId,
+      billId: billDocuments.billId,
+      groupTypeId: billDocuments.groupTypeId,
+      groupTypeDesc: billDocuments.groupTypeDesc,
+      applicationDesc: billDocuments.applicationDesc,
+      filePath: billDocuments.filePath,
+    })
+    .from(billDocuments)
+    .where(eq(billDocuments.billId, billId));
+
+  // Sort by type priority (lower index = higher priority)
+  const priorityMap = new Map(typePriority.map((id, idx) => [id, idx]));
+  docs.sort(
+    (a, b) =>
+      (priorityMap.get(a.groupTypeId) ?? 999) -
+      (priorityMap.get(b.groupTypeId) ?? 999),
+  );
+
+  return docs;
+}
+
+// ── Read document content ───────────────────────────────────────
+
+/**
+ * Read text content from a bill document.
+ * - PDF → Gemini Flash for OCR/text extraction
+ * - DOC/DOCX → officeparser for local text extraction
+ */
+export async function readDocument(doc: BillDocument): Promise<string | null> {
+  const ext = doc.applicationDesc.toLowerCase();
+
+  try {
+    if (ext === 'pdf') {
+      return await readPdfWithGemini(doc.filePath);
+    } else if (ext === 'doc' || ext === 'docx') {
+      return await readDocWithOfficeparser(doc.filePath);
+    } else {
+      console.warn(
+        `[doc-reader] Unsupported format "${ext}" for doc ${doc.knessetDocId}`,
+      );
+      return null;
+    }
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.error(
+      `[doc-reader] Failed to read doc ${doc.knessetDocId} (${ext}): ${msg}`,
+    );
+    return null;
+  }
+}
+
+/**
+ * Read a PDF document using Gemini Flash for text extraction.
+ * Sends the PDF URL directly — Gemini supports URL-based document input.
+ */
+async function readPdfWithGemini(url: string): Promise<string | null> {
+  const { pdfModel, maxPages } = appConfig.billSummary.documentReader;
+
+  const google = createGoogleGenerativeAI({
+    apiKey:
+      process.env.GOOGLE_GENERATIVE_AI_API_KEY ?? process.env.GEMINI_API_KEY,
+  });
+
+  // Download PDF as buffer (Gemini needs inline data for PDFs)
+  const response = await fetch(url, {
+    signal: AbortSignal.timeout(30_000),
+  });
+  if (!response.ok) {
+    console.warn(`[doc-reader] PDF fetch failed: ${response.status} ${url}`);
+    return null;
+  }
+  const pdfBuffer = await response.arrayBuffer();
+  const pdfBase64 = Buffer.from(pdfBuffer).toString('base64');
+
+  const { text } = await generateText({
+    model: google(pdfModel),
+    messages: [
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'file',
+            data: pdfBase64,
+            mimeType: 'application/pdf',
+          },
+          {
+            type: 'text',
+            text: `Extract the full text content from this PDF document (up to ${maxPages} pages). 
+Preserve the structure: headings, paragraphs, and especially the "דברי הסבר" (explanatory notes) section if present.
+Return ONLY the extracted text, no commentary.`,
+          },
+        ],
+      },
+    ],
+    maxOutputTokens: 8192,
+  });
+
+  return text?.trim() || null;
+}
+
+/**
+ * Read a DOC/DOCX file using officeparser (local text extraction, no AI).
+ */
+async function readDocWithOfficeparser(url: string): Promise<string | null> {
+  const { parseOfficeAsync } = await import('officeparser');
+
+  const response = await fetch(url, {
+    signal: AbortSignal.timeout(30_000),
+  });
+  if (!response.ok) {
+    console.warn(`[doc-reader] DOC fetch failed: ${response.status} ${url}`);
+    return null;
+  }
+  const buffer = Buffer.from(await response.arrayBuffer());
+
+  const text = await parseOfficeAsync(buffer);
+  return text?.trim() || null;
+}
+
+// ── Extract explanatory notes ───────────────────────────────────
+
+/**
+ * Extract the "דברי הסבר" (explanatory notes) section from bill text.
+ * This section describes the bill's purpose and impact — the most valuable part.
+ * Falls back to the full text if no section is found.
+ */
+export function extractExplanatoryNotes(
+  fullText: string,
+  maxChars?: number,
+): string {
+  const limit =
+    maxChars ?? appConfig.billSummary.documentReader.maxDocumentChars;
+
+  // Common headings for explanatory notes
+  const patterns = [
+    /דברי[\s\u200f]*הסבר/i,
+    /הסבר[\s\u200f]*להצעת[\s\u200f]*חוק/i,
+    /explanatory[\s]*notes/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = fullText.match(pattern);
+    if (match && match.index !== undefined) {
+      const extracted = fullText.slice(match.index);
+      return extracted.slice(0, limit);
+    }
+  }
+
+  // No explanatory notes section found — return from the beginning
+  return fullText.slice(0, limit);
+}
+
+// ── Main entry point ────────────────────────────────────────────
+
+/**
+ * Read the highest-priority document for a bill and extract context.
+ * Returns the document text (preferring דברי הסבר), the document metadata,
+ * and the legislative stage the document belongs to.
+ */
+export async function readBillDocumentContext(
+  billId: number,
+): Promise<DocumentReadResult | null> {
+  const docs = await fetchBillDocuments(billId);
+  if (docs.length === 0) return null;
+
+  // Try documents in priority order until one succeeds
+  for (const doc of docs) {
+    const rawText = await readDocument(doc);
+    if (!rawText) continue;
+
+    const text = extractExplanatoryNotes(rawText);
+    const stage = getDocumentStage(doc.groupTypeId) ?? BillStage.SUBMITTED;
+
+    console.log(
+      `[doc-reader] Read doc ${doc.knessetDocId} (type ${doc.groupTypeId}: ${doc.groupTypeDesc}) ` +
+        `→ ${text.length} chars, stage ${stage}`,
+    );
+
+    return {
+      text,
+      documentId: doc.id,
+      groupTypeId: doc.groupTypeId,
+      stage,
+    };
+  }
+
+  return null;
+}

@@ -442,6 +442,44 @@ export const billNames = pgTable('bill_names', {
 });
 
 // ──────────────────────────────────────
+// Bill Documents (synced from KNS_DocumentBill)
+// ──────────────────────────────────────
+
+export const billDocuments = pgTable('bill_documents', {
+  id: serial('id').primaryKey(),
+  knessetDocId: integer('knesset_doc_id').unique().notNull(),
+  billId: integer('bill_id').references(() => bills.id),
+  knessetBillId: integer('knesset_bill_id').notNull(),
+  groupTypeId: integer('group_type_id').notNull(),
+  groupTypeDesc: text('group_type_desc').notNull(),
+  applicationDesc: text('application_desc').notNull(),
+  filePath: text('file_path').notNull(),
+  lastUpdated: timestamp('last_updated', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+// ──────────────────────────────────────
+// Bill Stage Summaries (per-stage AI summary history)
+// ──────────────────────────────────────
+
+export const billStageSummaries = pgTable(
+  'bill_stage_summaries',
+  {
+    id: serial('id').primaryKey(),
+    billId: integer('bill_id')
+      .references(() => bills.id)
+      .notNull(),
+    stage: integer('stage').notNull(),
+    summary: jsonb('summary').$type<Record<string, string>>().notNull(),
+    topics: jsonb('topics').$type<Record<string, string[]>>(),
+    sourceDocType: integer('source_doc_type'),
+    sourceDocId: integer('source_doc_id').references(() => billDocuments.id),
+    generatedAt: timestamp('generated_at', { withTimezone: true }).defaultNow(),
+  },
+  (t) => [unique().on(t.billId, t.stage)],
+);
+
+// ──────────────────────────────────────
 // Bill Clusters (unified legislation entities)
 // ──────────────────────────────────────
 
@@ -960,6 +998,8 @@ export const billsRelations = relations(bills, ({ one, many }) => ({
   splitsAsMain: many(billSplits, { relationName: 'mainBillSplits' }),
   splitsAsChild: many(billSplits, { relationName: 'splitBillSplits' }),
   nameHistory: many(billNames),
+  documents: many(billDocuments),
+  stageSummaries: many(billStageSummaries),
   cluster: one(billClusters, {
     fields: [bills.clusterId],
     references: [billClusters.id],
@@ -1011,6 +1051,27 @@ export const billNamesRelations = relations(billNames, ({ one }) => ({
     references: [bills.id],
   }),
 }));
+
+export const billDocumentsRelations = relations(billDocuments, ({ one }) => ({
+  bill: one(bills, {
+    fields: [billDocuments.billId],
+    references: [bills.id],
+  }),
+}));
+
+export const billStageSummariesRelations = relations(
+  billStageSummaries,
+  ({ one }) => ({
+    bill: one(bills, {
+      fields: [billStageSummaries.billId],
+      references: [bills.id],
+    }),
+    sourceDoc: one(billDocuments, {
+      fields: [billStageSummaries.sourceDocId],
+      references: [billDocuments.id],
+    }),
+  }),
+);
 
 export const billClustersRelations = relations(
   billClusters,

@@ -2,12 +2,11 @@ import { appConfig } from '../../../app.config';
 import type {
   ODataV4PlenumVote,
   ODataV4PlenumVoteResult,
+  ODataV4DocumentBill,
 } from './types';
 
-const WEBSITE_API_BASE =
-  appConfig.dataSources.knessetWebsiteApi;
-const ODATA_V4_BASE =
-  appConfig.dataSources.knessetOdataV4;
+const WEBSITE_API_BASE = appConfig.dataSources.knessetWebsiteApi;
+const ODATA_V4_BASE = appConfig.dataSources.knessetOdataV4;
 
 /**
  * Response shape from GetVotesHeaders endpoint.
@@ -134,14 +133,18 @@ async function fetchAllODataV4<T>(
           signal: AbortSignal.timeout(30_000),
         });
         if (!response.ok) {
-          throw new Error(`OData v4 fetch failed: ${response.status} ${response.statusText}`);
+          throw new Error(
+            `OData v4 fetch failed: ${response.status} ${response.statusText}`,
+          );
         }
         data = await response.json();
         break;
       } catch (err) {
         if (attempt === maxRetries) throw err;
         const delay = Math.min(attempt * 3000, 15000);
-        console.warn(`  [ODataV4 retry] Attempt ${attempt} failed, retrying in ${delay}ms...`);
+        console.warn(
+          `  [ODataV4 retry] Attempt ${attempt} failed, retrying in ${delay}ms...`,
+        );
         await new Promise((r) => setTimeout(r, delay));
       }
     }
@@ -161,7 +164,9 @@ async function fetchAllODataV4<T>(
   }
 
   if (label) {
-    console.log(`  [${label}] done: ${results.length} records in ${page} pages`);
+    console.log(
+      `  [${label}] done: ${results.length} records in ${page} pages`,
+    );
   }
   return results;
 }
@@ -194,7 +199,9 @@ export async function fetchV4VoteResults(
   voteIdSet: Set<number>,
   label = 'v4-vote-results',
 ): Promise<ODataV4PlenumVoteResult[]> {
-  console.log(`  [${label}] Fetching VoteID range ${minVoteId}–${maxVoteId}...`);
+  console.log(
+    `  [${label}] Fetching VoteID range ${minVoteId}–${maxVoteId}...`,
+  );
 
   const allResults = await fetchAllODataV4<ODataV4PlenumVoteResult>(
     'KNS_PlenumVoteResult',
@@ -207,12 +214,17 @@ export async function fetchV4VoteResults(
   );
 
   const filtered = allResults.filter((r) => voteIdSet.has(r.VoteID));
-  console.log(`  [${label}] Fetched ${allResults.length}, kept ${filtered.length}`);
+  console.log(
+    `  [${label}] Fetched ${allResults.length}, kept ${filtered.length}`,
+  );
   return filtered;
 }
 
 /** Minimal result type with only the 3 fields needed for tallies + member votes */
-export type V4VoteResultMinimal = Pick<ODataV4PlenumVoteResult, 'VoteID' | 'MkId' | 'ResultCode'>;
+export type V4VoteResultMinimal = Pick<
+  ODataV4PlenumVoteResult,
+  'VoteID' | 'MkId' | 'ResultCode'
+>;
 
 /**
  * Fetch member-level vote results with minimal payload ($select=VoteID,MkId,ResultCode).
@@ -265,7 +277,10 @@ export async function fetchV4MkIdMapping(): Promise<
   );
 
   // Deduplicate by MkId, keeping the first occurrence (most recent)
-  const seen = new Map<number, { mkId: number; firstName: string; lastName: string }>();
+  const seen = new Map<
+    number,
+    { mkId: number; firstName: string; lastName: string }
+  >();
   for (const r of results) {
     if (!seen.has(r.MkId)) {
       seen.set(r.MkId, {
@@ -276,6 +291,30 @@ export async function fetchV4MkIdMapping(): Promise<
     }
   }
 
-  console.log(`  [v4-mkid-mapping] ${seen.size} unique MK IDs from ${results.length} vote results`);
+  console.log(
+    `  [v4-mkid-mapping] ${seen.size} unique MK IDs from ${results.length} vote results`,
+  );
   return [...seen.values()];
+}
+
+/**
+ * Fetch bill documents from OData v4 KNS_DocumentBill.
+ * Supports optional LastUpdatedDate filter for incremental sync.
+ */
+export async function fetchV4DocumentBills(
+  since?: Date,
+): Promise<ODataV4DocumentBill[]> {
+  const params: Record<string, string> = {
+    $select:
+      'Id,BillID,GroupTypeID,GroupTypeDesc,ApplicationDesc,FilePath,LastUpdatedDate',
+    $orderby: 'LastUpdatedDate desc',
+  };
+  if (since) {
+    params.$filter = `LastUpdatedDate gt ${since.toISOString()}`;
+  }
+  return fetchAllODataV4<ODataV4DocumentBill>(
+    'KNS_DocumentBill',
+    params,
+    'v4-doc-bills',
+  );
 }

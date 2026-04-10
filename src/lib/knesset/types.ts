@@ -118,3 +118,14 @@ export interface ODataV4PlenumVoteResult {
   SessionID: number | null;
   ItemID: number | null;
 }
+
+// OData v4 — KNS_DocumentBill (ParliamentInfo)
+export interface ODataV4DocumentBill {
+  Id: number;
+  BillID: number;
+  GroupTypeID: number;
+  GroupTypeDesc: string;
+  ApplicationDesc: string;
+  FilePath: string;
+  LastUpdatedDate: string | null;
+}

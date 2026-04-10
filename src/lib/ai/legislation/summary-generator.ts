@@ -12,6 +12,11 @@ import {
   extractChapterTopic,
   type BudgetBillType,
 } from './budget-bill-utils';
+import {
+  readBillDocumentContext,
+  type DocumentReadResult,
+} from './document-reader';
+import { BillStage } from '../../knesset/bill-stages';
 
 /**
  * Extract a JSON object from text that may contain preamble text before/after.
@@ -51,6 +56,12 @@ export interface SummaryResult {
   tokensUsed: number;
   /** Budget bill type detected, if any */
   budgetType: BudgetBillType;
+  /** Legislative stage this summary belongs to (from document type) */
+  stage: BillStage | null;
+  /** ID of the source document in bill_documents table */
+  sourceDocId: number | null;
+  /** GroupTypeID of the source document */
+  sourceDocType: number | null;
 }
 
 /**
@@ -83,7 +94,18 @@ export async function generateBillSummary(
 
   const knessetUrl = `https://main.knesset.gov.il/Activity/Legislation/Laws/Pages/LawBill.aspx?t=LawsTable&lawItemID=${bill.knessetId}`;
 
-  // Step 1: Search the web for context about this bill
+  // Step 1: Try to read official document from bill_documents
+  let docResult: DocumentReadResult | null = null;
+  try {
+    docResult = await readBillDocumentContext(bill.id);
+  } catch (error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    console.warn(
+      `[bill-summary] Document reading failed for bill ${bill.knessetId}: ${msg}`,
+    );
+  }
+
+  // Step 2: Search the web for context about this bill
   const searchResults = await searchBillContext(
     bill.name,
     bill.knessetNum,
@@ -101,6 +123,18 @@ export async function generateBillSummary(
             `[${i + 1}] ${r.title}\n    URL: ${r.url}\n    ${r.content}`,
         )
         .join('\n\n');
+  }
+
+  // Build document context (NEW — from actual bill PDFs/DOCs)
+  let documentContext = '';
+  if (docResult) {
+    documentContext = `\n\nOFFICIAL BILL DOCUMENT (${docResult.groupTypeId === 1 ? 'דיון מוקדם' : docResult.groupTypeId === 2 ? 'קריאה ראשונה' : docResult.groupTypeId === 4 ? "קריאה ב'+ג'" : 'מסמך רשמי'}):
+The following is the actual text of the bill (or its explanatory notes).
+Use this as the PRIMARY source for your summary. Web search results serve as SUPPLEMENTARY context only.
+
+--- BEGIN DOCUMENT ---
+${docResult.text}
+--- END DOCUMENT ---`;
   }
 
   // Build budget-specific context for the prompt
@@ -128,7 +162,7 @@ export async function generateBillSummary(
 - Proposed Date: ${bill.proposedDate ?? 'unknown'}
 - Official Knesset Page: ${knessetUrl}
 
-Focus on the bill's LATEST version — if it went through committee discussions or readings, describe the current state, not just the original proposal.${budgetContext}${webContext}`;
+Focus on the bill's LATEST version — if it went through committee discussions or readings, describe the current state, not just the original proposal.${budgetContext}${documentContext}${webContext}`;
 
   // Parent omnibus bills need more output tokens for the broader overview
   const effectiveMaxTokens =
@@ -154,6 +188,9 @@ Focus on the bill's LATEST version — if it went through committee discussions 
       topics: null,
       tokensUsed,
       budgetType,
+      stage: docResult?.stage ?? null,
+      sourceDocId: docResult?.documentId ?? null,
+      sourceDocType: docResult?.groupTypeId ?? null,
     };
   }
 
@@ -211,6 +248,9 @@ Focus on the bill's LATEST version — if it went through committee discussions 
       topics: null,
       tokensUsed,
       budgetType,
+      stage: docResult?.stage ?? null,
+      sourceDocId: docResult?.documentId ?? null,
+      sourceDocType: docResult?.groupTypeId ?? null,
     };
   }
 
@@ -219,9 +259,21 @@ Focus on the bill's LATEST version — if it went through committee discussions 
       ` [${Object.keys(summary).length} langs]` +
       (topics ? ` [${Object.keys(topics).length} lang topics]` : '') +
       (budgetType ? ` [budget:${budgetType}]` : '') +
+      (docResult
+        ? ` [doc:type${docResult.groupTypeId}→stage${docResult.stage}]`
+        : '') +
       (searchResults.length ? ` (${searchResults.length} web sources)` : '') +
       ` [${tokensUsed} tokens]`,
   );
 
-  return { billId: bill.id, summary, topics, tokensUsed, budgetType };
+  return {
+    billId: bill.id,
+    summary,
+    topics,
+    tokensUsed,
+    budgetType,
+    stage: docResult?.stage ?? null,
+    sourceDocId: docResult?.documentId ?? null,
+    sourceDocType: docResult?.groupTypeId ?? null,
+  };
 }

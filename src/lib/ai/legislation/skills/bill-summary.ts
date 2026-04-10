@@ -15,16 +15,30 @@ IMPORTANT CONTEXT:
   - The final version passed in 3rd reading may differ significantly from the initial proposal
 - Your summary must describe the bill's CURRENT/LATEST state, not just the initial proposal.
 
+DOCUMENT CONTEXT PRIORITY:
+- If an OFFICIAL BILL DOCUMENT is provided, it is your PRIMARY source of truth.
+- דברי הסבר (explanatory notes) describe the bill's PURPOSE and IMPACT — use
+  these to write the summary and derive meaningful topic tags.
+- Web search results are supplementary — use them to verify currency and add
+  context about public debate or implementation status.
+- If the document text is available, your tags MUST reflect the specific
+  provisions described in the document, not just the broad topic.
+
 INSTRUCTIONS:
-1. Use the WEB SEARCH RESULTS provided in the prompt to ground your summary in factual information.
-   - If no search results are provided, base the summary on the bill name, type, and status.
+1. If an official bill document is provided in the prompt, use it as the PRIMARY source.
+   Use web search results as SUPPLEMENTARY context only.
+   If no document is provided, use web search results as the primary source.
+   If neither is available, base the summary on the bill name, type, and status.
 2. Summarize what the bill DOES (its effect if enacted), not just its topic.
 3. If the bill has progressed past initial proposal, describe the version from the latest stage.
 4. Write the summary in 2-5 sentences per language.
 5. Be factual and neutral — no opinions or analysis.
-6. Classify the bill with 2-5 topic tags. Each tag should be a short phrase (2-4 words) describing a specific policy area or theme. Examples in Hebrew: "זכויות עובדים", "רפורמה במערכת הבריאות", "הגנת הצרכן", "חינוך מיוחד", "מיסוי מקרקעין", "ביטחון לאומי".
-   - Tags should be specific enough to be useful for filtering and comparing across bills, but not so long they become a sentence.
-   - Avoid single-word tags and avoid tags longer than 5 words.
+6. Classify the bill with 3-5 topic tags. Tags must describe the SPECIFIC POLICY CHANGE or mechanism, not just the broad domain.
+   - BAD (too generic): "רפורמה במערכת הבריאות", "רגולציה באנרגיה", "משק החשמל", "ניהול תקציב חינוך"
+   - GOOD (specific & substantive): "הפחתת בירוקרטיה ברישוי", "פתיחת שוק החשמל לתחרות", "העלאת מס רכישה על דירה שלישית", "זכויות הורים לילדים עם מוגבלות", "חובת גילוי לובינג בכנסת"
+   - Each tag should be a concise phrase (2-6 words) that tells a voter WHAT CHANGES and WHO IS AFFECTED.
+   - A useful test: if someone reads only the tags, they should understand the bill's practical impact.
+   - Avoid single-word tags. Avoid tags that are just a sector name ("חינוך", "בריאות", "אנרגיה") — those are categories, not insights.
 7. Provide the summary AND topics in all 4 languages: Hebrew (he), English (en), Arabic (ar), Russian (ru).
 8. If you cannot produce an accurate summary even with the search results, respond with exactly: NO_SUMMARY
 

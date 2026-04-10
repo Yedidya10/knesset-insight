@@ -1,6 +1,6 @@
-import { sql, eq, and, isNull, inArray, or, like } from 'drizzle-orm';
+import { sql, eq, and, isNull, inArray, or, like, max } from 'drizzle-orm';
 import { db } from '../../lib/db';
-import { bills } from '../../lib/db/schema';
+import { bills, billStageSummaries } from '../../lib/db/schema';
 import { generateBillSummary } from '../../lib/ai/legislation/summary-generator';
 import { detectBudgetBillType } from '../../lib/ai/legislation/budget-bill-utils';
 import { appConfig } from '../../../app.config';
@@ -145,15 +145,61 @@ export async function generateBillSummaries(): Promise<void> {
             ...(result.budgetType && { budgetBillType: result.budgetType }),
           };
 
-          await db
-            .update(bills)
-            .set({
-              aiSummary: result.summary,
-              aiTopics: result.topics ?? {},
-              metadata: updatedMetadata,
-              updatedAt: new Date(),
-            })
-            .where(eq(bills.id, bill.id));
+          // Write per-stage summary if a stage was determined
+          if (result.stage !== null) {
+            await db
+              .insert(billStageSummaries)
+              .values({
+                billId: bill.id,
+                stage: result.stage,
+                summary: result.summary,
+                topics: result.topics ?? undefined,
+                sourceDocType: result.sourceDocType,
+                sourceDocId: result.sourceDocId,
+              })
+              .onConflictDoUpdate({
+                target: [billStageSummaries.billId, billStageSummaries.stage],
+                set: {
+                  summary: sql`excluded.summary`,
+                  topics: sql`excluded.topics`,
+                  sourceDocType: sql`excluded.source_doc_type`,
+                  sourceDocId: sql`excluded.source_doc_id`,
+                  generatedAt: new Date(),
+                },
+              });
+          }
+
+          // Only update bills.aiSummary if this is the highest stage
+          let shouldUpdateBill = true;
+          if (result.stage !== null) {
+            const [maxRow] = await db
+              .select({ maxStage: max(billStageSummaries.stage) })
+              .from(billStageSummaries)
+              .where(eq(billStageSummaries.billId, bill.id));
+            const maxExistingStage = maxRow?.maxStage ?? -1;
+            shouldUpdateBill = result.stage >= maxExistingStage;
+          }
+
+          if (shouldUpdateBill) {
+            await db
+              .update(bills)
+              .set({
+                aiSummary: result.summary,
+                aiTopics: result.topics ?? {},
+                metadata: updatedMetadata,
+                updatedAt: new Date(),
+              })
+              .where(eq(bills.id, bill.id));
+          } else {
+            // Still update metadata timestamp even if not the highest stage
+            await db
+              .update(bills)
+              .set({
+                metadata: updatedMetadata,
+                updatedAt: new Date(),
+              })
+              .where(eq(bills.id, bill.id));
+          }
 
           generated++;
         }
