@@ -1,5 +1,3 @@
-import { generateText } from 'ai';
-import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { eq, and, inArray, sql } from 'drizzle-orm';
 import { appConfig } from '../../../../app.config';
 import { db } from '../../db';
@@ -91,7 +89,7 @@ export async function readDocument(doc: BillDocument): Promise<string | null> {
 
   try {
     if (ext === 'pdf') {
-      return await readPdfWithGemini(doc.filePath);
+      return await readPdfWithPdfParse(doc.filePath);
     } else if (ext === 'doc' || ext === 'docx') {
       return await readDocWithOfficeparser(doc.filePath);
     } else {
@@ -110,18 +108,10 @@ export async function readDocument(doc: BillDocument): Promise<string | null> {
 }
 
 /**
- * Read a PDF document using Gemini Flash for text extraction.
- * Sends the PDF URL directly — Gemini supports URL-based document input.
+ * Read a PDF document using unpdf for local text extraction (no AI needed).
  */
-async function readPdfWithGemini(url: string): Promise<string | null> {
-  const { pdfModel, maxPages } = appConfig.billSummary.documentReader;
-
-  const google = createGoogleGenerativeAI({
-    apiKey:
-      process.env.GOOGLE_GENERATIVE_AI_API_KEY ?? process.env.GEMINI_API_KEY,
-  });
-
-  // Download PDF as buffer (Gemini needs inline data for PDFs)
+async function readPdfWithPdfParse(url: string): Promise<string | null> {
+  // Download PDF
   const response = await fetch(url, {
     signal: AbortSignal.timeout(30_000),
   });
@@ -129,31 +119,10 @@ async function readPdfWithGemini(url: string): Promise<string | null> {
     console.warn(`[doc-reader] PDF fetch failed: ${response.status} ${url}`);
     return null;
   }
-  const pdfBuffer = await response.arrayBuffer();
-  const pdfBase64 = Buffer.from(pdfBuffer).toString('base64');
+  const pdfBuffer = new Uint8Array(await response.arrayBuffer());
 
-  const { text } = await generateText({
-    model: google(pdfModel),
-    messages: [
-      {
-        role: 'user',
-        content: [
-          {
-            type: 'file',
-            data: pdfBase64,
-            mimeType: 'application/pdf',
-          },
-          {
-            type: 'text',
-            text: `Extract the full text content from this PDF document (up to ${maxPages} pages). 
-Preserve the structure: headings, paragraphs, and especially the "דברי הסבר" (explanatory notes) section if present.
-Return ONLY the extracted text, no commentary.`,
-          },
-        ],
-      },
-    ],
-    maxOutputTokens: 8192,
-  });
+  const { extractText } = await import('unpdf');
+  const { text } = await extractText(pdfBuffer, { mergePages: true });
 
   return text?.trim() || null;
 }
@@ -162,7 +131,9 @@ Return ONLY the extracted text, no commentary.`,
  * Read a DOC/DOCX file using officeparser (local text extraction, no AI).
  */
 async function readDocWithOfficeparser(url: string): Promise<string | null> {
-  const { parseOfficeAsync } = await import('officeparser');
+  const officeparser = await import('officeparser');
+  const parseOffice =
+    officeparser.parseOffice ?? officeparser.default?.parseOffice;
 
   const response = await fetch(url, {
     signal: AbortSignal.timeout(30_000),
@@ -173,8 +144,19 @@ async function readDocWithOfficeparser(url: string): Promise<string | null> {
   }
   const buffer = Buffer.from(await response.arrayBuffer());
 
-  const text = await parseOfficeAsync(buffer);
-  return text?.trim() || null;
+  const result = await parseOffice(buffer);
+  let text: string;
+  if (typeof result === 'string') {
+    text = result;
+  } else if (result && typeof result === 'object') {
+    text =
+      typeof result.toText === 'function'
+        ? result.toText()
+        : (result.content ?? String(result));
+  } else {
+    text = String(result ?? '');
+  }
+  return text.trim() || null;
 }
 
 // ── Extract explanatory notes ───────────────────────────────────

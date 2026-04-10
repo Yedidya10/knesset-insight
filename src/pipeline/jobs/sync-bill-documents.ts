@@ -7,12 +7,15 @@ import { runSyncJob, getLastSyncTime, type SyncCheckpoint } from '../utils';
 const BATCH_SIZE = 200;
 
 /**
- * Normalize FilePath from OData (backslash → forward slash) and
- * prepend the Knesset file server base URL.
+ * Normalize FilePath from OData (backslash → forward slash).
+ * OData v4 returns full URLs like "https://fs.knesset.gov.il/25/law/..."
+ * or relative paths like "\25\law\...". Handle both.
  */
 function normalizeFilePath(raw: string): string {
-  // OData returns paths like "\25\law\25_ls2_12079291.pdf"
   const cleaned = raw.replace(/\\/g, '/').replace(/^\//, '');
+  if (cleaned.startsWith('http://') || cleaned.startsWith('https://')) {
+    return cleaned;
+  }
   return `https://fs.knesset.gov.il/${cleaned}`;
 }
 
