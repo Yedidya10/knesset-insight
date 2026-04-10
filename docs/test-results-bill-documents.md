@@ -151,7 +151,25 @@ Each test: syncs target documents → reads document → generates 4-language su
 - **Tokens**: 3,356 | **Time**: 6.2s
 - **Result**: **NO_SUMMARY** — The background document was a research paper about the Special Court for Sierra Leone, not directly about the Israeli bill. The AI correctly identified the document as insufficient for generating a bill summary.
 
-> **Note**: Background material (type 59) often contains academic papers, comparative law research, or general reference material. The AI's refusal to generate a summary from irrelevant context is correct behavior. In production, the pipeline would fall back to web search when document context is insufficient.
+> **Note**: This bill actually has official documents (types 1, 2 — visible on its Knesset page). In the test we forced type 59 in isolation; in production the pipeline would never reach type 59 for this bill because official docs have higher priority. See "Background Document Handling" below.
+
+#### Post-Test Fix: Background Document Safeguards
+
+Two safeguards were added to `document-reader.ts` after this test:
+
+1. **Skip when official docs exist** — If a bill has any official document types (1, 2, 3, 4, 17, 60), background/research types (59, 12) are skipped entirely. No download, no text extraction, no tokens wasted.
+
+2. **Keyword relevance check** — When a background doc _is_ the only option, the pipeline extracts key Hebrew words from the bill name and checks if ≥2 appear in the document text. The Sierra Leone paper would fail this check (no Hebrew bill keywords found) and be skipped _before_ reaching the AI, saving ~3,356 tokens.
+
+```
+readBillDocumentContext(billId, billName)
+  ├── Has official docs (types 1,2,3,4,17,60)?
+  │   └── YES → skip types 59, 12 entirely
+  │   └── NO  → try type 59/12 but check relevance first:
+  │       ├── isDocumentRelevant(billName, docText) → true → use it
+  │       └── isDocumentRelevant(billName, docText) → false → skip, log warning
+  └── Fall through to web search only
+```
 
 ---
 
@@ -172,7 +190,7 @@ Each test: syncs target documents → reads document → generates 4-language su
 1. **PDF extraction is free** — Switched from Gemini Flash ($0.01/1K tokens) to unpdf (local, free). Significant cost savings at scale (15K+ documents).
 2. **Document context improves summary quality** — When the document directly relates to the bill, the summary is more specific and accurate than web-search-only summaries.
 3. **Token usage varies significantly** — First Reading used 15K tokens (5 web sources + doc context) vs Preliminary at 3.6K tokens (doc only). Depends on web search results.
-4. **Background documents can be irrelevant** — Type 59 (חומר רקע) may contain tangentially related material. The AI correctly rejects irrelevant context.
+4. **Background documents are pre-filtered** — Type 59/12 (חומר רקע, מחקר) are skipped when official docs exist, and undergo a keyword relevance check otherwise. Saves ~3K+ tokens per irrelevant document.
 5. **Stage detection works correctly** — Each document type maps to the correct BillStage value.
 
 ---
@@ -198,6 +216,7 @@ The per-stage UPSERT logic works: each bill can have multiple stage summaries, a
 2. **Gemini API key missing** — No `GOOGLE_GENERATIVE_AI_API_KEY` in `.env.local`. Switched PDF extraction from Gemini Flash to local `unpdf` library (free, no API key needed).
 3. **officeparser v6 API change** — `parseOfficeAsync` replaced with `parseOffice`, returns object with `.toText()` method instead of plain string.
 4. **AI SDK v6 schema** — `mimeType` renamed to `mediaType` for file parts (noted for future Gemini integration).
+5. **Background doc token waste** — Type 59/12 docs sent to AI even when irrelevant. Added two-layer filter: skip when official docs exist + keyword relevance check.
 
 ---
 
@@ -208,6 +227,9 @@ OData v4 API (KNS_DocumentBill)
     ↓ sync-bill-documents.ts (full/incremental)
 bill_documents table (15K+ docs with type, file_path)
     ↓ document-reader.ts
+    ├── Priority sort: 4 → 2 → 1 → 3 → 60 → 59 → 12 → 17
+    ├── Types 59/12 skipped if official types exist
+    ├── Types 59/12 keyword relevance check (if only option)
     ├── PDF → unpdf (local text extraction)
     └── DOC/DOCX → officeparser (local text extraction)
     ↓ extractExplanatoryNotes() → maxDocumentChars: 8000

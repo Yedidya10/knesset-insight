@@ -192,23 +192,101 @@ export function extractExplanatoryNotes(
   return fullText.slice(0, limit);
 }
 
+// ── Background document relevance check ─────────────────────────
+
+/** Document types that are official bill texts (not background/research) */
+const OFFICIAL_DOC_TYPES = new Set([1, 2, 3, 4, 17, 60]);
+
+/** Document types that are background/research material */
+const BACKGROUND_DOC_TYPES = new Set([59, 12]);
+
+/**
+ * Quick keyword-based relevance check for background/research documents.
+ * Extracts key terms from the bill name and checks whether they appear in the
+ * document text. Returns false when the document is clearly unrelated to the
+ * bill (e.g. a comparative-law paper about Sierra Leone attached to an Israeli
+ * criminal-law bill), so we can skip sending it to the AI and save tokens.
+ */
+export function isDocumentRelevant(
+  billName: string,
+  documentText: string,
+  minMatches = 2,
+): boolean {
+  // Extract meaningful Hebrew words (≥3 chars) from the bill name,
+  // excluding common legal boilerplate
+  const boilerplate = new Set([
+    'הצעת',
+    'חוק',
+    'תיקון',
+    'הוראת',
+    'שעה',
+    'התשפ',
+    'מספר',
+  ]);
+  const words = billName
+    .replace(/[^א-תa-zA-Z\s]/g, '')
+    .split(/\s+/)
+    .filter((w) => w.length >= 3 && !boilerplate.has(w));
+
+  if (words.length === 0) return true; // can't check, allow through
+
+  const lowerDoc = documentText.toLowerCase();
+  let matches = 0;
+  for (const word of words) {
+    if (lowerDoc.includes(word.toLowerCase())) {
+      matches++;
+      if (matches >= minMatches) return true;
+    }
+  }
+
+  return false;
+}
+
 // ── Main entry point ────────────────────────────────────────────
 
 /**
  * Read the highest-priority document for a bill and extract context.
  * Returns the document text (preferring דברי הסבר), the document metadata,
  * and the legislative stage the document belongs to.
+ *
+ * Background/research docs (types 59, 12) are skipped when official bill
+ * documents exist. When they are the only option, a keyword relevance check
+ * filters out clearly unrelated material to avoid wasting AI tokens.
  */
 export async function readBillDocumentContext(
   billId: number,
+  billName?: string,
 ): Promise<DocumentReadResult | null> {
   const docs = await fetchBillDocuments(billId);
   if (docs.length === 0) return null;
 
+  const hasOfficialDocs = docs.some((d) =>
+    OFFICIAL_DOC_TYPES.has(d.groupTypeId),
+  );
+
   // Try documents in priority order until one succeeds
   for (const doc of docs) {
+    // Skip background/research docs when official bill texts exist
+    if (hasOfficialDocs && BACKGROUND_DOC_TYPES.has(doc.groupTypeId)) {
+      console.log(
+        `[doc-reader] Skipping background doc ${doc.knessetDocId} (type ${doc.groupTypeId}) — official docs available`,
+      );
+      continue;
+    }
+
     const rawText = await readDocument(doc);
     if (!rawText) continue;
+
+    // For background docs, check relevance before spending AI tokens
+    if (BACKGROUND_DOC_TYPES.has(doc.groupTypeId) && billName) {
+      if (!isDocumentRelevant(billName, rawText)) {
+        console.log(
+          `[doc-reader] Skipping irrelevant background doc ${doc.knessetDocId} ` +
+            `(type ${doc.groupTypeId}) — bill keywords not found in document`,
+        );
+        continue;
+      }
+    }
 
     const text = extractExplanatoryNotes(rawText);
     const stage = getDocumentStage(doc.groupTypeId) ?? BillStage.SUBMITTED;

@@ -97,7 +97,7 @@ export async function generateBillSummary(
   // Step 1: Try to read official document from bill_documents
   let docResult: DocumentReadResult | null = null;
   try {
-    docResult = await readBillDocumentContext(bill.id);
+    docResult = await readBillDocumentContext(bill.id, bill.name);
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     console.warn(
