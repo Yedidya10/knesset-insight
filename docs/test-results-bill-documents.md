@@ -173,17 +173,57 @@ readBillDocumentContext(billId, billName)
 
 ---
 
+### 3.6 Retest: Bill 2222852 with Official Documents ✅
+
+After adding the background-doc safeguards, we re-ran the pipeline for bill 2222852 — this time syncing **all 27 documents** for the bill (not just type 59).
+
+- **Bill**: הצעת חוק העמדה לדין של משתתפי אירועי טבח 7 באוקטובר, התשפ"ו–2026
+- **Bill ID**: 576, Knesset Bill ID: 2222852
+- **Documents synced**: 27 total — 2× type 1 (דיון מוקדם), 1× type 2 (קריאה ראשונה), 24× type 59 (חומר רקע)
+- **Document selected by pipeline**: Type 2 — `https://fs.knesset.gov.il/25/law/25_ls1_10591390.pdf` (First Reading PDF)
+- **Background docs skipped**: All 24 type-59 documents — correctly skipped because official docs (types 1, 2) exist
+- **Read Method**: unpdf (PDF) → 8,000 chars (truncated)
+- **Stage Detected**: 3 (FIRST_READING) from doc type 2
+- **Tokens**: 8,178 | **Time**: 20.5s
+- **Web Search**: Tavily returned 1 result
+
+#### Hebrew Summary
+
+> הצעת חוק זו קובעת כי משתתפי אירועי הטבח ב-7 באוקטובר יועמדו לדין בבתי משפט צבאיים במקום בבתי משפט אזרחיים. החוק מרחיב את סמכות בתי המשפט הצבאיים לדון גם בעבירות של פשע השמדת עם, פגיעה בריבונות המדינה וטרור. בית המשפט יורכב משופט בית משפט מחוזי בדימוס כיושב ראש ושני קצינים עם ניסיון משפטי, וערעור אוטומטי יוגש על כל גזר דין המטיל עונש מוות.
+
+#### English Summary
+
+> This bill mandates that participants in the October 7th massacre will be tried in military courts instead of civilian courts. The bill expands military court jurisdiction to include crimes of genocide, harming state sovereignty, and terrorism. The court will be composed of a retired district court judge as presiding judge and two officers with legal experience, with automatic appeal for any death penalty sentence.
+
+#### Topics
+
+- **Hebrew**: העברת משפטים לבתי משפט צבאיים, הרחבת סמכות שיפוט צבאי, הרכב מיוחד לבתי משפט צבאיים, ערעור אוטומטי על עונש מוות
+- **English**: Transfer of trials to military courts, Expansion of military court jurisdiction, Special composition of military courts, Automatic appeal for death penalty
+
+#### Comparison: Before vs After Fix
+
+|                     | Before (type 59 only)                   | After (full docs)                        |
+| ------------------- | --------------------------------------- | ---------------------------------------- |
+| **Doc selected**    | Type 59 (חומר רקע) — Sierra Leone paper | Type 2 (קריאה ראשונה) — actual bill text |
+| **Background docs** | Sent to AI                              | All 24 skipped                           |
+| **Tokens**          | 3,356                                   | 8,178                                    |
+| **Result**          | ❌ NO_SUMMARY                           | ✅ Accurate 4-language summary           |
+| **Cost**            | ~$0.02 wasted                           | ~$0.04 productive                        |
+
+---
+
 ## 4. Performance Comparison
 
-| Stage           | DocType  | Read Method  | Doc Size     | Tokens | AI Time (s) | Total Cost (est.) |
-| --------------- | -------- | ------------ | ------------ | ------ | ----------- | ----------------- |
-| Preliminary     | 1 (DOC)  | officeparser | 2,366 chars  | 3,615  | 18.6        | ~$0.02            |
-| First Reading   | 2 (PDF)  | unpdf        | 51,992 chars | 15,295 | 25.5        | ~$0.08            |
-| 2nd+3rd Reading | 4 (PDF)  | unpdf        | 61,627 chars | 8,454  | 30.2        | ~$0.04            |
-| Committee       | 60 (DOC) | officeparser | 3,393 chars  | 4,436  | 22.3        | ~$0.02            |
-| Background      | 59 (PDF) | unpdf        | 53,061 chars | 3,356  | 6.2         | ~$0.02            |
+| Stage              | DocType     | Read Method  | Doc Size        | Tokens    | AI Time (s) | Total Cost (est.) |
+| ------------------ | ----------- | ------------ | --------------- | --------- | ----------- | ----------------- |
+| Preliminary        | 1 (DOC)     | officeparser | 2,366 chars     | 3,615     | 18.6        | ~$0.02            |
+| First Reading      | 2 (PDF)     | unpdf        | 51,992 chars    | 15,295    | 25.5        | ~$0.08            |
+| 2nd+3rd Reading    | 4 (PDF)     | unpdf        | 61,627 chars    | 8,454     | 30.2        | ~$0.04            |
+| Committee          | 60 (DOC)    | officeparser | 3,393 chars     | 4,436     | 22.3        | ~$0.02            |
+| Background         | 59 (PDF)    | unpdf        | 53,061 chars    | 3,356     | 6.2         | ~$0.02            |
+| **Retest 2222852** | **2 (PDF)** | **unpdf**    | **8,000 chars** | **8,178** | **20.5**    | **~$0.04**        |
 
-**Total tokens across 5 tests**: 35,156 (~$0.18 estimated)
+**Total tokens across 6 tests**: 43,334 (~$0.22 estimated)
 
 ### Key Observations
 
@@ -205,6 +245,7 @@ After all tests, the `bill_stage_summaries` table contains:
 | 15      | 3     | FIRST_READING        | 2               |
 | 2       | 5     | SECOND_THIRD_READING | 4               |
 | 2140470 | 4     | COMMITTEE_SECOND     | 60              |
+| 576     | 3     | FIRST_READING        | 2               |
 
 The per-stage UPSERT logic works: each bill can have multiple stage summaries, and `bills.aiSummary` is only updated when a higher stage is processed.
 
