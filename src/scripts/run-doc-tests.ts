@@ -10,6 +10,10 @@ const args = process.argv.slice(2);
 const stageFilter =
   args.find((a) => a.startsWith('--stage='))?.split('=')[1] ??
   (args.includes('--stage') ? args[args.indexOf('--stage') + 1] : null);
+const billFilter =
+  args.find((a) => a.startsWith('--bill='))?.split('=')[1] ??
+  (args.includes('--bill') ? args[args.indexOf('--bill') + 1] : null);
+const targetKnessetBillId = billFilter ? Number(billFilter) : null;
 const readOnly = args.includes('--read-only');
 
 interface TestResult {
@@ -355,6 +359,13 @@ async function main() {
     console.log('═'.repeat(60));
 
     // Find a bill with this doc type
+    const docConditions = [
+      eq(billDocuments.groupTypeId, test.docType),
+      isNotNull(billDocuments.billId),
+    ];
+    if (targetKnessetBillId) {
+      docConditions.push(eq(billDocuments.knessetBillId, targetKnessetBillId));
+    }
     const docsOfType = await db
       .select({
         docId: billDocuments.id,
@@ -365,12 +376,7 @@ async function main() {
         applicationDesc: billDocuments.applicationDesc,
       })
       .from(billDocuments)
-      .where(
-        and(
-          eq(billDocuments.groupTypeId, test.docType),
-          isNotNull(billDocuments.billId),
-        ),
-      )
+      .where(and(...docConditions))
       .limit(3);
 
     if (docsOfType.length === 0) {
