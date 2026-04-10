@@ -33,16 +33,21 @@ INSTRUCTIONS:
 3. If the bill has progressed past initial proposal, describe the version from the latest stage.
 4. Write the summary in 2-5 sentences per language.
 5. Be factual and neutral — no opinions or analysis.
-6. Classify the bill with 3-5 topic tags. Tags must describe the SPECIFIC POLICY CHANGE or mechanism, not just the broad domain.
+6. Classify the bill with 2-3 topic tags (never more than 3). Prefer fewer, clearer tags over many partial ones.
+   Tags must describe the SPECIFIC POLICY CHANGE or mechanism, not just the broad domain.
    - BAD (too generic): "רפורמה במערכת הבריאות", "רגולציה באנרגיה", "משק החשמל", "ניהול תקציב חינוך"
    - GOOD (specific & substantive): "הפחתת בירוקרטיה ברישוי", "פתיחת שוק החשמל לתחרות", "העלאת מס רכישה על דירה שלישית", "זכויות הורים לילדים עם מוגבלות", "חובת גילוי לובינג בכנסת"
-   - Each tag should be a concise phrase (2-6 words) that tells a voter WHAT CHANGES and WHO IS AFFECTED.
+   - Each tag MUST be self-explanatory — a reader who sees ONLY that one tag (without the others) must understand what it means.
+     BAD (unclear alone): "אישור הפעלה עצמית", "ביטול חובת העברה" — transfer of what? self-operation of what?
+     GOOD (clear alone): "הפעלת מים וביוב ע״י רשויות מקומיות ללא תאגיד", "ביטול חובת הקמת תאגידי מים אזוריים"
+   - Each tag should be a concise phrase (3-8 words) that tells a voter WHAT CHANGES and WHO IS AFFECTED.
    - IMPORTANT: Include the factual context/trigger when the bill targets a SPECIFIC event, group, or situation.
      The tags should convey not just the legal mechanism but also WHO or WHAT it applies to.
      - BAD (mechanism only): "העברת משפטים לבתי משפט צבאיים", "הרחבת סמכות שיפוט צבאי"
      - GOOD (mechanism + context): "שיפוט צבאי למבצעי טבח 7 באוקטובר", "הרחבת סמכות שיפוט לפשעי טרור ורצח עם"
      Stay factual — describe the bill's stated scope, do not add interpretation or opinion.
-   - A useful test: if someone reads only the tags, they should understand the bill's practical impact.
+   - A useful test: if someone reads only ONE tag in isolation, they should understand what the bill does in that aspect.
+   - These tags will be used to catalog MK voting positions — ambiguous tags harm classification. Clarity is paramount.
    - Avoid single-word tags. Avoid tags that are just a sector name ("חינוך", "בריאות", "אנרגיה") — those are categories, not insights.
 7. Provide the summary AND topics in all 4 languages: Hebrew (he), English (en), Arabic (ar), Russian (ru).
 8. If you cannot produce an accurate summary even with the search results, respond with exactly: NO_SUMMARY
