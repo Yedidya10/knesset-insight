@@ -1,5 +1,11 @@
 import { getTranslations } from 'next-intl/server';
-import { Gavel, GitMerge, GitBranch, Pause, ArrowLeftRight } from 'lucide-react';
+import {
+  Gavel,
+  GitMerge,
+  GitBranch,
+  Pause,
+  ArrowLeftRight,
+} from 'lucide-react';
 import { desc, asc, eq, sql, ilike, and, or, exists } from 'drizzle-orm';
 import { Link } from '@/i18n/navigation';
 import { db } from '@/lib/db';
@@ -37,6 +43,8 @@ interface Props {
 }
 
 const PAGE_SIZE = 50;
+
+export const dynamic = 'force-dynamic';
 
 export default async function LegislationPage({ searchParams }: Props) {
   const t = await getTranslations('legislation');
@@ -322,77 +330,89 @@ export default async function LegislationPage({ searchParams }: Props) {
                 bill.billType,
               );
               return (
-              <div key={bill.id} className="group relative">
-                <Link href={`/legislation/${bill.id}`}>
-                  <Card className="glass-card hover-lift border-s-primary/30 overflow-hidden border-s-4">
-                    <CardContent className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="min-w-0 flex-1">
-                        <h3 className="leading-tight font-semibold">
-                          <TranslatedText text={bill.name} />
-                        </h3>
-                        <div className="text-muted-foreground mt-1.5 flex flex-wrap items-center gap-2 text-sm">
-                          {bill.proposedDate && (
-                            <span>
-                              {new Date(bill.proposedDate).toLocaleDateString(
-                                'he-IL',
-                              )}
-                            </span>
+                <div key={bill.id} className="group relative">
+                  <Link href={`/legislation/${bill.id}`}>
+                    <Card className="glass-card hover-lift border-s-primary/30 overflow-hidden border-s-4">
+                      <CardContent className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="leading-tight font-semibold">
+                            <TranslatedText text={bill.name} />
+                          </h3>
+                          <div className="text-muted-foreground mt-1.5 flex flex-wrap items-center gap-2 text-sm">
+                            {bill.proposedDate && (
+                              <span>
+                                {new Date(bill.proposedDate).toLocaleDateString(
+                                  'he-IL',
+                                )}
+                              </span>
+                            )}
+                            {bill.knessetNum && (
+                              <span>
+                                • {t('knesset')} {bill.knessetNum}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {specialStatus === 'merged' && (
+                            <Badge
+                              variant="outline"
+                              className="gap-1 border-violet-300 text-violet-700 dark:border-violet-700 dark:text-violet-300"
+                            >
+                              <GitMerge className="h-3 w-3" />
+                              {t('special.merged')}
+                            </Badge>
                           )}
-                          {bill.knessetNum && (
-                            <span>
-                              • {t('knesset')} {bill.knessetNum}
-                            </span>
+                          {specialStatus === 'split' && (
+                            <Badge
+                              variant="outline"
+                              className="gap-1 border-sky-300 text-sky-700 dark:border-sky-700 dark:text-sky-300"
+                            >
+                              <GitBranch className="h-3 w-3" />
+                              {t('special.split')}
+                            </Badge>
+                          )}
+                          {specialStatus === 'stopped' && (
+                            <Badge
+                              variant="outline"
+                              className="gap-1 border-amber-300 text-amber-700 dark:border-amber-700 dark:text-amber-300"
+                            >
+                              <Pause className="h-3 w-3" />
+                              {t('special.stopped')}
+                            </Badge>
+                          )}
+                          {specialStatus === 'converted' && (
+                            <Badge
+                              variant="outline"
+                              className="gap-1 border-teal-300 text-teal-700 dark:border-teal-700 dark:text-teal-300"
+                            >
+                              <ArrowLeftRight className="h-3 w-3" />
+                              {t('special.converted')}
+                            </Badge>
+                          )}
+                          {bill.billType && (
+                            <Badge variant="outline">
+                              <TranslatedText text={bill.billType} />
+                            </Badge>
+                          )}
+                          {bill.status && (
+                            <Badge variant="secondary">
+                              <TranslatedText
+                                text={getBillStatusText(bill.status)}
+                              />
+                            </Badge>
                           )}
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {specialStatus === 'merged' && (
-                          <Badge variant="outline" className="gap-1 border-violet-300 text-violet-700 dark:border-violet-700 dark:text-violet-300">
-                            <GitMerge className="h-3 w-3" />
-                            {t('special.merged')}
-                          </Badge>
-                        )}
-                        {specialStatus === 'split' && (
-                          <Badge variant="outline" className="gap-1 border-sky-300 text-sky-700 dark:border-sky-700 dark:text-sky-300">
-                            <GitBranch className="h-3 w-3" />
-                            {t('special.split')}
-                          </Badge>
-                        )}
-                        {specialStatus === 'stopped' && (
-                          <Badge variant="outline" className="gap-1 border-amber-300 text-amber-700 dark:border-amber-700 dark:text-amber-300">
-                            <Pause className="h-3 w-3" />
-                            {t('special.stopped')}
-                          </Badge>
-                        )}
-                        {specialStatus === 'converted' && (
-                          <Badge variant="outline" className="gap-1 border-teal-300 text-teal-700 dark:border-teal-700 dark:text-teal-300">
-                            <ArrowLeftRight className="h-3 w-3" />
-                            {t('special.converted')}
-                          </Badge>
-                        )}
-                        {bill.billType && (
-                          <Badge variant="outline">
-                            <TranslatedText text={bill.billType} />
-                          </Badge>
-                        )}
-                        {bill.status && (
-                          <Badge variant="secondary">
-                            <TranslatedText
-                              text={getBillStatusText(bill.status)}
-                            />
-                          </Badge>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-                <div className="absolute top-2 inset-e-2 z-10">
-                  <EntityActivityPopover
-                    entityType="bill"
-                    entityId={String(bill.id)}
-                  />
+                      </CardContent>
+                    </Card>
+                  </Link>
+                  <div className="absolute inset-e-2 top-2 z-10">
+                    <EntityActivityPopover
+                      entityType="bill"
+                      entityId={String(bill.id)}
+                    />
+                  </div>
                 </div>
-              </div>
               );
             })}
           </div>

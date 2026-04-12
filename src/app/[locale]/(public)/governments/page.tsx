@@ -11,6 +11,8 @@ interface Props {
   searchParams: Promise<{ knesset?: string }>;
 }
 
+export const dynamic = 'force-dynamic';
+
 export default async function GovernmentsPage({ searchParams }: Props) {
   const t = await getTranslations('governments');
   const params = await searchParams;
@@ -59,8 +61,8 @@ export default async function GovernmentsPage({ searchParams }: Props) {
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       {/* Header */}
       <div className="mb-8 flex items-center gap-3">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
-          <Landmark className="h-7 w-7 text-primary" />
+        <div className="bg-primary/10 ring-primary/20 flex h-14 w-14 items-center justify-center rounded-2xl ring-1">
+          <Landmark className="text-primary h-7 w-7" />
         </div>
         <div>
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
@@ -95,9 +97,7 @@ export default async function GovernmentsPage({ searchParams }: Props) {
 
       {/* Government cards */}
       {rows.length === 0 ? (
-        <p className="text-center text-muted-foreground py-12">
-          {t('noData')}
-        </p>
+        <p className="text-muted-foreground py-12 text-center">{t('noData')}</p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {rows.map((gov) => (

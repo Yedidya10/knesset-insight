@@ -13,6 +13,8 @@ interface Props {
   searchParams: Promise<{ knesset?: string }>;
 }
 
+export const dynamic = 'force-dynamic';
+
 export default async function ElectionsPage({ searchParams }: Props) {
   const t = await getTranslations('elections');
   const t2026 = await getTranslations('elections2026');
@@ -26,7 +28,9 @@ export default async function ElectionsPage({ searchParams }: Props) {
     .orderBy(desc(electoralLists.knessetNum));
   const availableKnessets = knessetNums.map((k) => k.knessetNum);
 
-  const activeKnesset = knessetFilter ?? (availableKnessets[0] || appConfig.knesset.syncKnessets[0]);
+  const activeKnesset =
+    knessetFilter ??
+    (availableKnessets[0] || appConfig.knesset.syncKnessets[0]);
 
   // Fetch electoral lists for the selected knesset
   const data = await db
@@ -49,30 +53,34 @@ export default async function ElectionsPage({ searchParams }: Props) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       <div className="mb-8 flex items-center gap-3">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
-          <Vote className="h-7 w-7 text-primary" />
+        <div className="bg-primary/10 ring-primary/20 flex h-14 w-14 items-center justify-center rounded-2xl ring-1">
+          <Vote className="text-primary h-7 w-7" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{t('title')}</h1>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+            {t('title')}
+          </h1>
         </div>
       </div>
 
       {/* Elections 2026 banner */}
       <Link href="/elections/2026">
-        <Card className="mb-6 overflow-hidden border-primary/30 bg-gradient-to-r from-primary/5 to-primary/10 transition-colors hover:border-primary/50">
+        <Card className="border-primary/30 from-primary/5 to-primary/10 hover:border-primary/50 mb-6 overflow-hidden bg-gradient-to-r transition-colors">
           <CardContent className="flex items-center justify-between p-4">
             <div>
               <h2 className="text-lg font-bold">{t2026('bannerTitle')}</h2>
-              <p className="text-sm text-muted-foreground">{t2026('bannerDescription')}</p>
+              <p className="text-muted-foreground text-sm">
+                {t2026('bannerDescription')}
+              </p>
             </div>
-            <ArrowRight className="h-5 w-5 shrink-0 text-primary rtl:rotate-180" />
+            <ArrowRight className="text-primary h-5 w-5 shrink-0 rtl:rotate-180" />
           </CardContent>
         </Card>
       </Link>
 
       {/* Knesset tabs */}
       {availableKnessets.length > 0 && (
-        <div className="mb-6 flex flex-wrap gap-1.5 rounded-xl bg-muted/60 p-1.5 backdrop-blur-sm">
+        <div className="bg-muted/60 mb-6 flex flex-wrap gap-1.5 rounded-xl p-1.5 backdrop-blur-sm">
           {availableKnessets.map((num) => (
             <Link
               key={num}
@@ -92,7 +100,7 @@ export default async function ElectionsPage({ searchParams }: Props) {
       {data.length > 0 ? (
         <div className="space-y-3">
           {/* Header row */}
-          <div className="hidden items-center gap-4 px-4 text-xs font-medium text-muted-foreground sm:flex">
+          <div className="text-muted-foreground hidden items-center gap-4 px-4 text-xs font-medium sm:flex">
             <span className="w-16">{t('ballotLetters')}</span>
             <span className="flex-1">{t('listName')}</span>
             <span className="w-24 text-end">{t('totalVotes')}</span>
@@ -106,21 +114,26 @@ export default async function ElectionsPage({ searchParams }: Props) {
                 className={`glass-card hover-lift overflow-hidden transition-colors ${
                   list.isElected
                     ? 'border-s-4 border-s-green-500/50'
-                    : 'border-s-4 border-s-muted/30'
+                    : 'border-s-muted/30 border-s-4'
                 }`}
               >
                 <CardContent className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:gap-4">
-                  <span className="w-16 text-center font-mono text-lg font-bold text-primary">
+                  <span className="text-primary w-16 text-center font-mono text-lg font-bold">
                     {list.ballotLetters}
                   </span>
                   <div className="flex-1">
                     <span className="font-medium">{list.name}</span>
                     <div className="mt-1 sm:hidden">
-                      <div className="flex gap-2 text-xs text-muted-foreground">
+                      <div className="text-muted-foreground flex gap-2 text-xs">
                         {list.totalVotes && (
-                          <span>{list.totalVotes.toLocaleString()} {t('totalVotes').toLowerCase()}</span>
+                          <span>
+                            {list.totalVotes.toLocaleString()}{' '}
+                            {t('totalVotes').toLowerCase()}
+                          </span>
                         )}
-                        {list.votePercentage && <span>{list.votePercentage}%</span>}
+                        {list.votePercentage && (
+                          <span>{list.votePercentage}%</span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -140,9 +153,13 @@ export default async function ElectionsPage({ searchParams }: Props) {
                     </span>
                   </div>
                   {list.isElected ? (
-                    <Badge variant="default" className="w-auto shrink-0">{t('elected')}</Badge>
+                    <Badge variant="default" className="w-auto shrink-0">
+                      {t('elected')}
+                    </Badge>
                   ) : (
-                    <Badge variant="outline" className="w-auto shrink-0">{t('notElected')}</Badge>
+                    <Badge variant="outline" className="w-auto shrink-0">
+                      {t('notElected')}
+                    </Badge>
                   )}
                 </CardContent>
               </Card>
@@ -150,7 +167,9 @@ export default async function ElectionsPage({ searchParams }: Props) {
           ))}
         </div>
       ) : (
-        <p className="py-12 text-center text-muted-foreground">{t('noResults')}</p>
+        <p className="text-muted-foreground py-12 text-center">
+          {t('noResults')}
+        </p>
       )}
     </div>
   );

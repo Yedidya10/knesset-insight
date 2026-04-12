@@ -36,6 +36,8 @@ type Props = {
   params: Promise<{ locale: string }>;
 };
 
+export const dynamic = 'force-dynamic';
+
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
@@ -49,14 +51,26 @@ export default async function LocaleLayout({ children, params }: Props) {
 
   setRequestLocale(locale);
 
-  const isRTL = (appConfig.i18n.rtlLocales as readonly string[]).includes(locale);
+  const isRTL = (appConfig.i18n.rtlLocales as readonly string[]).includes(
+    locale,
+  );
 
   const messages = await getMessages();
 
   return (
-    <html lang={locale} dir={isRTL ? 'rtl' : 'ltr'} className={`${rubik.variable} ${jetbrainsMono.variable} ${locale === 'ar' ? notoArabic.variable : ''}`} suppressHydrationWarning>
+    <html
+      lang={locale}
+      dir={isRTL ? 'rtl' : 'ltr'}
+      className={`${rubik.variable} ${jetbrainsMono.variable} ${locale === 'ar' ? notoArabic.variable : ''}`}
+      suppressHydrationWarning
+    >
       <body className="antialiased">
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
           <NextIntlClientProvider locale={locale} messages={messages}>
             <AdminEditProvider>
               <div className="flex min-h-screen flex-col">

@@ -10,6 +10,8 @@ interface Props {
   searchParams: Promise<{ status?: string; position?: string }>;
 }
 
+export const dynamic = 'force-dynamic';
+
 export default async function PartiesPage({ searchParams }: Props) {
   const t = await getTranslations('elections2026');
   const params = await searchParams;
@@ -41,8 +43,14 @@ export default async function PartiesPage({ searchParams }: Props) {
 
   // Client-side filter (simple: apply server-side)
   const filtered = lists.filter((l) => {
-    if (params.status && params.status !== 'all' && l.status !== params.status) return false;
-    if (params.position && params.position !== 'all' && l.politicalPosition !== params.position) return false;
+    if (params.status && params.status !== 'all' && l.status !== params.status)
+      return false;
+    if (
+      params.position &&
+      params.position !== 'all' &&
+      l.politicalPosition !== params.position
+    )
+      return false;
     return true;
   });
 
@@ -65,12 +73,21 @@ export default async function PartiesPage({ searchParams }: Props) {
   };
 
   const statusFilters = ['all', 'potential', 'confirmed', 'withdrawn'];
-  const positionFilters = ['all', 'left', 'center_left', 'center', 'center_right', 'right', 'arab', 'haredi'];
+  const positionFilters = [
+    'all',
+    'left',
+    'center_left',
+    'center',
+    'center_right',
+    'right',
+    'arab',
+    'haredi',
+  ];
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       {/* Header */}
-      <nav className="mb-4 text-sm text-muted-foreground">
+      <nav className="text-muted-foreground mb-4 text-sm">
         <Link href="/elections" className="hover:text-foreground">
           {t('backToElections')}
         </Link>
@@ -82,12 +99,14 @@ export default async function PartiesPage({ searchParams }: Props) {
         <span className="text-foreground">{t('parties.title')}</span>
       </nav>
 
-      <h1 className="mb-2 text-2xl font-bold tracking-tight">{t('parties.title')}</h1>
-      <p className="mb-6 text-muted-foreground">{t('parties.description')}</p>
+      <h1 className="mb-2 text-2xl font-bold tracking-tight">
+        {t('parties.title')}
+      </h1>
+      <p className="text-muted-foreground mb-6">{t('parties.description')}</p>
 
       {/* Filters */}
       <div className="mb-6 flex flex-wrap gap-4">
-        <div className="flex flex-wrap gap-1.5 rounded-xl bg-muted/60 p-1.5">
+        <div className="bg-muted/60 flex flex-wrap gap-1.5 rounded-xl p-1.5">
           {statusFilters.map((s) => (
             <Link
               key={s}
@@ -98,11 +117,13 @@ export default async function PartiesPage({ searchParams }: Props) {
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              {s === 'all' ? t('parties.viewAll') : statusLabels[s as keyof typeof statusLabels]}
+              {s === 'all'
+                ? t('parties.viewAll')
+                : statusLabels[s as keyof typeof statusLabels]}
             </Link>
           ))}
         </div>
-        <div className="flex flex-wrap gap-1.5 rounded-xl bg-muted/60 p-1.5">
+        <div className="bg-muted/60 flex flex-wrap gap-1.5 rounded-xl p-1.5">
           {positionFilters.map((p) => (
             <Link
               key={p}
@@ -113,7 +134,9 @@ export default async function PartiesPage({ searchParams }: Props) {
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              {p === 'all' ? t('parties.viewAll') : positionLabels[p as keyof typeof positionLabels]}
+              {p === 'all'
+                ? t('parties.viewAll')
+                : positionLabels[p as keyof typeof positionLabels]}
             </Link>
           ))}
         </div>
@@ -141,7 +164,7 @@ export default async function PartiesPage({ searchParams }: Props) {
       </div>
 
       {filtered.length === 0 && (
-        <p className="py-12 text-center text-muted-foreground">{t('noData')}</p>
+        <p className="text-muted-foreground py-12 text-center">{t('noData')}</p>
       )}
     </div>
   );

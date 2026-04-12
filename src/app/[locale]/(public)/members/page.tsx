@@ -17,6 +17,8 @@ import PaginationNav from '@/components/ui/pagination-nav';
 
 const PAGE_SIZE = 60;
 
+export const dynamic = 'force-dynamic';
+
 interface Props {
   searchParams: Promise<{
     party?: string;

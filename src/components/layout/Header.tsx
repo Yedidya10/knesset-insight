@@ -2,7 +2,7 @@
 
 import { useTranslations, useLocale } from 'next-intl';
 import { Link, usePathname } from '@/i18n/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import {
   Menu,
   Landmark,
@@ -40,7 +40,9 @@ export default function Header() {
   const t = useTranslations('nav');
   const tCommon = useTranslations('common');
   const locale = useLocale();
-  const isRTL = (appConfig.i18n.rtlLocales as readonly string[]).includes(locale);
+  const isRTL = (appConfig.i18n.rtlLocales as readonly string[]).includes(
+    locale,
+  );
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -59,18 +61,13 @@ export default function Header() {
   return (
     <header
       className={cn(
-        'sticky top-0 z-50 bg-background/80 backdrop-blur-xl transition-[box-shadow,border-color] duration-300 gradient-border',
-        scrolled
-          ? 'shadow-sm'
-          : 'shadow-none',
+        'bg-background/80 gradient-border sticky top-0 z-50 backdrop-blur-xl transition-[box-shadow,border-color] duration-300',
+        scrolled ? 'shadow-sm' : 'shadow-none',
       )}
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
-        <Link
-          href="/"
-          className="group flex items-center gap-2.5"
-        >
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm transition-transform duration-200 group-hover:scale-105">
+        <Link href="/" className="group flex items-center gap-2.5">
+          <div className="bg-primary text-primary-foreground flex h-9 w-9 items-center justify-center rounded-xl shadow-sm transition-transform duration-200 group-hover:scale-105">
             <Landmark className="h-5 w-5" />
           </div>
           <span className="text-lg font-bold tracking-tight">
@@ -94,7 +91,7 @@ export default function Header() {
               >
                 {t(key)}
                 {active && (
-                  <span className="absolute inset-x-2 -bottom-[13px] h-0.5 rounded-full bg-primary" />
+                  <span className="bg-primary absolute inset-x-2 -bottom-[13px] h-0.5 rounded-full" />
                 )}
               </Link>
             );
@@ -103,16 +100,14 @@ export default function Header() {
 
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <LanguageSwitcher />
+          <Suspense>
+            <LanguageSwitcher />
+          </Suspense>
 
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger
               render={
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="lg:hidden"
-                />
+                <Button variant="ghost" size="icon" className="lg:hidden" />
               }
             >
               <Menu className="h-5 w-5" />
@@ -120,7 +115,7 @@ export default function Header() {
             </SheetTrigger>
             <SheetContent side={isRTL ? 'right' : 'left'} className="w-72">
               <SheetTitle className="flex items-center gap-2 px-2 pb-6">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                <div className="bg-primary text-primary-foreground flex h-8 w-8 items-center justify-center rounded-lg">
                   <Landmark className="h-4 w-4" />
                 </div>
                 <span className="font-bold">{tCommon('appName')}</span>
