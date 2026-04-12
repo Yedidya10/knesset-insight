@@ -262,6 +262,7 @@
       "voteCount": "{count} تصويتات",
       "initiatorCount": "{count} مبادرون",
       "relatedBills": "مشاريع قوانين ذات صلة",
+      "relationshipGraph": "مخطط الانقسامات والدمج",
       "relatedBillsAcrossTerms": "مشاريع قوانين ذات صلة عبر دورات الكنيست",
       "partOfCluster": "مشروع القانون هذا جزء من رحلة تشريعية أوسع: {name}",
       "aiMatched": "علاقة تم تحديدها بواسطة الذكاء الاصطناعي",

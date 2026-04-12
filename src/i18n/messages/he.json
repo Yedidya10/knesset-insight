@@ -262,6 +262,7 @@
       "voteCount": "{count} הצבעות",
       "initiatorCount": "{count} יוזמים",
       "relatedBills": "הצעות חוק קשורות",
+      "relationshipGraph": "תרשים פיצולים ומיזוגים",
       "relatedBillsAcrossTerms": "הצעות חוק קשורות לאורך כנסות",
       "partOfCluster": "הצעה זו חלק ממסע החקיקה: {name}",
       "aiMatched": "קשר שזוהה על ידי AI",

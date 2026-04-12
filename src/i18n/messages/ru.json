@@ -262,6 +262,7 @@
       "voteCount": "{count} голосований",
       "initiatorCount": "{count} инициаторов",
       "relatedBills": "Связанные законопроекты",
+      "relationshipGraph": "Граф разделений и слияний",
       "relatedBillsAcrossTerms": "Связанные законопроекты разных созывов",
       "partOfCluster": "Этот законопроект является частью законодательного маршрута: {name}",
       "aiMatched": "Связь определена ИИ",

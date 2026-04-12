@@ -262,6 +262,7 @@
       "voteCount": "{count} votes",
       "initiatorCount": "{count} initiators",
       "relatedBills": "Related Bills",
+      "relationshipGraph": "Split & Merge Graph",
       "relatedBillsAcrossTerms": "Related bills across Knesset terms",
       "partOfCluster": "This bill is part of a broader legislative journey: {name}",
       "aiMatched": "AI-identified relationship",
