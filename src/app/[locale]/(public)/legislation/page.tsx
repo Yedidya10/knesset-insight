@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { Gavel } from 'lucide-react';
+import { Gavel, GitMerge, GitBranch, Pause, ArrowLeftRight } from 'lucide-react';
 import { desc, asc, eq, sql, ilike, and, or, exists } from 'drizzle-orm';
 import { Link } from '@/i18n/navigation';
 import { db } from '@/lib/db';
@@ -13,6 +13,7 @@ import { BillClusterCard } from '@/components/legislation/BillClusterCard';
 import LegislationViewToggle from '@/components/legislation/LegislationViewToggle';
 import EntityActivityPopover from '@/components/admin/inline/EntityActivityPopover';
 import { getBillStatusText } from '@/lib/knesset/bill-status';
+import { computeBillStage } from '@/lib/knesset/bill-stages';
 
 // Mapping between URL-friendly English slugs and Hebrew billType stored in DB
 const BILL_TYPE_SLUGS = ['government', 'private', 'committee'] as const;
@@ -248,6 +249,7 @@ export default async function LegislationPage({ searchParams }: Props) {
         name: bills.name,
         status: bills.status,
         billType: bills.billType,
+        subTypeId: bills.subTypeId,
         knessetNum: bills.knessetNum,
         proposedDate: bills.proposedDate,
       })
@@ -313,7 +315,13 @@ export default async function LegislationPage({ searchParams }: Props) {
       {data.length > 0 ? (
         <>
           <div className="stagger-children space-y-3">
-            {data.map((bill) => (
+            {data.map((bill) => {
+              const { specialStatus } = computeBillStage(
+                bill.status,
+                bill.subTypeId,
+                bill.billType,
+              );
+              return (
               <div key={bill.id} className="group relative">
                 <Link href={`/legislation/${bill.id}`}>
                   <Card className="glass-card hover-lift border-s-primary/30 overflow-hidden border-s-4">
@@ -337,7 +345,31 @@ export default async function LegislationPage({ searchParams }: Props) {
                           )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        {specialStatus === 'merged' && (
+                          <Badge variant="outline" className="gap-1 border-violet-300 text-violet-700 dark:border-violet-700 dark:text-violet-300">
+                            <GitMerge className="h-3 w-3" />
+                            {t('special.merged')}
+                          </Badge>
+                        )}
+                        {specialStatus === 'split' && (
+                          <Badge variant="outline" className="gap-1 border-sky-300 text-sky-700 dark:border-sky-700 dark:text-sky-300">
+                            <GitBranch className="h-3 w-3" />
+                            {t('special.split')}
+                          </Badge>
+                        )}
+                        {specialStatus === 'stopped' && (
+                          <Badge variant="outline" className="gap-1 border-amber-300 text-amber-700 dark:border-amber-700 dark:text-amber-300">
+                            <Pause className="h-3 w-3" />
+                            {t('special.stopped')}
+                          </Badge>
+                        )}
+                        {specialStatus === 'converted' && (
+                          <Badge variant="outline" className="gap-1 border-teal-300 text-teal-700 dark:border-teal-700 dark:text-teal-300">
+                            <ArrowLeftRight className="h-3 w-3" />
+                            {t('special.converted')}
+                          </Badge>
+                        )}
                         {bill.billType && (
                           <Badge variant="outline">
                             <TranslatedText text={bill.billType} />
@@ -361,7 +393,8 @@ export default async function LegislationPage({ searchParams }: Props) {
                   />
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
 
           {/* Pagination */}

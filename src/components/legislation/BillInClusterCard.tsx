@@ -11,7 +11,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { ChevronDown, FileText, Users } from 'lucide-react';
+import { ChevronDown, FileText, Users, GitMerge, GitBranch, Pause, ArrowLeftRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { BillStagePipeline } from './BillStagePipeline';
 import { MiniVoteCard } from './MiniVoteCard';
@@ -98,6 +98,30 @@ export function BillInClusterCard({
                         confidence={confidence}
                         reasoning={aiReasoning}
                       />
+                    )}
+                    {specialStatus === 'merged' && (
+                      <Badge variant="outline" className="gap-0.5 border-violet-300 text-[10px] text-violet-700 dark:border-violet-700 dark:text-violet-300">
+                        <GitMerge className="h-2.5 w-2.5" />
+                        {t('special.merged')}
+                      </Badge>
+                    )}
+                    {specialStatus === 'split' && (
+                      <Badge variant="outline" className="gap-0.5 border-sky-300 text-[10px] text-sky-700 dark:border-sky-700 dark:text-sky-300">
+                        <GitBranch className="h-2.5 w-2.5" />
+                        {t('special.split')}
+                      </Badge>
+                    )}
+                    {specialStatus === 'stopped' && (
+                      <Badge variant="outline" className="gap-0.5 border-amber-300 text-[10px] text-amber-700 dark:border-amber-700 dark:text-amber-300">
+                        <Pause className="h-2.5 w-2.5" />
+                        {t('special.stopped')}
+                      </Badge>
+                    )}
+                    {specialStatus === 'converted' && (
+                      <Badge variant="outline" className="gap-0.5 border-teal-300 text-[10px] text-teal-700 dark:border-teal-700 dark:text-teal-300">
+                        <ArrowLeftRight className="h-2.5 w-2.5" />
+                        {t('special.converted')}
+                      </Badge>
                     )}
                     {votes.length > 0 && (
                       <Badge variant="secondary" className="text-[10px]">

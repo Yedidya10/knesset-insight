@@ -9,6 +9,7 @@ import {
   ArrowRightLeft,
   Ban,
   CalendarOff,
+  ExternalLink,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { SpecialStatus } from '@/lib/knesset/bill-stages';
@@ -18,6 +19,8 @@ interface BillUnionInfo {
   mainBillId: number;
   mainBillName: string | null;
   mainBillKnessetId: number;
+  mainBillKnessetNum?: number | null;
+  date?: string | null;
 }
 
 interface BillSplitInfo {
@@ -25,6 +28,8 @@ interface BillSplitInfo {
   splitBillId: number;
   splitBillName: string | null;
   splitBillKnessetId: number;
+  splitBillKnessetNum?: number | null;
+  date?: string | null;
 }
 
 interface BillSplitFromInfo {
@@ -32,6 +37,8 @@ interface BillSplitFromInfo {
   mainBillId: number;
   mainBillName: string | null;
   mainBillKnessetId: number;
+  mainBillKnessetNum?: number | null;
+  date?: string | null;
 }
 
 interface BillMergedFromInfo {
@@ -39,6 +46,8 @@ interface BillMergedFromInfo {
   unionBillId: number;
   unionBillName: string | null;
   unionBillKnessetId: number;
+  unionBillKnessetNum?: number | null;
+  date?: string | null;
 }
 
 interface BillRelationshipBannerProps {
@@ -48,6 +57,10 @@ interface BillRelationshipBannerProps {
   splits: BillSplitInfo[];
   splitFrom?: BillSplitFromInfo[];
   mergedFrom?: BillMergedFromInfo[];
+  /** Current bill's knessetNum — used to show cross-knesset badges */
+  currentKnessetNum?: number | null;
+  /** Knesset site URL for this bill — used as fallback when relationship data is missing */
+  knessetUrl?: string | null;
 }
 
 export function BillRelationshipBanner({
@@ -57,8 +70,33 @@ export function BillRelationshipBanner({
   splits,
   splitFrom = [],
   mergedFrom = [],
+  currentKnessetNum,
+  knessetUrl,
 }: BillRelationshipBannerProps) {
   const t = useTranslations('legislation.special');
+  const tLeg = useTranslations('legislation');
+
+  /** Format a date string for display */
+  const formatDate = (dateStr: string | null | undefined) => {
+    if (!dateStr) return null;
+    try {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('he-IL');
+    } catch {
+      return null;
+    }
+  };
+
+  /** Show knesset badge if the related bill is from a different knesset */
+  const knessetBadge = (relatedKnessetNum: number | null | undefined) => {
+    if (!relatedKnessetNum || !currentKnessetNum) return null;
+    if (relatedKnessetNum === currentKnessetNum) return null;
+    return (
+      <Badge variant="outline" className="text-[10px]">
+        כנסת {relatedKnessetNum}
+      </Badge>
+    );
+  };
 
   const banners: React.ReactNode[] = [];
 
@@ -91,19 +129,41 @@ export function BillRelationshipBanner({
               {t('mergedWith')}
             </span>
             {unions.map((u) => (
-              <Link
-                key={u.id}
-                href={`/legislation/${u.mainBillId}`}
-                className="font-medium text-violet-700 underline underline-offset-2 hover:text-violet-900 dark:text-violet-300 dark:hover:text-violet-100"
-              >
-                {u.mainBillName ?? `#${u.mainBillKnessetId}`}
-              </Link>
+              <span key={u.id} className="inline-flex items-center gap-1">
+                <Link
+                  href={`/legislation/${u.mainBillId}`}
+                  className="font-medium text-violet-700 underline underline-offset-2 hover:text-violet-900 dark:text-violet-300 dark:hover:text-violet-100"
+                >
+                  {u.mainBillName ?? `#${u.mainBillKnessetId}`}
+                </Link>
+                {knessetBadge(u.mainBillKnessetNum)}
+                {u.date && (
+                  <span className="text-violet-500 dark:text-violet-400 text-xs">
+                    • {formatDate(u.date)}
+                  </span>
+                )}
+              </span>
             ))}
           </>
         ) : (
-          <span className="text-violet-800 dark:text-violet-200">
-            {t('merged')}
-          </span>
+          <>
+            <span className="text-violet-800 dark:text-violet-200">
+              {t('merged')}
+            </span>
+            {knessetUrl && (
+              <a
+                href={knessetUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-violet-600 hover:text-violet-800 dark:text-violet-400 dark:hover:text-violet-200"
+              >
+                <ExternalLink className="h-3 w-3" />
+                <span className="text-xs underline underline-offset-2">
+                  {tLeg('viewOnKnesset')}
+                </span>
+              </a>
+            )}
+          </>
         )}
       </div>,
     );
@@ -119,14 +179,21 @@ export function BillRelationshipBanner({
         <GitBranch className="h-4 w-4 shrink-0 text-sky-600 dark:text-sky-400" />
         <span className="text-sky-800 dark:text-sky-200">{t('splitInto')}</span>
         {splits.map((s) => (
-          <Link
-            key={s.id}
-            href={`/legislation/${s.splitBillId}`}
-            className="font-medium text-sky-700 underline underline-offset-2 hover:text-sky-900 dark:text-sky-300 dark:hover:text-sky-100"
-          >
-            {s.splitBillName ?? `#${s.splitBillKnessetId}`}
-          </Link>
+          <span key={s.id} className="inline-flex items-center gap-1">
+            <Link
+              href={`/legislation/${s.splitBillId}`}
+              className="font-medium text-sky-700 underline underline-offset-2 hover:text-sky-900 dark:text-sky-300 dark:hover:text-sky-100"
+            >
+              {s.splitBillName ?? `#${s.splitBillKnessetId}`}
+            </Link>
+            {knessetBadge(s.splitBillKnessetNum)}
+          </span>
         ))}
+        {splits[0]?.date && (
+          <span className="text-sky-500 dark:text-sky-400 text-xs">
+            • {formatDate(splits[0].date)}
+          </span>
+        )}
       </div>,
     );
   }
@@ -141,13 +208,20 @@ export function BillRelationshipBanner({
         <GitBranch className="h-4 w-4 shrink-0 text-sky-600 dark:text-sky-400" />
         <span className="text-sky-800 dark:text-sky-200">{t('splitFrom')}</span>
         {splitFrom.map((sf) => (
-          <Link
-            key={sf.id}
-            href={`/legislation/${sf.mainBillId}`}
-            className="font-medium text-sky-700 underline underline-offset-2 hover:text-sky-900 dark:text-sky-300 dark:hover:text-sky-100"
-          >
-            {sf.mainBillName ?? `#${sf.mainBillKnessetId}`}
-          </Link>
+          <span key={sf.id} className="inline-flex items-center gap-1">
+            <Link
+              href={`/legislation/${sf.mainBillId}`}
+              className="font-medium text-sky-700 underline underline-offset-2 hover:text-sky-900 dark:text-sky-300 dark:hover:text-sky-100"
+            >
+              {sf.mainBillName ?? `#${sf.mainBillKnessetId}`}
+            </Link>
+            {knessetBadge(sf.mainBillKnessetNum)}
+            {sf.date && (
+              <span className="text-sky-500 dark:text-sky-400 text-xs">
+                • {formatDate(sf.date)}
+              </span>
+            )}
+          </span>
         ))}
       </div>,
     );
@@ -165,13 +239,20 @@ export function BillRelationshipBanner({
           {t('includesMerge')}
         </span>
         {mergedFrom.map((mf) => (
-          <Link
-            key={mf.id}
-            href={`/legislation/${mf.unionBillId}`}
-            className="font-medium text-violet-700 underline underline-offset-2 hover:text-violet-900 dark:text-violet-300 dark:hover:text-violet-100"
-          >
-            {mf.unionBillName ?? `#${mf.unionBillKnessetId}`}
-          </Link>
+          <span key={mf.id} className="inline-flex items-center gap-1">
+            <Link
+              href={`/legislation/${mf.unionBillId}`}
+              className="font-medium text-violet-700 underline underline-offset-2 hover:text-violet-900 dark:text-violet-300 dark:hover:text-violet-100"
+            >
+              {mf.unionBillName ?? `#${mf.unionBillKnessetId}`}
+            </Link>
+            {knessetBadge(mf.unionBillKnessetNum)}
+            {mf.date && (
+              <span className="text-violet-500 dark:text-violet-400 text-xs">
+                • {formatDate(mf.date)}
+              </span>
+            )}
+          </span>
         ))}
       </div>,
     );

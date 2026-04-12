@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/button';
 import MemberAvatar from '@/components/members/MemberAvatar';
 import { BillRelationshipBanner } from '@/components/legislation/BillRelationshipBanner';
 import { InteractiveStagePipeline } from '@/components/legislation/InteractiveStagePipeline';
+import { RelatedBillsCard } from '@/components/legislation/RelatedBillsCard';
 import { computeBillStage } from '@/lib/knesset/bill-stages';
 import {
   getBillStatusText,
@@ -97,13 +98,21 @@ export default async function BillDetailPage({ params }: Props) {
 
       // Unions where this bill was absorbed (this bill → merged into main)
       db
-        .select({ id: billUnions.id, mainBillId: billUnions.mainBillId })
+        .select({
+          id: billUnions.id,
+          mainBillId: billUnions.mainBillId,
+          lastUpdated: billUnions.lastUpdated,
+        })
         .from(billUnions)
         .where(eq(billUnions.unionBillId, billId)),
 
       // Splits where this bill is the origin (this bill → split into children)
       db
-        .select({ id: billSplits.id, splitBillId: billSplits.splitBillId })
+        .select({
+          id: billSplits.id,
+          splitBillId: billSplits.splitBillId,
+          lastUpdated: billSplits.lastUpdated,
+        })
         .from(billSplits)
         .where(eq(billSplits.mainBillId, billId)),
 
@@ -121,13 +130,21 @@ export default async function BillDetailPage({ params }: Props) {
   const [rawSplitFrom, rawMergedFrom] = await Promise.all([
     // This bill was split FROM a parent bill
     db
-      .select({ id: billSplits.id, mainBillId: billSplits.mainBillId })
+      .select({
+        id: billSplits.id,
+        mainBillId: billSplits.mainBillId,
+        lastUpdated: billSplits.lastUpdated,
+      })
       .from(billSplits)
       .where(eq(billSplits.splitBillId, billId)),
 
     // Bills that were absorbed INTO this bill
     db
-      .select({ id: billUnions.id, unionBillId: billUnions.unionBillId })
+      .select({
+        id: billUnions.id,
+        unionBillId: billUnions.unionBillId,
+        lastUpdated: billUnions.lastUpdated,
+      })
       .from(billUnions)
       .where(eq(billUnions.mainBillId, billId)),
   ]);
@@ -141,15 +158,24 @@ export default async function BillDetailPage({ params }: Props) {
   ];
   const relatedBillMap = new Map<
     number,
-    { name: string | null; knessetId: number }
+    { name: string | null; knessetId: number; knessetNum: number | null }
   >();
   if (relatedBillIds.length > 0) {
     const relatedBills = await db
-      .select({ id: bills.id, name: bills.name, knessetId: bills.knessetId })
+      .select({
+        id: bills.id,
+        name: bills.name,
+        knessetId: bills.knessetId,
+        knessetNum: bills.knessetNum,
+      })
       .from(bills)
       .where(inArray(bills.id, relatedBillIds));
     for (const b of relatedBills) {
-      relatedBillMap.set(b.id, { name: b.name, knessetId: b.knessetId });
+      relatedBillMap.set(b.id, {
+        name: b.name,
+        knessetId: b.knessetId,
+        knessetNum: b.knessetNum,
+      });
     }
   }
   const unionRows = rawUnions.map((u) => ({
@@ -157,24 +183,33 @@ export default async function BillDetailPage({ params }: Props) {
     mainBillId: u.mainBillId,
     mainBillName: relatedBillMap.get(u.mainBillId)?.name ?? null,
     mainBillKnessetId: relatedBillMap.get(u.mainBillId)?.knessetId ?? 0,
+    mainBillKnessetNum: relatedBillMap.get(u.mainBillId)?.knessetNum ?? null,
+    date: u.lastUpdated?.toISOString() ?? null,
   }));
   const splitRows = rawSplits.map((s) => ({
     id: s.id,
     splitBillId: s.splitBillId,
     splitBillName: relatedBillMap.get(s.splitBillId)?.name ?? null,
     splitBillKnessetId: relatedBillMap.get(s.splitBillId)?.knessetId ?? 0,
+    splitBillKnessetNum: relatedBillMap.get(s.splitBillId)?.knessetNum ?? null,
+    date: s.lastUpdated?.toISOString() ?? null,
   }));
   const splitFromRows = rawSplitFrom.map((sf) => ({
     id: sf.id,
     mainBillId: sf.mainBillId,
     mainBillName: relatedBillMap.get(sf.mainBillId)?.name ?? null,
     mainBillKnessetId: relatedBillMap.get(sf.mainBillId)?.knessetId ?? 0,
+    mainBillKnessetNum: relatedBillMap.get(sf.mainBillId)?.knessetNum ?? null,
+    date: sf.lastUpdated?.toISOString() ?? null,
   }));
   const mergedFromRows = rawMergedFrom.map((mf) => ({
     id: mf.id,
     unionBillId: mf.unionBillId,
     unionBillName: relatedBillMap.get(mf.unionBillId)?.name ?? null,
     unionBillKnessetId: relatedBillMap.get(mf.unionBillId)?.knessetId ?? 0,
+    unionBillKnessetNum:
+      relatedBillMap.get(mf.unionBillId)?.knessetNum ?? null,
+    date: mf.lastUpdated?.toISOString() ?? null,
   }));
 
   const stageInfo = computeBillStage(
@@ -198,6 +233,35 @@ export default async function BillDetailPage({ params }: Props) {
     .limit(1);
   const cluster =
     clusterRow && (clusterRow.billCount ?? 0) > 1 ? clusterRow : null;
+
+  // Fetch cluster siblings (other bills in same cluster)
+  let clusterSiblings: { id: number; name: string | null; knessetNum: number | null }[] = [];
+  if (cluster) {
+    const siblingRows = await db
+      .select({
+        billId: billClusterMembers.billId,
+        name: bills.name,
+        knessetNum: bills.knessetNum,
+      })
+      .from(billClusterMembers)
+      .innerJoin(bills, eq(billClusterMembers.billId, bills.id))
+      .where(eq(billClusterMembers.clusterId, cluster.id));
+    clusterSiblings = siblingRows
+      .filter((s) => s.billId !== billId)
+      .map((s) => ({ id: s.billId, name: s.name, knessetNum: s.knessetNum }));
+  }
+
+  // Build related bills for RelatedBillsCard
+  const splitChildBills = splitRows.map((s) => ({
+    id: s.splitBillId,
+    name: s.splitBillName,
+    knessetNum: relatedBillMap.get(s.splitBillId)?.knessetNum ?? null,
+  }));
+  const mergedFromBills = mergedFromRows.map((mf) => ({
+    id: mf.unionBillId,
+    name: mf.unionBillName,
+    knessetNum: relatedBillMap.get(mf.unionBillId)?.knessetNum ?? null,
+  }));
 
   const billTypeKey =
     bill.subTypeId === 53
@@ -297,6 +361,8 @@ export default async function BillDetailPage({ params }: Props) {
               splits={splitRows}
               splitFrom={splitFromRows}
               mergedFrom={mergedFromRows}
+              currentKnessetNum={bill.knessetNum}
+              knessetUrl={knessetUrl}
             />
           </div>
 
@@ -396,6 +462,14 @@ export default async function BillDetailPage({ params }: Props) {
           </CardContent>
         </Card>
       )}
+
+      {/* Related bills (splits, mergedFrom, cluster siblings) */}
+      <RelatedBillsCard
+        splitChildren={splitChildBills}
+        mergedFromBills={mergedFromBills}
+        clusterSiblings={clusterSiblings}
+        cluster={cluster ? { id: cluster.id, name: cluster.name } : null}
+      />
     </div>
   );
 }
