@@ -2,6 +2,12 @@
 
 import { useTranslations } from 'next-intl';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from '@/components/ui/popover';
+import MemberAvatar from '@/components/members/MemberAvatar';
 
 interface FactionCounts {
   for: number;
@@ -11,9 +17,18 @@ interface FactionCounts {
   isCoalition: boolean | null;
 }
 
+export interface FactionVoter {
+  memberId: number;
+  firstName: string | null;
+  lastName: string | null;
+  imageUrl: string | null;
+  voteValue: string;
+}
+
 interface FactionBreakdownProps {
   coalitionFactions: [string, FactionCounts][];
   oppositionFactions: [string, FactionCounts][];
+  voters?: Map<string, FactionVoter[]>;
 }
 
 function sumCounts(entries: [string, FactionCounts][]) {
@@ -27,21 +42,12 @@ function sumCounts(entries: [string, FactionCounts][]) {
   );
 }
 
-function TotalBadges({
-  entries,
-  labels,
-}: {
-  entries: [string, FactionCounts][];
-  labels: { for: string; against: string; abstain: string };
-}) {
+function TotalBadges({ entries }: { entries: [string, FactionCounts][] }) {
   const totals = sumCounts(entries);
   const total = totals.for + totals.against + totals.abstain;
   if (total === 0) return null;
   return (
     <div className="flex items-center gap-1.5">
-      <span className="text-muted-foreground text-xs font-medium tabular-nums">
-        ({total})
-      </span>
       {totals.for > 0 && (
         <span className="inline-flex min-w-5 items-center justify-center rounded-md bg-green-100 px-1.5 py-0.5 text-xs font-medium text-green-700 tabular-nums dark:bg-green-950/50 dark:text-green-400">
           {totals.for}
@@ -61,12 +67,81 @@ function TotalBadges({
   );
 }
 
+const voteColorMap = {
+  for: 'text-green-600 dark:text-green-400',
+  against: 'text-red-600 dark:text-red-400',
+  abstain: 'text-yellow-600 dark:text-yellow-400',
+} as const;
+
+function FactionVoterPopover({
+  voters,
+  labels,
+  children,
+}: {
+  voters: FactionVoter[];
+  labels: { for: string; against: string; abstain: string };
+  children: React.ReactNode;
+}) {
+  const grouped = {
+    for: voters.filter((v) => v.voteValue === 'for'),
+    against: voters.filter((v) => v.voteValue === 'against'),
+    abstain: voters.filter((v) => v.voteValue === 'abstain'),
+  };
+
+  return (
+    <Popover delay={300} closeDelay={300}>
+      <PopoverTrigger openOnHover render={<div />}>
+        {children}
+      </PopoverTrigger>
+      <PopoverContent className="max-h-72 w-64 overflow-y-auto p-3">
+        <div className="space-y-2">
+          {(['for', 'against', 'abstain'] as const).map((value) => {
+            const group = grouped[value];
+            if (group.length === 0) return null;
+            return (
+              <div key={value}>
+                <p
+                  className={`mb-1 text-xs font-semibold ${voteColorMap[value]}`}
+                >
+                  {labels[value]} ({group.length})
+                </p>
+                <div className="space-y-0.5">
+                  {group.map((v) => (
+                    <div
+                      key={v.memberId}
+                      className="flex items-center gap-1.5 text-xs"
+                    >
+                      <MemberAvatar
+                        member={{
+                          firstName: v.firstName,
+                          lastName: v.lastName,
+                          imageUrl: v.imageUrl,
+                        }}
+                        size="sm"
+                      />
+                      <span className="truncate">
+                        {v.firstName} {v.lastName}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 function FactionBarList({
   entries,
   labels,
+  voters,
 }: {
   entries: [string, FactionCounts][];
   labels: { for: string; against: string; abstain: string };
+  voters?: Map<string, FactionVoter[]>;
 }) {
   const sorted = [...entries].sort(
     (a, b) =>
@@ -86,11 +161,10 @@ function FactionBarList({
         const total = counts.for + counts.against + counts.abstain;
         if (total === 0) return null;
         const barWidth = (total / maxTotal) * 100;
-        return (
-          <div
-            key={partyName}
-            className="bg-muted/30 hover:bg-muted/50 rounded-lg px-3 py-2 transition-colors"
-          >
+        const factionVoters = voters?.get(partyName);
+
+        const barContent = (
+          <div className="bg-muted/30 hover:bg-muted/50 cursor-pointer rounded-lg px-3 py-2 transition-colors">
             <div className="mb-1 flex items-center justify-between gap-2">
               <span className="truncate text-sm font-medium">{partyName}</span>
               <div className="flex shrink-0 items-center gap-1.5">
@@ -141,6 +215,20 @@ function FactionBarList({
             </div>
           </div>
         );
+
+        if (factionVoters && factionVoters.length > 0) {
+          return (
+            <FactionVoterPopover
+              key={partyName}
+              voters={factionVoters}
+              labels={labels}
+            >
+              {barContent}
+            </FactionVoterPopover>
+          );
+        }
+
+        return <div key={partyName}>{barContent}</div>;
       })}
     </div>
   );
@@ -149,6 +237,7 @@ function FactionBarList({
 export default function FactionBreakdown({
   coalitionFactions,
   oppositionFactions,
+  voters,
 }: FactionBreakdownProps) {
   const t = useTranslations('votes');
   const labels = {
@@ -172,9 +261,13 @@ export default function FactionBreakdown({
               <h3 className="text-muted-foreground text-sm font-semibold">
                 {t('coalitionBreakdown')}
               </h3>
-              <TotalBadges entries={coalitionFactions} labels={labels} />
+              <TotalBadges entries={coalitionFactions} />
             </div>
-            <FactionBarList entries={coalitionFactions} labels={labels} />
+            <FactionBarList
+              entries={coalitionFactions}
+              labels={labels}
+              voters={voters}
+            />
           </div>
         )}
         {hasOpposition && (
@@ -183,9 +276,13 @@ export default function FactionBreakdown({
               <h3 className="text-muted-foreground text-sm font-semibold">
                 {t('oppositionBreakdown')}
               </h3>
-              <TotalBadges entries={oppositionFactions} labels={labels} />
+              <TotalBadges entries={oppositionFactions} />
             </div>
-            <FactionBarList entries={oppositionFactions} labels={labels} />
+            <FactionBarList
+              entries={oppositionFactions}
+              labels={labels}
+              voters={voters}
+            />
           </div>
         )}
       </div>
@@ -197,30 +294,26 @@ export default function FactionBreakdown({
             <TabsList className="w-full">
               <TabsTrigger value="coalition" className="gap-1.5">
                 {t('coalitionBreakdown')}
-                <span className="text-muted-foreground text-xs tabular-nums">
-                  (
-                  {sumCounts(coalitionFactions).for +
-                    sumCounts(coalitionFactions).against +
-                    sumCounts(coalitionFactions).abstain}
-                  )
-                </span>
+                <TotalBadges entries={coalitionFactions} />
               </TabsTrigger>
               <TabsTrigger value="opposition" className="gap-1.5">
                 {t('oppositionBreakdown')}
-                <span className="text-muted-foreground text-xs tabular-nums">
-                  (
-                  {sumCounts(oppositionFactions).for +
-                    sumCounts(oppositionFactions).against +
-                    sumCounts(oppositionFactions).abstain}
-                  )
-                </span>
+                <TotalBadges entries={oppositionFactions} />
               </TabsTrigger>
             </TabsList>
             <TabsContent value="coalition" className="mt-3">
-              <FactionBarList entries={coalitionFactions} labels={labels} />
+              <FactionBarList
+                entries={coalitionFactions}
+                labels={labels}
+                voters={voters}
+              />
             </TabsContent>
             <TabsContent value="opposition" className="mt-3">
-              <FactionBarList entries={oppositionFactions} labels={labels} />
+              <FactionBarList
+                entries={oppositionFactions}
+                labels={labels}
+                voters={voters}
+              />
             </TabsContent>
           </Tabs>
         ) : (
@@ -231,9 +324,13 @@ export default function FactionBreakdown({
                   <h3 className="text-muted-foreground text-sm font-semibold">
                     {t('coalitionBreakdown')}
                   </h3>
-                  <TotalBadges entries={coalitionFactions} labels={labels} />
+                  <TotalBadges entries={coalitionFactions} />
                 </div>
-                <FactionBarList entries={coalitionFactions} labels={labels} />
+                <FactionBarList
+                  entries={coalitionFactions}
+                  labels={labels}
+                  voters={voters}
+                />
               </div>
             )}
             {hasOpposition && (
@@ -242,9 +339,13 @@ export default function FactionBreakdown({
                   <h3 className="text-muted-foreground text-sm font-semibold">
                     {t('oppositionBreakdown')}
                   </h3>
-                  <TotalBadges entries={oppositionFactions} labels={labels} />
+                  <TotalBadges entries={oppositionFactions} />
                 </div>
-                <FactionBarList entries={oppositionFactions} labels={labels} />
+                <FactionBarList
+                  entries={oppositionFactions}
+                  labels={labels}
+                  voters={voters}
+                />
               </div>
             )}
           </>

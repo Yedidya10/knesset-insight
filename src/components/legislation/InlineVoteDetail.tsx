@@ -12,7 +12,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import FactionBreakdown from '@/components/votes/FactionBreakdown';
+import FactionBreakdown, {
+  type FactionVoter,
+} from '@/components/votes/FactionBreakdown';
 import MemberAvatar from '@/components/members/MemberAvatar';
 
 interface Voter {
@@ -133,6 +135,16 @@ export function InlineVoteDetail({ voteId }: { voteId: number }) {
     }
   }
 
+  // Build voters-by-faction map for popover tooltips
+  const votersByFaction = new Map<string, FactionVoter[]>();
+  for (const v of data.voters) {
+    if (v.voteValue === 'absent') continue;
+    const key = v.factionName ?? '';
+    const arr = votersByFaction.get(key);
+    if (arr) arr.push(v);
+    else votersByFaction.set(key, [v]);
+  }
+
   // Group voters by voteValue, then by faction
   const groupByFaction = (voters: Voter[]) => {
     const map = new Map<string, Voter[]>();
@@ -162,6 +174,7 @@ export function InlineVoteDetail({ voteId }: { voteId: number }) {
       <FactionBreakdown
         coalitionFactions={coalitionFactions}
         oppositionFactions={oppositionFactions}
+        voters={votersByFaction}
       />
 
       {/* Voter list trigger */}
