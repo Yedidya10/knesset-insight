@@ -163,17 +163,43 @@ export function InteractiveStagePipeline({
     }
   }
 
-  // Place relationship events at the terminated/current stage
+  // Place relationship events at correct legislative stage
+  // Splits and merges happen during COMMITTEE_SECOND (committee preparation
+  // for 2nd+3rd reading) per Knesset regulations.
   const eventsByStage = new Map<string, RelationshipEvent[]>();
   if (relationshipEvents && relationshipEvents.length > 0) {
-    // Events go at the "current" stage (which for terminated bills is where it ended)
-    const currentStageKey = stages.find((s) => s.status === 'current')?.key;
-    const latestCompletedKey = [...stages]
-      .reverse()
-      .find((s) => s.status === 'completed')?.key;
-    const eventsTargetKey = currentStageKey ?? latestCompletedKey;
-    if (eventsTargetKey) {
-      eventsByStage.set(eventsTargetKey, relationshipEvents);
+    const stageKeys = new Set(stages.map((s) => s.key));
+    for (const event of relationshipEvents) {
+      // Determine correct stage for each event type
+      let targetKey: string | undefined;
+      if (event.type === 'splitInto' || event.type === 'mergedFrom') {
+        // Parent bill: committee splits/absorbs during committeeSecond
+        targetKey = stageKeys.has('committeeSecond')
+          ? 'committeeSecond'
+          : undefined;
+      } else if (event.type === 'mergedInto') {
+        // Child bill merged back: termination at committeeSecond
+        targetKey = stageKeys.has('committeeSecond')
+          ? 'committeeSecond'
+          : undefined;
+      } else if (event.type === 'splitFrom') {
+        // Child bill born from split: origin at committeeSecond (parent's committee work)
+        targetKey = stageKeys.has('committeeSecond')
+          ? 'committeeSecond'
+          : undefined;
+      }
+      // Fallback to current/latest stage if committeeSecond isn't in this pipeline
+      if (!targetKey) {
+        const currentStageKey = stages.find((s) => s.status === 'current')?.key;
+        const latestCompletedKey = [...stages]
+          .reverse()
+          .find((s) => s.status === 'completed')?.key;
+        targetKey = currentStageKey ?? latestCompletedKey;
+      }
+      if (targetKey) {
+        if (!eventsByStage.has(targetKey)) eventsByStage.set(targetKey, []);
+        eventsByStage.get(targetKey)!.push(event);
+      }
     }
   }
 

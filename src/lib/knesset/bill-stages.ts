@@ -48,11 +48,11 @@ export interface ComputedBillStage {
 // Used by link-votes-to-bills to assign bill_stage via name matching.
 
 export const NAME_TYPE_TO_STAGE: Record<number, BillStage> = {
-  5200: BillStage.PRELIMINARY,           // בדיון המוקדם
-  5201: BillStage.FIRST_READING,         // בקריאה הראשונה
-  5202: BillStage.SECOND_THIRD_READING,  // בקריאה השנייה והשלישית
-  5203: BillStage.SECOND_THIRD_READING,  // לקריאה השלישית
-  10062: BillStage.PASSED,               // לחוק שהתקבל
+  5200: BillStage.PRELIMINARY, // בדיון המוקדם
+  5201: BillStage.FIRST_READING, // בקריאה הראשונה
+  5202: BillStage.SECOND_THIRD_READING, // בקריאה השנייה והשלישית
+  5203: BillStage.SECOND_THIRD_READING, // לקריאה השלישית
+  10062: BillStage.PASSED, // לחוק שהתקבל
 };
 
 // ── StatusID → Stage mapping ────────────────────────────────────
@@ -164,13 +164,14 @@ function getSpecialStatus(statusId: string): SpecialStatus {
 
 /**
  * Determine the last completed stage for a special-status bill.
- * We infer based on the special status type.
+ * Merges and splits happen during committee preparation for 2nd+3rd reading
+ * (COMMITTEE_SECOND) per Knesset regulations: the committee can split a bill
+ * into parts (with Knesset approval) or merge bills (with committee approval).
  */
 function inferStageForSpecialStatus(statusId: string): BillStage {
-  // Merge can happen at various points — usually after committee first reading
-  if (MERGED_STATUSES.has(statusId)) return BillStage.COMMITTEE_FIRST;
-  // Split usually happens after first reading
-  if (SPLIT_STATUSES.has(statusId)) return BillStage.FIRST_READING;
+  // Merge/split happen during committee prep for 2nd+3rd reading
+  if (MERGED_STATUSES.has(statusId)) return BillStage.COMMITTEE_SECOND;
+  if (SPLIT_STATUSES.has(statusId)) return BillStage.COMMITTEE_SECOND;
   // Continuity statuses — bill is in early stages (pre-pipeline)
   if (
     CONTINUITY_PENDING_STATUSES.has(statusId) ||

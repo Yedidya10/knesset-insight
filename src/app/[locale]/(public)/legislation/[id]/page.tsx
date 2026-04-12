@@ -23,7 +23,6 @@ import MemberAvatar from '@/components/members/MemberAvatar';
 import { InteractiveStagePipeline } from '@/components/legislation/InteractiveStagePipeline';
 import type { RelationshipEvent } from '@/components/legislation/InteractiveStagePipeline';
 import { RelatedBillsCard } from '@/components/legislation/RelatedBillsCard';
-import BillRelationshipGraph from '@/components/legislation/BillRelationshipGraph';
 import { computeBillStage } from '@/lib/knesset/bill-stages';
 import {
   getBillStatusText,
@@ -495,14 +494,6 @@ export default async function BillDetailPage({ params }: Props) {
           </CardContent>
         </Card>
       )}
-
-      {/* Relationship graph (git-style split/merge visualization) */}
-      <BillRelationshipGraph
-        unions={unionBills}
-        splitFrom={splitFromBills}
-        splitChildren={splitChildBills}
-        mergedFromBills={mergedFromBills}
-      />
 
       {/* Related bills (splits, mergedFrom, cluster siblings) */}
       <RelatedBillsCard
