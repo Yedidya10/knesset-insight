@@ -497,8 +497,8 @@ async function main() {
           topicsEn: result.topics?.en,
           tokensUsed: result.tokensUsed,
           elapsedSec: elapsed,
-          resultStage: result.stage,
-          sourceDocType: result.sourceDocType,
+          resultStage: result.stage ?? undefined,
+          sourceDocType: result.sourceDocType ?? undefined,
           success: true,
         });
       } else {

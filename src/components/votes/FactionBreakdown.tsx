@@ -95,7 +95,7 @@ function FactionVoterPopover({
   };
 
   return (
-    <Popover delay={300} closeDelay={300}>
+    <Popover>
       <PopoverTrigger openOnHover render={<div />}>
         {children}
       </PopoverTrigger>

@@ -2,6 +2,7 @@
  * Discover the WebSiteApi endpoint for vote results.
  * Tests various endpoint patterns used by the Knesset website.
  */
+export {};
 
 const WEBSITE_API = 'https://main.knesset.gov.il/WebSiteApi/Knesset';
 const VOTE_ID = 45854; // Known K25 vote
@@ -32,20 +33,46 @@ async function tryEndpoint(name: string, url: string, options?: RequestInit) {
 }
 
 async function main() {
-  console.log('=== Discovering Knesset WebSiteApi vote results endpoints ===\n');
+  console.log(
+    '=== Discovering Knesset WebSiteApi vote results endpoints ===\n',
+  );
 
   // 1. Try GET endpoints for vote results
   const getEndpoints = [
-    ['GET GetVoteResults', `${WEBSITE_API}/Votes/GetVoteResults?voteId=${VOTE_ID}`],
-    ['GET GetVoteResult', `${WEBSITE_API}/Votes/GetVoteResult?voteId=${VOTE_ID}`],
-    ['GET GetVoteDetails', `${WEBSITE_API}/Votes/GetVoteDetails?voteId=${VOTE_ID}`],
-    ['GET GetVoteMembers', `${WEBSITE_API}/Votes/GetVoteMembers?voteId=${VOTE_ID}`],
-    ['GET GetPlenumVotes', `${WEBSITE_API}/Votes/GetPlenumVotes?voteId=${VOTE_ID}`],
+    [
+      'GET GetVoteResults',
+      `${WEBSITE_API}/Votes/GetVoteResults?voteId=${VOTE_ID}`,
+    ],
+    [
+      'GET GetVoteResult',
+      `${WEBSITE_API}/Votes/GetVoteResult?voteId=${VOTE_ID}`,
+    ],
+    [
+      'GET GetVoteDetails',
+      `${WEBSITE_API}/Votes/GetVoteDetails?voteId=${VOTE_ID}`,
+    ],
+    [
+      'GET GetVoteMembers',
+      `${WEBSITE_API}/Votes/GetVoteMembers?voteId=${VOTE_ID}`,
+    ],
+    [
+      'GET GetPlenumVotes',
+      `${WEBSITE_API}/Votes/GetPlenumVotes?voteId=${VOTE_ID}`,
+    ],
     ['GET GetMKVotes', `${WEBSITE_API}/MK/GetMKVotes?mkId=${MK_ID}`],
-    ['GET GetMKPlenumVotes', `${WEBSITE_API}/MK/GetMKPlenumVotes?mkId=${MK_ID}`],
-    ['GET GetMKVotingRecord', `${WEBSITE_API}/MK/GetMKVotingRecord?mkId=${MK_ID}`],
+    [
+      'GET GetMKPlenumVotes',
+      `${WEBSITE_API}/MK/GetMKPlenumVotes?mkId=${MK_ID}`,
+    ],
+    [
+      'GET GetMKVotingRecord',
+      `${WEBSITE_API}/MK/GetMKVotingRecord?mkId=${MK_ID}`,
+    ],
     ['GET GetMKActivity', `${WEBSITE_API}/MK/GetMKActivity?mkId=${MK_ID}`],
-    ['GET GetMKParliamentaryActivity', `${WEBSITE_API}/MK/GetMKParliamentaryActivity?mkId=${MK_ID}`],
+    [
+      'GET GetMKParliamentaryActivity',
+      `${WEBSITE_API}/MK/GetMKParliamentaryActivity?mkId=${MK_ID}`,
+    ],
     ['GET vote by id', `${WEBSITE_API}/Votes/${VOTE_ID}`],
   ];
 
@@ -55,14 +82,46 @@ async function main() {
 
   // 2. Try POST endpoints for vote results
   const postEndpoints: [string, string, object][] = [
-    ['POST GetVoteResults', `${WEBSITE_API}/Votes/GetVoteResults`, { VoteId: VOTE_ID }],
-    ['POST GetVoteResult', `${WEBSITE_API}/Votes/GetVoteResult`, { VoteId: VOTE_ID }],
-    ['POST GetVoteDetails', `${WEBSITE_API}/Votes/GetVoteDetails`, { VoteId: VOTE_ID }],
-    ['POST GetVoteMembers', `${WEBSITE_API}/Votes/GetVoteMembers`, { VoteId: VOTE_ID }],
-    ['POST GetMKVotes', `${WEBSITE_API}/MK/GetMKVotes`, { MkId: MK_ID, KnessetNum: 25 }],
-    ['POST GetMKPlenumVotes', `${WEBSITE_API}/MK/GetMKPlenumVotes`, { MkId: MK_ID, KnessetNum: 25 }],
-    ['POST GetMKVotingRecord', `${WEBSITE_API}/MK/GetMKVotingRecord`, { MkId: MK_ID, KnessetNum: 25 }],
-    ['POST GetMKActivity', `${WEBSITE_API}/MK/GetMKActivity`, { MkId: MK_ID, KnessetNum: 25 }],
+    [
+      'POST GetVoteResults',
+      `${WEBSITE_API}/Votes/GetVoteResults`,
+      { VoteId: VOTE_ID },
+    ],
+    [
+      'POST GetVoteResult',
+      `${WEBSITE_API}/Votes/GetVoteResult`,
+      { VoteId: VOTE_ID },
+    ],
+    [
+      'POST GetVoteDetails',
+      `${WEBSITE_API}/Votes/GetVoteDetails`,
+      { VoteId: VOTE_ID },
+    ],
+    [
+      'POST GetVoteMembers',
+      `${WEBSITE_API}/Votes/GetVoteMembers`,
+      { VoteId: VOTE_ID },
+    ],
+    [
+      'POST GetMKVotes',
+      `${WEBSITE_API}/MK/GetMKVotes`,
+      { MkId: MK_ID, KnessetNum: 25 },
+    ],
+    [
+      'POST GetMKPlenumVotes',
+      `${WEBSITE_API}/MK/GetMKPlenumVotes`,
+      { MkId: MK_ID, KnessetNum: 25 },
+    ],
+    [
+      'POST GetMKVotingRecord',
+      `${WEBSITE_API}/MK/GetMKVotingRecord`,
+      { MkId: MK_ID, KnessetNum: 25 },
+    ],
+    [
+      'POST GetMKActivity',
+      `${WEBSITE_API}/MK/GetMKActivity`,
+      { MkId: MK_ID, KnessetNum: 25 },
+    ],
   ];
 
   for (const [name, url, body] of postEndpoints) {
@@ -82,7 +141,9 @@ async function main() {
     const html = await pageRes.text();
     // Look for API URLs in the HTML
     const apiRefs = html.match(/WebSiteApi[^"'\s]*/g) || [];
-    console.log(`Found ${apiRefs.length} WebSiteApi references in vote page HTML:`);
+    console.log(
+      `Found ${apiRefs.length} WebSiteApi references in vote page HTML:`,
+    );
     for (const ref of [...new Set(apiRefs)]) {
       console.log(`  ${ref}`);
     }
@@ -101,9 +162,18 @@ async function main() {
   console.log('\n\n=== Trying alternative API patterns ===');
   const altEndpoints = [
     ['GET api/votes', `https://main.knesset.gov.il/api/votes/${VOTE_ID}`],
-    ['GET api/vote-results', `https://main.knesset.gov.il/api/vote-results/${VOTE_ID}`],
-    ['GET mk activity json', `https://main.knesset.gov.il/mk/Apps/mk/mk-parliamentary-activity/${MK_ID}?format=json`],
-    ['GET mk votes json', `https://main.knesset.gov.il/mk/Apps/mk/mk-votes/${MK_ID}`],
+    [
+      'GET api/vote-results',
+      `https://main.knesset.gov.il/api/vote-results/${VOTE_ID}`,
+    ],
+    [
+      'GET mk activity json',
+      `https://main.knesset.gov.il/mk/Apps/mk/mk-parliamentary-activity/${MK_ID}?format=json`,
+    ],
+    [
+      'GET mk votes json',
+      `https://main.knesset.gov.il/mk/Apps/mk/mk-votes/${MK_ID}`,
+    ],
   ];
 
   for (const [name, url] of altEndpoints) {

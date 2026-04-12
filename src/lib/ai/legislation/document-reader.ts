@@ -149,10 +149,14 @@ async function readDocWithOfficeparser(url: string): Promise<string | null> {
   if (typeof result === 'string') {
     text = result;
   } else if (result && typeof result === 'object') {
+    const obj = result as unknown as {
+      toText?: () => string;
+      content?: string;
+    };
     text =
-      typeof result.toText === 'function'
-        ? result.toText()
-        : (result.content ?? String(result));
+      typeof obj.toText === 'function'
+        ? obj.toText()
+        : (obj.content ?? String(result));
   } else {
     text = String(result ?? '');
   }

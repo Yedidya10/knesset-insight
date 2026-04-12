@@ -53,14 +53,14 @@ export async function linkVotesToBills(): Promise<void> {
     const billsByKnesset = new Map<number, { id: number; name: string }[]>();
     for (const b of allBills) {
       if (!b.name || b.name.length <= 10) continue;
-      const arr = billsByKnesset.get(b.knessetNum) ?? [];
+      const arr = billsByKnesset.get(b.knessetNum!) ?? [];
       arr.push({ id: b.id, name: b.name });
-      billsByKnesset.set(b.knessetNum, arr);
+      billsByKnesset.set(b.knessetNum!, arr);
     }
 
     // Index bill_names by bill → lookup knesset from allBills
     const billKnessetMap = new Map<number, number>();
-    for (const b of allBills) billKnessetMap.set(b.id, b.knessetNum);
+    for (const b of allBills) billKnessetMap.set(b.id, b.knessetNum!);
     for (const bn of allBillNameRows) {
       if (!bn.name || bn.name.length <= 10) continue;
       const kn = billKnessetMap.get(bn.billId);
@@ -81,7 +81,7 @@ export async function linkVotesToBills(): Promise<void> {
     const stillUnlinked: typeof unlinkedVotes = [];
 
     for (const vote of unlinkedVotes) {
-      const candidates = billsByKnesset.get(vote.knessetNum) ?? [];
+      const candidates = billsByKnesset.get(vote.knessetNum!) ?? [];
       const titleLower = vote.title.toLowerCase();
       let matched = false;
       for (const bill of candidates) {

@@ -18,10 +18,7 @@ interface Props {
   entityId: string;
 }
 
-export default function EntityActivityPopover({
-  entityType,
-  entityId,
-}: Props) {
+export default function EntityActivityPopover({ entityType, entityId }: Props) {
   const t = useTranslations('admin.entityActivity');
   const { isAdmin } = useAdminEdit();
   const [open, setOpen] = useState(false);
@@ -38,16 +35,26 @@ export default function EntityActivityPopover({
 
   useEffect(() => {
     if (!open || !isAdmin) return;
-    setLoading(true);
-    trpc.admin.entityActivity
-      .query({
-        entityType,
-        entityId,
-        limit: expanded ? 20 : 4,
-      })
-      .then((res) => setItems(res as typeof items))
-      .catch(() => setItems([]))
-      .finally(() => setLoading(false));
+    let cancelled = false;
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const res = await trpc.admin.entityActivity.query({
+          entityType,
+          entityId,
+          limit: expanded ? 20 : 4,
+        });
+        if (!cancelled) setItems(res as typeof items);
+      } catch {
+        if (!cancelled) setItems([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    fetchData();
+    return () => {
+      cancelled = true;
+    };
   }, [open, entityType, entityId, expanded, isAdmin]);
 
   if (!isAdmin) return null;
@@ -78,23 +85,23 @@ export default function EntityActivityPopover({
             <Loader2 className="h-4 w-4 animate-spin" />
           </div>
         ) : items.length === 0 ? (
-          <p className="text-xs text-muted-foreground py-2">
+          <p className="text-muted-foreground py-2 text-xs">
             {t('noActivity')}
           </p>
         ) : (
           <div className="space-y-2">
             {items.map((item) => {
-              const details = item.details as Record<string, unknown> | null;
+              const details = item.details as
+                | Record<string, unknown>
+                | null
+                | undefined;
               return (
                 <div
                   key={item.id}
-                  className="rounded-md border p-2 text-xs space-y-1"
+                  className="space-y-1 rounded-md border p-2 text-xs"
                 >
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <Badge
-                      variant="outline"
-                      className="text-[10px] font-mono"
-                    >
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <Badge variant="outline" className="font-mono text-[10px]">
                       {item.action}
                     </Badge>
                     <span className="text-muted-foreground">
@@ -103,11 +110,11 @@ export default function EntityActivityPopover({
                         : '—'}
                     </span>
                   </div>
-                  {details?.reason && (
+                  {details?.reason ? (
                     <p className="text-muted-foreground">
                       {String(details.reason)}
                     </p>
-                  )}
+                  ) : null}
                 </div>
               );
             })}
@@ -115,7 +122,7 @@ export default function EntityActivityPopover({
               <Button
                 variant="ghost"
                 size="sm"
-                className="w-full text-xs gap-1"
+                className="w-full gap-1 text-xs"
                 onClick={() => setExpanded(true)}
               >
                 <ChevronDown className="h-3 w-3" />

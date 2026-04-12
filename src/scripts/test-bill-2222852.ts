@@ -104,7 +104,6 @@ async function main() {
           knessetBillId: KNESSET_BILL_ID,
           groupTypeId: d.GroupTypeID,
           groupTypeDesc: d.GroupTypeDesc ?? '',
-          applicationTypeId: null,
           applicationDesc: d.ApplicationDesc ?? '',
           filePath,
           lastUpdated: d.LastUpdatedDate ? new Date(d.LastUpdatedDate) : null,

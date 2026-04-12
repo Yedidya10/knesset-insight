@@ -2,8 +2,8 @@ import { config } from 'dotenv';
 config({ path: '.env.local' });
 
 async function main() {
-  const { db } = await import('../lib/db/index.ts');
-  const { bills, billSplits, billUnions } = await import('../lib/db/schema.ts');
+  const { db } = await import('../lib/db/index');
+  const { bills, billSplits, billUnions } = await import('../lib/db/schema');
   const { eq, sql, inArray } = await import('drizzle-orm');
 
   // Count total splits and unions

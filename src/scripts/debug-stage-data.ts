@@ -2,8 +2,8 @@ import { config } from 'dotenv';
 config({ path: '.env.local' });
 
 async function main() {
-  const { db } = await import('../lib/db/index.ts');
-  const { votes, billNames } = await import('../lib/db/schema.ts');
+  const { db } = await import('../lib/db/index');
+  const { votes, billNames } = await import('../lib/db/schema');
   const { eq, desc, sql, and, isNotNull } = await import('drizzle-orm');
 
   // 1. All bill_names for bill 27 with their typeIds

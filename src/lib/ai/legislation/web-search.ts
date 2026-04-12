@@ -36,7 +36,7 @@ export async function searchBillContext(
     const response = await tvly.search(query, {
       searchDepth,
       maxResults,
-      includeDomains,
+      includeDomains: [...includeDomains],
     });
 
     const results = (response.results ?? []).map((r) => ({

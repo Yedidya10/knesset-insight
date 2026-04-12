@@ -1,16 +1,20 @@
 /**
  * Check Open Knesset CSV data for K25 vote results and investigate Buskila's missing votes.
  */
+export {};
 
 async function main() {
   // 1. Check Open Knesset vote_rslts_kmmbr_shadow.csv header + sample
   console.log('=== Checking Open Knesset vote_rslts_kmmbr_shadow.csv ===');
   try {
-    const url = 'https://production.oknesset.org/pipelines/data/votes/vote_rslts_kmmbr_shadow/vote_rslts_kmmbr_shadow.csv';
+    const url =
+      'https://production.oknesset.org/pipelines/data/votes/vote_rslts_kmmbr_shadow/vote_rslts_kmmbr_shadow.csv';
     const res = await fetch(url, { signal: AbortSignal.timeout(30_000) });
     const contentLength = res.headers.get('content-length');
-    console.log(`Content-Length: ${contentLength} bytes (${Math.round(Number(contentLength) / 1024 / 1024)}MB)`);
-    
+    console.log(
+      `Content-Length: ${contentLength} bytes (${Math.round(Number(contentLength) / 1024 / 1024)}MB)`,
+    );
+
     // Read just first 5KB to see headers + sample
     const reader = res.body!.getReader();
     let text = '';
@@ -20,7 +24,7 @@ async function main() {
       text += new TextDecoder().decode(value);
     }
     reader.cancel();
-    
+
     const lines = text.split('\n');
     console.log(`\nHeaders: ${lines[0]}`);
     console.log(`\nFirst 5 data rows:`);
@@ -34,10 +38,13 @@ async function main() {
   // 2. Check vote_rslts_kmmbr_shadow_extra (might have newer data)
   console.log('\n=== Checking vote_rslts_kmmbr_shadow_extra.csv ===');
   try {
-    const url = 'https://production.oknesset.org/pipelines/data/votes/vote_rslts_kmmbr_shadow_extra/vote_rslts_kmmbr_shadow.csv';
+    const url =
+      'https://production.oknesset.org/pipelines/data/votes/vote_rslts_kmmbr_shadow_extra/vote_rslts_kmmbr_shadow.csv';
     const res = await fetch(url, { signal: AbortSignal.timeout(30_000) });
     const contentLength = res.headers.get('content-length');
-    console.log(`Content-Length: ${contentLength} bytes (${Math.round(Number(contentLength) / 1024 / 1024)}MB)`);
+    console.log(
+      `Content-Length: ${contentLength} bytes (${Math.round(Number(contentLength) / 1024 / 1024)}MB)`,
+    );
 
     const reader = res.body!.getReader();
     let text = '';
@@ -61,10 +68,13 @@ async function main() {
   // 3. Check view_vote_mk_individual
   console.log('\n=== Checking view_vote_mk_individual.csv ===');
   try {
-    const url = 'https://production.oknesset.org/pipelines/data/votes/view_vote_mk_individual/view_vote_mk_individual.csv';
+    const url =
+      'https://production.oknesset.org/pipelines/data/votes/view_vote_mk_individual/view_vote_mk_individual.csv';
     const res = await fetch(url, { signal: AbortSignal.timeout(30_000) });
     const contentLength = res.headers.get('content-length');
-    console.log(`Content-Length: ${contentLength} bytes (${Math.round(Number(contentLength) / 1024 / 1024)}MB)`);
+    console.log(
+      `Content-Length: ${contentLength} bytes (${Math.round(Number(contentLength) / 1024 / 1024)}MB)`,
+    );
 
     const reader = res.body!.getReader();
     let text = '';
@@ -86,15 +96,21 @@ async function main() {
   }
 
   // 4. Check OData v4: does MkId=32681 (Buskila) appear in ANY vote result?
-  console.log('\n=== Checking if Buskila (MkId=32681) appears in v4 OData at all ===');
+  console.log(
+    '\n=== Checking if Buskila (MkId=32681) appears in v4 OData at all ===',
+  );
   try {
     const url = `https://knesset.gov.il/OdataV4/ParliamentInfo/KNS_PlenumVoteResult?$filter=MkId eq 32681&$count=true&$top=5&$format=json`;
     const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
     const data = await res.json();
-    console.log(`Total results for MkId=32681: ${data['@odata.count'] ?? data.value?.length}`);
+    console.log(
+      `Total results for MkId=32681: ${data['@odata.count'] ?? data.value?.length}`,
+    );
     if (data.value?.length > 0) {
       for (const r of data.value.slice(0, 5)) {
-        console.log(`  VoteID=${r.VoteID}, ResultCode=${r.ResultCode}, ${r.FirstName} ${r.LastName}`);
+        console.log(
+          `  VoteID=${r.VoteID}, ResultCode=${r.ResultCode}, ${r.FirstName} ${r.LastName}`,
+        );
       }
     }
   } catch (err: any) {
@@ -109,16 +125,20 @@ async function main() {
     { name: 'Benny Gantz', mkId: 0 },
     { name: 'Buskila', mkId: 32681 },
   ];
-  
+
   // Check Israel Katz specifically
   try {
     const url = `https://knesset.gov.il/OdataV4/ParliamentInfo/KNS_PlenumVoteResult?$filter=MkId eq 3260&$count=true&$top=3&$format=json`;
     const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
     const data = await res.json();
-    console.log(`Israel Katz (MkId=3260): ${data['@odata.count'] ?? data.value?.length} results`);
+    console.log(
+      `Israel Katz (MkId=3260): ${data['@odata.count'] ?? data.value?.length} results`,
+    );
     if (data.value?.length > 0) {
       for (const r of data.value.slice(0, 3)) {
-        console.log(`  VoteID=${r.VoteID}, ResultCode=${r.ResultCode}, ${r.FirstName} ${r.LastName}`);
+        console.log(
+          `  VoteID=${r.VoteID}, ResultCode=${r.ResultCode}, ${r.FirstName} ${r.LastName}`,
+        );
       }
     }
   } catch (err: any) {
@@ -133,12 +153,16 @@ async function main() {
     const res = await fetch(url, { signal: AbortSignal.timeout(10_000) });
     const data = await res.json();
     const mkIds = new Set(data.value.map((r: any) => r.MkId));
-    console.log(`Vote 40000: ${data.value.length} results, ${mkIds.size} distinct MkIds`);
-    
+    console.log(
+      `Vote 40000: ${data.value.length} results, ${mkIds.size} distinct MkIds`,
+    );
+
     // Check if Buskila's MkId is in this vote
     const buskila = data.value.find((r: any) => r.MkId === 32681);
-    console.log(`Buskila in vote 40000: ${buskila ? `YES (${buskila.FirstName} ${buskila.LastName})` : 'NO'}`);
-    
+    console.log(
+      `Buskila in vote 40000: ${buskila ? `YES (${buskila.FirstName} ${buskila.LastName})` : 'NO'}`,
+    );
+
     // Show sample MkIds
     console.log(`Sample MkIds: ${[...mkIds].slice(0, 10).join(', ')}`);
   } catch (err: any) {

@@ -8,11 +8,11 @@ config({ path: '.env.local' });
  * SECOND_THIRD_READING.
  */
 async function main() {
-  const { db } = await import('../lib/db/index.ts');
-  const { votes, bills, billNames } = await import('../lib/db/schema.ts');
+  const { db } = await import('../lib/db/index');
+  const { votes, bills, billNames } = await import('../lib/db/schema');
   const { sql, eq, isNotNull, and, inArray } = await import('drizzle-orm');
   const { BillStage, NAME_TYPE_TO_STAGE } =
-    await import('../lib/knesset/bill-stages.ts');
+    await import('../lib/knesset/bill-stages');
 
   // ── Step 1: Reset all bill_stage to NULL ──────────────────────
   console.log('Step 1: Resetting all bill_stage values...');

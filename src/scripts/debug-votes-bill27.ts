@@ -2,8 +2,8 @@ import { config } from 'dotenv';
 config({ path: '.env.local' });
 
 async function main() {
-  const { db } = await import('../lib/db/index.ts');
-  const { votes } = await import('../lib/db/schema.ts');
+  const { db } = await import('../lib/db/index');
+  const { votes } = await import('../lib/db/schema');
   const { sql } = await import('drizzle-orm');
 
   // Fix misclassified votes: "כהצעת הוועדה" and "הסתייגות" are always 2nd+3rd reading
