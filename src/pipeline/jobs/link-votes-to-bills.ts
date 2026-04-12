@@ -216,9 +216,11 @@ export async function linkVotesToBills(): Promise<void> {
       arr.push({ name: sn.name, stage });
       stageNamesByBill.set(sn.billId, arr);
     }
-    // Sort each bill's names by length DESC (longest substring match first)
+    // Sort each bill's names by length DESC (longest substring match first).
+    // When lengths are equal, prefer higher stage (later in legislative process)
+    // so that 2nd+3rd reading names win over 1st reading names.
     for (const arr of stageNamesByBill.values()) {
-      arr.sort((a, b) => b.name.length - a.name.length);
+      arr.sort((a, b) => b.name.length - a.name.length || b.stage - a.stage);
     }
 
     console.log(
@@ -291,6 +293,105 @@ export async function linkVotesToBills(): Promise<void> {
     `);
     console.log(
       `[link-votes-to-bills] Layer 5 (keyword fallback): ${layer5.length}`,
+    );
+
+    // ── Layer 6: Date-based disambiguation ───────────────────────
+    // When Layer 4 assigned ALL votes of a bill to the SAME stage,
+    // but the bill clearly progressed further (status → passed/later),
+    // use vote dates to split: earliest date group keeps the stage,
+    // later date groups move to SECOND_THIRD_READING.
+    // This is data-driven — uses synced dates + bill status.
+    const billsWithStage = await db.execute<{
+      bill_id: number;
+      stage: number;
+      cnt: string;
+      distinct_stages: string;
+    }>(sql`
+      SELECT bill_id, bill_stage AS stage, count(*)::text AS cnt,
+             count(DISTINCT bill_stage)::text AS distinct_stages
+      FROM votes
+      WHERE bill_id IS NOT NULL AND bill_stage IS NOT NULL
+      GROUP BY bill_id, bill_stage
+    `);
+
+    // Find bills where ALL votes share ONE stage
+    const billStageCounts = new Map<number, Map<number, number>>();
+    for (const row of billsWithStage) {
+      const map = billStageCounts.get(row.bill_id) ?? new Map();
+      map.set(row.stage, Number(row.cnt));
+      billStageCounts.set(row.bill_id, map);
+    }
+
+    // Load bill status to determine progression
+    const billStatusMap = new Map<number, string>();
+    const allBillStatuses = await db
+      .select({ id: bills.id, status: bills.status })
+      .from(bills);
+    for (const b of allBillStatuses) {
+      if (b.status) billStatusMap.set(b.id, b.status);
+    }
+
+    // Status IDs that indicate the bill passed through 2nd+3rd reading
+    const PASSED_BEYOND_FIRST = new Set([
+      '113',
+      '114',
+      '115',
+      '117',
+      '118', // committee 2nd, 2nd+3rd reading, passed
+      '122',
+      '126',
+      '169', // merged (during committee 2nd)
+      '178',
+      '179', // committee second variants
+    ]);
+
+    let layer6Count = 0;
+    for (const [billId, stageMap] of billStageCounts) {
+      // Only fix bills with a SINGLE assigned stage
+      if (stageMap.size !== 1) continue;
+      const [assignedStage, voteCount] = [...stageMap.entries()][0];
+      // Only fix early stages (FIRST_READING or before) with multiple votes
+      if (assignedStage > BillStage.FIRST_READING || voteCount <= 1) continue;
+      // Only fix if the bill progressed beyond the assigned stage
+      const status = billStatusMap.get(billId);
+      if (!status || !PASSED_BEYOND_FIRST.has(status)) continue;
+
+      // Get all votes for this bill, sorted by date
+      const billVotes = await db
+        .select({ id: votes.id, voteDate: votes.voteDate })
+        .from(votes)
+        .where(and(eq(votes.billId, billId), isNotNull(votes.billStage)))
+        .orderBy(votes.voteDate);
+
+      if (billVotes.length <= 1) continue;
+
+      // Find the earliest vote date (this is the actual first-reading vote)
+      const firstDate = billVotes[0].voteDate;
+      if (!firstDate) continue;
+
+      // Votes on a LATER day than the first vote → SECOND_THIRD_READING
+      const firstDay = firstDate.toISOString().slice(0, 10);
+      const laterVoteIds = billVotes
+        .filter(
+          (v) =>
+            v.voteDate && v.voteDate.toISOString().slice(0, 10) !== firstDay,
+        )
+        .map((v) => v.id);
+
+      if (laterVoteIds.length === 0) continue;
+
+      // Batch update later votes to SECOND_THIRD_READING
+      for (let i = 0; i < laterVoteIds.length; i += UPDATE_BATCH) {
+        const batch = laterVoteIds.slice(i, i + UPDATE_BATCH);
+        await db
+          .update(votes)
+          .set({ billStage: BillStage.SECOND_THIRD_READING })
+          .where(inArray(votes.id, batch));
+      }
+      layer6Count += laterVoteIds.length;
+    }
+    console.log(
+      `[link-votes-to-bills] Layer 6 (date disambiguation): ${layer6Count}`,
     );
 
     const [{ cnt: unlinkedAfter }] = await db.execute<{ cnt: string }>(sql`

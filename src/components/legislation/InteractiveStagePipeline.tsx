@@ -117,49 +117,23 @@ export function InteractiveStagePipeline({
     }
   }
 
-  // Assign untagged votes by inferring stage from title keywords
+  // Assign untagged votes to the latest non-PASSED completed stage.
+  // Stage assignment is done in the pipeline using synced data
+  // (bill_names, vote dates, bill status). The client trusts the DB.
   if (unassignedVotes.length > 0) {
-    const titlePatterns: Array<{ re: RegExp; stageIndex: number }> = [
-      {
-        re: /קריאה שנייה ושלישית|קריאה שניה ושלישית|הסתייגו/,
-        stageIndex: BillStage.SECOND_THIRD_READING,
-      },
-      {
-        re: /קריאה שנייה|קריאה שניה/,
-        stageIndex: BillStage.SECOND_THIRD_READING,
-      },
-      { re: /קריאה ראשונה/, stageIndex: BillStage.FIRST_READING },
-      { re: /דיון מוקדם/, stageIndex: BillStage.PRELIMINARY },
-      { re: /אישור החוק/, stageIndex: BillStage.PASSED },
-    ];
-
-    const still: StageVote[] = [];
-    for (const vote of unassignedVotes) {
-      const match = titlePatterns.find((p) => p.re.test(vote.title));
-      if (match) {
-        const stageKey = Object.entries(keyMap).find(
-          ([, idx]) => idx === match.stageIndex,
-        )?.[0];
-        if (stageKey) {
-          if (!votesByStage.has(stageKey)) votesByStage.set(stageKey, []);
-          votesByStage.get(stageKey)!.push(vote);
-          continue;
-        }
-      }
-      still.push(vote);
-    }
-
-    // Remaining truly unclassifiable votes go to latest completed stage
-    if (still.length > 0) {
-      const currentStage = stages.find((s) => s.status === 'current');
-      const latestCompleted = [...stages]
-        .reverse()
-        .find((s) => s.status === 'completed');
-      const targetKey = currentStage?.key ?? latestCompleted?.key;
-      if (targetKey) {
-        if (!votesByStage.has(targetKey)) votesByStage.set(targetKey, []);
-        votesByStage.get(targetKey)!.push(...still);
-      }
+    // Find the latest completed stage that isn't PASSED (for voting context)
+    const currentStage = stages.find((s) => s.status === 'current');
+    const latestVotingStage = [...stages]
+      .reverse()
+      .find((s) => s.status === 'completed' && s.stage !== BillStage.PASSED);
+    const latestCompleted = [...stages]
+      .reverse()
+      .find((s) => s.status === 'completed');
+    const targetKey =
+      currentStage?.key ?? latestVotingStage?.key ?? latestCompleted?.key;
+    if (targetKey) {
+      if (!votesByStage.has(targetKey)) votesByStage.set(targetKey, []);
+      votesByStage.get(targetKey)!.push(...unassignedVotes);
     }
   }
 
