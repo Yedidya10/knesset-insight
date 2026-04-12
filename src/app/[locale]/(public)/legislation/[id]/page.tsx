@@ -20,7 +20,6 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import MemberAvatar from '@/components/members/MemberAvatar';
-import { BillRelationshipBanner } from '@/components/legislation/BillRelationshipBanner';
 import { InteractiveStagePipeline } from '@/components/legislation/InteractiveStagePipeline';
 import { RelatedBillsCard } from '@/components/legislation/RelatedBillsCard';
 import { computeBillStage } from '@/lib/knesset/bill-stages';
@@ -256,11 +255,25 @@ export default async function BillDetailPage({ params }: Props) {
     id: s.splitBillId,
     name: s.splitBillName,
     knessetNum: relatedBillMap.get(s.splitBillId)?.knessetNum ?? null,
+    date: s.date,
   }));
   const mergedFromBills = mergedFromRows.map((mf) => ({
     id: mf.unionBillId,
     name: mf.unionBillName,
     knessetNum: relatedBillMap.get(mf.unionBillId)?.knessetNum ?? null,
+    date: mf.date,
+  }));
+  const unionBills = unionRows.map((u) => ({
+    id: u.mainBillId,
+    name: u.mainBillName,
+    knessetNum: relatedBillMap.get(u.mainBillId)?.knessetNum ?? null,
+    date: u.date,
+  }));
+  const splitFromBills = splitFromRows.map((sf) => ({
+    id: sf.mainBillId,
+    name: sf.mainBillName,
+    knessetNum: relatedBillMap.get(sf.mainBillId)?.knessetNum ?? null,
+    date: sf.date,
   }));
 
   const billTypeKey =
@@ -351,20 +364,6 @@ export default async function BillDetailPage({ params }: Props) {
             billId={billId}
             currentStatusId={bill.status}
           />
-
-          {/* Relationship banners */}
-          <div className="mt-4">
-            <BillRelationshipBanner
-              specialStatus={stageInfo.specialStatus}
-              isContinuationBill={bill.isContinuationBill}
-              unions={unionRows}
-              splits={splitRows}
-              splitFrom={splitFromRows}
-              mergedFrom={mergedFromRows}
-              currentKnessetNum={bill.knessetNum}
-              knessetUrl={knessetUrl}
-            />
-          </div>
 
           {/* Cluster banner */}
           {cluster && (
@@ -465,7 +464,9 @@ export default async function BillDetailPage({ params }: Props) {
 
       {/* Related bills (splits, mergedFrom, cluster siblings) */}
       <RelatedBillsCard
+        unions={unionBills}
         splitChildren={splitChildBills}
+        splitFrom={splitFromBills}
         mergedFromBills={mergedFromBills}
         clusterSiblings={clusterSiblings}
         cluster={cluster ? { id: cluster.id, name: cluster.name } : null}
