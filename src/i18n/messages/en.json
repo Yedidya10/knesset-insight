@@ -155,6 +155,7 @@
     "coalitionBreakdown": "Coalition",
     "oppositionBreakdown": "Opposition",
     "voterList": "Voter List",
+    "unknownFaction": "Unknown faction",
     "aiExplanation": "What does this mean?",
     "totalVoters": "Total voters",
     "relatedBill": "Related bill",

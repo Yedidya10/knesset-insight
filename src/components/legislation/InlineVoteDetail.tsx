@@ -133,11 +133,27 @@ export function InlineVoteDetail({ voteId }: { voteId: number }) {
     }
   }
 
-  // Group voters by voteValue for the sheet
+  // Group voters by voteValue, then by faction
+  const groupByFaction = (voters: Voter[]) => {
+    const map = new Map<string, Voter[]>();
+    for (const v of voters) {
+      const key = v.factionName ?? t('unknownFaction');
+      const arr = map.get(key);
+      if (arr) arr.push(v);
+      else map.set(key, [v]);
+    }
+    // Sort factions by voter count descending
+    return [...map.entries()].sort((a, b) => b[1].length - a[1].length);
+  };
+
   const votersByValue = {
-    for: data.voters.filter((v) => v.voteValue === 'for'),
-    against: data.voters.filter((v) => v.voteValue === 'against'),
-    abstain: data.voters.filter((v) => v.voteValue === 'abstain'),
+    for: groupByFaction(data.voters.filter((v) => v.voteValue === 'for')),
+    against: groupByFaction(
+      data.voters.filter((v) => v.voteValue === 'against'),
+    ),
+    abstain: groupByFaction(
+      data.voters.filter((v) => v.voteValue === 'abstain'),
+    ),
   };
 
   return (
@@ -165,8 +181,12 @@ export function InlineVoteDetail({ voteId }: { voteId: number }) {
           </SheetHeader>
           <div className="space-y-4 p-4 pt-0">
             {(['for', 'against', 'abstain'] as const).map((value) => {
-              const voters = votersByValue[value];
-              if (voters.length === 0) return null;
+              const factionGroups = votersByValue[value];
+              if (factionGroups.length === 0) return null;
+              const totalCount = factionGroups.reduce(
+                (s, [, v]) => s + v.length,
+                0,
+              );
               const colorMap = {
                 for: 'text-green-600 dark:text-green-400',
                 against: 'text-red-600 dark:text-red-400',
@@ -175,27 +195,36 @@ export function InlineVoteDetail({ voteId }: { voteId: number }) {
               return (
                 <div key={value}>
                   <h4
-                    className={`mb-2 text-sm font-semibold ${colorMap[value]}`}
+                    className={`mb-3 text-sm font-semibold ${colorMap[value]}`}
                   >
-                    {t(value)} ({voters.length})
+                    {t(value)} ({totalCount})
                   </h4>
-                  <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
-                    {voters.map((v) => (
-                      <div
-                        key={v.memberId}
-                        className="flex items-center gap-2 rounded-md px-2 py-1 text-xs"
-                      >
-                        <MemberAvatar
-                          member={{
-                            firstName: v.firstName,
-                            lastName: v.lastName,
-                            imageUrl: v.imageUrl,
-                          }}
-                          size="sm"
-                        />
-                        <span className="truncate">
-                          {v.firstName} {v.lastName}
-                        </span>
+                  <div className="space-y-3">
+                    {factionGroups.map(([factionName, voters]) => (
+                      <div key={factionName}>
+                        <h5 className="text-muted-foreground mb-1.5 text-xs font-medium">
+                          {factionName} ({voters.length})
+                        </h5>
+                        <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
+                          {voters.map((v) => (
+                            <div
+                              key={v.memberId}
+                              className="flex items-center gap-2 rounded-md px-2 py-1 text-xs"
+                            >
+                              <MemberAvatar
+                                member={{
+                                  firstName: v.firstName,
+                                  lastName: v.lastName,
+                                  imageUrl: v.imageUrl,
+                                }}
+                                size="sm"
+                              />
+                              <span className="truncate">
+                                {v.firstName} {v.lastName}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     ))}
                   </div>
