@@ -34,53 +34,61 @@ export function VoteTalliesBar({
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger render={<div className="w-full" />}>
-            {!compact && (
-              <div className="mb-1 flex justify-between text-xs tabular-nums text-muted-foreground">
-                <span className="text-green-600 dark:text-green-400">
-                  {forCount} {t('for')}
-                </span>
-                <span className="text-red-600 dark:text-red-400">
-                  {againstCount} {t('against')}
-                </span>
-                {abstainCount > 0 && (
-                  <span className="text-yellow-600 dark:text-yellow-400">
-                    {abstainCount} {t('abstain')}
-                  </span>
-                )}
-              </div>
-            )}
-            <div
-              className={`flex w-full overflow-hidden rounded-full ${compact ? 'h-1.5' : 'h-2.5'}`}
-              role="meter"
-              aria-valuenow={forCount}
-              aria-valuemin={0}
-              aria-valuemax={total}
-            >
-              {forCount > 0 && (
-                <div
-                  className="bg-green-500 dark:bg-green-600 transition-all"
-                  style={{ width: `${forPct}%` }}
-                />
-              )}
-              {againstCount > 0 && (
-                <div
-                  className="bg-red-500 dark:bg-red-600 transition-all"
-                  style={{ width: `${againstPct}%` }}
-                />
-              )}
+          {!compact && (
+            <div className="text-muted-foreground mb-1 flex justify-between text-xs tabular-nums">
+              <span className="text-green-600 dark:text-green-400">
+                {forCount} {t('for')}
+              </span>
+              <span className="text-red-600 dark:text-red-400">
+                {againstCount} {t('against')}
+              </span>
               {abstainCount > 0 && (
-                <div
-                  className="bg-yellow-500 dark:bg-yellow-600 transition-all"
-                  style={{ width: `${abstainPct}%` }}
-                />
+                <span className="text-yellow-600 dark:text-yellow-400">
+                  {abstainCount} {t('abstain')}
+                </span>
               )}
             </div>
+          )}
+          <div
+            className={`flex w-full overflow-hidden rounded-full ${compact ? 'h-1.5' : 'h-2.5'}`}
+            role="meter"
+            aria-valuenow={forCount}
+            aria-valuemin={0}
+            aria-valuemax={total}
+          >
+            {forCount > 0 && (
+              <div
+                className="bg-green-500 transition-all dark:bg-green-600"
+                style={{ width: `${forPct}%` }}
+              />
+            )}
+            {againstCount > 0 && (
+              <div
+                className="bg-red-500 transition-all dark:bg-red-600"
+                style={{ width: `${againstPct}%` }}
+              />
+            )}
+            {abstainCount > 0 && (
+              <div
+                className="bg-yellow-500 transition-all dark:bg-yellow-600"
+                style={{ width: `${abstainPct}%` }}
+              />
+            )}
+          </div>
         </TooltipTrigger>
         <TooltipContent>
-          <div className="flex gap-3 text-xs">
-            <span className="text-green-400">{t('for')}: {forCount}</span>
-            <span className="text-red-400">{t('against')}: {againstCount}</span>
-            <span className="text-yellow-400">{t('abstain')}: {abstainCount}</span>
+          <div className="flex gap-3 text-xs font-medium">
+            <span>
+              <span className="font-semibold">{t('for')}:</span> {forCount}
+            </span>
+            <span>
+              <span className="font-semibold">{t('against')}:</span>{' '}
+              {againstCount}
+            </span>
+            <span>
+              <span className="font-semibold">{t('abstain')}:</span>{' '}
+              {abstainCount}
+            </span>
           </div>
         </TooltipContent>
       </Tooltip>

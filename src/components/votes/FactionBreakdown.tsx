@@ -7,6 +7,12 @@ import {
   PopoverTrigger,
   PopoverContent,
 } from '@/components/ui/popover';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import MemberAvatar from '@/components/members/MemberAvatar';
 
 interface FactionCounts {
@@ -185,34 +191,61 @@ function FactionBarList({
                 )}
               </div>
             </div>
-            <div className="bg-muted/60 h-1.5 w-full overflow-hidden rounded-full">
-              <div
-                className="flex h-full overflow-hidden rounded-full transition-all"
-                style={{ width: `${barWidth}%` }}
-              >
-                {counts.for > 0 && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <div className="bg-muted/60 h-1.5 w-full overflow-hidden rounded-full" />
+                  }
+                >
                   <div
-                    className="h-full bg-green-500 dark:bg-green-600"
-                    style={{ width: `${(counts.for / total) * 100}%` }}
-                    title={`${labels.for}: ${counts.for}`}
-                  />
-                )}
-                {counts.against > 0 && (
-                  <div
-                    className="h-full bg-red-500 dark:bg-red-600"
-                    style={{ width: `${(counts.against / total) * 100}%` }}
-                    title={`${labels.against}: ${counts.against}`}
-                  />
-                )}
-                {counts.abstain > 0 && (
-                  <div
-                    className="h-full bg-yellow-500 dark:bg-yellow-600"
-                    style={{ width: `${(counts.abstain / total) * 100}%` }}
-                    title={`${labels.abstain}: ${counts.abstain}`}
-                  />
-                )}
-              </div>
-            </div>
+                    className="flex h-full overflow-hidden rounded-full transition-all"
+                    style={{ width: `${barWidth}%` }}
+                  >
+                    {counts.for > 0 && (
+                      <div
+                        className="h-full bg-green-500 dark:bg-green-600"
+                        style={{ width: `${(counts.for / total) * 100}%` }}
+                      />
+                    )}
+                    {counts.against > 0 && (
+                      <div
+                        className="h-full bg-red-500 dark:bg-red-600"
+                        style={{ width: `${(counts.against / total) * 100}%` }}
+                      />
+                    )}
+                    {counts.abstain > 0 && (
+                      <div
+                        className="h-full bg-yellow-500 dark:bg-yellow-600"
+                        style={{ width: `${(counts.abstain / total) * 100}%` }}
+                      />
+                    )}
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <div className="flex gap-3 text-xs font-medium">
+                    {counts.for > 0 && (
+                      <span>
+                        <span className="font-semibold">{labels.for}:</span>{' '}
+                        {counts.for}
+                      </span>
+                    )}
+                    {counts.against > 0 && (
+                      <span>
+                        <span className="font-semibold">{labels.against}:</span>{' '}
+                        {counts.against}
+                      </span>
+                    )}
+                    {counts.abstain > 0 && (
+                      <span>
+                        <span className="font-semibold">{labels.abstain}:</span>{' '}
+                        {counts.abstain}
+                      </span>
+                    )}
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         );
 
