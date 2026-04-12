@@ -1,8 +1,16 @@
 import { getTranslations } from 'next-intl/server';
+import { Suspense } from 'react';
 import { Users } from 'lucide-react';
 import { eq, asc, sql, and, or, ilike, inArray, desc } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { members, factions, memberVotes, billInitiators, memberFactionHistory, factionCoalitionPeriods } from '@/lib/db/schema';
+import {
+  members,
+  factions,
+  memberVotes,
+  billInitiators,
+  memberFactionHistory,
+  factionCoalitionPeriods,
+} from '@/lib/db/schema';
 import MemberCard from '@/components/members/MemberCard';
 import MembersFilter from '@/components/members/MembersFilter';
 import PaginationNav from '@/components/ui/pagination-nav';
@@ -48,12 +56,16 @@ export default async function MembersPage({ searchParams }: Props) {
     .filter((n): n is number => n !== null);
 
   const currentKnesset = availableKnessets[0] || 25;
-  const selectedKnesset = knessetFilter ? Number(knessetFilter) : currentKnesset;
+  const selectedKnesset = knessetFilter
+    ? Number(knessetFilter)
+    : currentKnesset;
   const isCurrentKnesset = selectedKnesset === currentKnesset;
 
   // Determine the latest government for the selected knesset
   const [maxGovRow] = await db
-    .select({ maxGov: sql<number>`max(${factionCoalitionPeriods.governmentNum})` })
+    .select({
+      maxGov: sql<number>`max(${factionCoalitionPeriods.governmentNum})`,
+    })
     .from(factionCoalitionPeriods)
     .where(eq(factionCoalitionPeriods.knessetNum, selectedKnesset));
   const latestGovNum = maxGovRow?.maxGov ?? null;
@@ -97,7 +109,10 @@ export default async function MembersPage({ searchParams }: Props) {
       .from(memberFactionHistory)
       .innerJoin(factions, eq(memberFactionHistory.factionId, factions.id))
       .where(eq(memberFactionHistory.knessetNum, selectedKnesset))
-      .orderBy(memberFactionHistory.memberId, desc(memberFactionHistory.startDate));
+      .orderBy(
+        memberFactionHistory.memberId,
+        desc(memberFactionHistory.startDate),
+      );
 
     historyFactionMap = new Map();
     for (const row of historyRows) {
@@ -132,7 +147,9 @@ export default async function MembersPage({ searchParams }: Props) {
       .innerJoin(members, eq(members.factionId, factions.id))
       .where(eq(factions.knessetNum, selectedKnesset))
       .orderBy(factions.name);
-    factionList = factionRows.filter((f) => f.name).map((f) => ({ id: f.id, name: f.name }));
+    factionList = factionRows
+      .filter((f) => f.name)
+      .map((f) => ({ id: f.id, name: f.name }));
   }
 
   // Build member conditions
@@ -191,7 +208,9 @@ export default async function MembersPage({ searchParams }: Props) {
       conditions.push(inArray(members.factionId, [...coalitionFactionDbIds]));
     } else if (coalitionFilter === 'opposition') {
       // Opposition = factions NOT in the coalition set
-      const oppositionFactionIds = kfIds.filter((id) => !coalitionFactionDbIds.has(id));
+      const oppositionFactionIds = kfIds.filter(
+        (id) => !coalitionFactionDbIds.has(id),
+      );
       if (oppositionFactionIds.length > 0) {
         conditions.push(inArray(members.factionId, oppositionFactionIds));
       } else {
@@ -225,8 +244,7 @@ export default async function MembersPage({ searchParams }: Props) {
     );
   }
 
-  const whereClause =
-    conditions.length > 0 ? and(...conditions) : undefined;
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
   // Count for pagination
   const [countResult] = await db
@@ -263,7 +281,16 @@ export default async function MembersPage({ searchParams }: Props) {
   const memberIds = memberRows.map((m) => m.id);
 
   // Query 2: Aggregated vote stats for the fetched members (single fast query)
-  const voteStatsMap = new Map<number, { forCount: number; againstCount: number; abstainCount: number; absentCount: number; totalVotes: number }>();
+  const voteStatsMap = new Map<
+    number,
+    {
+      forCount: number;
+      againstCount: number;
+      abstainCount: number;
+      absentCount: number;
+      totalVotes: number;
+    }
+  >();
   if (memberIds.length > 0) {
     const statsRows = await db
       .select({
@@ -277,7 +304,13 @@ export default async function MembersPage({ searchParams }: Props) {
 
     for (const row of statsRows) {
       if (!voteStatsMap.has(row.memberId)) {
-        voteStatsMap.set(row.memberId, { forCount: 0, againstCount: 0, abstainCount: 0, absentCount: 0, totalVotes: 0 });
+        voteStatsMap.set(row.memberId, {
+          forCount: 0,
+          againstCount: 0,
+          abstainCount: 0,
+          absentCount: 0,
+          totalVotes: 0,
+        });
       }
       const entry = voteStatsMap.get(row.memberId)!;
       entry.totalVotes += row.count;
@@ -310,12 +343,26 @@ export default async function MembersPage({ searchParams }: Props) {
     const historyInfo = historyFactionMap?.get(m.id);
     const isCoalition = historyInfo
       ? historyInfo.isCoalition
-      : (m.factionId ? coalitionFactionDbIds.has(m.factionId) : false);
+      : m.factionId
+        ? coalitionFactionDbIds.has(m.factionId)
+        : false;
     return {
       ...(historyInfo
-        ? { ...m, factionId: historyInfo.factionId, factionName: historyInfo.factionName, factionColor: historyInfo.factionColor, isCoalition }
+        ? {
+            ...m,
+            factionId: historyInfo.factionId,
+            factionName: historyInfo.factionName,
+            factionColor: historyInfo.factionColor,
+            isCoalition,
+          }
         : { ...m, isCoalition }),
-      ...(voteStatsMap.get(m.id) ?? { forCount: 0, againstCount: 0, abstainCount: 0, absentCount: 0, totalVotes: 0 }),
+      ...(voteStatsMap.get(m.id) ?? {
+        forCount: 0,
+        againstCount: 0,
+        abstainCount: 0,
+        absentCount: 0,
+        totalVotes: 0,
+      }),
       billCount: billCountMap.get(m.id) ?? 0,
     };
   });
@@ -324,9 +371,12 @@ export default async function MembersPage({ searchParams }: Props) {
   if (sortBy !== 'name') {
     data.sort((a, b) => {
       switch (sortBy) {
-        case 'mostVotes': return b.totalVotes - a.totalVotes;
-        case 'mostAbsent': return b.absentCount - a.absentCount;
-        case 'mostBills': return b.billCount - a.billCount;
+        case 'mostVotes':
+          return b.totalVotes - a.totalVotes;
+        case 'mostAbsent':
+          return b.absentCount - a.absentCount;
+        case 'mostBills':
+          return b.billCount - a.billCount;
         case 'seniority': {
           // Earliest startDate first; nulls last
           if (!a.startDate && !b.startDate) return 0;
@@ -341,55 +391,62 @@ export default async function MembersPage({ searchParams }: Props) {
           if (!b.birthDate) return -1;
           return a.birthDate.localeCompare(b.birthDate);
         }
-        default: return 0;
+        default:
+          return 0;
       }
     });
   }
 
-  const subtitleKey =
-    !isCurrentKnesset
-      ? 'allMembers'
-      : statusFilter === 'past'
-        ? 'pastMembers'
-        : 'currentMembers';
+  const subtitleKey = !isCurrentKnesset
+    ? 'allMembers'
+    : statusFilter === 'past'
+      ? 'pastMembers'
+      : 'currentMembers';
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       <div className="mb-8 flex items-center gap-3">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
-          <Users className="h-7 w-7 text-primary" />
+        <div className="bg-primary/10 ring-primary/20 flex h-14 w-14 items-center justify-center rounded-2xl ring-1">
+          <Users className="text-primary h-7 w-7" />
         </div>
         <div>
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
             {t('title')}
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             {t(subtitleKey)} ({totalCount})
           </p>
         </div>
       </div>
 
       <div className="mb-6">
-        <MembersFilter
-          factions={factionList}
-          currentFaction={partyFilter}
-          currentSort={sortBy}
-          currentStatus={statusFilter}
-          currentSearch={searchQuery}
-          knessetNumbers={availableKnessets}
-          currentKnesset={knessetFilter || String(currentKnesset)}
-          currentCoalition={coalitionFilter}
-          currentGender={genderFilter}
-          currentKnessetNumber={currentKnesset}
-          showDetails={showDetails}
-        />
+        <Suspense>
+          <MembersFilter
+            factions={factionList}
+            currentFaction={partyFilter}
+            currentSort={sortBy}
+            currentStatus={statusFilter}
+            currentSearch={searchQuery}
+            knessetNumbers={availableKnessets}
+            currentKnesset={knessetFilter || String(currentKnesset)}
+            currentCoalition={coalitionFilter}
+            currentGender={genderFilter}
+            currentKnessetNumber={currentKnesset}
+            showDetails={showDetails}
+          />
+        </Suspense>
       </div>
 
       {data.length > 0 ? (
         <>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 stagger-children">
+          <div className="stagger-children grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
             {data.map((member, i) => (
-              <MemberCard key={member.id} member={member} showDetails={showDetails} priority={i < 10} />
+              <MemberCard
+                key={member.id}
+                member={member}
+                showDetails={showDetails}
+                priority={i < 10}
+              />
             ))}
           </div>
           <PaginationNav
@@ -399,7 +456,8 @@ export default async function MembersPage({ searchParams }: Props) {
               const urlParams = new URLSearchParams();
               if (partyFilter) urlParams.set('party', partyFilter);
               if (sortBy !== 'name') urlParams.set('sort', sortBy);
-              if (statusFilter !== 'current') urlParams.set('status', statusFilter);
+              if (statusFilter !== 'current')
+                urlParams.set('status', statusFilter);
               if (searchQuery) urlParams.set('search', searchQuery);
               if (knessetFilter) urlParams.set('knesset', knessetFilter);
               if (coalitionFilter) urlParams.set('coalition', coalitionFilter);
@@ -414,8 +472,8 @@ export default async function MembersPage({ searchParams }: Props) {
           />
         </>
       ) : (
-        <div className="mt-16 flex flex-col items-center gap-3 text-muted-foreground">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
+        <div className="text-muted-foreground mt-16 flex flex-col items-center gap-3">
+          <div className="bg-muted flex h-16 w-16 items-center justify-center rounded-2xl">
             <Users className="h-8 w-8 opacity-30" />
           </div>
           <p className="text-sm">{t('noResults')}</p>
