@@ -2,7 +2,15 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Check, X, ChevronDown, Pencil } from 'lucide-react';
+import {
+  Check,
+  X,
+  ChevronDown,
+  Pencil,
+  GitMerge,
+  GitBranch,
+} from 'lucide-react';
+import { Link } from '@/i18n/navigation';
 import {
   Tooltip,
   TooltipContent,
@@ -38,10 +46,18 @@ interface StageVote {
   billStage?: number | null;
 }
 
+export interface RelationshipEvent {
+  type: 'mergedInto' | 'splitFrom' | 'splitInto' | 'mergedFrom';
+  billId: number;
+  billName: string | null;
+  date: string | null;
+}
+
 interface InteractiveStagePipelineProps {
   stages: StageInfo[];
   specialStatus: SpecialStatus;
   votes: StageVote[];
+  relationshipEvents?: RelationshipEvent[];
   stageKeyToIndex?: Record<string, number>;
   billId?: number;
   currentStatusId?: string | null;
@@ -61,11 +77,13 @@ export function InteractiveStagePipeline({
   stages,
   specialStatus,
   votes,
+  relationshipEvents,
   stageKeyToIndex,
   billId,
   currentStatusId,
 }: InteractiveStagePipelineProps) {
   const t = useTranslations('legislation.stages');
+  const tLeg = useTranslations('legislation');
   const { isAdmin } = useAdminEdit();
 
   const keyMap = stageKeyToIndex ?? DEFAULT_STAGE_KEY_MAP;
@@ -145,10 +163,25 @@ export function InteractiveStagePipeline({
     }
   }
 
-  // Default to the latest stage that has votes
+  // Place relationship events at the terminated/current stage
+  const eventsByStage = new Map<string, RelationshipEvent[]>();
+  if (relationshipEvents && relationshipEvents.length > 0) {
+    // Events go at the "current" stage (which for terminated bills is where it ended)
+    const currentStageKey = stages.find((s) => s.status === 'current')?.key;
+    const latestCompletedKey = [...stages]
+      .reverse()
+      .find((s) => s.status === 'completed')?.key;
+    const eventsTargetKey = currentStageKey ?? latestCompletedKey;
+    if (eventsTargetKey) {
+      eventsByStage.set(eventsTargetKey, relationshipEvents);
+    }
+  }
+
+  // Default to the latest stage that has votes or events
   const defaultStage = (() => {
     for (let i = stages.length - 1; i >= 0; i--) {
-      if (votesByStage.has(stages[i].key)) return stages[i].key;
+      const key = stages[i].key;
+      if (votesByStage.has(key) || eventsByStage.has(key)) return key;
     }
     return null;
   })();
@@ -172,7 +205,10 @@ export function InteractiveStagePipeline({
               }
             />
             <PopoverContent side="bottom" align="end" className="w-80">
-              <BillStageOverride billId={billId} currentStatusId={currentStatusId ?? null} />
+              <BillStageOverride
+                billId={billId}
+                currentStatusId={currentStatusId ?? null}
+              />
             </PopoverContent>
           </Popover>
         </div>
@@ -187,7 +223,9 @@ export function InteractiveStagePipeline({
           {stages.map((stage, idx) => {
             const isLast = idx === stages.length - 1;
             const stageVotes = votesByStage.get(stage.key) ?? [];
+            const stageEvents = eventsByStage.get(stage.key) ?? [];
             const hasVotes = stageVotes.length > 0;
+            const hasContent = hasVotes || stageEvents.length > 0;
 
             return (
               <div
@@ -201,7 +239,7 @@ export function InteractiveStagePipeline({
                     stepNumber={idx + 1}
                     isTerminated={isTerminated}
                     allCompleted={allCompleted}
-                    hasVotes={hasVotes}
+                    hasVotes={hasContent}
                     isExpanded={selectedStage === stage.key}
                     onToggle={() => setSelectedStage(stage.key)}
                     voteResult={
@@ -211,6 +249,7 @@ export function InteractiveStagePipeline({
                           : 'rejected'
                         : undefined
                     }
+                    hasRelationshipEvents={stageEvents.length > 0}
                   />
                   {!isLast && (
                     <div className="flex flex-1 items-center pt-[18px]">
@@ -238,16 +277,25 @@ export function InteractiveStagePipeline({
           })}
         </div>
 
-        {/* Expanded vote panel below pipeline */}
-        {selectedStage && votesByStage.has(selectedStage) && (
-          <div className="mt-4">
-            <StageVotePanel
-              stageName={t(selectedStage)}
-              votes={votesByStage.get(selectedStage)!}
-              billId={billId}
-            />
-          </div>
-        )}
+        {/* Expanded panel below pipeline — votes + relationship events */}
+        {selectedStage &&
+          (votesByStage.has(selectedStage) ||
+            eventsByStage.has(selectedStage)) && (
+            <div className="mt-4 space-y-3">
+              {eventsByStage.has(selectedStage) && (
+                <RelationshipEventsPanel
+                  events={eventsByStage.get(selectedStage)!}
+                />
+              )}
+              {votesByStage.has(selectedStage) && (
+                <StageVotePanel
+                  stageName={t(selectedStage)}
+                  votes={votesByStage.get(selectedStage)!}
+                  billId={billId}
+                />
+              )}
+            </div>
+          )}
       </div>
 
       {/* Mobile: vertical stepper with inline vote panels */}
@@ -256,7 +304,9 @@ export function InteractiveStagePipeline({
           {stages.map((stage, idx) => {
             const isLast = idx === stages.length - 1;
             const stageVotes = votesByStage.get(stage.key) ?? [];
+            const stageEvents = eventsByStage.get(stage.key) ?? [];
             const hasVotes = stageVotes.length > 0;
+            const hasContent = hasVotes || stageEvents.length > 0;
 
             return (
               <Collapsible
@@ -272,7 +322,7 @@ export function InteractiveStagePipeline({
                       stage={stage}
                       isTerminated={isTerminated}
                       allCompleted={allCompleted}
-                      hasVotes={hasVotes}
+                      hasVotes={hasContent}
                     />
                     {!isLast && (
                       <div
@@ -296,7 +346,7 @@ export function InteractiveStagePipeline({
                   <div className={cn('flex-1 pt-2 pb-5', isLast && 'pb-0')}>
                     <CollapsibleTrigger
                       className="flex w-full items-center justify-between"
-                      disabled={!hasVotes}
+                      disabled={!hasContent}
                     >
                       <div>
                         <p className="text-muted-foreground text-[11px] font-medium">
@@ -321,7 +371,7 @@ export function InteractiveStagePipeline({
                           {t(stage.key)}
                         </p>
                       </div>
-                      {hasVotes && (
+                      {hasContent && (
                         <ChevronDown
                           className={cn(
                             'text-muted-foreground h-4 w-4 transition-transform',
@@ -330,12 +380,17 @@ export function InteractiveStagePipeline({
                         />
                       )}
                     </CollapsibleTrigger>
-                    <CollapsibleContent className="mt-2">
-                      <StageVotePanel
-                        stageName={t(stage.key)}
-                        votes={stageVotes}
-                        billId={billId}
-                      />
+                    <CollapsibleContent className="mt-2 space-y-3">
+                      {stageEvents.length > 0 && (
+                        <RelationshipEventsPanel events={stageEvents} />
+                      )}
+                      {hasVotes && (
+                        <StageVotePanel
+                          stageName={t(stage.key)}
+                          votes={stageVotes}
+                          billId={billId}
+                        />
+                      )}
                     </CollapsibleContent>
                   </div>
                 </div>
@@ -428,6 +483,7 @@ function InteractiveStageNode({
   isExpanded,
   onToggle,
   voteResult,
+  hasRelationshipEvents,
 }: {
   stage: StageInfo;
   label: string;
@@ -438,6 +494,7 @@ function InteractiveStageNode({
   isExpanded: boolean;
   onToggle: () => void;
   voteResult?: 'accepted' | 'rejected';
+  hasRelationshipEvents?: boolean;
 }) {
   const t = useTranslations('legislation.stages');
   const { status } = stage;
@@ -498,6 +555,12 @@ function InteractiveStageNode({
                 {voteResult === 'accepted' ? '✓' : '✗'}
               </span>
             )}
+            {hasRelationshipEvents && (
+              <div className="mt-0.5 flex items-center gap-0.5">
+                <GitMerge className="h-2.5 w-2.5 text-violet-500" />
+                <GitBranch className="h-2.5 w-2.5 text-sky-500" />
+              </div>
+            )}
             {hasVotes && (
               <ChevronDown
                 className={cn(
@@ -519,5 +582,77 @@ function InteractiveStageNode({
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
+  );
+}
+
+// ── Relationship Events Panel ───────────────────────────────────
+
+function RelationshipEventsPanel({ events }: { events: RelationshipEvent[] }) {
+  const t = useTranslations('legislation.special');
+
+  const typeConfig: Record<
+    RelationshipEvent['type'],
+    { icon: typeof GitMerge; label: string; color: string }
+  > = {
+    mergedInto: {
+      icon: GitMerge,
+      label: t('mergedWith'),
+      color: 'text-violet-600 dark:text-violet-400',
+    },
+    mergedFrom: {
+      icon: GitMerge,
+      label: t('includesMerge'),
+      color: 'text-violet-600 dark:text-violet-400',
+    },
+    splitFrom: {
+      icon: GitBranch,
+      label: t('splitFrom'),
+      color: 'text-sky-600 dark:text-sky-400',
+    },
+    splitInto: {
+      icon: GitBranch,
+      label: t('splitInto'),
+      color: 'text-sky-600 dark:text-sky-400',
+    },
+  };
+
+  // Sort by date
+  const sorted = [...events].sort(
+    (a, b) => new Date(a.date ?? 0).getTime() - new Date(b.date ?? 0).getTime(),
+  );
+
+  return (
+    <div className="bg-muted/10 rounded-lg border-s-4 border-s-violet-400/50 p-3">
+      <div className="space-y-2">
+        {sorted.map((event, idx) => {
+          const cfg = typeConfig[event.type];
+          const Icon = cfg.icon;
+          return (
+            <div
+              key={`${event.type}-${event.billId}-${idx}`}
+              className="flex items-start gap-2"
+            >
+              <Icon className={cn('mt-0.5 h-4 w-4 shrink-0', cfg.color)} />
+              <div className="min-w-0 flex-1">
+                <span className={cn('text-xs font-medium', cfg.color)}>
+                  {cfg.label}
+                </span>
+                <Link
+                  href={`/legislation/${event.billId}`}
+                  className="text-primary mt-0.5 block truncate text-sm underline-offset-2 hover:underline"
+                >
+                  {event.billName ?? `#${event.billId}`}
+                </Link>
+              </div>
+              {event.date && (
+                <span className="text-muted-foreground shrink-0 pt-0.5 text-[10px]">
+                  {new Date(event.date).toLocaleDateString('he-IL')}
+                </span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }

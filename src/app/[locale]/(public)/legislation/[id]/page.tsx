@@ -21,6 +21,7 @@ import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import MemberAvatar from '@/components/members/MemberAvatar';
 import { InteractiveStagePipeline } from '@/components/legislation/InteractiveStagePipeline';
+import type { RelationshipEvent } from '@/components/legislation/InteractiveStagePipeline';
 import { RelatedBillsCard } from '@/components/legislation/RelatedBillsCard';
 import { computeBillStage } from '@/lib/knesset/bill-stages';
 import {
@@ -206,8 +207,7 @@ export default async function BillDetailPage({ params }: Props) {
     unionBillId: mf.unionBillId,
     unionBillName: relatedBillMap.get(mf.unionBillId)?.name ?? null,
     unionBillKnessetId: relatedBillMap.get(mf.unionBillId)?.knessetId ?? 0,
-    unionBillKnessetNum:
-      relatedBillMap.get(mf.unionBillId)?.knessetNum ?? null,
+    unionBillKnessetNum: relatedBillMap.get(mf.unionBillId)?.knessetNum ?? null,
     date: mf.lastUpdated?.toISOString() ?? null,
   }));
 
@@ -234,7 +234,11 @@ export default async function BillDetailPage({ params }: Props) {
     clusterRow && (clusterRow.billCount ?? 0) > 1 ? clusterRow : null;
 
   // Fetch cluster siblings (other bills in same cluster)
-  let clusterSiblings: { id: number; name: string | null; knessetNum: number | null }[] = [];
+  let clusterSiblings: {
+    id: number;
+    name: string | null;
+    knessetNum: number | null;
+  }[] = [];
   if (cluster) {
     const siblingRows = await db
       .select({
@@ -275,6 +279,34 @@ export default async function BillDetailPage({ params }: Props) {
     knessetNum: relatedBillMap.get(sf.mainBillId)?.knessetNum ?? null,
     date: sf.date,
   }));
+
+  // Build relationship events for the stage pipeline
+  const relationshipEvents: RelationshipEvent[] = [
+    ...unionRows.map((u) => ({
+      type: 'mergedInto' as const,
+      billId: u.mainBillId,
+      billName: u.mainBillName,
+      date: u.date,
+    })),
+    ...splitFromRows.map((sf) => ({
+      type: 'splitFrom' as const,
+      billId: sf.mainBillId,
+      billName: sf.mainBillName,
+      date: sf.date,
+    })),
+    ...splitRows.map((s) => ({
+      type: 'splitInto' as const,
+      billId: s.splitBillId,
+      billName: s.splitBillName,
+      date: s.date,
+    })),
+    ...mergedFromRows.map((mf) => ({
+      type: 'mergedFrom' as const,
+      billId: mf.unionBillId,
+      billName: mf.unionBillName,
+      date: mf.date,
+    })),
+  ];
 
   const billTypeKey =
     bill.subTypeId === 53
@@ -361,6 +393,7 @@ export default async function BillDetailPage({ params }: Props) {
               isAccepted: v.isAccepted,
               billStage: v.billStage,
             }))}
+            relationshipEvents={relationshipEvents}
             billId={billId}
             currentStatusId={bill.status}
           />
