@@ -269,8 +269,6 @@
       "aiConfidence": "Уверенность: {percent}%",
       "aiReasoning": "Объяснение ИИ",
       "whyRelated": "Почему эти законопроекты связаны?",
-      "viewClusters": "Законы",
-      "viewIndividual": "Отдельные законопроекты",
       "category": {
         "criminal-law": "Уголовное право",
         "civil-law": "Гражданское право",

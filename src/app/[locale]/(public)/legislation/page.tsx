@@ -9,14 +9,12 @@ import {
 import { desc, asc, eq, sql, ilike, and, or, exists } from 'drizzle-orm';
 import { Link } from '@/i18n/navigation';
 import { db } from '@/lib/db';
-import { bills, billClusters, billNames } from '@/lib/db/schema';
+import { bills, billNames } from '@/lib/db/schema';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import TranslatedText from '@/components/ui/translated-text';
 import PaginationNav from '@/components/ui/pagination-nav';
 import LegislationFilter from '@/components/legislation/LegislationFilter';
-import { BillClusterCard } from '@/components/legislation/BillClusterCard';
-import LegislationViewToggle from '@/components/legislation/LegislationViewToggle';
 import EntityActivityPopover from '@/components/admin/inline/EntityActivityPopover';
 import { getBillStatusText } from '@/lib/knesset/bill-status';
 import { computeBillStage } from '@/lib/knesset/bill-stages';
@@ -32,7 +30,6 @@ const SLUG_TO_HEBREW: Record<BillTypeSlug, string> = {
 
 interface Props {
   searchParams: Promise<{
-    view?: string;
     knesset?: string;
     type?: string;
     status?: string;
@@ -50,7 +47,6 @@ export default async function LegislationPage({ searchParams }: Props) {
   const t = await getTranslations('legislation');
   const tCommon = await getTranslations('common');
   const params = await searchParams;
-  const view = params.view ?? 'bills';
   const knessetNum = params.knesset ? Number(params.knesset) : undefined;
   const billType = params.type ?? '';
   const statusFilter = params.status ?? '';
@@ -58,159 +54,6 @@ export default async function LegislationPage({ searchParams }: Props) {
   const sortBy = params.sort ?? 'dateDesc';
   const page = Math.max(1, Number(params.page ?? '1'));
   const offset = (page - 1) * PAGE_SIZE;
-
-  // Clusters view
-  if (view === 'clusters') {
-    let clusterData: {
-      id: number;
-      name: string;
-      description: string | null;
-      category: string | null;
-      currentStage: number | null;
-      billType: string | null;
-      latestKnessetNum: number | null;
-      billCount: number | null;
-      hasCrossTermBills: boolean | null;
-      aiProcessed: boolean | null;
-      aiConfidence: number | null;
-      latestUpdate: Date | null;
-    }[] = [];
-    let clusterTotal = 0;
-
-    const clusterConditions = [];
-    if (knessetNum)
-      clusterConditions.push(eq(billClusters.latestKnessetNum, knessetNum));
-    if (billType && billType in SLUG_TO_HEBREW)
-      clusterConditions.push(
-        eq(billClusters.billType, SLUG_TO_HEBREW[billType as BillTypeSlug]),
-      );
-    if (searchQuery)
-      clusterConditions.push(ilike(billClusters.name, `%${searchQuery}%`));
-    const clusterWhere =
-      clusterConditions.length > 0 ? and(...clusterConditions) : undefined;
-
-    const clusterOrder =
-      sortBy === 'dateAsc'
-        ? asc(billClusters.latestUpdate)
-        : sortBy === 'nameAsc'
-          ? asc(billClusters.name)
-          : sortBy === 'nameDesc'
-            ? desc(billClusters.name)
-            : desc(billClusters.latestUpdate);
-
-    const [data, countResult] = await Promise.all([
-      db
-        .select({
-          id: billClusters.id,
-          name: billClusters.name,
-          description: billClusters.description,
-          category: billClusters.category,
-          currentStage: billClusters.currentStage,
-          billType: billClusters.billType,
-          latestKnessetNum: billClusters.latestKnessetNum,
-          billCount: billClusters.billCount,
-          hasCrossTermBills: billClusters.hasCrossTermBills,
-          aiProcessed: billClusters.aiProcessed,
-          aiConfidence: billClusters.aiConfidence,
-          latestUpdate: billClusters.latestUpdate,
-        })
-        .from(billClusters)
-        .where(clusterWhere)
-        .orderBy(clusterOrder)
-        .limit(PAGE_SIZE)
-        .offset(offset),
-      db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(billClusters)
-        .where(clusterWhere),
-    ]);
-    clusterData = data;
-    clusterTotal = countResult[0]?.count ?? 0;
-    const clusterTotalPages = Math.ceil(clusterTotal / PAGE_SIZE);
-
-    return (
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-        <div className="mb-8 flex items-center gap-3">
-          <div className="bg-primary/10 ring-primary/20 flex h-14 w-14 items-center justify-center rounded-2xl ring-1">
-            <Gavel className="text-primary h-7 w-7" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-              {t('clusters.title')}
-            </h1>
-            <p className="text-muted-foreground text-sm">
-              {clusterTotal.toLocaleString()} {t('clusters.title')}
-            </p>
-          </div>
-        </div>
-
-        <div className="mb-6 flex flex-col gap-4">
-          <LegislationViewToggle currentView={view} />
-          <LegislationFilter
-            currentSearch={searchQuery}
-            currentKnessetNum={knessetNum ? String(knessetNum) : ''}
-            currentBillType={billType}
-            currentStatus={statusFilter}
-            currentSort={sortBy}
-            billTypes={[]}
-            statusOptions={[]}
-          />
-        </div>
-
-        {clusterData.length > 0 ? (
-          <>
-            <div className="stagger-children grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {clusterData.map((cluster) => (
-                <BillClusterCard
-                  key={cluster.id}
-                  id={cluster.id}
-                  name={cluster.name}
-                  description={cluster.description}
-                  category={cluster.category}
-                  currentStage={cluster.currentStage}
-                  billType={cluster.billType}
-                  latestKnessetNum={cluster.latestKnessetNum}
-                  billCount={cluster.billCount ?? 1}
-                  hasCrossTermBills={cluster.hasCrossTermBills}
-                  aiProcessed={cluster.aiProcessed}
-                  aiConfidence={cluster.aiConfidence}
-                  latestUpdate={cluster.latestUpdate}
-                />
-              ))}
-            </div>
-
-            <PaginationNav
-              currentPage={page}
-              totalPages={clusterTotalPages}
-              buildPageUrl={(p) => {
-                const urlParams = new URLSearchParams();
-                urlParams.set('view', 'clusters');
-                if (knessetNum) urlParams.set('knesset', String(knessetNum));
-                if (billType) urlParams.set('type', billType);
-                if (searchQuery) urlParams.set('search', searchQuery);
-                if (sortBy && sortBy !== 'dateDesc')
-                  urlParams.set('sort', sortBy);
-                if (p > 1) urlParams.set('page', String(p));
-                const qs = urlParams.toString();
-                return `/legislation${qs ? `?${qs}` : ''}`;
-              }}
-              previousLabel={tCommon('previous')}
-              nextLabel={tCommon('next')}
-            />
-          </>
-        ) : (
-          <div className="text-muted-foreground mt-16 flex flex-col items-center gap-3">
-            <div className="bg-muted flex h-16 w-16 items-center justify-center rounded-2xl">
-              <Gavel className="h-8 w-8 opacity-40" />
-            </div>
-            <p className="text-sm">{t('noResults')}</p>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // Individual bills view (fallback for any non-clusters view)
 
   const conditions = [];
   if (knessetNum) conditions.push(eq(bills.knessetNum, knessetNum));
@@ -307,8 +150,7 @@ export default async function LegislationPage({ searchParams }: Props) {
       </div>
 
       {/* Filters */}
-      <div className="mb-6 flex flex-col gap-4">
-        <LegislationViewToggle currentView={view} />
+      <div className="mb-6">
         <LegislationFilter
           currentSearch={searchQuery}
           currentKnessetNum={knessetNum ? String(knessetNum) : ''}
@@ -423,7 +265,6 @@ export default async function LegislationPage({ searchParams }: Props) {
             totalPages={totalPages}
             buildPageUrl={(p) => {
               const urlParams = new URLSearchParams();
-              urlParams.set('view', 'bills');
               if (knessetNum) urlParams.set('knesset', String(knessetNum));
               if (billType) urlParams.set('type', billType);
               if (statusFilter) urlParams.set('status', statusFilter);

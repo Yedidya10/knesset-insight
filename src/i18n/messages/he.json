@@ -269,8 +269,6 @@
       "aiConfidence": "ביטחון: {percent}%",
       "aiReasoning": "הסבר AI",
       "whyRelated": "למה ההצעות האלה קשורות?",
-      "viewClusters": "חוקים",
-      "viewIndividual": "הצעות חוק",
       "category": {
         "criminal-law": "משפט פלילי",
         "civil-law": "משפט אזרחי",

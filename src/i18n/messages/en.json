@@ -269,8 +269,6 @@
       "aiConfidence": "Confidence: {percent}%",
       "aiReasoning": "AI Explanation",
       "whyRelated": "Why are these bills related?",
-      "viewClusters": "Laws",
-      "viewIndividual": "Individual Bills",
       "category": {
         "criminal-law": "Criminal Law",
         "civil-law": "Civil Law",
