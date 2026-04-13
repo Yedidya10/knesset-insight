@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
+import type { Metadata } from 'next';
 import {
   User,
   Building2,
@@ -39,6 +40,38 @@ import IntegrityTab from '@/components/integrity/IntegrityTab';
 
 interface Props {
   params: Promise<{ id: string }>;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  const memberId = Number(id);
+  if (isNaN(memberId)) return {};
+
+  const [member] = await db
+    .select({
+      firstName: members.firstName,
+      lastName: members.lastName,
+      factionName: factions.name,
+    })
+    .from(members)
+    .leftJoin(factions, eq(members.factionId, factions.id))
+    .where(eq(members.id, memberId))
+    .limit(1);
+
+  if (!member) return {};
+
+  const t = await getTranslations('seo.members.detail');
+  const name = `${member.firstName} ${member.lastName}`;
+  const faction = member.factionName ?? '';
+
+  return {
+    title: t('title', { name }),
+    description: t('description', { name, faction }),
+    openGraph: {
+      title: t('title', { name }),
+      description: t('description', { name, faction }),
+    },
+  };
 }
 
 export default async function MemberProfilePage({ params }: Props) {

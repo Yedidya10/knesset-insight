@@ -335,11 +335,23 @@
     "endDate": "Dissolved"
   },
   "budget": {
-    "title": "Budget",
+    "title": "State Budget",
     "allocated": "Allocated",
     "used": "Used",
     "yearComparison": "Year Comparison",
-    "ministry": "Ministry"
+    "ministry": "Ministry",
+    "noData": "No budget data currently available",
+    "overview": "Overview",
+    "byMinistry": "By Ministry",
+    "budgetYear": "Budget Year",
+    "totalAllocated": "Total Allocated",
+    "totalUsed": "Total Used",
+    "utilizationRate": "Utilization Rate",
+    "dataNote": "Data is based on the published state budget. Utilization data may be updated.",
+    "billions": "₪{value}B",
+    "allMinistries": "All Ministries",
+    "items": "Budget Items",
+    "budgetCode": "Budget Code"
   },
   "committees": {
     "title": "Committees",
@@ -349,7 +361,17 @@
     "active": "Active Committees",
     "inactive": "Inactive Committees",
     "knesset": "Knesset",
-    "noResults": "No committees found"
+    "noResults": "No committees found",
+    "detail": {
+      "chairman": "Committee Chair",
+      "type": "Committee Type",
+      "status": "Status",
+      "recentSessions": "Recent Sessions",
+      "noSessions": "No sessions recorded",
+      "viewProtocol": "View Protocol",
+      "topicsDiscussed": "Topics Discussed",
+      "sessionDate": "Date"
+    }
   },
   "ai": {
     "chatTitle": "AI Chat",
@@ -833,6 +855,58 @@
         "userReport": "Following user report",
         "custom": "Other…"
       }
+    }
+  },
+  "seo": {
+    "siteName": "Knesset Insight",
+    "defaultDescription": "Israeli parliamentary data platform — MKs, votes, legislation, committees and budget",
+    "home": {
+      "title": "Knesset Insight — Israeli Parliamentary Data",
+      "description": "Israeli parliamentary data platform — MKs, votes, legislation, committees and budget"
+    },
+    "members": {
+      "title": "Members of Knesset — Knesset Insight",
+      "description": "List of Knesset members — search, filter by faction, voting records and legislative initiatives",
+      "detail": {
+        "title": "{name} — MK Profile",
+        "description": "{name}, {faction} — votes, legislative initiatives, committee memberships and parliamentary activity"
+      }
+    },
+    "legislation": {
+      "title": "Legislation — Knesset Insight",
+      "description": "Bills in the Knesset — track legislative stages, votes and sponsors",
+      "detail": {
+        "title": "{name} — Bill",
+        "description": "{name} — legislative stages, votes and bill details"
+      }
+    },
+    "committees": {
+      "title": "Knesset Committees — Knesset Insight",
+      "description": "Knesset committees — standing, special and inquiry committees, members and sessions",
+      "detail": {
+        "title": "{name} — Knesset Committee",
+        "description": "{name} — members, recent sessions and discussed legislation"
+      }
+    },
+    "politics": {
+      "title": "Politics — Knesset Insight",
+      "description": "Factions, parties and political groups in the Knesset — composition, timeline and connections"
+    },
+    "elections": {
+      "title": "Elections — Knesset Insight",
+      "description": "Knesset election results — history, mandates and polls"
+    },
+    "governments": {
+      "title": "Israeli Governments — Knesset Insight",
+      "description": "Israeli governments — Prime Minister, ministers, coalition factions and composition",
+      "detail": {
+        "title": "Government {number} — Knesset Insight",
+        "description": "Government {number} — Prime Minister, ministers and coalition composition"
+      }
+    },
+    "budget": {
+      "title": "State Budget — Knesset Insight",
+      "description": "Israeli state budget — allocation by ministry, utilization rates and yearly comparisons"
     }
   }
 }

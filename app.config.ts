@@ -1,4 +1,8 @@
 export const appConfig = {
+  // Site URL — used for SEO (sitemap, canonical, Open Graph)
+  siteUrl:
+    process.env.NEXT_PUBLIC_SITE_URL ?? 'https://knesset-insight.vercel.app',
+
   // Supported locales — RTL detected automatically
   i18n: {
     locales: ['he', 'en', 'ar', 'ru'] as const,

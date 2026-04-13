@@ -1,7 +1,11 @@
 import type { Metadata } from 'next';
 import { Rubik, Noto_Sans_Arabic, JetBrains_Mono } from 'next/font/google';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
-import { getMessages, setRequestLocale } from 'next-intl/server';
+import {
+  getMessages,
+  getTranslations,
+  setRequestLocale,
+} from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { routing } from '@/i18n/routing';
 import { appConfig } from '../../../app.config';
@@ -25,18 +29,46 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin', 'cyrillic'],
 });
 
-export const metadata: Metadata = {
-  title: 'Knesset Insight',
-  description: 'Israeli parliamentary data platform',
-  manifest: '/manifest.json',
-};
-
 type Props = {
   children: React.ReactNode;
   params: Promise<{ locale: string }>;
 };
 
-export const dynamic = 'force-dynamic';
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: 'seo' });
+  const baseUrl = appConfig.siteUrl;
+
+  return {
+    title: {
+      default: t('home.title'),
+      template: `%s | ${t('siteName')}`,
+    },
+    description: t('defaultDescription'),
+    manifest: '/manifest.json',
+    metadataBase: new URL(baseUrl),
+    alternates: {
+      canonical: `/${locale}`,
+      languages: Object.fromEntries(routing.locales.map((l) => [l, `/${l}`])),
+    },
+    openGraph: {
+      title: t('home.title'),
+      description: t('defaultDescription'),
+      siteName: t('siteName'),
+      locale,
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: t('home.title'),
+      description: t('defaultDescription'),
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
+  };
+}
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));

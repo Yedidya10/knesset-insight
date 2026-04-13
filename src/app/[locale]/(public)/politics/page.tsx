@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import type { Metadata } from 'next';
 import { Landmark } from 'lucide-react';
 import PoliticsTabNav, {
   type PoliticsTab,
@@ -8,6 +9,15 @@ import PartiesTab from '@/components/politics/tabs/PartiesTab';
 import GroupsTab from '@/components/politics/tabs/GroupsTab';
 import TimelineTab from '@/components/politics/tabs/TimelineTab';
 import GraphTab from '@/components/politics/tabs/GraphTab';
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('seo.politics');
+  return {
+    title: t('title'),
+    description: t('description'),
+    openGraph: { title: t('title'), description: t('description') },
+  };
+}
 
 const VALID_TABS: PoliticsTab[] = [
   'factions',

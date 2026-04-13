@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { Users } from 'lucide-react';
 import { eq, asc, sql, and, or, ilike, inArray, desc } from 'drizzle-orm';
@@ -18,6 +19,15 @@ import PaginationNav from '@/components/ui/pagination-nav';
 const PAGE_SIZE = 60;
 
 export const dynamic = 'force-dynamic';
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('seo.members');
+  return {
+    title: t('title'),
+    description: t('description'),
+    openGraph: { title: t('title'), description: t('description') },
+  };
+}
 
 interface Props {
   searchParams: Promise<{

@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import type { Metadata } from 'next';
 import { Landmark } from 'lucide-react';
 import { eq, desc, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
@@ -6,6 +7,15 @@ import { governments, members, factionCoalitionPeriods } from '@/lib/db/schema';
 import { Link } from '@/i18n/navigation';
 import { Badge } from '@/components/ui/badge';
 import GovernmentCard from '@/components/governments/GovernmentCard';
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('seo.governments');
+  return {
+    title: t('title'),
+    description: t('description'),
+    openGraph: { title: t('title'), description: t('description') },
+  };
+}
 
 interface Props {
   searchParams: Promise<{ knesset?: string }>;

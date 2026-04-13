@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
+import type { Metadata } from 'next';
 import { ArrowRight, Landmark } from 'lucide-react';
 import { eq, and } from 'drizzle-orm';
 import { db } from '@/lib/db';
@@ -19,6 +20,30 @@ import CoalitionBreakdown from '@/components/governments/CoalitionBreakdown';
 
 interface Props {
   params: Promise<{ id: string }>;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  const governmentNum = Number(id);
+  if (Number.isNaN(governmentNum)) return {};
+
+  const [gov] = await db
+    .select({ governmentNum: governments.governmentNum })
+    .from(governments)
+    .where(eq(governments.governmentNum, governmentNum))
+    .limit(1);
+
+  if (!gov) return {};
+
+  const t = await getTranslations('seo.governments.detail');
+  return {
+    title: t('title', { number: String(gov.governmentNum) }),
+    description: t('description', { number: String(gov.governmentNum) }),
+    openGraph: {
+      title: t('title', { number: String(gov.governmentNum) }),
+      description: t('description', { number: String(gov.governmentNum) }),
+    },
+  };
 }
 
 export default async function GovernmentDetailPage({ params }: Props) {

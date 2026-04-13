@@ -1,6 +1,7 @@
 import { getTranslations, getLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
+import type { Metadata } from 'next';
 import { eq, desc, sql, inArray, and } from 'drizzle-orm';
 import { Users, ExternalLink, Layers, UserMinus } from 'lucide-react';
 import { db } from '@/lib/db';
@@ -34,6 +35,30 @@ import {
 
 interface Props {
   params: Promise<{ id: string }>;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  const billId = Number(id);
+  if (Number.isNaN(billId)) return {};
+
+  const [bill] = await db
+    .select({ name: bills.name })
+    .from(bills)
+    .where(eq(bills.id, billId))
+    .limit(1);
+
+  if (!bill) return {};
+
+  const t = await getTranslations('seo.legislation.detail');
+  return {
+    title: t('title', { name: bill.name }),
+    description: t('description', { name: bill.name }),
+    openGraph: {
+      title: t('title', { name: bill.name }),
+      description: t('description', { name: bill.name }),
+    },
+  };
 }
 
 export default async function BillDetailPage({ params }: Props) {

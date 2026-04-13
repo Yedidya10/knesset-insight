@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import type { Metadata } from 'next';
 import { Vote, ArrowRight } from 'lucide-react';
 import { sql, eq, desc } from 'drizzle-orm';
 import { db } from '@/lib/db';
@@ -8,6 +9,15 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Link } from '@/i18n/navigation';
 import { appConfig } from '../../../../../app.config';
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('seo.elections');
+  return {
+    title: t('title'),
+    description: t('description'),
+    openGraph: { title: t('title'), description: t('description') },
+  };
+}
 
 interface Props {
   searchParams: Promise<{ knesset?: string }>;

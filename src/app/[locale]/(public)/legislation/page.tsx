@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import type { Metadata } from 'next';
 import {
   Gavel,
   GitMerge,
@@ -13,6 +14,15 @@ import { bills, billNames } from '@/lib/db/schema';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import TranslatedText from '@/components/ui/translated-text';
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('seo.legislation');
+  return {
+    title: t('title'),
+    description: t('description'),
+    openGraph: { title: t('title'), description: t('description') },
+  };
+}
 import PaginationNav from '@/components/ui/pagination-nav';
 import LegislationFilter from '@/components/legislation/LegislationFilter';
 import EntityActivityPopover from '@/components/admin/inline/EntityActivityPopover';

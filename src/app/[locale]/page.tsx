@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import type { Metadata } from 'next';
 import { Link } from '@/i18n/navigation';
 import {
   Vote,
@@ -15,6 +16,15 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import AnimatedSection from '@/components/ui/animated-section';
 import CountUp from '@/components/ui/count-up';
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('seo.home');
+  return {
+    title: t('title'),
+    description: t('description'),
+    openGraph: { title: t('title'), description: t('description') },
+  };
+}
 
 export default async function HomePage() {
   const t = await getTranslations('home');
