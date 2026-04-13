@@ -393,6 +393,22 @@ export const billInitiators = pgTable(
   (t) => [unique().on(t.billId, t.memberId)],
 );
 
+export const billHistoryInitiators = pgTable('bill_history_initiators', {
+  id: serial('id').primaryKey(),
+  knessetId: integer('knesset_id').unique().notNull(),
+  billId: integer('bill_id')
+    .references(() => bills.id)
+    .notNull(),
+  memberId: integer('member_id')
+    .references(() => members.id)
+    .notNull(),
+  isInitiator: boolean('is_initiator').default(false),
+  startDate: date('start_date'),
+  endDate: date('end_date'),
+  reasonId: integer('reason_id'),
+  reasonDesc: text('reason_desc'),
+});
+
 export const billUnions = pgTable(
   'bill_unions',
   {
@@ -992,6 +1008,7 @@ export const memberVotesRelations = relations(memberVotes, ({ one }) => ({
 
 export const billsRelations = relations(bills, ({ one, many }) => ({
   initiators: many(billInitiators),
+  historyInitiators: many(billHistoryInitiators),
   votes: many(votes),
   unionsAsMain: many(billUnions, { relationName: 'mainBillUnions' }),
   unionsAsMerged: many(billUnions, { relationName: 'unionBillUnions' }),
@@ -1018,6 +1035,20 @@ export const billInitiatorsRelations = relations(billInitiators, ({ one }) => ({
     references: [members.id],
   }),
 }));
+
+export const billHistoryInitiatorsRelations = relations(
+  billHistoryInitiators,
+  ({ one }) => ({
+    bill: one(bills, {
+      fields: [billHistoryInitiators.billId],
+      references: [bills.id],
+    }),
+    member: one(members, {
+      fields: [billHistoryInitiators.memberId],
+      references: [members.id],
+    }),
+  }),
+);
 
 export const billUnionsRelations = relations(billUnions, ({ one }) => ({
   mainBill: one(bills, {

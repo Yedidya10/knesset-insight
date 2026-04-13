@@ -18,7 +18,8 @@
     "all": "הכל",
     "more": "עוד",
     "showMore": "הצג עוד",
-    "showLess": "הצג פחות"
+    "showLess": "הצג פחות",
+    "unknown": "לא ידוע"
   },
   "theme": {
     "light": "בהיר",
@@ -188,6 +189,8 @@
     "initiators": "יוזמים",
     "primaryInitiator": "יוזם ראשי",
     "noInitiators": "לא נמצאו יוזמים",
+    "previousProposers": "מציעים קודמים",
+    "removedOn": "הוסר בתאריך {date}",
     "relatedVotes": "הצבעות קשורות",
     "noRelatedVotes": "לא נמצאו הצבעות קשורות",
     "committeeDiscussions": "דיונים בועדות",

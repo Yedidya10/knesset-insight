@@ -18,7 +18,8 @@
     "all": "الكل",
     "more": "المزيد",
     "showMore": "عرض المزيد",
-    "showLess": "عرض أقل"
+    "showLess": "عرض أقل",
+    "unknown": "غير معروف"
   },
   "theme": {
     "light": "فاتح",
@@ -188,6 +189,8 @@
     "initiators": "المبادرون",
     "primaryInitiator": "المبادر الرئيسي",
     "noInitiators": "لم يتم العثور على مبادرين",
+    "previousProposers": "مقترحون سابقون",
+    "removedOn": "تمت الإزالة في {date}",
     "relatedVotes": "تصويتات ذات صلة",
     "noRelatedVotes": "لم يتم العثور على تصويتات ذات صلة",
     "committeeDiscussions": "مناقشات اللجان",

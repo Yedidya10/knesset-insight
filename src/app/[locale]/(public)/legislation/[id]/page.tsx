@@ -1,17 +1,20 @@
 import { getTranslations, getLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
-import { eq, desc, sql, inArray } from 'drizzle-orm';
-import { Users, ExternalLink, Layers } from 'lucide-react';
+import { eq, desc, sql, inArray, and } from 'drizzle-orm';
+import { Users, ExternalLink, Layers, UserMinus } from 'lucide-react';
 import { db } from '@/lib/db';
 import {
   bills,
   billInitiators,
+  billHistoryInitiators,
   billUnions,
   billSplits,
   billNames,
   members,
   votes,
+  factions,
+  memberFactionHistory,
   billClusters,
   billClusterMembers,
 } from '@/lib/db/schema';
@@ -67,64 +70,94 @@ export default async function BillDetailPage({ params }: Props) {
   if (!bill) notFound();
 
   // Fetch related data in parallel
-  const [initiatorRows, relatedVotes, rawUnions, rawSplits, nameRows] =
-    await Promise.all([
-      db
-        .select({
-          memberId: members.id,
-          firstName: members.firstName,
-          lastName: members.lastName,
-          imageUrl: members.imageUrl,
-          isPrimary: billInitiators.isPrimary,
-        })
-        .from(billInitiators)
-        .innerJoin(members, eq(billInitiators.memberId, members.id))
-        .where(eq(billInitiators.billId, billId)),
+  const [
+    initiatorRows,
+    relatedVotes,
+    rawUnions,
+    rawSplits,
+    nameRows,
+    historyInitiatorRows,
+  ] = await Promise.all([
+    db
+      .select({
+        memberId: members.id,
+        firstName: members.firstName,
+        lastName: members.lastName,
+        imageUrl: members.imageUrl,
+        isPrimary: billInitiators.isPrimary,
+        factionId: factions.id,
+        factionName: factions.name,
+        factionColor: factions.color,
+      })
+      .from(billInitiators)
+      .innerJoin(members, eq(billInitiators.memberId, members.id))
+      .leftJoin(factions, eq(members.factionId, factions.id))
+      .where(eq(billInitiators.billId, billId)),
 
-      db
-        .select({
-          id: votes.id,
-          title: votes.title,
-          voteDate: votes.voteDate,
-          isAccepted: votes.isAccepted,
-          forCount: votes.forCount,
-          againstCount: votes.againstCount,
-          abstainCount: votes.abstainCount,
-          billStage: votes.billStage,
-        })
-        .from(votes)
-        .where(eq(votes.billId, billId))
-        .orderBy(desc(votes.voteDate)),
+    db
+      .select({
+        id: votes.id,
+        title: votes.title,
+        voteDate: votes.voteDate,
+        isAccepted: votes.isAccepted,
+        forCount: votes.forCount,
+        againstCount: votes.againstCount,
+        abstainCount: votes.abstainCount,
+        billStage: votes.billStage,
+      })
+      .from(votes)
+      .where(eq(votes.billId, billId))
+      .orderBy(desc(votes.voteDate)),
 
-      // Unions where this bill was absorbed (this bill → merged into main)
-      db
-        .select({
-          id: billUnions.id,
-          mainBillId: billUnions.mainBillId,
-          lastUpdated: billUnions.lastUpdated,
-        })
-        .from(billUnions)
-        .where(eq(billUnions.unionBillId, billId)),
+    // Unions where this bill was absorbed (this bill → merged into main)
+    db
+      .select({
+        id: billUnions.id,
+        mainBillId: billUnions.mainBillId,
+        lastUpdated: billUnions.lastUpdated,
+      })
+      .from(billUnions)
+      .where(eq(billUnions.unionBillId, billId)),
 
-      // Splits where this bill is the origin (this bill → split into children)
-      db
-        .select({
-          id: billSplits.id,
-          splitBillId: billSplits.splitBillId,
-          lastUpdated: billSplits.lastUpdated,
-        })
-        .from(billSplits)
-        .where(eq(billSplits.mainBillId, billId)),
+    // Splits where this bill is the origin (this bill → split into children)
+    db
+      .select({
+        id: billSplits.id,
+        splitBillId: billSplits.splitBillId,
+        lastUpdated: billSplits.lastUpdated,
+      })
+      .from(billSplits)
+      .where(eq(billSplits.mainBillId, billId)),
 
-      // Name history
-      db
-        .select({
-          name: billNames.name,
-          typeDesc: billNames.nameHistoryTypeDesc,
-        })
-        .from(billNames)
-        .where(eq(billNames.billId, billId)),
-    ]);
+    // Name history
+    db
+      .select({
+        name: billNames.name,
+        typeDesc: billNames.nameHistoryTypeDesc,
+      })
+      .from(billNames)
+      .where(eq(billNames.billId, billId)),
+
+    // Previous proposers (removed initiators)
+    db
+      .select({
+        memberId: members.id,
+        firstName: members.firstName,
+        lastName: members.lastName,
+        imageUrl: members.imageUrl,
+        isInitiator: billHistoryInitiators.isInitiator,
+        endDate: billHistoryInitiators.endDate,
+        reasonId: billHistoryInitiators.reasonId,
+        reasonDesc: billHistoryInitiators.reasonDesc,
+        factionId: factions.id,
+        factionName: factions.name,
+        factionColor: factions.color,
+      })
+      .from(billHistoryInitiators)
+      .innerJoin(members, eq(billHistoryInitiators.memberId, members.id))
+      .leftJoin(factions, eq(members.factionId, factions.id))
+      .where(eq(billHistoryInitiators.billId, billId)),
+  ]);
 
   // Reverse relationships (parallel)
   const [rawSplitFrom, rawMergedFrom] = await Promise.all([
@@ -218,6 +251,111 @@ export default async function BillDetailPage({ params }: Props) {
   );
   const statusText = getBillStatusText(bill.status);
   const knessetUrl = bill.knessetId ? getKnessetBillUrl(bill.knessetId) : null;
+
+  // Resolve faction info from history for past Knessets
+  const allInitiatorMemberIds = [
+    ...initiatorRows.map((r) => r.memberId),
+    ...historyInitiatorRows.map((r) => r.memberId),
+  ];
+  let historyFactionMap = new Map<
+    number,
+    { factionId: number; factionName: string; factionColor: string | null }
+  >();
+  if (bill.knessetNum && allInitiatorMemberIds.length > 0) {
+    const historyRows = await db
+      .select({
+        memberId: memberFactionHistory.memberId,
+        factionId: factions.id,
+        factionName: factions.name,
+        factionColor: factions.color,
+        startDate: memberFactionHistory.startDate,
+      })
+      .from(memberFactionHistory)
+      .innerJoin(factions, eq(memberFactionHistory.factionId, factions.id))
+      .where(
+        and(
+          inArray(memberFactionHistory.memberId, allInitiatorMemberIds),
+          eq(memberFactionHistory.knessetNum, bill.knessetNum),
+        ),
+      )
+      .orderBy(
+        memberFactionHistory.memberId,
+        desc(memberFactionHistory.startDate),
+      );
+    for (const row of historyRows) {
+      if (!historyFactionMap.has(row.memberId)) {
+        historyFactionMap.set(row.memberId, {
+          factionId: row.factionId,
+          factionName: row.factionName,
+          factionColor: row.factionColor,
+        });
+      }
+    }
+  }
+
+  // Build enriched initiator list with resolved faction
+  const enrichedInitiators = initiatorRows.map((m) => {
+    const histFaction = historyFactionMap.get(m.memberId);
+    return {
+      ...m,
+      resolvedFactionId: histFaction?.factionId ?? m.factionId ?? null,
+      resolvedFactionName: histFaction?.factionName ?? m.factionName ?? null,
+      resolvedFactionColor: histFaction?.factionColor ?? m.factionColor ?? null,
+    };
+  });
+
+  // Group initiators by faction
+  const initiatorsByFaction = new Map<
+    number | null,
+    {
+      factionName: string | null;
+      factionColor: string | null;
+      members: typeof enrichedInitiators;
+    }
+  >();
+  for (const init of enrichedInitiators) {
+    const key = init.resolvedFactionId;
+    if (!initiatorsByFaction.has(key)) {
+      initiatorsByFaction.set(key, {
+        factionName: init.resolvedFactionName,
+        factionColor: init.resolvedFactionColor,
+        members: [],
+      });
+    }
+    initiatorsByFaction.get(key)!.members.push(init);
+  }
+
+  // Enrich previous proposers with resolved faction
+  const enrichedHistoryInitiators = historyInitiatorRows.map((m) => {
+    const histFaction = historyFactionMap.get(m.memberId);
+    return {
+      ...m,
+      resolvedFactionId: histFaction?.factionId ?? m.factionId ?? null,
+      resolvedFactionName: histFaction?.factionName ?? m.factionName ?? null,
+      resolvedFactionColor: histFaction?.factionColor ?? m.factionColor ?? null,
+    };
+  });
+
+  // Group previous proposers by faction
+  const historyByFaction = new Map<
+    number | null,
+    {
+      factionName: string | null;
+      factionColor: string | null;
+      members: typeof enrichedHistoryInitiators;
+    }
+  >();
+  for (const init of enrichedHistoryInitiators) {
+    const key = init.resolvedFactionId;
+    if (!historyByFaction.has(key)) {
+      historyByFaction.set(key, {
+        factionName: init.resolvedFactionName,
+        factionColor: init.resolvedFactionColor,
+        members: [],
+      });
+    }
+    historyByFaction.get(key)!.members.push(init);
+  }
 
   // Fetch cluster info if bill belongs to one
   const [clusterRow] = await db
@@ -426,7 +564,7 @@ export default async function BillDetailPage({ params }: Props) {
         </CardContent>
       </Card>
 
-      {/* Initiators */}
+      {/* Initiators — grouped by faction */}
       {initiatorRows.length > 0 && (
         <Card className="glass-card mb-6 overflow-hidden">
           <CardHeader>
@@ -439,30 +577,124 @@ export default async function BillDetailPage({ params }: Props) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {initiatorRows.map((m) => (
-                <Link
-                  key={m.memberId}
-                  href={`/members/${m.memberId}`}
-                  className="hover:bg-muted/50 flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors"
-                >
-                  <MemberAvatar
-                    member={m}
-                    size="sm"
-                    ring="ring-2 ring-background"
-                    className="h-10 w-10 shadow-sm"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold">
-                      {m.firstName} {m.lastName}
-                    </p>
-                  </div>
-                  {m.isPrimary && (
-                    <Badge variant="default" className="shrink-0 text-[10px]">
-                      {t('primaryInitiator')}
-                    </Badge>
+            <div className="space-y-4">
+              {[...initiatorsByFaction.entries()].map(([factionId, group]) => (
+                <div key={factionId ?? 'unknown'}>
+                  {initiatorsByFaction.size > 1 && (
+                    <div className="mb-2 flex items-center gap-2">
+                      {group.factionColor && (
+                        <span
+                          className="inline-block h-3 w-3 rounded-full"
+                          style={{ backgroundColor: group.factionColor }}
+                        />
+                      )}
+                      <span className="text-muted-foreground text-xs font-medium">
+                        {group.factionName ?? tCommon('unknown')} (
+                        {group.members.length})
+                      </span>
+                    </div>
                   )}
-                </Link>
+                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                    {group.members.map((m) => (
+                      <Link
+                        key={m.memberId}
+                        href={`/members/${m.memberId}`}
+                        className="hover:bg-muted/50 flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors"
+                      >
+                        <MemberAvatar
+                          member={m}
+                          size="sm"
+                          ring="ring-2 ring-background"
+                          className="h-10 w-10 shadow-sm"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold">
+                            {m.firstName} {m.lastName}
+                          </p>
+                        </div>
+                        {m.isPrimary && (
+                          <Badge
+                            variant="default"
+                            className="shrink-0 text-[10px]"
+                          >
+                            {t('primaryInitiator')}
+                          </Badge>
+                        )}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Previous Proposers */}
+      {historyInitiatorRows.length > 0 && (
+        <Card className="glass-card mb-6 overflow-hidden">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <UserMinus className="text-muted-foreground h-5 w-5" />
+              {t('previousProposers')}
+              <span className="text-muted-foreground text-sm font-normal">
+                ({historyInitiatorRows.length})
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[...historyByFaction.entries()].map(([factionId, group]) => (
+                <div key={factionId ?? 'unknown'}>
+                  {historyByFaction.size > 1 && (
+                    <div className="mb-2 flex items-center gap-2">
+                      {group.factionColor && (
+                        <span
+                          className="inline-block h-3 w-3 rounded-full"
+                          style={{ backgroundColor: group.factionColor }}
+                        />
+                      )}
+                      <span className="text-muted-foreground text-xs font-medium">
+                        {group.factionName ?? tCommon('unknown')} (
+                        {group.members.length})
+                      </span>
+                    </div>
+                  )}
+                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                    {group.members.map((m) => (
+                      <Link
+                        key={`${m.memberId}-${m.endDate}`}
+                        href={`/members/${m.memberId}`}
+                        className="hover:bg-muted/50 flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors"
+                      >
+                        <MemberAvatar
+                          member={m}
+                          size="sm"
+                          ring="ring-2 ring-background"
+                          className="h-10 w-10 opacity-60 shadow-sm"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-semibold">
+                            {m.firstName} {m.lastName}
+                          </p>
+                          {m.endDate && (
+                            <p className="text-muted-foreground truncate text-xs">
+                              {t('removedOn', { date: m.endDate })}
+                            </p>
+                          )}
+                        </div>
+                        {m.reasonDesc && (
+                          <Badge
+                            variant="outline"
+                            className="shrink-0 text-[10px]"
+                          >
+                            {m.reasonDesc}
+                          </Badge>
+                        )}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           </CardContent>

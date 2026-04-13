@@ -5,21 +5,43 @@
 import { config } from 'dotenv';
 config({ path: '.env.local' });
 
-const job = process.argv[2] as 'members' | 'votes' | 'bills' | 'billInitiators' | 'committees' | 'images' | 'parties' | 'elections' | 'links' | 'linkVotes' | 'enrichTitles' | 'all' | undefined;
+const job = process.argv[2] as
+  | 'members'
+  | 'votes'
+  | 'bills'
+  | 'billInitiators'
+  | 'billHistoryInitiators'
+  | 'committees'
+  | 'images'
+  | 'parties'
+  | 'elections'
+  | 'links'
+  | 'linkVotes'
+  | 'enrichTitles'
+  | 'all'
+  | undefined;
 
 async function main() {
   // Dynamic imports so env vars are loaded before DB module initializes
   const { syncMembers } = await import('../pipeline/jobs/sync-members');
   const { syncVotes } = await import('../pipeline/jobs/sync-votes');
   const { syncBills } = await import('../pipeline/jobs/sync-bills');
-  const { syncBillInitiators } = await import('../pipeline/jobs/sync-bill-initiators');
+  const { syncBillInitiators } =
+    await import('../pipeline/jobs/sync-bill-initiators');
+  const { syncBillHistoryInitiators } =
+    await import('../pipeline/jobs/sync-bill-history-initiators');
   const { syncCommittees } = await import('../pipeline/jobs/sync-committees');
   const { syncMemberImages } = await import('../pipeline/jobs/sync-images');
-  const { syncRegisteredParties } = await import('../pipeline/jobs/sync-registered-parties');
-  const { syncElectoralLists } = await import('../pipeline/jobs/sync-electoral-lists');
-  const { syncPoliticalLinks } = await import('../pipeline/jobs/sync-political-links');
-  const { linkVotesToBills } = await import('../pipeline/jobs/link-votes-to-bills');
-  const { enrichVoteTitles } = await import('../pipeline/jobs/enrich-vote-titles');
+  const { syncRegisteredParties } =
+    await import('../pipeline/jobs/sync-registered-parties');
+  const { syncElectoralLists } =
+    await import('../pipeline/jobs/sync-electoral-lists');
+  const { syncPoliticalLinks } =
+    await import('../pipeline/jobs/sync-political-links');
+  const { linkVotesToBills } =
+    await import('../pipeline/jobs/link-votes-to-bills');
+  const { enrichVoteTitles } =
+    await import('../pipeline/jobs/enrich-vote-titles');
 
   const target = job ?? 'all';
   console.log(`Starting sync: ${target}`);
@@ -39,6 +61,10 @@ async function main() {
 
   if (target === 'billInitiators' || target === 'all') {
     await syncBillInitiators();
+  }
+
+  if (target === 'billHistoryInitiators' || target === 'all') {
+    await syncBillHistoryInitiators();
   }
 
   if (target === 'committees' || target === 'all') {

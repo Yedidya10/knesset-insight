@@ -18,7 +18,8 @@
     "all": "Все",
     "more": "Ещё",
     "showMore": "Показать больше",
-    "showLess": "Показать меньше"
+    "showLess": "Показать меньше",
+    "unknown": "Неизвестно"
   },
   "theme": {
     "light": "Светлая",
@@ -188,6 +189,8 @@
     "initiators": "Инициаторы",
     "primaryInitiator": "Основной инициатор",
     "noInitiators": "Инициаторы не найдены",
+    "previousProposers": "Предыдущие инициаторы",
+    "removedOn": "Удалён {date}",
     "relatedVotes": "Связанные голосования",
     "noRelatedVotes": "Связанные голосования не найдены",
     "committeeDiscussions": "Обсуждения в комитетах",

@@ -18,7 +18,8 @@
     "all": "All",
     "more": "More",
     "showMore": "Show more",
-    "showLess": "Show less"
+    "showLess": "Show less",
+    "unknown": "Unknown"
   },
   "theme": {
     "light": "Light",
@@ -188,6 +189,8 @@
     "initiators": "Initiators",
     "primaryInitiator": "Primary Initiator",
     "noInitiators": "No initiators found",
+    "previousProposers": "Previous Proposers",
+    "removedOn": "Removed on {date}",
     "relatedVotes": "Related Votes",
     "noRelatedVotes": "No related votes found",
     "committeeDiscussions": "Committee Discussions",

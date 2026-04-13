@@ -64,6 +64,13 @@
       "when": 1776400000000,
       "tag": "0011_bill_documents",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1776600000000,
+      "tag": "0012_bill_history_initiators",
+      "breakpoints": true
     }
   ]
 }
