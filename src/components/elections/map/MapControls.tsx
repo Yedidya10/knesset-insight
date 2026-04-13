@@ -50,10 +50,9 @@ export default function MapControls({
 
       {/* View mode toggle */}
       <ToggleGroup
-        type="single"
-        value={viewMode}
+        value={[viewMode]}
         onValueChange={(v) => {
-          if (v) onViewModeChange(v as ViewMode);
+          if (v.length > 0) onViewModeChange(v[v.length - 1] as ViewMode);
         }}
         className="rounded-lg border"
       >

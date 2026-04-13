@@ -169,8 +169,8 @@ export default function CityDetailPanel({
                       ))}
                     </Pie>
                     <Tooltip
-                      formatter={(value: number, name: string) => [
-                        `${value.toLocaleString()} ${t('city.votes')}`,
+                      formatter={(value, name) => [
+                        `${Number(value).toLocaleString()} ${t('city.votes')}`,
                         name,
                       ]}
                       contentStyle={{
@@ -221,7 +221,7 @@ export default function CityDetailPanel({
                       tick={{ fontSize: 11 }}
                     />
                     <Tooltip
-                      formatter={(value: number) => [`${value.toFixed(1)}%`]}
+                      formatter={(value) => [`${Number(value).toFixed(1)}%`]}
                       contentStyle={{
                         backgroundColor: 'hsl(var(--popover))',
                         border: '1px solid hsl(var(--border))',
@@ -261,7 +261,7 @@ export default function CityDetailPanel({
                     <XAxis dataKey="knesset" tick={{ fontSize: 11 }} />
                     <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
                     <Tooltip
-                      formatter={(value: number) => [`${value.toFixed(1)}%`]}
+                      formatter={(value) => [`${Number(value).toFixed(1)}%`]}
                       contentStyle={{
                         backgroundColor: 'hsl(var(--popover))',
                         border: '1px solid hsl(var(--border))',

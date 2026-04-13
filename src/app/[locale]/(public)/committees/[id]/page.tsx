@@ -129,9 +129,12 @@ export default async function CommitteeDetailPage({ params }: Props) {
                   className="hover:bg-muted/50 flex items-center gap-3 rounded-lg p-2 transition-colors"
                 >
                   <MemberAvatar
-                    src={committee.chairmanImageUrl}
-                    name={`${committee.chairmanFirstName} ${committee.chairmanLastName}`}
-                    size={48}
+                    member={{
+                      firstName: committee.chairmanFirstName,
+                      lastName: committee.chairmanLastName,
+                      imageUrl: committee.chairmanImageUrl,
+                    }}
+                    size="md"
                   />
                   <span className="font-medium">
                     {committee.chairmanFirstName} {committee.chairmanLastName}

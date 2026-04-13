@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import dynamic from 'next/dynamic';
 import { trpc } from '@/lib/trpc';
@@ -22,6 +22,46 @@ function MapSkeleton() {
       <div className="bg-muted h-80 w-48 animate-pulse rounded-lg" />
     </div>
   );
+}
+
+interface CityMapData {
+  cityCode: string;
+  cityName: string;
+  eligibleVoters: number;
+  actualVoters: number;
+  validVotes: number;
+  turnoutPercent: number;
+}
+
+interface NationalData {
+  totalEligible: number;
+  totalVoters: number;
+  totalValid: number;
+  totalInvalid: number;
+  turnoutPercent: number;
+  cityCount: number;
+  topParties: {
+    ballotLetters: string;
+    partyName: string;
+    votes: number;
+    percent: number;
+  }[];
+}
+
+interface CityDetailData {
+  cityCode: string;
+  cityName: string;
+  eligibleVoters: number;
+  actualVoters: number;
+  validVotes: number;
+  invalidVotes: number;
+  turnoutPercent: number;
+  parties: {
+    ballotLetters: string;
+    partyName: string;
+    votes: number;
+    votePercent: number;
+  }[];
 }
 
 interface ElectionMapClientProps {
@@ -46,47 +86,89 @@ export default function ElectionMapClient({
     name: string;
   } | null>(null);
 
-  // Fetch district results for the map
-  const districtResultsQuery = trpc.electionMap.districtResults.useQuery(
-    { knessetNum: selectedKnesset },
-    { staleTime: Infinity },
-  );
+  const [mapData, setMapData] = useState<CityMapData[] | undefined>();
+  const [mapLoading, setMapLoading] = useState(true);
+  const [nationalData, setNationalData] = useState<NationalData | null>(null);
+  const [cityDetail, setCityDetail] = useState<CityDetailData | null>(null);
 
-  // Fetch national summary
-  const nationalQuery = trpc.electionMap.nationalSummary.useQuery(
-    { knessetNum: selectedKnesset },
-    { staleTime: Infinity },
-  );
+  const fetchIdRef = useRef(0);
+  const detailIdRef = useRef(0);
 
-  // Fetch district detail on selection (isDistrict: true)
-  const cityDetailQuery = trpc.electionMap.cityDetail.useQuery(
-    {
-      knessetNum: selectedKnesset,
-      cityCode: selectedCity?.code ?? '',
-      isDistrict: true,
-    },
-    { enabled: !!selectedCity?.code, staleTime: Infinity },
-  );
+  const fetchKnessetData = useCallback((knessetNum: number) => {
+    const id = ++fetchIdRef.current;
+    setMapLoading(true);
+    setMapData(undefined);
+    setNationalData(null);
+    setSelectedCity(null);
+    setCityDetail(null);
 
-  // Transform district data into the format IsraelMap expects
-  // The TopoJSON uses muni_code which matches districtCode (1-6)
-  const mapData = useMemo(() => {
-    if (!districtResultsQuery.data) return undefined;
-    return districtResultsQuery.data.map((d) => ({
-      cityCode: d.districtCode,
-      cityName: '', // IsraelMap will use name_he from TopoJSON properties
-      eligibleVoters: d.eligibleVoters,
-      actualVoters: d.actualVoters,
-      validVotes: d.validVotes,
-      turnoutPercent: d.turnoutPercent,
-    }));
-  }, [districtResultsQuery.data]);
-
-  const handleCityClick = useCallback((cityCode: string, cityName: string) => {
-    setSelectedCity((prev) =>
-      prev?.code === cityCode ? null : { code: cityCode, name: cityName },
-    );
+    Promise.all([
+      trpc.electionMap.districtResults.query({ knessetNum }),
+      trpc.electionMap.nationalSummary.query({ knessetNum }),
+    ])
+      .then(([districts, national]) => {
+        if (id !== fetchIdRef.current) return;
+        setMapData(
+          districts.map((d) => ({
+            cityCode: d.districtCode,
+            cityName: '',
+            eligibleVoters: d.eligibleVoters,
+            actualVoters: d.actualVoters,
+            validVotes: d.validVotes,
+            turnoutPercent: d.turnoutPercent,
+          })),
+        );
+        setNationalData(national);
+        setMapLoading(false);
+      })
+      .catch(() => {
+        if (id === fetchIdRef.current) setMapLoading(false);
+      });
   }, []);
+
+  // Initial fetch on mount
+  const initialKnesset = knessets[0] ?? appConfig.electionMap.defaultKnesset;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    fetchKnessetData(initialKnesset);
+  }, []);
+
+  const handleKnessetChange = useCallback(
+    (knesset: number) => {
+      setSelectedKnesset(knesset);
+      fetchKnessetData(knesset);
+    },
+    [fetchKnessetData],
+  );
+
+  const fetchCityDetail = useCallback(
+    (knessetNum: number, cityCode: string) => {
+      const id = ++detailIdRef.current;
+      trpc.electionMap.cityDetail
+        .query({ knessetNum, cityCode, isDistrict: true })
+        .then((data) => {
+          if (id === detailIdRef.current) setCityDetail(data);
+        })
+        .catch(() => {
+          if (id === detailIdRef.current) setCityDetail(null);
+        });
+    },
+    [],
+  );
+
+  const handleCityClick = useCallback(
+    (cityCode: string, cityName: string) => {
+      setSelectedCity((prev) => {
+        if (prev?.code === cityCode) {
+          setCityDetail(null);
+          return null;
+        }
+        fetchCityDetail(selectedKnesset, cityCode);
+        return { code: cityCode, name: cityName };
+      });
+    },
+    [selectedKnesset, fetchCityDetail],
+  );
 
   const handleClose = useCallback(() => {
     setSelectedCity(null);
@@ -98,7 +180,7 @@ export default function ElectionMapClient({
       <MapControls
         availableKnessets={knessets}
         selectedKnesset={selectedKnesset}
-        onKnessetChange={setSelectedKnesset}
+        onKnessetChange={handleKnessetChange}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
       />
@@ -116,7 +198,7 @@ export default function ElectionMapClient({
               onCityClick={handleCityClick}
               selectedCity={selectedCity?.code ?? null}
             />
-          ) : districtResultsQuery.isLoading ? (
+          ) : mapLoading ? (
             <MapSkeleton />
           ) : (
             <div className="bg-muted/30 flex h-125 items-center justify-center rounded-xl border">
@@ -127,28 +209,28 @@ export default function ElectionMapClient({
 
         {/* Side panel: national summary or city detail */}
         <div className="w-full shrink-0 lg:w-80 xl:w-96">
-          {selectedCity && cityDetailQuery.data ? (
+          {selectedCity && cityDetail ? (
             <CityDetailPanel
               cityName={selectedCity.name}
               cityCode={selectedCity.code}
-              eligibleVoters={cityDetailQuery.data.eligibleVoters}
-              actualVoters={cityDetailQuery.data.actualVoters}
-              validVotes={cityDetailQuery.data.validVotes}
-              invalidVotes={cityDetailQuery.data.invalidVotes}
-              turnoutPercent={cityDetailQuery.data.turnoutPercent}
-              parties={cityDetailQuery.data.parties}
+              eligibleVoters={cityDetail.eligibleVoters}
+              actualVoters={cityDetail.actualVoters}
+              validVotes={cityDetail.validVotes}
+              invalidVotes={cityDetail.invalidVotes}
+              turnoutPercent={cityDetail.turnoutPercent}
+              parties={cityDetail.parties}
               trends={[]}
               onClose={handleClose}
             />
-          ) : nationalQuery.data ? (
+          ) : nationalData ? (
             <NationalSummary
-              totalEligible={nationalQuery.data.totalEligible}
-              totalVoters={nationalQuery.data.totalVoters}
-              totalValid={nationalQuery.data.totalValid}
-              totalInvalid={nationalQuery.data.totalInvalid}
-              turnoutPercent={nationalQuery.data.turnoutPercent}
-              cityCount={nationalQuery.data.cityCount}
-              topParties={nationalQuery.data.topParties}
+              totalEligible={nationalData.totalEligible}
+              totalVoters={nationalData.totalVoters}
+              totalValid={nationalData.totalValid}
+              totalInvalid={nationalData.totalInvalid}
+              turnoutPercent={nationalData.turnoutPercent}
+              cityCount={nationalData.cityCount}
+              topParties={nationalData.topParties}
             />
           ) : null}
         </div>
