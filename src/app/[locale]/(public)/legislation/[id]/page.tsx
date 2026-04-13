@@ -254,32 +254,6 @@ export default async function BillDetailPage({ params }: Props) {
       .map((s) => ({ id: s.billId, name: s.name, knessetNum: s.knessetNum }));
   }
 
-  // Build related bills for RelatedBillsCard
-  const splitChildBills = splitRows.map((s) => ({
-    id: s.splitBillId,
-    name: s.splitBillName,
-    knessetNum: relatedBillMap.get(s.splitBillId)?.knessetNum ?? null,
-    date: s.date,
-  }));
-  const mergedFromBills = mergedFromRows.map((mf) => ({
-    id: mf.unionBillId,
-    name: mf.unionBillName,
-    knessetNum: relatedBillMap.get(mf.unionBillId)?.knessetNum ?? null,
-    date: mf.date,
-  }));
-  const unionBills = unionRows.map((u) => ({
-    id: u.mainBillId,
-    name: u.mainBillName,
-    knessetNum: relatedBillMap.get(u.mainBillId)?.knessetNum ?? null,
-    date: u.date,
-  }));
-  const splitFromBills = splitFromRows.map((sf) => ({
-    id: sf.mainBillId,
-    name: sf.mainBillName,
-    knessetNum: relatedBillMap.get(sf.mainBillId)?.knessetNum ?? null,
-    date: sf.date,
-  }));
-
   // Build relationship events for the stage pipeline
   const relationshipEvents: RelationshipEvent[] = [
     ...unionRows.map((u) => ({
@@ -495,12 +469,8 @@ export default async function BillDetailPage({ params }: Props) {
         </Card>
       )}
 
-      {/* Related bills (splits, mergedFrom, cluster siblings) */}
+      {/* Related bills (cluster siblings only — splits/merges already shown in pipeline) */}
       <RelatedBillsCard
-        unions={unionBills}
-        splitChildren={splitChildBills}
-        splitFrom={splitFromBills}
-        mergedFromBills={mergedFromBills}
         clusterSiblings={clusterSiblings}
         cluster={cluster ? { id: cluster.id, name: cluster.name } : null}
       />
