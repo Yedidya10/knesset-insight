@@ -568,6 +568,8 @@
     "title": "Governments of Israel",
     "government": "Government",
     "governmentNum": "Government No. {num}",
+    "provisionalGovernment": "Provisional Government",
+    "provisionalStateCouncil": "Provisional State Council",
     "current": "Current Government",
     "primeMinister": "Prime Minister",
     "alternatePm": "Alternate Prime Minister",

@@ -568,6 +568,8 @@
     "title": "ממשלות ישראל",
     "government": "ממשלה",
     "governmentNum": "ממשלה מס׳ {num}",
+    "provisionalGovernment": "הממשלה הזמנית",
+    "provisionalStateCouncil": "מועצת המדינה הזמנית",
     "current": "ממשלה נוכחית",
     "primeMinister": "ראש הממשלה",
     "alternatePm": "ראש הממשלה החלופי",

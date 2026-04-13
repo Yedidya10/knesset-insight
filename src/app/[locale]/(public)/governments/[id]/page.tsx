@@ -40,8 +40,12 @@ export default async function GovernmentDetailPage({ params }: Props) {
   const govRecord = gov[0];
 
   // Fetch PM info
-  let pmInfo: { id: number; firstName: string; lastName: string; imageUrl: string | null } | null =
-    null;
+  let pmInfo: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    imageUrl: string | null;
+  } | null = null;
   if (govRecord.pmMemberId) {
     const pm = await db
       .select({
@@ -130,7 +134,7 @@ export default async function GovernmentDetailPage({ params }: Props) {
       {/* Back link */}
       <Link
         href="/governments"
-        className="mb-6 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        className="text-muted-foreground hover:text-foreground mb-6 inline-flex items-center gap-1.5 text-sm transition-colors"
       >
         <ArrowRight className="h-4 w-4 rtl:rotate-180" />
         {t('backToList')}
@@ -154,23 +158,27 @@ export default async function GovernmentDetailPage({ params }: Props) {
         )}
 
         <div className="flex-1">
-          <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex flex-wrap items-center gap-3">
             <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
-              {t('governmentNum', { num: govRecord.governmentNum })}
+              {govRecord.governmentNum === 0
+                ? t('provisionalGovernment')
+                : t('governmentNum', { num: govRecord.governmentNum })}
             </h1>
             {isCurrent && <Badge variant="default">{t('current')}</Badge>}
             <Badge variant="outline">
-              {t('knessetNum', { num: govRecord.knessetNum })}
+              {govRecord.knessetNum === 0
+                ? t('provisionalStateCouncil')
+                : t('knessetNum', { num: govRecord.knessetNum })}
             </Badge>
           </div>
 
           {/* PM name */}
           {pmInfo && (
-            <p className="mt-2 text-lg text-muted-foreground">
+            <p className="text-muted-foreground mt-2 text-lg">
               {t('primeMinister')}:{' '}
               <Link
                 href={`/members/${pmInfo.id}`}
-                className="font-medium text-foreground hover:text-primary transition-colors"
+                className="text-foreground hover:text-primary font-medium transition-colors"
               >
                 {pmInfo.firstName} {pmInfo.lastName}
               </Link>
@@ -179,11 +187,11 @@ export default async function GovernmentDetailPage({ params }: Props) {
 
           {/* Alternate PM */}
           {alternatePmInfo && (
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="text-muted-foreground mt-1 text-sm">
               {t('alternatePm')}:{' '}
               <Link
                 href={`/members/${alternatePmInfo.id}`}
-                className="font-medium text-foreground hover:text-primary transition-colors"
+                className="text-foreground hover:text-primary font-medium transition-colors"
               >
                 {alternatePmInfo.firstName} {alternatePmInfo.lastName}
               </Link>
@@ -192,7 +200,7 @@ export default async function GovernmentDetailPage({ params }: Props) {
 
           {/* Date range */}
           {dateRange && (
-            <p className="mt-2 text-sm text-muted-foreground">
+            <p className="text-muted-foreground mt-2 text-sm">
               {t('dateRange')}: {dateRange}
             </p>
           )}
@@ -215,7 +223,7 @@ export default async function GovernmentDetailPage({ params }: Props) {
 
       {/* Composition */}
       <section className="mb-8">
-        <h2 className="text-xl font-bold mb-4">{t('composition')}</h2>
+        <h2 className="mb-4 text-xl font-bold">{t('composition')}</h2>
         <GovernmentComposition positions={positions} />
       </section>
 

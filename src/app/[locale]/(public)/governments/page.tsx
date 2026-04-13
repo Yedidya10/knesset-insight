@@ -88,7 +88,9 @@ export default async function GovernmentsPage({ searchParams }: Props) {
                 variant={knessetFilter === kn ? 'default' : 'outline'}
                 className="cursor-pointer"
               >
-                {t('knessetNum', { num: kn })}
+                {kn === 0
+                  ? t('provisionalStateCouncil')
+                  : t('knessetNum', { num: kn })}
               </Badge>
             </Link>
           ))}

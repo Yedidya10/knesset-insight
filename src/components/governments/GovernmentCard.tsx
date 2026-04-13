@@ -20,7 +20,9 @@ interface GovernmentCardProps {
   };
 }
 
-export default function GovernmentCard({ government: gov }: GovernmentCardProps) {
+export default function GovernmentCard({
+  government: gov,
+}: GovernmentCardProps) {
   const t = useTranslations('governments');
 
   const isCurrent = !gov.endDate;
@@ -30,9 +32,9 @@ export default function GovernmentCard({ government: gov }: GovernmentCardProps)
 
   return (
     <Link href={`/governments/${gov.governmentNum}`}>
-      <Card className="group relative overflow-hidden transition-all duration-200 hover:shadow-md hover:ring-1 hover:ring-primary/20">
+      <Card className="group hover:ring-primary/20 relative overflow-hidden transition-all duration-200 hover:shadow-md hover:ring-1">
         {isCurrent && (
-          <div className="absolute top-3 end-3 z-10">
+          <div className="absolute end-3 top-3 z-10">
             <Badge variant="default" className="text-xs">
               {t('current')}
             </Badge>
@@ -53,20 +55,22 @@ export default function GovernmentCard({ government: gov }: GovernmentCardProps)
 
             <div className="min-w-0 flex-1">
               {/* Government number */}
-              <h3 className="text-lg font-bold tracking-tight group-hover:text-primary transition-colors">
-                {t('governmentNum', { num: gov.governmentNum })}
+              <h3 className="group-hover:text-primary text-lg font-bold tracking-tight transition-colors">
+                {gov.governmentNum === 0
+                  ? t('provisionalGovernment')
+                  : t('governmentNum', { num: gov.governmentNum })}
               </h3>
 
               {/* PM name */}
               {gov.pmFirstName && (
-                <p className="mt-0.5 text-sm text-muted-foreground">
+                <p className="text-muted-foreground mt-0.5 text-sm">
                   {t('primeMinister')}: {gov.pmFirstName} {gov.pmLastName}
                 </p>
               )}
 
               {/* Date range */}
               {dateRange && (
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p className="text-muted-foreground mt-1 text-xs">
                   {dateRange}
                 </p>
               )}
@@ -82,7 +86,9 @@ export default function GovernmentCard({ government: gov }: GovernmentCardProps)
                   </Badge>
                 )}
                 <Badge variant="outline" className="text-xs">
-                  {t('knessetNum', { num: gov.knessetNum })}
+                  {gov.knessetNum === 0
+                    ? t('provisionalStateCouncil')
+                    : t('knessetNum', { num: gov.knessetNum })}
                 </Badge>
               </div>
             </div>

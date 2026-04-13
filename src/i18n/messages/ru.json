@@ -568,6 +568,8 @@
     "title": "Правительства Израиля",
     "government": "Правительство",
     "governmentNum": "Правительство № {num}",
+    "provisionalGovernment": "Временное правительство",
+    "provisionalStateCouncil": "Временный государственный совет",
     "current": "Текущее правительство",
     "primeMinister": "Премьер-министр",
     "alternatePm": "Альтернативный премьер-министр",

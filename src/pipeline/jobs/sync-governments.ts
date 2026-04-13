@@ -63,6 +63,7 @@ async function fetchPositionDescriptions(): Promise<Map<number, string>> {
  * Derive Hebrew ordinal name for government number.
  */
 function govName(num: number): string {
+  if (num === 0) return 'הממשלה הזמנית';
   return `הממשלה ה-${num}`;
 }
 
@@ -81,7 +82,9 @@ async function syncGovernmentRecords(): Promise<number> {
     'gov-positions',
   );
 
-  console.log(`  [governments] Fetched ${allGovPositions.length} government positions`);
+  console.log(
+    `  [governments] Fetched ${allGovPositions.length} government positions`,
+  );
 
   // 2. Fetch position descriptions
   const positionDescs = await fetchPositionDescriptions();
@@ -145,9 +148,11 @@ async function syncGovernmentRecords(): Promise<number> {
       }
     }
 
-    const pmMemberId = pmPersonId ? personToMemberId.get(pmPersonId) ?? null : null;
+    const pmMemberId = pmPersonId
+      ? (personToMemberId.get(pmPersonId) ?? null)
+      : null;
     const alternatePmMemberId = alternatePmPersonId
-      ? personToMemberId.get(alternatePmPersonId) ?? null
+      ? (personToMemberId.get(alternatePmPersonId) ?? null)
       : null;
 
     // Upsert government record
@@ -206,7 +211,7 @@ async function syncGovernmentRecords(): Promise<number> {
         positionId: pos.PositionID,
         positionDesc: positionDescs.get(pos.PositionID) ?? null,
         govMinistryId: pos.GovMinistryID
-          ? ministryKnessetIdToDbId.get(pos.GovMinistryID) ?? null
+          ? (ministryKnessetIdToDbId.get(pos.GovMinistryID) ?? null)
           : null,
         factionKnessetId: pos.FactionID,
         startDate: pos.StartDate?.split('T')[0] ?? null,

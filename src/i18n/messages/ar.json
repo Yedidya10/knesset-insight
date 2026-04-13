@@ -569,6 +569,8 @@
     "title": "حكومات إسرائيل",
     "government": "حكومة",
     "governmentNum": "حكومة رقم {num}",
+    "provisionalGovernment": "الحكومة المؤقتة",
+    "provisionalStateCouncil": "مجلس الدولة المؤقت",
     "current": "الحكومة الحالية",
     "primeMinister": "رئيس الوزراء",
     "alternatePm": "رئيس الوزراء البديل",
