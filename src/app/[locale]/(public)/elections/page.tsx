@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import type { Metadata } from 'next';
-import { Vote, ArrowRight } from 'lucide-react';
+import { Vote, ArrowRight, Map } from 'lucide-react';
 import { sql, eq, desc } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { electoralLists } from '@/lib/db/schema';
@@ -28,6 +28,7 @@ export const dynamic = 'force-dynamic';
 export default async function ElectionsPage({ searchParams }: Props) {
   const t = await getTranslations('elections');
   const t2026 = await getTranslations('elections2026');
+  const tMap = await getTranslations('electionMap');
   const params = await searchParams;
   const knessetFilter = params.knesset ? Number(params.knesset) : null;
 
@@ -84,6 +85,24 @@ export default async function ElectionsPage({ searchParams }: Props) {
               </p>
             </div>
             <ArrowRight className="text-primary h-5 w-5 shrink-0 rtl:rotate-180" />
+          </CardContent>
+        </Card>
+      </Link>
+
+      {/* Election map banner */}
+      <Link href="/elections/map">
+        <Card className="border-chart-1/30 from-chart-1/5 to-chart-1/10 hover:border-chart-1/50 mb-6 overflow-hidden bg-gradient-to-r transition-colors">
+          <CardContent className="flex items-center justify-between p-4">
+            <div className="flex items-center gap-3">
+              <Map className="text-chart-1 h-5 w-5 shrink-0" />
+              <div>
+                <h2 className="text-lg font-bold">{tMap('title')}</h2>
+                <p className="text-muted-foreground text-sm">
+                  {tMap('description')}
+                </p>
+              </div>
+            </div>
+            <ArrowRight className="text-chart-1 h-5 w-5 shrink-0 rtl:rotate-180" />
           </CardContent>
         </Card>
       </Link>

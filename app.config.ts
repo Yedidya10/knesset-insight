@@ -175,6 +175,20 @@ export const appConfig = {
     thresholdPercent: 3.25,
   },
 
+  // Election voter map (historical results by city)
+  electionMap: {
+    /** Knesset numbers with available city-level results */
+    availableKnessets: [20, 21, 22, 23, 24, 25] as readonly number[],
+    /** Default knesset to show on page load */
+    defaultKnesset: 25,
+    /** TopoJSON file path (relative to public/) */
+    topoJsonPath: '/geo/israel-municipalities.topojson',
+    /** Color scale for turnout choropleth — sky-100 → sky-900 */
+    turnoutColorRange: ['#e0f2fe', '#0c4a6e'] as readonly [string, string],
+    /** CSV base URL pattern — replace {N} with knesset number */
+    csvBaseUrl: 'https://media{N}.bechirot.gov.il/files/expc.csv',
+  },
+
   // Bill Clusters (unified legislation entities)
   billClusters: {
     ai: {

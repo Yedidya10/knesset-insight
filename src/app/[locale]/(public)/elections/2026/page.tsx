@@ -18,6 +18,7 @@ import ElectionTimeline from '@/components/elections/ElectionTimeline';
 
 export default async function Elections2026Page() {
   const t = await getTranslations('elections2026');
+  const tMap = await getTranslations('electionMap');
 
   // Campaign
   const campaign = await db
@@ -26,7 +27,8 @@ export default async function Elections2026Page() {
     .where(eq(electionCampaigns.knessetNum, appConfig.elections2026.knessetNum))
     .limit(1);
 
-  const electionDate = campaign[0]?.electionDate ?? appConfig.elections2026.estimatedDate;
+  const electionDate =
+    campaign[0]?.electionDate ?? appConfig.elections2026.estimatedDate;
 
   // Candidate lists
   const lists = await db
@@ -64,7 +66,12 @@ export default async function Elections2026Page() {
         .limit(1)
     : [];
 
-  let seatSegments: { slug: string; name: string; seats: number; color: string }[] = [];
+  let seatSegments: {
+    slug: string;
+    name: string;
+    seats: number;
+    color: string;
+  }[] = [];
   if (latestPoll[0]) {
     const pollResults = await db
       .select({
@@ -134,19 +141,19 @@ export default async function Elections2026Page() {
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       {/* Header */}
       <div className="mb-8 flex items-center gap-3">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/20">
-          <Vote className="h-7 w-7 text-primary" />
+        <div className="bg-primary/10 ring-primary/20 flex h-14 w-14 items-center justify-center rounded-2xl ring-1">
+          <Vote className="text-primary h-7 w-7" />
         </div>
         <div>
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
             {t('title')}
           </h1>
-          <p className="text-sm text-muted-foreground">{t('description')}</p>
+          <p className="text-muted-foreground text-sm">{t('description')}</p>
         </div>
       </div>
 
       {/* Breadcrumb */}
-      <nav className="mb-6 text-sm text-muted-foreground">
+      <nav className="text-muted-foreground mb-6 text-sm">
         <Link href="/elections" className="hover:text-foreground">
           {t('backToElections')}
         </Link>
@@ -178,7 +185,7 @@ export default async function Elections2026Page() {
           <h2 className="text-lg font-semibold">{t('parties.title')}</h2>
           <Link
             href="/elections/2026/parties"
-            className="text-sm text-primary hover:underline"
+            className="text-primary text-sm hover:underline"
           >
             {t('parties.viewAll')} →
           </Link>
@@ -205,28 +212,45 @@ export default async function Elections2026Page() {
       </div>
 
       {/* Navigation links */}
-      <div className="mb-8 grid gap-3 sm:grid-cols-2">
+      <div className="mb-8 grid gap-3 sm:grid-cols-3">
         <Link
           href="/elections/2026/polls"
-          className="rounded-xl border bg-card p-4 transition-colors hover:bg-muted/50"
+          className="bg-card hover:bg-muted/50 rounded-xl border p-4 transition-colors"
         >
           <h3 className="font-semibold">{t('polls.title')}</h3>
-          <p className="text-sm text-muted-foreground">{t('polls.description')}</p>
+          <p className="text-muted-foreground text-sm">
+            {t('polls.description')}
+          </p>
         </Link>
         <Link
           href="/elections/2026/timeline"
-          className="rounded-xl border bg-card p-4 transition-colors hover:bg-muted/50"
+          className="bg-card hover:bg-muted/50 rounded-xl border p-4 transition-colors"
         >
           <h3 className="font-semibold">{t('timeline.title')}</h3>
-          <p className="text-sm text-muted-foreground">{t('timeline.description')}</p>
+          <p className="text-muted-foreground text-sm">
+            {t('timeline.description')}
+          </p>
+        </Link>
+        <Link
+          href="/elections/map"
+          className="bg-card hover:bg-muted/50 rounded-xl border p-4 transition-colors"
+        >
+          <h3 className="font-semibold">{tMap('title')}</h3>
+          <p className="text-muted-foreground text-sm">{tMap('description')}</p>
         </Link>
       </div>
 
       {/* Mini timeline */}
       {upcomingEvents.length > 0 && (
         <div>
-          <h2 className="mb-3 text-lg font-semibold">{t('timeline.upcoming')}</h2>
-          <ElectionTimeline events={upcomingEvents} typeLabels={eventTypeLabels} estimatedDateNote={t('estimatedDateNote')} />
+          <h2 className="mb-3 text-lg font-semibold">
+            {t('timeline.upcoming')}
+          </h2>
+          <ElectionTimeline
+            events={upcomingEvents}
+            typeLabels={eventTypeLabels}
+            estimatedDateNote={t('estimatedDateNote')}
+          />
         </div>
       )}
     </div>

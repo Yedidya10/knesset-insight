@@ -1353,3 +1353,57 @@ export const adminActivityLog = pgTable('admin_activity_log', {
   adminIdentifier: text('admin_identifier').notNull(), // who performed the action
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
+
+// ──────────────────────────────────────
+// Election City Results (historical voter map)
+// ──────────────────────────────────────
+
+export const electionCityResults = pgTable(
+  'election_city_results',
+  {
+    id: serial('id').primaryKey(),
+    knessetNum: integer('knesset_num').notNull(),
+    cityCode: text('city_code').notNull(),
+    cityName: text('city_name').notNull(),
+    districtCode: integer('district_code'),
+    eligibleVoters: integer('eligible_voters').notNull(),
+    actualVoters: integer('actual_voters').notNull(),
+    validVotes: integer('valid_votes').notNull(),
+    invalidVotes: integer('invalid_votes').notNull().default(0),
+    turnoutPercent: numeric('turnout_percent', { precision: 5, scale: 2 }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  },
+  (t) => [unique().on(t.knessetNum, t.cityCode)],
+);
+
+export const electionCityPartyResults = pgTable(
+  'election_city_party_results',
+  {
+    id: serial('id').primaryKey(),
+    cityResultId: integer('city_result_id')
+      .references(() => electionCityResults.id, { onDelete: 'cascade' })
+      .notNull(),
+    ballotLetters: text('ballot_letters').notNull(),
+    partyName: text('party_name').notNull(),
+    votes: integer('votes').notNull(),
+    votePercent: numeric('vote_percent', { precision: 5, scale: 2 }),
+  },
+  (t) => [unique().on(t.cityResultId, t.ballotLetters)],
+);
+
+export const electionCityResultsRelations = relations(
+  electionCityResults,
+  ({ many }) => ({
+    partyResults: many(electionCityPartyResults),
+  }),
+);
+
+export const electionCityPartyResultsRelations = relations(
+  electionCityPartyResults,
+  ({ one }) => ({
+    cityResult: one(electionCityResults, {
+      fields: [electionCityPartyResults.cityResultId],
+      references: [electionCityResults.id],
+    }),
+  }),
+);

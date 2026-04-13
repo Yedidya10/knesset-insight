@@ -573,6 +573,46 @@
     "backToElections": "Back to Elections",
     "noData": "No data available"
   },
+  "electionMap": {
+    "title": "Israel Election Map",
+    "description": "Election results by city — turnout, parties, and trends",
+    "selectKnesset": "Select Knesset",
+    "knesset": "Knesset {num}",
+    "viewMode": {
+      "turnout": "Voter Turnout",
+      "winningParty": "Winning Party",
+      "comparison": "Compare Elections"
+    },
+    "national": {
+      "title": "National Summary",
+      "eligible": "Eligible Voters",
+      "voters": "Actual Voters",
+      "turnout": "Turnout",
+      "validVotes": "Valid Votes",
+      "invalidVotes": "Invalid Votes",
+      "topParties": "Top {count} Parties",
+      "cities": "Cities"
+    },
+    "city": {
+      "detail": "City Details",
+      "partyBreakdown": "Party Breakdown",
+      "trends": "Trends Across Elections",
+      "topParties": "Top Parties",
+      "fullResults": "View Full Results",
+      "noData": "No data available for this city",
+      "votes": "votes"
+    },
+    "legend": {
+      "low": "Low",
+      "high": "High"
+    },
+    "comparison": {
+      "from": "From Knesset",
+      "to": "To Knesset",
+      "change": "Change"
+    },
+    "noData": "No election data available. Run the import script first."
+  },
   "footer": {
     "about": "About",
     "openSource": "Open Source",
@@ -907,6 +947,10 @@
     "budget": {
       "title": "State Budget — Knesset Insight",
       "description": "Israeli state budget — allocation by ministry, utilization rates and yearly comparisons"
+    },
+    "electionMap": {
+      "title": "Election Map — Knesset Insight",
+      "description": "Interactive map of Israeli election results by city — voter turnout, party breakdown and trends"
     }
   }
 }

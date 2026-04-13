@@ -9,6 +9,7 @@ import { governmentsRouter } from './governments';
 import { politicalGroupsRouter } from './political-groups';
 import { integrityRouter } from './integrity';
 import { elections2026Router } from './elections-2026';
+import { electionMapRouter } from './election-map';
 import { billClustersRouter } from './bill-clusters';
 import { adminRouter } from './admin';
 
@@ -23,6 +24,7 @@ export const appRouter = router({
   politicalGroups: politicalGroupsRouter,
   integrity: integrityRouter,
   elections2026: elections2026Router,
+  electionMap: electionMapRouter,
   billClusters: billClustersRouter,
   admin: adminRouter,
 });
