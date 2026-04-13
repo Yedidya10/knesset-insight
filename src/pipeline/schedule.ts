@@ -13,6 +13,7 @@ import { syncPoliticalLinks } from './jobs/sync-political-links';
 import { syncPoliticalGroups } from './jobs/sync-political-groups';
 import { syncGovMinistries } from './jobs/sync-gov-ministries';
 import { syncGovernments } from './jobs/sync-governments';
+import { syncBillDocuments } from './jobs/sync-bill-documents';
 import { syncIntegrityKnesset } from './jobs/sync-integrity-knesset';
 import { syncIntegrityLobbyists } from './jobs/sync-integrity-lobbyists';
 import { linkVotesToBills } from './jobs/link-votes-to-bills';
@@ -39,6 +40,7 @@ export const syncJobs = {
   governments: syncGovernments,
   integrityKnesset: syncIntegrityKnesset,
   integrityLobbyists: syncIntegrityLobbyists,
+  billDocuments: syncBillDocuments,
   // Bill clustering pipeline (run after sync jobs)
   linkVotesToBills: linkVotesToBills,
   computeBillClusters: computeBillClusters,
@@ -68,6 +70,8 @@ export const syncJobs = {
     // Integrity must run after members + committees
     await syncIntegrityKnesset();
     await syncIntegrityLobbyists();
+    // Bill documents must run after bills
+    await syncBillDocuments();
     // Bill clustering pipeline (must run after bills + votes synced)
     await linkVotesToBills();
     await computeBillClusters();

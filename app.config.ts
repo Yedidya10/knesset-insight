@@ -89,11 +89,15 @@ export const appConfig = {
     } as Record<string, readonly number[]>,
   },
 
-  // Sync schedule (cron expressions)
+  // Sync schedule (cron expressions, Israel time)
+  // These are the source of truth — Trigger.dev tasks read from here.
   sync: {
-    odata: process.env.SYNC_ODATA_CRON ?? '0 */6 * * *',
-    oknesset: process.env.SYNC_OKNESSET_CRON ?? '0 3 * * *',
-    budget: process.env.SYNC_BUDGET_CRON ?? '0 2 * * 5',
+    coreData: process.env.SYNC_CORE_CRON ?? '0 */6 * * *', // every 6h
+    billRelations: process.env.SYNC_BILL_RELATIONS_CRON ?? '0 1 * * *', // daily 1 AM
+    politicalData: process.env.SYNC_POLITICAL_CRON ?? '0 3 * * *', // daily 3 AM
+    integrity: process.env.SYNC_INTEGRITY_CRON ?? '0 4 * * *', // daily 4 AM
+    analysis: process.env.SYNC_ANALYSIS_CRON ?? '0 5 * * *', // daily 5 AM
+    timezone: 'Asia/Jerusalem',
   },
 
   // Google Translate

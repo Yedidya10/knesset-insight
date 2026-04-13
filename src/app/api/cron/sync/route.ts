@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { tasks } from '@trigger.dev/sdk';
 import { syncJobs, type SyncJobName } from '../../../../pipeline/schedule';
+import type { runSyncJob } from '../../../../trigger/run-sync-job';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   // Verify cron secret to prevent unauthorized access
@@ -11,7 +15,10 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json().catch(() => ({}));
-  const jobName = (body as { job?: string }).job as SyncJobName | undefined;
+  const { job: jobName, mode = 'trigger' } = body as {
+    job?: string;
+    mode?: 'trigger' | 'direct';
+  };
 
   if (!jobName || !(jobName in syncJobs)) {
     return NextResponse.json(
@@ -23,15 +30,47 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Direct mode: run synchronously in-process (for local dev / short jobs)
+  if (mode === 'direct') {
+    try {
+      await syncJobs[jobName as SyncJobName]();
+      return NextResponse.json({ success: true, job: jobName, mode: 'direct' });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      return NextResponse.json(
+        { error: message, job: jobName },
+        { status: 500 },
+      );
+    }
+  }
+
+  // Default: delegate to Trigger.dev (async, no timeout)
   try {
-    await syncJobs[jobName]();
-    return NextResponse.json({ success: true, job: jobName });
+    const handle = await tasks.trigger<typeof runSyncJob>('run-sync-job', {
+      job: jobName as SyncJobName,
+    });
+    return NextResponse.json({
+      success: true,
+      job: jobName,
+      mode: 'trigger',
+      runId: handle.id,
+    });
   } catch (error) {
-    const message =
-      error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json(
-      { error: message, job: jobName },
-      { status: 500 },
-    );
+    // Fallback to direct execution if Trigger.dev is unavailable
+    try {
+      await syncJobs[jobName as SyncJobName]();
+      return NextResponse.json({
+        success: true,
+        job: jobName,
+        mode: 'direct-fallback',
+      });
+    } catch (directError) {
+      const message =
+        directError instanceof Error ? directError.message : 'Unknown error';
+      return NextResponse.json(
+        { error: message, job: jobName },
+        { status: 500 },
+      );
+    }
   }
 }
