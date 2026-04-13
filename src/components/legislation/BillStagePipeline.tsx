@@ -41,11 +41,20 @@ export function BillStagePipeline({
     >
       {/* Desktop: horizontal stepper */}
       <div className="hidden md:block">
-        <div className="flex items-start" style={{ minWidth: stages.length * 120 }}>
+        <div
+          className="flex items-start"
+          style={{ minWidth: stages.length * 120 }}
+        >
           {stages.map((stage, idx) => {
             const isLast = idx === stages.length - 1;
             return (
-              <div key={stage.key} className={cn('flex items-start', isLast ? 'shrink-0' : 'flex-1')}>
+              <div
+                key={stage.key}
+                className={cn(
+                  'flex items-start',
+                  isLast ? 'shrink-0' : 'flex-1',
+                )}
+              >
                 {/* Node */}
                 <StageNode
                   stage={stage}
@@ -86,31 +95,41 @@ export function BillStagePipeline({
                   {!isLast && (
                     <div
                       className={cn(
-                        'w-[3px] flex-1 min-h-8 rounded-full',
+                        'min-h-8 w-0.75 flex-1 rounded-full',
                         stage.status === 'completed' &&
                           (allCompleted
                             ? 'bg-emerald-500 dark:bg-emerald-400'
                             : 'bg-emerald-400/50 dark:bg-emerald-500/40'),
-                        stage.status === 'current' && !isTerminated && 'bg-primary/25',
-                        stage.status === 'current' && isTerminated && 'bg-destructive/25',
+                        stage.status === 'current' &&
+                          !isTerminated &&
+                          'bg-primary/25',
+                        stage.status === 'current' &&
+                          isTerminated &&
+                          'bg-destructive/25',
                         stage.status === 'upcoming' && 'bg-muted',
                       )}
                     />
                   )}
                 </div>
                 {/* Label */}
-                <div className={cn('pb-5 pt-2', isLast && 'pb-0')}>
-                  <p className="text-[11px] font-medium text-muted-foreground">
+                <div className={cn('pt-2 pb-5', isLast && 'pb-0')}>
+                  <p className="text-muted-foreground text-[11px] font-medium">
                     {t('step', { num: idx + 1 })}
                   </p>
                   <p
                     className={cn(
-                      'text-sm font-semibold leading-snug',
+                      'text-sm leading-snug font-semibold',
                       stage.status === 'completed' && 'text-foreground',
-                      stage.status === 'current' && !isTerminated && 'text-primary',
-                      stage.status === 'current' && isTerminated && 'text-destructive line-through',
+                      stage.status === 'current' &&
+                        !isTerminated &&
+                        'text-primary',
+                      stage.status === 'current' &&
+                        isTerminated &&
+                        'text-destructive line-through',
                       stage.status === 'upcoming' &&
-                        (isTerminated ? 'text-muted-foreground/30 line-through' : 'text-muted-foreground/60'),
+                        (isTerminated
+                          ? 'text-muted-foreground/30 line-through'
+                          : 'text-muted-foreground/60'),
                     )}
                   >
                     {t(stage.key)}
@@ -162,10 +181,25 @@ function StageCircle({
     const outerRing = size === 'sm' ? 'h-9 w-9' : 'h-10 w-10';
     const innerDot = size === 'sm' ? 'h-3.5 w-3.5' : 'h-4 w-4';
     return (
-      <div className={cn('relative flex shrink-0 items-center justify-center', outerRing)}>
-        <span className={cn('absolute rounded-full bg-primary/10 animate-[pulse_2.5s_ease-in-out_infinite]', outerRing)} />
-        <div className={cn('relative rounded-full border-[3px] border-primary/80 bg-background shadow-sm shadow-primary/20 dark:bg-muted', outerRing)} />
-        <div className={cn('absolute rounded-full bg-primary', innerDot)} />
+      <div
+        className={cn(
+          'relative flex shrink-0 items-center justify-center',
+          outerRing,
+        )}
+      >
+        <span
+          className={cn(
+            'bg-primary/10 absolute animate-[pulse_2.5s_ease-in-out_infinite] rounded-full',
+            outerRing,
+          )}
+        />
+        <div
+          className={cn(
+            'border-primary/80 bg-background shadow-primary/20 dark:bg-muted relative rounded-full border-[3px] shadow-sm',
+            outerRing,
+          )}
+        />
+        <div className={cn('bg-primary absolute rounded-full', innerDot)} />
       </div>
     );
   }
@@ -174,7 +208,7 @@ function StageCircle({
     return (
       <div
         className={cn(
-          'flex shrink-0 items-center justify-center rounded-full bg-destructive/10 shadow-sm ring-2 ring-destructive/30',
+          'bg-destructive/10 ring-destructive/30 flex shrink-0 items-center justify-center rounded-full shadow-sm ring-2',
           dim,
         )}
       >
@@ -214,7 +248,13 @@ interface StageNodeProps {
   allCompleted: boolean;
 }
 
-function StageNode({ stage, label, stepNumber, isTerminated, allCompleted }: StageNodeProps) {
+function StageNode({
+  stage,
+  label,
+  stepNumber,
+  isTerminated,
+  allCompleted,
+}: StageNodeProps) {
   const t = useTranslations('legislation.stages');
   const { status } = stage;
 
@@ -230,7 +270,12 @@ function StageNode({ stage, label, stepNumber, isTerminated, allCompleted }: Sta
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger
-          render={<div className="flex flex-col items-center gap-2.5 shrink-0 w-[100px]" aria-label={ariaLabel} />}
+          render={
+            <div
+              className="flex w-25 shrink-0 flex-col items-center gap-2.5"
+              aria-label={ariaLabel}
+            />
+          }
         >
           <StageCircle
             stage={stage}
@@ -239,17 +284,21 @@ function StageNode({ stage, label, stepNumber, isTerminated, allCompleted }: Sta
             size="sm"
           />
           <div className="flex flex-col items-center gap-0.5">
-            <span className="text-[10px] font-medium text-muted-foreground/70 uppercase tracking-wide">
+            <span className="text-muted-foreground/70 text-[10px] font-medium tracking-wide uppercase">
               {t('step', { num: stepNumber })}
             </span>
             <span
               className={cn(
-                'text-center text-xs font-semibold leading-tight max-w-[96px]',
+                'max-w-24 text-center text-xs leading-tight font-semibold',
                 status === 'completed' && 'text-foreground',
                 status === 'current' && !isTerminated && 'text-primary',
-                status === 'current' && isTerminated && 'text-destructive line-through',
+                status === 'current' &&
+                  isTerminated &&
+                  'text-destructive line-through',
                 status === 'upcoming' &&
-                  (isTerminated ? 'text-muted-foreground/25 line-through' : 'text-muted-foreground/60'),
+                  (isTerminated
+                    ? 'text-muted-foreground/25 line-through'
+                    : 'text-muted-foreground/60'),
               )}
             >
               {label}
@@ -271,16 +320,28 @@ interface StageConnectorProps {
   allCompleted: boolean;
 }
 
-function StageConnector({ from, to, isTerminated, allCompleted }: StageConnectorProps) {
-  const filled = from === 'completed' && (to === 'completed' || to === 'current');
+function StageConnector({
+  from,
+  to,
+  isTerminated,
+  allCompleted,
+}: StageConnectorProps) {
+  const filled =
+    from === 'completed' && (to === 'completed' || to === 'current');
 
   return (
-    <div className="flex flex-1 items-center pt-[18px]">
+    <div className="flex flex-1 items-center pt-4.5">
       <div
         className={cn(
-          'h-[3px] w-full rounded-full',
-          filled && !isTerminated && allCompleted && 'bg-emerald-500 dark:bg-emerald-400',
-          filled && !isTerminated && !allCompleted && 'bg-emerald-400/50 dark:bg-emerald-500/40',
+          'h-0.75 w-full rounded-full',
+          filled &&
+            !isTerminated &&
+            allCompleted &&
+            'bg-emerald-500 dark:bg-emerald-400',
+          filled &&
+            !isTerminated &&
+            !allCompleted &&
+            'bg-emerald-400/50 dark:bg-emerald-500/40',
           filled && isTerminated && 'bg-destructive/25',
           !filled && 'bg-muted',
         )}

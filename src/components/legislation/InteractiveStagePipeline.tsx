@@ -252,10 +252,10 @@ export function InteractiveStagePipeline({
                     hasRelationshipEvents={stageEvents.length > 0}
                   />
                   {!isLast && (
-                    <div className="flex flex-1 items-center pt-[18px]">
+                    <div className="flex flex-1 items-center pt-4.5">
                       <div
                         className={cn(
-                          'h-[3px] w-full rounded-full',
+                          'h-0.75 w-full rounded-full',
                           stage.status === 'completed' &&
                             (allCompleted
                               ? 'bg-emerald-500 dark:bg-emerald-400'
@@ -327,7 +327,7 @@ export function InteractiveStagePipeline({
                     {!isLast && (
                       <div
                         className={cn(
-                          'min-h-8 w-[3px] flex-1 rounded-full',
+                          'min-h-8 w-0.75 flex-1 rounded-full',
                           stage.status === 'completed' &&
                             (allCompleted
                               ? 'bg-emerald-500 dark:bg-emerald-400'
@@ -508,7 +508,7 @@ function InteractiveStageNode({
               type="button"
               onClick={hasVotes ? onToggle : undefined}
               className={cn(
-                'flex w-[120px] shrink-0 flex-col items-center gap-2.5 transition-opacity',
+                'flex w-30 shrink-0 flex-col items-center gap-2.5 transition-opacity',
                 hasVotes ? 'cursor-pointer hover:opacity-80' : 'cursor-default',
                 isExpanded && 'opacity-100',
               )}
@@ -529,7 +529,7 @@ function InteractiveStageNode({
             </span>
             <span
               className={cn(
-                'max-w-[108px] text-center text-xs leading-tight font-semibold',
+                'max-w-27 text-center text-xs leading-tight font-semibold',
                 status === 'completed' && 'text-foreground',
                 status === 'current' && !isTerminated && 'text-primary',
                 status === 'current' &&

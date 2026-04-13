@@ -26,13 +26,16 @@ interface MemberCardProps {
   priority?: boolean;
 }
 
-export default function MemberCard({ member, showDetails = false, priority }: MemberCardProps) {
+export default function MemberCard({
+  member,
+  showDetails = false,
+  priority,
+}: MemberCardProps) {
   const t = useTranslations('members.profile');
   const tVotes = useTranslations('votes');
 
   const initials = `${member.firstName?.[0] ?? ''}${member.lastName?.[0] ?? ''}`;
-  const hasStats =
-    member.totalVotes !== undefined && member.totalVotes > 0;
+  const hasStats = member.totalVotes !== undefined && member.totalVotes > 0;
 
   const forPct = hasStats
     ? Math.round(((member.forCount ?? 0) / member.totalVotes!) * 100)
@@ -52,11 +55,11 @@ export default function MemberCard({ member, showDetails = false, priority }: Me
 
   return (
     <Link href={`/members/${member.id}`}>
-      <Card className="group h-full glass-card hover-lift overflow-hidden">
+      <Card className="group glass-card hover-lift h-full overflow-hidden">
         <CardContent className="flex flex-col items-center gap-3 p-5">
           {/* Avatar with gradient ring */}
           <div className="relative">
-            <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-primary/30 via-chart-2/20 to-chart-4/30 opacity-0 blur-sm transition-opacity group-hover:opacity-100" />
+            <div className="from-primary/30 via-chart-2/20 to-chart-4/30 absolute -inset-1 rounded-full bg-linear-to-br opacity-0 blur-sm transition-opacity group-hover:opacity-100" />
             <MemberAvatar
               member={member}
               size="lg"
@@ -67,12 +70,12 @@ export default function MemberCard({ member, showDetails = false, priority }: Me
           </div>
 
           <div className="text-center">
-            <h3 className="font-semibold leading-tight">
+            <h3 className="leading-tight font-semibold">
               {member.firstName} {member.lastName}
             </h3>
 
             {member.factionName && (
-              <p className="mt-1 text-xs text-muted-foreground line-clamp-1">
+              <p className="text-muted-foreground mt-1 line-clamp-1 text-xs">
                 {member.factionName}
               </p>
             )}
@@ -81,7 +84,7 @@ export default function MemberCard({ member, showDetails = false, priority }: Me
           {/* Mini vote distribution bar */}
           {hasStats && (
             <div className="w-full space-y-1.5">
-              <div className="flex h-1.5 w-full overflow-hidden rounded-full bg-muted">
+              <div className="bg-muted flex h-1.5 w-full overflow-hidden rounded-full">
                 <div
                   className="bg-green-500 transition-all"
                   style={{ width: `${forPct}%` }}
@@ -95,7 +98,7 @@ export default function MemberCard({ member, showDetails = false, priority }: Me
                   style={{ width: `${absentPct}%` }}
                 />
               </div>
-              <div className="flex items-center justify-center gap-3 text-xs tabular-nums text-muted-foreground">
+              <div className="text-muted-foreground flex items-center justify-center gap-3 text-xs tabular-nums">
                 <span className="flex items-center gap-1">
                   <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-500" />
                   {member.forCount ?? 0}
@@ -105,7 +108,7 @@ export default function MemberCard({ member, showDetails = false, priority }: Me
                   {member.againstCount ?? 0}
                 </span>
                 <span className="flex items-center gap-1">
-                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-muted-foreground/40" />
+                  <span className="bg-muted-foreground/40 inline-block h-1.5 w-1.5 rounded-full" />
                   {member.absentCount ?? 0}
                 </span>
               </div>
@@ -114,13 +117,13 @@ export default function MemberCard({ member, showDetails = false, priority }: Me
 
           {/* Extended details (toggled via showDetails) */}
           {showDetails && (
-            <div className="w-full space-y-2 border-t border-border/40 pt-2">
+            <div className="border-border/40 w-full space-y-2 border-t pt-2">
               {/* Participation rate */}
               {hasStats && (
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <div className="text-muted-foreground flex items-center gap-1.5 text-xs">
                   <BarChart3 className="h-3 w-3 shrink-0" />
                   <span>{t('participation')}</span>
-                  <span className="ms-auto font-medium tabular-nums text-foreground">
+                  <span className="text-foreground ms-auto font-medium tabular-nums">
                     {participationPct}%
                   </span>
                 </div>
@@ -128,10 +131,10 @@ export default function MemberCard({ member, showDetails = false, priority }: Me
 
               {/* Bill count */}
               {(member.billCount ?? 0) > 0 && (
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <div className="text-muted-foreground flex items-center gap-1.5 text-xs">
                   <FileText className="h-3 w-3 shrink-0" />
                   <span>{t('billCount')}</span>
-                  <span className="ms-auto font-medium tabular-nums text-foreground">
+                  <span className="text-foreground ms-auto font-medium tabular-nums">
                     {member.billCount}
                   </span>
                 </div>

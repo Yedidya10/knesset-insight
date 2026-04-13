@@ -304,7 +304,7 @@ export default async function BillDetailPage({ params }: Props) {
 
       {/* Main card */}
       <Card className="glass-card mb-6 overflow-hidden">
-        <div className="from-primary/40 via-chart-2/30 to-chart-4/30 h-2 bg-gradient-to-r" />
+        <div className="from-primary/40 via-chart-2/30 to-chart-4/30 h-2 bg-linear-to-r" />
         <CardContent className="p-6">
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <Badge variant="secondary">{statusText}</Badge>

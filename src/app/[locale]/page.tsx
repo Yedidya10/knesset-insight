@@ -97,9 +97,9 @@ export default async function HomePage() {
       {/* Hero */}
       <section className="border-border/20 relative overflow-hidden border-b">
         {/* Animated mesh gradient background */}
-        <div className="from-primary/8 via-chart-2/5 to-chart-4/5 animate-mesh absolute inset-0 bg-gradient-to-br" />
-        <div className="from-primary/12 absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,_var(--tw-gradient-stops))] via-transparent to-transparent" />
-        <div className="from-chart-2/8 absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,_var(--tw-gradient-stops))] via-transparent to-transparent" />
+        <div className="from-primary/8 via-chart-2/5 to-chart-4/5 animate-mesh absolute inset-0 bg-linear-to-br" />
+        <div className="from-primary/12 absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,var(--tw-gradient-stops))] via-transparent to-transparent" />
+        <div className="from-chart-2/8 absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,var(--tw-gradient-stops))] via-transparent to-transparent" />
 
         {/* Subtle dot pattern */}
         <div

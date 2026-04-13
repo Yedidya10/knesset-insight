@@ -91,7 +91,7 @@ export default function Header() {
               >
                 {t(key)}
                 {active && (
-                  <span className="bg-primary absolute inset-x-2 -bottom-[13px] h-0.5 rounded-full" />
+                  <span className="bg-primary absolute inset-x-2 -bottom-3.25 h-0.5 rounded-full" />
                 )}
               </Link>
             );
