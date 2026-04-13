@@ -14,7 +14,6 @@ config({ path: '.env.local' });
 const targetKnesset = process.argv[2] ? Number(process.argv[2]) : null;
 
 const KNESSET_CSVS: Record<number, string> = {
-  20: 'https://media20.bechirot.gov.il/files/expc.csv',
   21: 'https://media21.bechirot.gov.il/files/expc.csv',
   22: 'https://media22.bechirot.gov.il/files/expc.csv',
   23: 'https://media23.bechirot.gov.il/files/expc.csv',
@@ -44,15 +43,32 @@ function parseCSV(
 
   if (lines.length < 2) return [];
 
-  // CSV structure:
-  // Col 0: סמל ועדה (committee code)
-  // Col 1: שם ישוב (city name)
-  // Col 2: סמל ישוב (city code)
-  // Col 3: בזב (eligible voters)
-  // Col 4: מצביעים (actual voters)
-  // Col 5: פסולים (invalid votes)
-  // Col 6: כשרים (valid votes)
-  // Col 7+: party ballot letters and vote pairs
+  // Detect CSV format: K21 has no "סמל ועדה" column, K22+ does.
+  // If first header column contains "ועדה", there's an extra col 0 offset.
+  const headerCols = parseCSVLine(lines[0]);
+  const firstCol =
+    headerCols[0]
+      ?.replace(/"/g, '')
+      .replace(/\uFEFF/g, '')
+      .trim() ?? '';
+  const hasCommitteeCol = firstCol.includes('ועדה');
+  const offset = hasCommitteeCol ? 1 : 0;
+
+  // Columns (with offset):
+  // [offset+0]: שם ישוב (city name)
+  // [offset+1]: סמל ישוב (city code)
+  // [offset+2]: בזב (eligible voters)
+  // [offset+3]: מצביעים (actual voters)
+  // [offset+4]: פסולים (invalid votes)
+  // [offset+5]: כשרים (valid votes)
+  // [offset+6]+: vote count per party (ballot letters from header)
+  const partyStart = offset + 6;
+
+  // Parse header to get party ballot letters
+  const partyHeaders: string[] = [];
+  for (let j = partyStart; j < headerCols.length; j++) {
+    partyHeaders.push(headerCols[j]?.replace(/"/g, '').trim() ?? '');
+  }
 
   const rows: CityRow[] = [];
 
@@ -61,14 +77,26 @@ function parseCSV(
     const line = lines[i];
     const cols = parseCSVLine(line);
 
-    if (cols.length < 7) continue;
+    if (cols.length < partyStart) continue;
 
-    const cityName = cols[1]?.replace(/"/g, '').trim() ?? '';
-    const cityCode = cols[2]?.replace(/"/g, '').trim() ?? '';
-    const eligible = parseInt(cols[3]?.replace(/"/g, '').trim() ?? '0', 10);
-    const actual = parseInt(cols[4]?.replace(/"/g, '').trim() ?? '0', 10);
-    const invalid = parseInt(cols[5]?.replace(/"/g, '').trim() ?? '0', 10);
-    const valid = parseInt(cols[6]?.replace(/"/g, '').trim() ?? '0', 10);
+    const cityName = cols[offset]?.replace(/"/g, '').trim() ?? '';
+    const cityCode = cols[offset + 1]?.replace(/"/g, '').trim() ?? '';
+    const eligible = parseInt(
+      cols[offset + 2]?.replace(/"/g, '').trim() ?? '0',
+      10,
+    );
+    const actual = parseInt(
+      cols[offset + 3]?.replace(/"/g, '').trim() ?? '0',
+      10,
+    );
+    const invalid = parseInt(
+      cols[offset + 4]?.replace(/"/g, '').trim() ?? '0',
+      10,
+    );
+    const valid = parseInt(
+      cols[offset + 5]?.replace(/"/g, '').trim() ?? '0',
+      10,
+    );
 
     if (!cityCode || !cityName || isNaN(eligible)) continue;
 
@@ -76,11 +104,12 @@ function parseCSV(
     const cityNum = parseInt(cityCode, 10);
     const districtCode = districtMap.get(cityNum) ?? null;
 
-    // Remaining columns are pairs: ballot_letters, votes
+    // Each column from partyStart onwards has votes for the party
+    // whose ballot letters are in the same header column
     const parties: CityRow['parties'] = [];
-    for (let j = 7; j < cols.length - 1; j += 2) {
-      const letters = cols[j]?.replace(/"/g, '').trim() ?? '';
-      const votes = parseInt(cols[j + 1]?.replace(/"/g, '').trim() ?? '0', 10);
+    for (let j = partyStart; j < cols.length; j++) {
+      const votes = parseInt(cols[j]?.replace(/"/g, '').trim() ?? '0', 10);
+      const letters = partyHeaders[j - partyStart] ?? '';
       if (letters && !isNaN(votes) && votes > 0) {
         parties.push({ letters, name: letters, votes });
       }
@@ -154,8 +183,9 @@ async function importKnesset(
   try {
     // Try UTF-8 first
     csvText = new TextDecoder('utf-8').decode(buffer);
-    // Quick check: if Hebrew text is garbled, try windows-1255
-    if (csvText.includes('�')) {
+    // Check if Hebrew is garbled: look for replacement chars or absence of Hebrew
+    const hasHebrew = /[\u0590-\u05FF]/.test(csvText.slice(0, 500));
+    if (!hasHebrew || csvText.includes('\uFFFD')) {
       csvText = new TextDecoder('windows-1255').decode(buffer);
     }
   } catch {
@@ -177,18 +207,19 @@ async function importKnesset(
 
   let cityCount = 0;
   let partyCount = 0;
+  const BATCH_SIZE = 25;
 
-  // Insert in batches
-  for (const row of rows) {
-    const turnoutPercent =
-      row.eligible > 0
-        ? parseFloat(((row.actual / row.eligible) * 100).toFixed(2))
-        : 0;
+  // Insert cities in batches, then collect IDs for party inserts
+  for (let b = 0; b < rows.length; b += BATCH_SIZE) {
+    const batch = rows.slice(b, b + BATCH_SIZE);
 
-    const [inserted] = await db
-      .insert(electionCityResults)
-      .values({
-        knessetNum: knessetNum,
+    const cityValues = batch.map((row) => {
+      const turnoutPercent =
+        row.eligible > 0
+          ? parseFloat(((row.actual / row.eligible) * 100).toFixed(2))
+          : 0;
+      return {
+        knessetNum,
         cityCode: row.cityCode,
         cityName: row.cityName,
         districtCode: row.districtCode,
@@ -197,30 +228,64 @@ async function importKnesset(
         validVotes: row.valid,
         invalidVotes: row.invalid,
         turnoutPercent: String(turnoutPercent),
-      })
-      .returning({ id: electionCityResults.id });
+      };
+    });
 
-    cityCount++;
+    const inserted = await db
+      .insert(electionCityResults)
+      .values(cityValues)
+      .returning({
+        id: electionCityResults.id,
+        cityCode: electionCityResults.cityCode,
+      });
 
-    if (inserted && row.parties.length > 0) {
-      const partyValues = row.parties.map((p) => ({
-        cityResultId: inserted.id,
-        ballotLetters: p.letters,
-        partyName: p.name,
-        votes: p.votes,
-        votePercent:
-          row.valid > 0
-            ? String(parseFloat(((p.votes / row.valid) * 100).toFixed(2)))
-            : '0',
-      }));
+    cityCount += inserted.length;
 
-      await db.insert(electionCityPartyResults).values(partyValues);
-      partyCount += partyValues.length;
+    // Build a cityCode→id map for party inserts
+    const idMap = new Map<string, number>();
+    for (const row of inserted) {
+      idMap.set(row.cityCode, row.id);
     }
+
+    // Collect all party rows for this batch
+    const allPartyValues: {
+      cityResultId: number;
+      ballotLetters: string;
+      partyName: string;
+      votes: number;
+      votePercent: string;
+    }[] = [];
+
+    for (const row of batch) {
+      const cityResultId = idMap.get(row.cityCode);
+      if (!cityResultId || row.parties.length === 0) continue;
+      for (const p of row.parties) {
+        allPartyValues.push({
+          cityResultId,
+          ballotLetters: p.letters,
+          partyName: p.name,
+          votes: p.votes,
+          votePercent:
+            row.valid > 0
+              ? String(parseFloat(((p.votes / row.valid) * 100).toFixed(2)))
+              : '0',
+        });
+      }
+    }
+
+    // Insert party results in sub-batches
+    const PARTY_BATCH = 100;
+    for (let p = 0; p < allPartyValues.length; p += PARTY_BATCH) {
+      const partyBatch = allPartyValues.slice(p, p + PARTY_BATCH);
+      await db.insert(electionCityPartyResults).values(partyBatch);
+      partyCount += partyBatch.length;
+    }
+
+    console.log(`  ⏳ ${cityCount}/${rows.length} cities...`);
   }
 
   console.log(
-    `  ✅ K${knessetNum}: ${cityCount} cities, ${partyCount} party results`,
+    `\n  ✅ K${knessetNum}: ${cityCount} cities, ${partyCount} party results`,
   );
 }
 
@@ -287,7 +352,14 @@ async function main() {
       console.log(`  ⚠️ No URL for K${num}, skipping`);
       continue;
     }
-    await importKnesset(num, url, districtMap);
+    try {
+      await importKnesset(num, url, districtMap);
+    } catch (err) {
+      console.error(
+        `  ❌ K${num} failed:`,
+        err instanceof Error ? err.message : err,
+      );
+    }
   }
 
   console.log('\n🎉 Import complete!');
