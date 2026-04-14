@@ -6,7 +6,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { Map, BarChart3, GitCompare } from 'lucide-react';
@@ -36,8 +35,8 @@ export default function MapControls({
         value={String(selectedKnesset)}
         onValueChange={(v) => onKnessetChange(Number(v))}
       >
-        <SelectTrigger className="w-40">
-          <SelectValue placeholder={t('selectKnesset')} />
+        <SelectTrigger className="w-auto min-w-28">
+          <span>{t('knesset', { num: selectedKnesset })}</span>
         </SelectTrigger>
         <SelectContent>
           {availableKnessets.map((k) => (
@@ -54,12 +53,13 @@ export default function MapControls({
         onValueChange={(v) => {
           if (v.length > 0) onViewModeChange(v[v.length - 1] as ViewMode);
         }}
-        className="rounded-lg border"
+        className="gap-1 rounded-lg border p-1"
+        spacing={1}
       >
         <ToggleGroupItem
           value="turnout"
           aria-label={t('viewMode.turnout')}
-          className="gap-1.5 text-xs"
+          className="gap-1.5 rounded-md text-xs"
         >
           <Map className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">{t('viewMode.turnout')}</span>
@@ -67,7 +67,8 @@ export default function MapControls({
         <ToggleGroupItem
           value="winningParty"
           aria-label={t('viewMode.winningParty')}
-          className="gap-1.5 text-xs"
+          className="gap-1.5 rounded-md text-xs opacity-50"
+          disabled
         >
           <BarChart3 className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">{t('viewMode.winningParty')}</span>
@@ -75,7 +76,7 @@ export default function MapControls({
         <ToggleGroupItem
           value="comparison"
           aria-label={t('viewMode.comparison')}
-          className="gap-1.5 text-xs opacity-50"
+          className="gap-1.5 rounded-md text-xs opacity-50"
           disabled
         >
           <GitCompare className="h-3.5 w-3.5" />

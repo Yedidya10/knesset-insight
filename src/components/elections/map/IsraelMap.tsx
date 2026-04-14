@@ -71,10 +71,11 @@ export default function IsraelMap({
     return map;
   }, [cities]);
 
-  // Color scale for turnout mode
+  // Color scale for turnout mode — narrowed to 55–80% to differentiate
+  // districts in the typical Israeli turnout range (60–75%)
   const turnoutScale = useMemo(() => {
-    const minTurnout = 30;
-    const maxTurnout = 90;
+    const minTurnout = 55;
+    const maxTurnout = 80;
     return scaleSequential()
       .domain([minTurnout, maxTurnout])
       .interpolator(interpolateRgb(colorRange[0], colorRange[1]));
@@ -303,7 +304,7 @@ export default function IsraelMap({
         <button
           type="button"
           onClick={onOverseasClick}
-          className={`absolute start-3 bottom-14 z-10 flex cursor-pointer flex-col items-center gap-1 rounded-xl border-2 px-3 py-2.5 shadow-lg backdrop-blur-sm transition-all duration-200 hover:scale-105 ${
+          className={`absolute start-3 bottom-20 z-10 flex cursor-pointer flex-col items-center gap-1 rounded-xl border-2 px-3 py-2.5 shadow-lg backdrop-blur-sm transition-all duration-200 hover:scale-105 ${
             isOverseasSelected
               ? 'border-teal-500 bg-teal-950/80 text-teal-50 shadow-teal-500/40'
               : 'border-border/60 bg-background/80 text-foreground hover:border-teal-400/60'

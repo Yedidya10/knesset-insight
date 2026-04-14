@@ -18,7 +18,10 @@ export default function MapLegend({
   if (viewMode !== 'turnout') return null;
 
   return (
-    <div className="bg-background/95 absolute start-4 bottom-4 flex items-center gap-2.5 rounded-lg border px-4 py-2.5 text-sm shadow-md backdrop-blur-sm">
+    <div
+      dir="ltr"
+      className="bg-background/95 absolute start-4 bottom-4 flex items-center gap-2.5 rounded-lg border px-4 py-2.5 text-sm shadow-md backdrop-blur-sm"
+    >
       <span className="text-muted-foreground font-medium">{lowLabel}</span>
       <div
         className="h-4 w-32 rounded-sm"
@@ -27,7 +30,7 @@ export default function MapLegend({
         }}
       />
       <span className="text-muted-foreground font-medium">{highLabel}</span>
-      <span className="text-muted-foreground ms-1 tabular-nums">30%–90%</span>
+      <span className="text-muted-foreground ms-1 tabular-nums">55%–80%</span>
     </div>
   );
 }
