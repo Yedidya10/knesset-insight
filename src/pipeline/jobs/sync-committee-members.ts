@@ -1,4 +1,4 @@
-import { sql } from 'drizzle-orm';
+import { sql, eq } from 'drizzle-orm';
 import { db } from '../../lib/db';
 import { committees, committeeMembers, members } from '../../lib/db/schema';
 import { fetchV4CommitteeMembers } from '../../lib/knesset/knesset-api-client';
@@ -232,6 +232,36 @@ async function syncAttendanceStats(
 
   console.log(
     `  [committee-members] Aggregated ${statsMap.size} attendance stat entries`,
+  );
+
+  // Fill in 0-attendance for current members whose committee had sessions but
+  // who never appear in the attendance CSV (i.e. they attended 0 meetings).
+  // Without this, those members would show null (no bar) instead of 0%.
+  const committeeKnSet = new Set(totalMeetings.keys());
+  const currentMembers = await db
+    .select({
+      committeeId: committeeMembers.committeeId,
+      memberId: committeeMembers.memberId,
+      knessetNum: committeeMembers.knessetNum,
+    })
+    .from(committeeMembers)
+    .where(eq(committeeMembers.isCurrent, true));
+
+  let zeroFilled = 0;
+  for (const cm of currentMembers) {
+    const ckKey = `${cm.committeeId}:${cm.knessetNum}`;
+    if (!committeeKnSet.has(ckKey)) continue; // committee had no tracked meetings
+    const key = `${cm.committeeId}:${cm.memberId}:${cm.knessetNum}`;
+    if (statsMap.has(key)) continue; // already has data from CSV
+    statsMap.set(key, {
+      attended: 0,
+      protocol: totalMeetings.get(ckKey)!.size,
+    });
+    zeroFilled++;
+  }
+
+  console.log(
+    `  [committee-members] Zero-filled attendance for ${zeroFilled} non-attending current members`,
   );
 
   // Update existing committee_members rows with attendance stats in batches

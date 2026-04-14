@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import type { Metadata } from 'next';
 import { Users } from 'lucide-react';
-import { eq, desc, sql, and } from 'drizzle-orm';
+import { eq, desc, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { committees, committeeMembers } from '@/lib/db/schema';
 import { Link } from '@/i18n/navigation';
@@ -27,12 +27,17 @@ export default async function CommitteesPage() {
       committeeType: committees.committeeType,
       knessetNum: committees.knessetNum,
       isActive: committees.isActive,
-      memberCount: sql<number>`(
-        SELECT count(*) FROM committee_members cm
-        WHERE cm.committee_id = ${committees.id} AND cm.is_current = true
-      )`.as('member_count'),
+      memberCount: sql<number>`count(${committeeMembers.id}) filter (where ${committeeMembers.isCurrent})`,
     })
     .from(committees)
+    .leftJoin(committeeMembers, eq(committeeMembers.committeeId, committees.id))
+    .groupBy(
+      committees.id,
+      committees.name,
+      committees.committeeType,
+      committees.knessetNum,
+      committees.isActive,
+    )
     .orderBy(desc(committees.isActive), committees.name);
 
   const active = data.filter((c) => c.isActive);
