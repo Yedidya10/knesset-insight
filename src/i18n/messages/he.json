@@ -373,8 +373,16 @@
       "sessionDate": "תאריך",
       "committeeMembers": "חברי הוועדה",
       "chair": "יו\"ר",
+      "deputy": "מ\"מ יו\"ר",
+      "member": "חבר/ה",
+      "observer": "משקיף",
+      "memberSince": "חבר/ה מאז",
       "avgAttendance": "נוכחות ממוצעת",
-      "attended": "נוכחות"
+      "attended": "נוכחות",
+      "committeeHistory": "המשכיות הוועדה",
+      "previousKnessets": "כנסות קודמות",
+      "currentKnesset": "כנסת נוכחית",
+      "viewCommittee": "צפייה בוועדה"
     }
   },
   "ai": {

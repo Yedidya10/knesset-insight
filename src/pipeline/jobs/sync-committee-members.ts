@@ -119,6 +119,9 @@ async function syncCommitteeMemberRecords(
     await syncAttendanceStats(committeeMap, memberMap);
   }
 
+  // ── Step 5: Populate committees.chairmanId from current chair position ──
+  await syncCommitteeChairs();
+
   const checkpoint: SyncCheckpoint = {
     lastItemId: rows.reduce(
       (max, r) => Math.max(max, r.knessetPositionId),
@@ -189,9 +192,81 @@ async function syncAttendanceStats(
 
   const syncKnessets = new Set(appConfig.knesset.syncKnessets);
 
-  // Pass 1: Count total meetings per committee+knesset (distinct meeting dates)
+  // Fetch per-member date ranges so attendance can be scoped to when the member
+  // was actually on the committee (prevents unfairly low % for recent joiners
+  // and unfairly high % for members who left early).
+  const memberRanges = await db
+    .select({
+      committeeId: committeeMembers.committeeId,
+      memberId: committeeMembers.memberId,
+      knessetNum: committeeMembers.knessetNum,
+      startDate: committeeMembers.startDate,
+      finishDate: committeeMembers.finishDate,
+      isCurrent: committeeMembers.isCurrent,
+    })
+    .from(committeeMembers);
+
+  // For the same (committee, member, knesset) there can be multiple rows (different
+  // positions / re-assignments). Collect all active ranges per member so we can
+  // correctly handle gaps (e.g. member left and later rejoined the committee).
+  // Overlapping/adjacent ranges are merged; non-overlapping ones are kept separate
+  // so meetings during a gap are excluded from the denominator.
+  interface Range {
+    start: string | null;
+    finish: string | null;
+  }
+  const memberRangesMap = new Map<string, Range[]>();
+  for (const r of memberRanges) {
+    if (r.knessetNum == null) continue;
+    const key = `${r.committeeId}:${r.memberId}:${r.knessetNum}`;
+    const start = r.startDate ? r.startDate.toISOString().slice(0, 10) : null;
+    const finish =
+      r.isCurrent || !r.finishDate
+        ? null
+        : r.finishDate.toISOString().slice(0, 10);
+    if (!memberRangesMap.has(key)) memberRangesMap.set(key, []);
+    memberRangesMap.get(key)!.push({ start, finish });
+  }
+
+  // Merge overlapping/adjacent ranges per member, keep non-overlapping ones separate
+  function mergeRanges(ranges: Range[]): Range[] {
+    if (ranges.length <= 1) return ranges;
+    // Sort by start date (null = earliest)
+    const sorted = [...ranges].sort((a, b) => {
+      if (!a.start && !b.start) return 0;
+      if (!a.start) return -1;
+      if (!b.start) return 1;
+      return a.start.localeCompare(b.start);
+    });
+    const merged: Range[] = [sorted[0]];
+    for (let i = 1; i < sorted.length; i++) {
+      const prev = merged[merged.length - 1];
+      const curr = sorted[i];
+      // If prev has no end (open-ended), it absorbs everything after it
+      if (prev.finish === null) continue;
+      // If curr starts before or at prev's finish, merge them
+      if (!curr.start || curr.start <= prev.finish) {
+        prev.finish =
+          curr.finish === null
+            ? null
+            : prev.finish > curr.finish
+              ? prev.finish
+              : curr.finish;
+      } else {
+        merged.push(curr);
+      }
+    }
+    return merged;
+  }
+
+  const memberWindows = new Map<string, Range[]>();
+  for (const [key, ranges] of memberRangesMap) {
+    memberWindows.set(key, mergeRanges(ranges));
+  }
+
+  // Collect all distinct meeting dates per committee+knesset for denominators
   const totalMeetings = new Map<string, Set<string>>();
-  // Pass 2: Count attended meetings per MK (distinct meeting dates)
+  // Track attended meetings per MK+committee+knesset (distinct dates)
   const attendedMeetings = new Map<string, Set<string>>();
 
   for (const row of csvRows) {
@@ -205,11 +280,9 @@ async function syncAttendanceStats(
     const meetingDate = row.meeting_start_date;
     const ckKey = `${committeeId}:${kn}`;
 
-    // Track distinct meetings per committee+knesset
     if (!totalMeetings.has(ckKey)) totalMeetings.set(ckKey, new Set());
     totalMeetings.get(ckKey)!.add(meetingDate);
 
-    // Track attended meetings per MK+committee+knesset (distinct dates)
     const mkId = Number(row.mk_id);
     const personId = mkIdToPersonId.get(mkId);
     const memberId = personId ? memberMap.get(personId) : undefined;
@@ -220,13 +293,33 @@ async function syncAttendanceStats(
     attendedMeetings.get(key)!.add(meetingDate);
   }
 
-  // Build final stats
+  // Build final stats, scoping the denominator to the member's active ranges.
+  // Attended is already naturally scoped (a member can't attend before joining).
+  function countInRanges(
+    dates: Set<string>,
+    ranges: Range[] | undefined,
+  ): number {
+    if (!ranges || ranges.length === 0) return dates.size;
+    let n = 0;
+    for (const d of dates) {
+      for (const range of ranges) {
+        if (range.start && d < range.start) continue;
+        if (range.finish && d > range.finish) continue;
+        n++;
+        break; // date matched one range, no need to check others
+      }
+    }
+    return n;
+  }
+
   const statsMap = new Map<string, { attended: number; protocol: number }>();
 
   for (const [key, dates] of attendedMeetings) {
     const [committeeIdStr, , knStr] = key.split(':');
     const ckKey = `${committeeIdStr}:${knStr}`;
-    const protocol = totalMeetings.get(ckKey)?.size ?? 0;
+    const allDates = totalMeetings.get(ckKey);
+    const ranges = memberWindows.get(key);
+    const protocol = allDates ? countInRanges(allDates, ranges) : 0;
     statsMap.set(key, { attended: dates.size, protocol });
   }
 
@@ -235,8 +328,8 @@ async function syncAttendanceStats(
   );
 
   // Fill in 0-attendance for current members whose committee had sessions but
-  // who never appear in the attendance CSV (i.e. they attended 0 meetings).
-  // Without this, those members would show null (no bar) instead of 0%.
+  // who never appear in the attendance CSV (i.e. attended 0 meetings in their
+  // active window). Scope denominator to their window too.
   const committeeKnSet = new Set(totalMeetings.keys());
   const currentMembers = await db
     .select({
@@ -250,13 +343,12 @@ async function syncAttendanceStats(
   let zeroFilled = 0;
   for (const cm of currentMembers) {
     const ckKey = `${cm.committeeId}:${cm.knessetNum}`;
-    if (!committeeKnSet.has(ckKey)) continue; // committee had no tracked meetings
+    if (!committeeKnSet.has(ckKey)) continue;
     const key = `${cm.committeeId}:${cm.memberId}:${cm.knessetNum}`;
-    if (statsMap.has(key)) continue; // already has data from CSV
-    statsMap.set(key, {
-      attended: 0,
-      protocol: totalMeetings.get(ckKey)!.size,
-    });
+    if (statsMap.has(key)) continue;
+    const ranges = memberWindows.get(key);
+    const protocol = countInRanges(totalMeetings.get(ckKey)!, ranges);
+    statsMap.set(key, { attended: 0, protocol });
     zeroFilled++;
   }
 
@@ -270,7 +362,10 @@ async function syncAttendanceStats(
     const [committeeIdStr, memberIdStr, knStr] = key.split(':');
     const percent =
       stats.protocol > 0
-        ? Math.round((stats.attended / stats.protocol) * 10000) / 100
+        ? Math.min(
+            Math.round((stats.attended / stats.protocol) * 10000) / 100,
+            100,
+          )
         : null;
 
     return {
@@ -318,6 +413,62 @@ async function syncAttendanceStats(
   console.log(
     `  [committee-members] Updated attendance stats for ${updated} members`,
   );
+}
+
+/**
+ * Populate committees.chairmanId from current committee_members rows.
+ * Priority: positionId=41 (chair) > positionId=67 (deputy / acting chair).
+ * Clears chairmanId if no current chair/deputy is found so stale data doesn't linger.
+ */
+async function syncCommitteeChairs(): Promise<void> {
+  const updated = await db.execute(sql`
+    WITH ranked AS (
+      SELECT
+        cm.committee_id,
+        cm.member_id,
+        ROW_NUMBER() OVER (
+          PARTITION BY cm.committee_id
+          ORDER BY
+            CASE cm.position_id WHEN 41 THEN 0 WHEN 67 THEN 1 ELSE 2 END,
+            cm.start_date DESC NULLS LAST
+        ) AS rn
+      FROM committee_members cm
+      WHERE cm.is_current = true
+        AND cm.position_id IN (41, 67)
+    ),
+    picks AS (
+      SELECT committee_id, member_id FROM ranked WHERE rn = 1
+    )
+    UPDATE committees c
+    SET chairman_id = p.member_id,
+        updated_at = NOW()
+    FROM picks p
+    WHERE c.id = p.committee_id
+      AND (c.chairman_id IS DISTINCT FROM p.member_id)
+    RETURNING c.id
+  `);
+  console.log(
+    `  [committee-members] Updated chairman_id for ${updated.length} committees`,
+  );
+
+  // Clear stale chairman_id where no current chair/deputy exists
+  const cleared = await db.execute(sql`
+    UPDATE committees c
+    SET chairman_id = NULL, updated_at = NOW()
+    WHERE c.chairman_id IS NOT NULL
+      AND NOT EXISTS (
+        SELECT 1 FROM committee_members cm
+        WHERE cm.committee_id = c.id
+          AND cm.is_current = true
+          AND cm.position_id IN (41, 67)
+      )
+    RETURNING c.id
+  `);
+  if (cleared.length > 0) {
+    console.log(
+      `  [committee-members] Cleared chairman_id for ${cleared.length} committees with no current chair`,
+    );
+  }
 }
 
 export async function syncCommitteeMembers(): Promise<void> {

@@ -1,9 +1,10 @@
 import { getTranslations } from 'next-intl/server';
 import type { Metadata } from 'next';
-import { Users } from 'lucide-react';
-import { eq, desc, sql } from 'drizzle-orm';
+import { Users, History } from 'lucide-react';
+import { eq, desc, sql, inArray } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { committees, committeeMembers } from '@/lib/db/schema';
+import { SUPPORTED_COMMITTEE_KNESSETS } from '@/lib/committees/scope';
 import { Link } from '@/i18n/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -27,10 +28,11 @@ export default async function CommitteesPage() {
       committeeType: committees.committeeType,
       knessetNum: committees.knessetNum,
       isActive: committees.isActive,
-      memberCount: sql<number>`count(${committeeMembers.id}) filter (where ${committeeMembers.isCurrent})`,
+      memberCount: sql<number>`count(distinct ${committeeMembers.memberId}) filter (where ${committeeMembers.isCurrent})`,
     })
     .from(committees)
     .leftJoin(committeeMembers, eq(committeeMembers.committeeId, committees.id))
+    .where(inArray(committees.knessetNum, SUPPORTED_COMMITTEE_KNESSETS))
     .groupBy(
       committees.id,
       committees.name,
@@ -41,7 +43,20 @@ export default async function CommitteesPage() {
     .orderBy(desc(committees.isActive), committees.name);
 
   const active = data.filter((c) => c.isActive);
-  const inactive = data.filter((c) => !c.isActive);
+
+  // Collect active committee names so we can hide inactive committees that
+  // have an active successor (they're accessible from the active committee's
+  // history section instead of cluttering the inactive list).
+  const activeNames = new Set(active.map((c) => c.name));
+  const inactive = data.filter((c) => !c.isActive && !activeNames.has(c.name));
+
+  // For each active committee, count how many previous Knessets it existed in
+  const activeWithHistory = active.map((c) => {
+    const previousKnessets = data.filter(
+      (other) => !other.isActive && other.name === c.name,
+    );
+    return { ...c, previousKnessetCount: previousKnessets.length };
+  });
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
@@ -63,7 +78,7 @@ export default async function CommitteesPage() {
         <div className="mb-8">
           <h2 className="mb-4 text-lg font-semibold">{t('active')}</h2>
           <div className="stagger-children grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {active.map((committee) => (
+            {activeWithHistory.map((committee) => (
               <Link key={committee.id} href={`/committees/${committee.id}`}>
                 <Card className="glass-card hover-lift h-full overflow-hidden border-s-4 border-s-green-500/40">
                   <CardHeader className="pb-2">
@@ -84,6 +99,12 @@ export default async function CommitteesPage() {
                       <Badge variant="secondary" className="gap-1">
                         <Users className="h-3 w-3" />
                         {committee.memberCount}
+                      </Badge>
+                    )}
+                    {committee.previousKnessetCount > 0 && (
+                      <Badge variant="outline" className="gap-1 opacity-60">
+                        <History className="h-3 w-3" />+
+                        {committee.previousKnessetCount}
                       </Badge>
                     )}
                   </CardContent>

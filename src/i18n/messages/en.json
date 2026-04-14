@@ -373,8 +373,16 @@
       "sessionDate": "Date",
       "committeeMembers": "Committee Members",
       "chair": "Chair",
+      "deputy": "Acting Chair",
+      "member": "Member",
+      "observer": "Observer",
+      "memberSince": "Member since",
       "avgAttendance": "Avg. Attendance",
-      "attended": "Attended"
+      "attended": "Attended",
+      "committeeHistory": "Committee History",
+      "previousKnessets": "Previous Knessets",
+      "currentKnesset": "Current Knesset",
+      "viewCommittee": "View Committee"
     }
   },
   "ai": {

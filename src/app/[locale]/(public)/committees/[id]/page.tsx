@@ -6,9 +6,10 @@ import {
   Calendar,
   FileText,
   ExternalLink,
-  BarChart3,
+  Clock,
+  History,
 } from 'lucide-react';
-import { eq, desc, and } from 'drizzle-orm';
+import { eq, desc, and, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import {
   committees,
@@ -28,6 +29,11 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import MemberAvatar from '@/components/members/MemberAvatar';
+import {
+  SUPPORTED_COMMITTEE_KNESSETS,
+  dedupeCommitteeMembers,
+  type DedupedCommitteeMember,
+} from '@/lib/committees/scope';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -85,7 +91,16 @@ export default async function CommitteeDetailPage({ params }: Props) {
 
   if (!committee) notFound();
 
-  // Fetch recent sessions
+  if (
+    committee.knessetNum == null ||
+    !(SUPPORTED_COMMITTEE_KNESSETS as readonly number[]).includes(
+      committee.knessetNum,
+    )
+  ) {
+    notFound();
+  }
+
+  // Fetch recent sessions (for display)
   const sessions = await db
     .select({
       id: committeeSessions.id,
@@ -99,13 +114,45 @@ export default async function CommitteeDetailPage({ params }: Props) {
     .orderBy(desc(committeeSessions.sessionDate))
     .limit(30);
 
-  // Fetch committee members with attendance stats
-  const cmMembers = await db
+  // Count total sessions (independent of display limit)
+  const [{ total: totalSessions } = { total: 0 }] = await db
+    .select({ total: sql<number>`count(*)::int` })
+    .from(committeeSessions)
+    .where(eq(committeeSessions.committeeId, committeeId));
+
+  // Compute the effective "tracked meetings" count from attendance data:
+  // Use the maximum protocol_meetings among current members (the longest-serving
+  // member covers the widest window, giving us the committee's total tracked meetings).
+  const [
+    { trackedMeetings: trackedMeetingsCount } = { trackedMeetings: null },
+  ] = await db
+    .select({
+      trackedMeetings: sql<
+        number | null
+      >`max(${committeeMembers.protocolMeetings})`,
+    })
+    .from(committeeMembers)
+    .where(eq(committeeMembers.committeeId, committeeId));
+
+  // Prefer attendance-based count when available; fall back to raw session count
+  const displaySessionCount = trackedMeetingsCount ?? totalSessions;
+
+  // Fetch committee members with attendance stats.
+  // For inactive committees all members have isCurrent=false, so show all members.
+  const memberFilter = committee.isActive
+    ? and(
+        eq(committeeMembers.committeeId, committeeId),
+        eq(committeeMembers.isCurrent, true),
+      )
+    : eq(committeeMembers.committeeId, committeeId);
+
+  const rawMembers = await db
     .select({
       memberId: committeeMembers.memberId,
       positionId: committeeMembers.positionId,
       dutyDesc: committeeMembers.dutyDesc,
-      isCurrent: committeeMembers.isCurrent,
+      startDate: committeeMembers.startDate,
+      finishDate: committeeMembers.finishDate,
       attendedMeetings: committeeMembers.attendedMeetings,
       protocolMeetings: committeeMembers.protocolMeetings,
       attendancePercent: committeeMembers.attendancePercent,
@@ -117,19 +164,13 @@ export default async function CommitteeDetailPage({ params }: Props) {
     .from(committeeMembers)
     .innerJoin(members, eq(committeeMembers.memberId, members.id))
     .leftJoin(factions, eq(members.factionId, factions.id))
-    .where(
-      and(
-        eq(committeeMembers.committeeId, committeeId),
-        eq(committeeMembers.isCurrent, true),
-      ),
-    )
-    .orderBy(committeeMembers.positionId, members.lastName);
+    .where(memberFilter);
 
-  // Separate chair (41) from regular members
-  const chair = cmMembers.find((m) => m.positionId === 41);
-  const regularMembers = cmMembers.filter((m) => m.positionId !== 41);
+  const cmMembers = dedupeCommitteeMembers(rawMembers, (key) => tDetail(key));
+  const chair = cmMembers.find((m) => m.isChair);
+  const regularMembers = cmMembers.filter((m) => !m.isChair);
 
-  // Calculate average attendance for the committee
+  // Average attendance — one value per distinct member, already deduped
   const membersWithAttendance = cmMembers.filter(
     (m) => m.attendancePercent != null,
   );
@@ -143,6 +184,23 @@ export default async function CommitteeDetailPage({ params }: Props) {
         )
       : null;
 
+  // Fetch related committees with the same name from other Knessets
+  const relatedCommittees = await db
+    .select({
+      id: committees.id,
+      name: committees.name,
+      knessetNum: committees.knessetNum,
+      isActive: committees.isActive,
+    })
+    .from(committees)
+    .where(
+      and(
+        eq(committees.name, committee.name),
+        sql`${committees.id} != ${committeeId}`,
+      ),
+    )
+    .orderBy(desc(committees.knessetNum));
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       {/* Header */}
@@ -151,7 +209,7 @@ export default async function CommitteeDetailPage({ params }: Props) {
           <Users className="text-primary h-7 w-7" />
         </div>
         <div className="min-w-0">
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+          <h1 className="text-2xl font-bold tracking-tight break-words sm:text-3xl">
             {committee.name}
           </h1>
           <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -232,7 +290,7 @@ export default async function CommitteeDetailPage({ params }: Props) {
               <Separator />
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">{t('sessions')}</span>
-                <span className="font-medium">{sessions.length}</span>
+                <span className="font-medium">{displaySessionCount}</span>
               </div>
               {avgAttendance != null && (
                 <>
@@ -265,13 +323,8 @@ export default async function CommitteeDetailPage({ params }: Props) {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {/* Chair first */}
                   {chair && (
-                    <CommitteeMemberRow
-                      member={chair}
-                      isChair
-                      tDetail={tDetail}
-                    />
+                    <CommitteeMemberRow member={chair} tDetail={tDetail} />
                   )}
                   {chair && regularMembers.length > 0 && (
                     <Separator className="my-3" />
@@ -308,19 +361,30 @@ export default async function CommitteeDetailPage({ params }: Props) {
                       key={session.id}
                       className="hover:bg-muted/30 rounded-lg border p-4 transition-colors"
                     >
-                      <div className="flex items-start justify-between gap-4">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                         <div className="min-w-0 flex-1">
                           {session.title && (
-                            <p className="leading-snug font-medium">
+                            <p className="leading-snug font-medium break-words">
                               {session.title}
                             </p>
                           )}
                           {session.sessionDate && (
-                            <p className="text-muted-foreground mt-1 text-sm">
-                              <Calendar className="me-1 inline h-3.5 w-3.5" />
-                              {new Date(session.sessionDate).toLocaleDateString(
-                                'he-IL',
-                              )}
+                            <p className="text-muted-foreground mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                              <span className="inline-flex items-center gap-1">
+                                <Calendar className="h-3.5 w-3.5" />
+                                {new Date(
+                                  session.sessionDate,
+                                ).toLocaleDateString('he-IL')}
+                              </span>
+                              <span className="inline-flex items-center gap-1">
+                                <Clock className="h-3.5 w-3.5" />
+                                {new Date(
+                                  session.sessionDate,
+                                ).toLocaleTimeString('he-IL', {
+                                  hour: '2-digit',
+                                  minute: '2-digit',
+                                })}
+                              </span>
                             </p>
                           )}
                         </div>
@@ -356,6 +420,64 @@ export default async function CommitteeDetailPage({ params }: Props) {
               )}
             </CardContent>
           </Card>
+
+          {/* Committee History across Knessets */}
+          {relatedCommittees.length > 0 && (
+            <Card className="glass-card overflow-hidden">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <History className="text-muted-foreground h-5 w-5" />
+                  {tDetail('committeeHistory')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {/* Current committee in the timeline */}
+                  <div className="bg-primary/5 border-primary/20 flex items-center justify-between rounded-lg border p-3">
+                    <div className="flex items-center gap-2">
+                      <Badge>
+                        {t('knesset')} {committee.knessetNum}
+                      </Badge>
+                      <span className="text-sm font-medium">
+                        {tDetail('currentKnesset')}
+                      </span>
+                    </div>
+                    {committee.isActive ? (
+                      <Badge className="bg-green-500/15 text-green-700 dark:text-green-400">
+                        {t('active')}
+                      </Badge>
+                    ) : (
+                      <Badge variant="secondary">{t('inactive')}</Badge>
+                    )}
+                  </div>
+                  {/* Related committees from other Knessets */}
+                  {relatedCommittees.map((rc) => (
+                    <Link
+                      key={rc.id}
+                      href={`/committees/${rc.id}`}
+                      className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-3 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline">
+                          {t('knesset')} {rc.knessetNum}
+                        </Badge>
+                        <span className="text-muted-foreground text-sm">
+                          {tDetail('viewCommittee')}
+                        </span>
+                      </div>
+                      {rc.isActive ? (
+                        <Badge className="bg-green-500/15 text-green-700 dark:text-green-400">
+                          {t('active')}
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary">{t('inactive')}</Badge>
+                      )}
+                    </Link>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>
@@ -384,26 +506,18 @@ function AttendanceBar({ percent }: { percent: number }) {
 }
 
 interface CommitteeMemberRowProps {
-  member: {
-    memberId: number;
-    firstName: string | null;
-    lastName: string | null;
-    imageUrl: string | null;
-    factionName: string | null;
-    dutyDesc: string | null;
-    attendedMeetings: number | null;
-    protocolMeetings: number | null;
-    attendancePercent: number | null;
-  };
-  isChair?: boolean;
+  member: DedupedCommitteeMember;
   tDetail: (key: string) => string;
 }
 
-function CommitteeMemberRow({
-  member,
-  isChair,
-  tDetail,
-}: CommitteeMemberRowProps) {
+function CommitteeMemberRow({ member, tDetail }: CommitteeMemberRowProps) {
+  const startYear = member.earliestStart
+    ? member.earliestStart.getFullYear()
+    : null;
+  const startLabel = member.earliestStart
+    ? member.earliestStart.toLocaleDateString('he-IL')
+    : null;
+
   return (
     <Link
       href={`/members/${member.memberId}`}
@@ -418,21 +532,40 @@ function CommitteeMemberRow({
         size="sm"
       />
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           <span className="truncate text-sm font-medium">
             {member.firstName} {member.lastName}
           </span>
-          {isChair && (
-            <Badge className="bg-primary/15 text-primary text-xs">
-              {tDetail('chair')}
+          {member.roleLabels.map((label, i) => (
+            <Badge
+              key={label}
+              className={
+                i === 0 && (member.isChair || member.isDeputy)
+                  ? 'bg-primary/15 text-primary text-xs'
+                  : 'text-xs'
+              }
+              variant={
+                i === 0 && (member.isChair || member.isDeputy)
+                  ? undefined
+                  : 'outline'
+              }
+            >
+              {label}
             </Badge>
+          ))}
+        </div>
+        <div className="flex items-center gap-2 text-xs">
+          {member.factionName && (
+            <span className="text-muted-foreground truncate">
+              {member.factionName}
+            </span>
+          )}
+          {startYear && (
+            <span className="text-muted-foreground/70">
+              · {tDetail('memberSince')} {startYear}
+            </span>
           )}
         </div>
-        {member.factionName && (
-          <p className="text-muted-foreground truncate text-xs">
-            {member.factionName}
-          </p>
-        )}
       </div>
       {member.attendancePercent != null && (
         <TooltipProvider>
@@ -450,6 +583,11 @@ function CommitteeMemberRow({
                 {tDetail('attended')}: {member.attendedMeetings ?? 0}/
                 {member.protocolMeetings ?? 0}
               </p>
+              {startLabel && (
+                <p className="text-muted-foreground text-xs">
+                  {tDetail('memberSince')}: {startLabel}
+                </p>
+              )}
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

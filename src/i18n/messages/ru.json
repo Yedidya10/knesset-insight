@@ -373,8 +373,16 @@
       "sessionDate": "Дата",
       "committeeMembers": "Члены комитета",
       "chair": "Председатель",
+      "deputy": "И.о. председателя",
+      "member": "Член",
+      "observer": "Наблюдатель",
+      "memberSince": "Член с",
       "avgAttendance": "Ср. посещаемость",
-      "attended": "Посещено"
+      "attended": "Посещено",
+      "committeeHistory": "История комитета",
+      "previousKnessets": "Предыдущие кнессеты",
+      "currentKnesset": "Текущий кнессет",
+      "viewCommittee": "Просмотр комитета"
     }
   },
   "ai": {

@@ -374,8 +374,16 @@
       "sessionDate": "التاريخ",
       "committeeMembers": "أعضاء اللجنة",
       "chair": "الرئيس",
+      "deputy": "رئيس بالنيابة",
+      "member": "عضو",
+      "observer": "مراقب",
+      "memberSince": "عضو منذ",
       "avgAttendance": "متوسط الحضور",
-      "attended": "الحضور"
+      "attended": "الحضور",
+      "committeeHistory": "تاريخ اللجنة",
+      "previousKnessets": "كنيست سابقة",
+      "currentKnesset": "الكنيست الحالي",
+      "viewCommittee": "عرض اللجنة"
     }
   },
   "ai": {
