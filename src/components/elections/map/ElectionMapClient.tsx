@@ -90,6 +90,7 @@ export default function ElectionMapClient({
   const [mapLoading, setMapLoading] = useState(true);
   const [nationalData, setNationalData] = useState<NationalData | null>(null);
   const [cityDetail, setCityDetail] = useState<CityDetailData | null>(null);
+  const [isOverseasSelected, setIsOverseasSelected] = useState(false);
 
   const fetchIdRef = useRef(0);
   const detailIdRef = useRef(0);
@@ -101,6 +102,7 @@ export default function ElectionMapClient({
     setNationalData(null);
     setSelectedCities(new Map());
     setCityDetail(null);
+    setIsOverseasSelected(false);
 
     Promise.all([
       trpc.electionMap.districtResults.query({ knessetNum }),
@@ -182,6 +184,7 @@ export default function ElectionMapClient({
 
   const handleCityClick = useCallback(
     (cityCode: string, cityName: string) => {
+      setIsOverseasSelected(false);
       setSelectedCities((prev) => {
         const next = new Map(prev);
         if (next.has(cityCode)) {
@@ -200,7 +203,29 @@ export default function ElectionMapClient({
   const handleClose = useCallback(() => {
     setSelectedCities(new Map());
     setCityDetail(null);
+    setIsOverseasSelected(false);
   }, []);
+
+  const handleOverseasClick = useCallback(() => {
+    if (isOverseasSelected) {
+      // Deselect overseas
+      setIsOverseasSelected(false);
+      setCityDetail(null);
+      return;
+    }
+    // Clear district selections and select overseas
+    setSelectedCities(new Map());
+    setIsOverseasSelected(true);
+    const id = ++detailIdRef.current;
+    trpc.electionMap.cityDetail
+      .query({ knessetNum: selectedKnesset, cityCode: '9999' })
+      .then((data) => {
+        if (id === detailIdRef.current) setCityDetail(data);
+      })
+      .catch(() => {
+        if (id === detailIdRef.current) setCityDetail(null);
+      });
+  }, [isOverseasSelected, selectedKnesset]);
 
   return (
     <div className="space-y-4">
@@ -225,6 +250,9 @@ export default function ElectionMapClient({
               colorRange={appConfig.electionMap.turnoutColorRange}
               onCityClick={handleCityClick}
               selectedCities={Array.from(selectedCities.keys())}
+              overseasVoters={nationalData?.overseasVoters}
+              isOverseasSelected={isOverseasSelected}
+              onOverseasClick={handleOverseasClick}
             />
           ) : mapLoading ? (
             <MapSkeleton />
@@ -237,9 +265,13 @@ export default function ElectionMapClient({
 
         {/* Side panel: national summary or city detail */}
         <div className="w-full shrink-0 lg:w-80 xl:w-96">
-          {selectedCities.size > 0 && cityDetail ? (
+          {(selectedCities.size > 0 || isOverseasSelected) && cityDetail ? (
             <CityDetailPanel
-              cityName={Array.from(selectedCities.values()).join(', ')}
+              cityName={
+                isOverseasSelected
+                  ? cityDetail.cityName
+                  : Array.from(selectedCities.values()).join(', ')
+              }
               cityCode={Array.from(selectedCities.keys()).join(',')}
               eligibleVoters={cityDetail.eligibleVoters}
               actualVoters={cityDetail.actualVoters}

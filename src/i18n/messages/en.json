@@ -603,6 +603,9 @@
       "noData": "No data available for this city",
       "votes": "votes"
     },
+    "overseas": {
+      "territory": "Overseas Ballots"
+    },
     "legend": {
       "low": "Low",
       "high": "High"

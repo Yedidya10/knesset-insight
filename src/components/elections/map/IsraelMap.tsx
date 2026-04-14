@@ -31,6 +31,9 @@ interface IsraelMapProps {
   colorRange: readonly [string, string];
   onCityClick: (cityCode: string, cityName: string) => void;
   selectedCities: string[];
+  overseasVoters?: number;
+  isOverseasSelected?: boolean;
+  onOverseasClick?: () => void;
 }
 
 interface TooltipState {
@@ -49,6 +52,9 @@ export default function IsraelMap({
   colorRange,
   onCityClick,
   selectedCities,
+  overseasVoters,
+  isOverseasSelected,
+  onOverseasClick,
 }: IsraelMapProps) {
   const t = useTranslations('electionMap');
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
@@ -291,6 +297,28 @@ export default function IsraelMap({
         lowLabel={t('legend.low')}
         highLabel={t('legend.high')}
       />
+
+      {/* Overseas votes territory */}
+      {overseasVoters != null && overseasVoters > 0 && onOverseasClick && (
+        <button
+          type="button"
+          onClick={onOverseasClick}
+          className={`absolute start-3 bottom-14 z-10 flex cursor-pointer flex-col items-center gap-1 rounded-xl border-2 px-3 py-2.5 shadow-lg backdrop-blur-sm transition-all duration-200 hover:scale-105 ${
+            isOverseasSelected
+              ? 'border-teal-500 bg-teal-950/80 text-teal-50 shadow-teal-500/40'
+              : 'border-border/60 bg-background/80 text-foreground hover:border-teal-400/60'
+          }`}
+          aria-label={t('overseas.territory')}
+        >
+          <span className="text-lg leading-none">✈️</span>
+          <span className="text-[10px] leading-tight font-semibold">
+            {t('overseas.territory')}
+          </span>
+          <span className="text-xs font-bold tabular-nums">
+            {overseasVoters.toLocaleString()}
+          </span>
+        </button>
+      )}
     </div>
   );
 }
