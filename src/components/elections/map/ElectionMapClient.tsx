@@ -81,10 +81,9 @@ export default function ElectionMapClient({
     knessets[0] ?? appConfig.electionMap.defaultKnesset,
   );
   const [viewMode, setViewMode] = useState<ViewMode>('turnout');
-  const [selectedCity, setSelectedCity] = useState<{
-    code: string;
-    name: string;
-  } | null>(null);
+  const [selectedCities, setSelectedCities] = useState<Map<string, string>>(
+    new Map(),
+  );
 
   const [mapData, setMapData] = useState<CityMapData[] | undefined>();
   const [mapLoading, setMapLoading] = useState(true);
@@ -99,7 +98,7 @@ export default function ElectionMapClient({
     setMapLoading(true);
     setMapData(undefined);
     setNationalData(null);
-    setSelectedCity(null);
+    setSelectedCities(new Map());
     setCityDetail(null);
 
     Promise.all([
@@ -128,10 +127,10 @@ export default function ElectionMapClient({
 
   // Initial fetch on mount
   const initialKnesset = knessets[0] ?? appConfig.electionMap.defaultKnesset;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchKnessetData(initialKnesset);
-  }, []);
+  }, [fetchKnessetData, initialKnesset]);
 
   const handleKnessetChange = useCallback(
     (knesset: number) => {
@@ -141,37 +140,65 @@ export default function ElectionMapClient({
     [fetchKnessetData],
   );
 
-  const fetchCityDetail = useCallback(
-    (knessetNum: number, cityCode: string) => {
+  const fetchMultiDistrictDetail = useCallback(
+    (knessetNum: number, districtCodes: string[]) => {
       const id = ++detailIdRef.current;
-      trpc.electionMap.cityDetail
-        .query({ knessetNum, cityCode, isDistrict: true })
-        .then((data) => {
-          if (id === detailIdRef.current) setCityDetail(data);
-        })
-        .catch(() => {
-          if (id === detailIdRef.current) setCityDetail(null);
-        });
+      if (districtCodes.length === 0) {
+        setCityDetail(null);
+        return;
+      }
+      if (districtCodes.length === 1) {
+        trpc.electionMap.cityDetail
+          .query({ knessetNum, cityCode: districtCodes[0], isDistrict: true })
+          .then((data) => {
+            if (id === detailIdRef.current) setCityDetail(data);
+          })
+          .catch(() => {
+            if (id === detailIdRef.current) setCityDetail(null);
+          });
+      } else {
+        trpc.electionMap.multiDistrictDetail
+          .query({ knessetNum, districtCodes })
+          .then((data) => {
+            if (id !== detailIdRef.current) return;
+            if (data) {
+              setCityDetail({
+                cityCode: districtCodes.join(','),
+                cityName: '',
+                ...data,
+              });
+            } else {
+              setCityDetail(null);
+            }
+          })
+          .catch(() => {
+            if (id === detailIdRef.current) setCityDetail(null);
+          });
+      }
     },
     [],
   );
 
   const handleCityClick = useCallback(
     (cityCode: string, cityName: string) => {
-      setSelectedCity((prev) => {
-        if (prev?.code === cityCode) {
-          setCityDetail(null);
-          return null;
+      setSelectedCities((prev) => {
+        const next = new Map(prev);
+        if (next.has(cityCode)) {
+          next.delete(cityCode);
+        } else {
+          next.set(cityCode, cityName);
         }
-        fetchCityDetail(selectedKnesset, cityCode);
-        return { code: cityCode, name: cityName };
+        const codes = Array.from(next.keys());
+        fetchMultiDistrictDetail(selectedKnesset, codes);
+        return next;
       });
     },
-    [selectedKnesset, fetchCityDetail],
+    [selectedKnesset, fetchMultiDistrictDetail],
   );
 
   const handleClose = useCallback(() => {
-    setSelectedCity(null);
+    setSelectedCities(new Map());
+    setCityDetail(null);
   }, []);
 
   return (
@@ -196,7 +223,7 @@ export default function ElectionMapClient({
               viewMode={viewMode}
               colorRange={appConfig.electionMap.turnoutColorRange}
               onCityClick={handleCityClick}
-              selectedCity={selectedCity?.code ?? null}
+              selectedCities={Array.from(selectedCities.keys())}
             />
           ) : mapLoading ? (
             <MapSkeleton />
@@ -209,10 +236,10 @@ export default function ElectionMapClient({
 
         {/* Side panel: national summary or city detail */}
         <div className="w-full shrink-0 lg:w-80 xl:w-96">
-          {selectedCity && cityDetail ? (
+          {selectedCities.size > 0 && cityDetail ? (
             <CityDetailPanel
-              cityName={selectedCity.name}
-              cityCode={selectedCity.code}
+              cityName={Array.from(selectedCities.values()).join(', ')}
+              cityCode={Array.from(selectedCities.keys()).join(',')}
               eligibleVoters={cityDetail.eligibleVoters}
               actualVoters={cityDetail.actualVoters}
               validVotes={cityDetail.validVotes}

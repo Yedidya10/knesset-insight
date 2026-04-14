@@ -1,5 +1,5 @@
 import { z } from 'zod/v4';
-import { eq, sql, desc, and } from 'drizzle-orm';
+import { eq, sql, desc, and, inArray } from 'drizzle-orm';
 import { router, publicProcedure } from '../trpc';
 import { db } from '../../lib/db';
 import {
@@ -283,5 +283,84 @@ export const electionMapRouter = router({
         actualVoters: r.actualVoters,
         turnoutPercent: r.turnoutPercent ? parseFloat(r.turnoutPercent) : 0,
       }));
+    }),
+
+  /** Aggregated results for multiple districts */
+  multiDistrictDetail: publicProcedure
+    .input(
+      z.object({
+        knessetNum: z.number().int().min(1),
+        districtCodes: z.array(z.string().min(1)).min(1).max(10),
+      }),
+    )
+    .query(async ({ input }) => {
+      const codes = input.districtCodes.map((c) => parseInt(c, 10));
+
+      const [summary] = await db
+        .select({
+          eligibleVoters: sql<number>`SUM(${electionCityResults.eligibleVoters})::int`,
+          actualVoters: sql<number>`SUM(${electionCityResults.actualVoters})::int`,
+          validVotes: sql<number>`SUM(${electionCityResults.validVotes})::int`,
+          invalidVotes: sql<number>`SUM(${electionCityResults.invalidVotes})::int`,
+        })
+        .from(electionCityResults)
+        .where(
+          and(
+            eq(electionCityResults.knessetNum, input.knessetNum),
+            inArray(electionCityResults.districtCode, codes),
+          ),
+        );
+
+      if (!summary) return null;
+
+      const turnout =
+        summary.eligibleVoters > 0
+          ? parseFloat(
+              ((summary.actualVoters / summary.eligibleVoters) * 100).toFixed(
+                2,
+              ),
+            )
+          : 0;
+
+      const parties = await db
+        .select({
+          ballotLetters: electionCityPartyResults.ballotLetters,
+          partyName: electionCityPartyResults.partyName,
+          votes: sql<number>`SUM(${electionCityPartyResults.votes})::int`,
+        })
+        .from(electionCityPartyResults)
+        .innerJoin(
+          electionCityResults,
+          eq(electionCityPartyResults.cityResultId, electionCityResults.id),
+        )
+        .where(
+          and(
+            eq(electionCityResults.knessetNum, input.knessetNum),
+            inArray(electionCityResults.districtCode, codes),
+          ),
+        )
+        .groupBy(
+          electionCityPartyResults.ballotLetters,
+          electionCityPartyResults.partyName,
+        )
+        .orderBy(desc(sql`SUM(${electionCityPartyResults.votes})`))
+        .limit(15);
+
+      return {
+        eligibleVoters: summary.eligibleVoters,
+        actualVoters: summary.actualVoters,
+        validVotes: summary.validVotes,
+        invalidVotes: summary.invalidVotes,
+        turnoutPercent: turnout,
+        parties: parties.map((p) => ({
+          ballotLetters: p.ballotLetters,
+          partyName: p.partyName,
+          votes: p.votes,
+          votePercent:
+            summary.validVotes > 0
+              ? parseFloat(((p.votes / summary.validVotes) * 100).toFixed(2))
+              : 0,
+        })),
+      };
     }),
 });

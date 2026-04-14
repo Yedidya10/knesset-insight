@@ -30,7 +30,7 @@ interface IsraelMapProps {
   viewMode: ViewMode;
   colorRange: readonly [string, string];
   onCityClick: (cityCode: string, cityName: string) => void;
-  selectedCity: string | null;
+  selectedCities: string[];
 }
 
 interface TooltipState {
@@ -48,10 +48,13 @@ export default function IsraelMap({
   viewMode,
   colorRange,
   onCityClick,
-  selectedCity,
+  selectedCities,
 }: IsraelMapProps) {
   const t = useTranslations('electionMap');
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
+
+  const selectedSet = useMemo(() => new Set(selectedCities), [selectedCities]);
+  const hasSelection = selectedSet.size > 0;
 
   // Build a lookup map: cityCode → data
   const cityMap = useMemo(() => {
@@ -126,34 +129,124 @@ export default function IsraelMap({
         }}
         className="h-125 w-full sm:h-150 lg:h-175"
       >
+        {/* SVG defs for 3D-like effects */}
+        <defs>
+          <filter
+            id="shadow-default"
+            x="-10%"
+            y="-10%"
+            width="130%"
+            height="130%"
+          >
+            <feDropShadow
+              dx="0"
+              dy="1"
+              stdDeviation="1.5"
+              floodColor="#000"
+              floodOpacity="0.15"
+            />
+          </filter>
+          <filter
+            id="shadow-selected"
+            x="-15%"
+            y="-15%"
+            width="140%"
+            height="140%"
+          >
+            <feDropShadow
+              dx="0"
+              dy="2"
+              stdDeviation="3"
+              floodColor="#000"
+              floodOpacity="0.35"
+            />
+            <feDropShadow
+              dx="0"
+              dy="0"
+              stdDeviation="4"
+              floodColor="#0d9488"
+              floodOpacity="0.4"
+            />
+          </filter>
+          <filter
+            id="shadow-hover"
+            x="-10%"
+            y="-10%"
+            width="130%"
+            height="130%"
+          >
+            <feDropShadow
+              dx="0"
+              dy="1.5"
+              stdDeviation="2"
+              floodColor="#000"
+              floodOpacity="0.25"
+            />
+          </filter>
+          {/* Bevel/inner-shadow effect for 3D appearance */}
+          <filter id="bevel" x="-5%" y="-5%" width="110%" height="110%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="1" result="blur" />
+            <feSpecularLighting
+              in="blur"
+              surfaceScale="3"
+              specularConstant="0.6"
+              specularExponent="20"
+              result="specular"
+            >
+              <fePointLight x="-50" y="-100" z="200" />
+            </feSpecularLighting>
+            <feComposite
+              in="specular"
+              in2="SourceAlpha"
+              operator="in"
+              result="specular-in"
+            />
+            <feComposite
+              in="SourceGraphic"
+              in2="specular-in"
+              operator="arithmetic"
+              k1="0"
+              k2="1"
+              k3="0.3"
+              k4="0"
+            />
+          </filter>
+        </defs>
         <ZoomableGroup center={[35.0, 31.5]} zoom={1} minZoom={0.8} maxZoom={8}>
           <Geographies geography={geoUrl}>
             {({ geographies }) =>
               geographies.map((geo) => {
                 const code = geo.properties?.muni_code;
-                const isSelected = code === selectedCity;
+                const isSelected = !!code && selectedSet.has(code);
+                const isFaded = hasSelection && !isSelected;
 
                 return (
                   <Geography
                     key={geo.rsmKey}
                     geography={geo}
                     fill={getFillColor(geo)}
-                    stroke={
-                      isSelected ? 'hsl(var(--primary))' : 'hsl(var(--border))'
-                    }
-                    strokeWidth={isSelected ? 2 : 0.5}
+                    stroke={isSelected ? '#0d9488' : 'rgba(255,255,255,0.6)'}
+                    strokeWidth={isSelected ? 2.5 : 0.8}
                     className="cursor-pointer outline-none focus:outline-none"
                     style={{
                       default: {
-                        transition: 'filter 200ms, stroke 200ms',
+                        filter: isSelected
+                          ? 'url(#shadow-selected)'
+                          : 'url(#shadow-default)',
+                        opacity: isFaded ? 0.35 : 1,
+                        transition:
+                          'filter 250ms, stroke 200ms, stroke-width 200ms, opacity 300ms',
                       },
                       hover: {
-                        filter: 'brightness(1.35) saturate(1.2)',
-                        stroke: 'hsl(var(--primary))',
-                        strokeWidth: 1.5,
+                        filter: isSelected
+                          ? 'url(#shadow-selected)'
+                          : 'url(#shadow-hover)',
+                        stroke: '#0d9488',
+                        strokeWidth: 2,
+                        opacity: isFaded ? 0.55 : 1,
                       },
                       pressed: {
-                        filter: 'brightness(1.5) saturate(1.3)',
+                        filter: 'url(#shadow-selected)',
                       },
                     }}
                     onMouseEnter={(e) => handleMouseEnter(geo, e)}
