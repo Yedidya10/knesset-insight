@@ -18,16 +18,16 @@ export default function MapLegend({
   if (viewMode !== 'turnout') return null;
 
   return (
-    <div className="bg-background/90 absolute start-4 bottom-4 flex items-center gap-2 rounded-lg border px-3 py-2 text-xs shadow-sm backdrop-blur-sm">
-      <span className="text-muted-foreground">{lowLabel}</span>
+    <div className="bg-background/95 absolute start-4 bottom-4 flex items-center gap-2.5 rounded-lg border px-4 py-2.5 text-sm shadow-md backdrop-blur-sm">
+      <span className="text-muted-foreground font-medium">{lowLabel}</span>
       <div
-        className="h-3 w-24 rounded-sm"
+        className="h-4 w-32 rounded-sm"
         style={{
           background: `linear-gradient(to right, ${colorRange[0]}, ${colorRange[1]})`,
         }}
       />
-      <span className="text-muted-foreground">{highLabel}</span>
-      <span className="text-muted-foreground ms-2">30%–90%</span>
+      <span className="text-muted-foreground font-medium">{highLabel}</span>
+      <span className="text-muted-foreground ms-1 tabular-nums">30%–90%</span>
     </div>
   );
 }

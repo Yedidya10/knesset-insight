@@ -19,16 +19,18 @@ export default function MapTooltip({
 }: MapTooltipProps) {
   return (
     <div
-      className="bg-popover text-popover-foreground pointer-events-none fixed z-50 rounded-lg border px-3 py-2 text-sm shadow-lg"
+      className="bg-popover text-popover-foreground pointer-events-none fixed z-50 rounded-lg border px-3.5 py-2.5 shadow-xl"
       style={{
-        left: x + 12,
-        top: y - 40,
+        left: x + 14,
+        top: y - 44,
       }}
     >
-      <p className="font-semibold">{cityName}</p>
+      <p className="text-sm font-bold">{cityName}</p>
       <div className="text-muted-foreground mt-1 space-y-0.5 text-xs">
-        <p>
-          {turnoutPercent.toFixed(1)}%{' '}
+        <p className="tabular-nums">
+          <span className="text-foreground font-semibold">
+            {turnoutPercent.toFixed(1)}%
+          </span>{' '}
           <span className="opacity-70">
             ({actualVoters.toLocaleString()} / {eligibleVoters.toLocaleString()}
             )
