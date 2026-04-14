@@ -138,11 +138,20 @@ export default async function CommitteeDetailPage({ params }: Props) {
   const displaySessionCount = trackedMeetingsCount ?? totalSessions;
 
   // Fetch committee members with attendance stats.
-  // For inactive committees all members have isCurrent=false, so show all members.
+  // For active committees: fetch ALL rows whose memberId has at least one
+  // isCurrent=true row. This ensures that members who left and returned have
+  // their full history (including earliestStart and attendance covering all
+  // stints), while still only showing current members.
+  // For inactive committees: show all members since everyone is isCurrent=false.
   const memberFilter = committee.isActive
     ? and(
         eq(committeeMembers.committeeId, committeeId),
-        eq(committeeMembers.isCurrent, true),
+        sql`${committeeMembers.memberId} IN (
+          SELECT DISTINCT ${committeeMembers.memberId}
+          FROM ${committeeMembers}
+          WHERE ${committeeMembers.committeeId} = ${committeeId}
+            AND ${committeeMembers.isCurrent} = true
+        )`,
       )
     : eq(committeeMembers.committeeId, committeeId);
 
