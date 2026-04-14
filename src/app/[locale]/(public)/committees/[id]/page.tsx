@@ -160,6 +160,7 @@ export default async function CommitteeDetailPage({ params }: Props) {
       memberId: committeeMembers.memberId,
       positionId: committeeMembers.positionId,
       dutyDesc: committeeMembers.dutyDesc,
+      isCurrent: committeeMembers.isCurrent,
       startDate: committeeMembers.startDate,
       finishDate: committeeMembers.finishDate,
       attendedMeetings: committeeMembers.attendedMeetings,

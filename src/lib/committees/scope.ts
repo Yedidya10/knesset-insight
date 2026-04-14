@@ -29,6 +29,7 @@ export interface RawCommitteeMember {
   memberId: number;
   positionId: number | null;
   dutyDesc: string | null;
+  isCurrent: boolean | null;
   startDate: Date | null;
   finishDate: Date | null;
   attendedMeetings: number | null;
@@ -75,7 +76,12 @@ export function dedupeCommitteeMembers(
 
   const deduped: DedupedCommitteeMember[] = [];
   for (const [memberId, group] of byMember) {
-    const sorted = [...group].sort(
+    // Separate current from historical rows. Use current rows for position
+    // and role-label determination; use ALL rows for earliestStart.
+    const currentRows = group.filter((r) => r.isCurrent === true);
+    const rowsForPosition = currentRows.length > 0 ? currentRows : group;
+
+    const sorted = [...rowsForPosition].sort(
       (a, b) => positionPriority(a.positionId) - positionPriority(b.positionId),
     );
     const primary = sorted[0];
@@ -92,8 +98,9 @@ export function dedupeCommitteeMembers(
       }
     }
 
+    // Earliest start across ALL stints (including historical)
     const earliestStart =
-      sorted
+      group
         .map((r) => r.startDate)
         .filter((d): d is Date => d != null)
         .sort((a, b) => a.getTime() - b.getTime())[0] ?? null;
