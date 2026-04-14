@@ -120,13 +120,12 @@ async function syncGovernmentRecords(): Promise<number> {
     let minStart: string | null = null;
     let maxEnd: string | null = null;
     let hasOpenEnd = false;
-    const knessetNumCounts = new Map<number, number>();
+    // Track the minimum KnessetNum — a government belongs to the Knesset
+    // in which it was formed; positions in later terms are caretaker records.
+    let knessetNum = Infinity;
 
     for (const pos of positions) {
-      knessetNumCounts.set(
-        pos.KnessetNum,
-        (knessetNumCounts.get(pos.KnessetNum) ?? 0) + 1,
-      );
+      if (pos.KnessetNum < knessetNum) knessetNum = pos.KnessetNum;
       const start = pos.StartDate?.split('T')[0] ?? null;
       const end = pos.FinishDate?.split('T')[0] ?? null;
 
@@ -137,17 +136,7 @@ async function syncGovernmentRecords(): Promise<number> {
         maxEnd = end;
       }
     }
-
-    // Use the most frequent KnessetNum (mode) — avoids mis-attribution
-    // when a caretaker government carries over into the next Knesset term
-    let knessetNum = 0;
-    let maxCount = 0;
-    for (const [kNum, count] of knessetNumCounts) {
-      if (count > maxCount || (count === maxCount && kNum < knessetNum)) {
-        knessetNum = kNum;
-        maxCount = count;
-      }
-    }
+    if (!isFinite(knessetNum)) knessetNum = 0;
 
     // Find PM (earliest start date) and alternate PM
     let pmPersonId: number | null = null;

@@ -15,6 +15,7 @@ const job = process.argv[2] as
   | 'images'
   | 'parties'
   | 'elections'
+  | 'governments'
   | 'links'
   | 'linkVotes'
   | 'enrichTitles'
@@ -36,6 +37,7 @@ async function main() {
     await import('../pipeline/jobs/sync-registered-parties');
   const { syncElectoralLists } =
     await import('../pipeline/jobs/sync-electoral-lists');
+  const { syncGovernments } = await import('../pipeline/jobs/sync-governments');
   const { syncPoliticalLinks } =
     await import('../pipeline/jobs/sync-political-links');
   const { linkVotesToBills } =
@@ -81,6 +83,10 @@ async function main() {
 
   if (target === 'elections' || target === 'all') {
     await syncElectoralLists();
+  }
+
+  if (target === 'governments' || target === 'all') {
+    await syncGovernments();
   }
 
   if (target === 'links' || target === 'all') {
