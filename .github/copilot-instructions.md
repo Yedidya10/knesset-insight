@@ -63,3 +63,4 @@ See `PLAN.md` for the full architecture and feature spec.
 ## Workflow
 
 - **After completing a fix or feature, always create a commit** with a clear conventional-commit message (`feat:`, `fix:`, `style:`, `refactor:`, `chore:`, `i18n:`, `docs:`). Group related changes into a single commit; unrelated changes go into separate commits.
+- **Every commit must pass TypeScript type-checking** — the pre-commit hook runs `pnpm type-check` (`tsc --noEmit`). Fix all type errors before committing.

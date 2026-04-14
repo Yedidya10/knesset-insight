@@ -17,7 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import MemberAvatar from '@/components/members/MemberAvatar';
 import GovernmentComposition from '@/components/governments/GovernmentComposition';
 import CoalitionBreakdown from '@/components/governments/CoalitionBreakdown';
-import { appConfig } from '../../../../../app.config';
+import { appConfig } from '@/../app.config';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -238,9 +238,10 @@ export default async function GovernmentDetailPage({ params }: Props) {
                 count: new Set(
                   positions
                     .filter((p) =>
-                      appConfig.knesset.govPositionIds.minister.includes(
-                        p.positionId,
-                      ),
+                      (
+                        appConfig.knesset.govPositionIds
+                          .minister as readonly number[]
+                      ).includes(p.positionId),
                     )
                     .map((p) => p.memberKnessetId),
                 ).size,
