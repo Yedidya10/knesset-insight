@@ -217,7 +217,7 @@ export default async function CommitteeDetailPage({ params }: Props) {
     .orderBy(desc(committees.knessetNum));
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-7xl overflow-x-hidden px-4 py-8 sm:px-6">
       {/* Header */}
       <div className="mb-8 flex items-start gap-4">
         <div className="bg-primary/10 ring-primary/20 flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl ring-1">
@@ -249,7 +249,7 @@ export default async function CommitteeDetailPage({ params }: Props) {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Sidebar */}
-        <div className="space-y-6 lg:col-span-1">
+        <div className="min-w-0 space-y-6 lg:col-span-1">
           {/* Chairman Card */}
           {committee.chairmanId && (
             <Card className="glass-card overflow-hidden">
@@ -275,6 +275,65 @@ export default async function CommitteeDetailPage({ params }: Props) {
                     {committee.chairmanFirstName} {committee.chairmanLastName}
                   </span>
                 </Link>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Committee History across Knessets */}
+          {relatedCommittees.length > 0 && (
+            <Card className="glass-card overflow-hidden">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-sm">
+                  <History className="text-muted-foreground h-4 w-4" />
+                  {tDetail('committeeHistory')}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {/* Current committee in the timeline */}
+                  <div className="bg-primary/5 border-primary/20 flex items-center justify-between rounded-lg border p-2.5">
+                    <div className="flex items-center gap-2">
+                      <Badge className="text-xs">
+                        {t('knesset')} {committee.knessetNum}
+                      </Badge>
+                      <span className="text-xs font-medium">
+                        {tDetail('currentKnesset')}
+                      </span>
+                    </div>
+                    {committee.isActive ? (
+                      <Badge className="bg-green-500/15 text-xs text-green-700 dark:text-green-400">
+                        {t('active')}
+                      </Badge>
+                    ) : (
+                      <Badge variant="secondary" className="text-xs">
+                        {t('inactive')}
+                      </Badge>
+                    )}
+                  </div>
+                  {/* Related committees from other Knessets */}
+                  {relatedCommittees.map((rc) => (
+                    <Link
+                      key={rc.id}
+                      href={`/committees/${rc.id}`}
+                      className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-2.5 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-xs">
+                          {t('knesset')} {rc.knessetNum}
+                        </Badge>
+                        {rc.memberCount > 0 && (
+                          <span className="text-muted-foreground flex items-center gap-1 text-xs">
+                            <Users className="h-3 w-3" />
+                            {rc.memberCount}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-primary text-xs">
+                        {tDetail('viewCommittee')} →
+                      </span>
+                    </Link>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           )}
@@ -323,7 +382,7 @@ export default async function CommitteeDetailPage({ params }: Props) {
         </div>
 
         {/* Main Content */}
-        <div className="space-y-6 lg:col-span-2">
+        <div className="min-w-0 space-y-6 lg:col-span-2">
           {/* Committee Members */}
           {cmMembers.length > 0 && (
             <Card className="glass-card overflow-hidden">
@@ -374,12 +433,12 @@ export default async function CommitteeDetailPage({ params }: Props) {
                   {sessions.map((session) => (
                     <div
                       key={session.id}
-                      className="hover:bg-muted/30 rounded-lg border p-4 transition-colors"
+                      className="hover:bg-muted/30 overflow-hidden rounded-lg border p-3 transition-colors sm:p-4"
                     >
-                      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
-                        <div className="min-w-0 flex-1">
+                      <div className="flex flex-col gap-2">
+                        <div className="min-w-0">
                           {session.title && (
-                            <p className="leading-snug font-medium break-words">
+                            <p className="text-sm leading-snug font-medium [overflow-wrap:anywhere] break-words">
                               {session.title}
                             </p>
                           )}
@@ -403,18 +462,20 @@ export default async function CommitteeDetailPage({ params }: Props) {
                             </p>
                           )}
                         </div>
-                        {session.protocolUrl && (
-                          <a
-                            href={session.protocolUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="bg-primary/10 text-primary hover:bg-primary/20 flex shrink-0 items-center gap-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors"
-                          >
-                            <FileText className="h-3.5 w-3.5" />
-                            {tDetail('viewProtocol')}
-                            <ExternalLink className="h-3 w-3" />
-                          </a>
-                        )}
+                        <div className="flex items-center gap-3">
+                          {session.protocolUrl && (
+                            <a
+                              href={session.protocolUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="bg-primary/10 text-primary hover:bg-primary/20 inline-flex items-center gap-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors"
+                            >
+                              <FileText className="h-3.5 w-3.5" />
+                              {tDetail('viewProtocol')}
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
+                          )}
+                        </div>
                       </div>
                       {session.topics && session.topics.length > 0 && (
                         <div className="mt-3 flex flex-wrap gap-1.5">
@@ -435,63 +496,6 @@ export default async function CommitteeDetailPage({ params }: Props) {
               )}
             </CardContent>
           </Card>
-
-          {/* Committee History across Knessets */}
-          {relatedCommittees.length > 0 && (
-            <Card className="glass-card overflow-hidden">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <History className="text-muted-foreground h-5 w-5" />
-                  {tDetail('committeeHistory')}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {/* Current committee in the timeline */}
-                  <div className="bg-primary/5 border-primary/20 flex items-center justify-between rounded-lg border p-3">
-                    <div className="flex items-center gap-2">
-                      <Badge>
-                        {t('knesset')} {committee.knessetNum}
-                      </Badge>
-                      <span className="text-sm font-medium">
-                        {tDetail('currentKnesset')}
-                      </span>
-                    </div>
-                    {committee.isActive ? (
-                      <Badge className="bg-green-500/15 text-green-700 dark:text-green-400">
-                        {t('active')}
-                      </Badge>
-                    ) : (
-                      <Badge variant="secondary">{t('inactive')}</Badge>
-                    )}
-                  </div>
-                  {/* Related committees from other Knessets */}
-                  {relatedCommittees.map((rc) => (
-                    <Link
-                      key={rc.id}
-                      href={`/committees/${rc.id}`}
-                      className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-3 transition-colors"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Badge variant="outline">
-                          {t('knesset')} {rc.knessetNum}
-                        </Badge>
-                        {rc.memberCount > 0 && (
-                          <span className="text-muted-foreground flex items-center gap-1 text-xs">
-                            <Users className="h-3 w-3" />
-                            {rc.memberCount} {t('members')}
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-primary text-sm">
-                        {tDetail('viewCommittee')} →
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
         </div>
       </div>
     </div>
