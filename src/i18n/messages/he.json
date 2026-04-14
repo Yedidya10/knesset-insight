@@ -591,7 +591,8 @@
       "validVotes": "קולות כשרים",
       "invalidVotes": "קולות פסולים",
       "topParties": "טופ {count} סיעות",
-      "cities": "יישובים"
+      "cities": "יישובים",
+      "overseasVoters": "מעטפות חיצוניות (חיילים, דיפלומטים ועוד)"
     },
     "city": {
       "detail": "פרטי יישוב",

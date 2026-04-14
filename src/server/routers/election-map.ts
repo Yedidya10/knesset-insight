@@ -33,6 +33,23 @@ export const electionMapRouter = router({
         .from(electionCityResults)
         .where(eq(electionCityResults.knessetNum, input.knessetNum));
 
+      // Overseas / "external envelope" votes (city code 9999)
+      const [overseas] = await db
+        .select({
+          actualVoters: electionCityResults.actualVoters,
+          validVotes: electionCityResults.validVotes,
+        })
+        .from(electionCityResults)
+        .where(
+          and(
+            eq(electionCityResults.knessetNum, input.knessetNum),
+            eq(electionCityResults.cityCode, '9999'),
+          ),
+        )
+        .limit(1);
+
+      const overseasVoters = overseas?.actualVoters ?? 0;
+
       // Top parties nationally
       const topParties = await db
         .select({
@@ -64,7 +81,8 @@ export const electionMapRouter = router({
         totalValid: summary?.totalValid ?? 0,
         totalInvalid: summary?.totalInvalid ?? 0,
         turnoutPercent: parseFloat(turnout),
-        cityCount: summary?.cityCount ?? 0,
+        cityCount: (summary?.cityCount ?? 0) - (overseasVoters > 0 ? 1 : 0),
+        overseasVoters,
         topParties: topParties.map((p) => ({
           ballotLetters: p.ballotLetters,
           partyName: p.partyName,

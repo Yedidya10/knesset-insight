@@ -40,6 +40,7 @@ interface NationalData {
   totalInvalid: number;
   turnoutPercent: number;
   cityCount: number;
+  overseasVoters: number;
   topParties: {
     ballotLetters: string;
     partyName: string;
@@ -257,6 +258,7 @@ export default function ElectionMapClient({
               totalInvalid={nationalData.totalInvalid}
               turnoutPercent={nationalData.turnoutPercent}
               cityCount={nationalData.cityCount}
+              overseasVoters={nationalData.overseasVoters}
               topParties={nationalData.topParties}
             />
           ) : null}

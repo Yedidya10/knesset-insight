@@ -592,7 +592,8 @@
       "validVotes": "أصوات صحيحة",
       "invalidVotes": "أصوات باطلة",
       "topParties": "أعلى {count} أحزاب",
-      "cities": "مدن"
+      "cities": "مدن",
+      "overseasVoters": "مظاريف خارجية (جنود، دبلوماسيون وغيرهم)"
     },
     "city": {
       "detail": "تفاصيل المدينة",

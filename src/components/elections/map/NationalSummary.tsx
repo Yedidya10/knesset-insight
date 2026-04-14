@@ -5,16 +5,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 
 const PARTY_COLORS = [
-  '#2563eb',
-  '#dc2626',
-  '#16a34a',
-  '#f59e0b',
-  '#8b5cf6',
-  '#ec4899',
-  '#06b6d4',
-  '#f97316',
-  '#6366f1',
-  '#84cc16',
+  '#2563eb', // blue
+  '#dc2626', // red
+  '#16a34a', // green
+  '#f59e0b', // amber
+  '#9333ea', // purple
+  '#ec4899', // pink
+  '#0891b2', // cyan
+  '#ea580c', // orange
+  '#4f46e5', // indigo
+  '#65a30d', // lime
 ];
 
 interface TopParty {
@@ -31,6 +31,7 @@ interface NationalSummaryProps {
   totalInvalid: number;
   turnoutPercent: number;
   cityCount: number;
+  overseasVoters: number;
   topParties: TopParty[];
 }
 
@@ -39,6 +40,7 @@ export default function NationalSummary({
   totalVoters,
   turnoutPercent,
   cityCount,
+  overseasVoters,
   topParties,
 }: NationalSummaryProps) {
   const t = useTranslations('electionMap');
@@ -91,6 +93,18 @@ export default function NationalSummary({
             </p>
           </div>
         </div>
+
+        {/* Overseas voters badge */}
+        {overseasVoters > 0 && (
+          <div className="bg-muted/50 flex items-center justify-between rounded-lg px-3 py-2">
+            <span className="text-muted-foreground text-xs">
+              {t('national.overseasVoters')}
+            </span>
+            <span className="text-sm font-bold tabular-nums">
+              {overseasVoters.toLocaleString()}
+            </span>
+          </div>
+        )}
 
         {/* Top parties — colored bars */}
         {topParties.length > 0 && (

@@ -591,7 +591,8 @@
       "validVotes": "Valid Votes",
       "invalidVotes": "Invalid Votes",
       "topParties": "Top {count} Parties",
-      "cities": "Cities"
+      "cities": "Cities",
+      "overseasVoters": "Overseas ballots (soldiers, diplomats, etc.)"
     },
     "city": {
       "detail": "City Details",
