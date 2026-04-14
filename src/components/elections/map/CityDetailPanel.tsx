@@ -79,12 +79,13 @@ export default function CityDetailPanel({
     color: PARTY_COLORS[i % PARTY_COLORS.length],
   }));
 
-  const barData = topParties.map((p) => ({
+  const barData = topParties.map((p, i) => ({
     name:
       p.partyName.length > 12 ? p.partyName.slice(0, 12) + '…' : p.partyName,
     fullName: p.partyName,
     percent: p.votePercent,
     votes: p.votes,
+    fill: PARTY_COLORS[i % PARTY_COLORS.length],
   }));
 
   const trendData = trends.map((t) => ({
@@ -163,6 +164,10 @@ export default function CityDetailPanel({
                       dataKey="value"
                       strokeWidth={1}
                       stroke="hsl(var(--background))"
+                      label={(props) =>
+                        (props.percent ?? 0) > 0.05 ? String(props.name) : ''
+                      }
+                      labelLine={false}
                     >
                       {donutData.map((entry, i) => (
                         <Cell key={i} fill={entry.color} />
@@ -178,7 +183,10 @@ export default function CityDetailPanel({
                         border: '1px solid hsl(var(--border))',
                         borderRadius: '0.5rem',
                         fontSize: '0.75rem',
+                        color: 'hsl(var(--popover-foreground))',
                       }}
+                      itemStyle={{ color: 'hsl(var(--popover-foreground))' }}
+                      labelStyle={{ color: 'hsl(var(--popover-foreground))' }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -218,7 +226,7 @@ export default function CityDetailPanel({
                       type="category"
                       dataKey="name"
                       width={90}
-                      tick={{ fontSize: 11 }}
+                      tick={{ fontSize: 11, fill: 'hsl(var(--foreground))' }}
                     />
                     <Tooltip
                       formatter={(value) => [`${Number(value).toFixed(1)}%`]}
@@ -227,13 +235,16 @@ export default function CityDetailPanel({
                         border: '1px solid hsl(var(--border))',
                         borderRadius: '0.5rem',
                         fontSize: '0.75rem',
+                        color: 'hsl(var(--popover-foreground))',
                       }}
+                      itemStyle={{ color: 'hsl(var(--popover-foreground))' }}
+                      labelStyle={{ color: 'hsl(var(--popover-foreground))' }}
                     />
-                    <Bar
-                      dataKey="percent"
-                      fill="hsl(var(--primary))"
-                      radius={[0, 4, 4, 0]}
-                    />
+                    <Bar dataKey="percent" radius={[0, 4, 4, 0]}>
+                      {barData.map((entry, i) => (
+                        <Cell key={i} fill={entry.fill} />
+                      ))}
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -258,8 +269,14 @@ export default function CityDetailPanel({
                       strokeDasharray="3 3"
                       className="stroke-border"
                     />
-                    <XAxis dataKey="knesset" tick={{ fontSize: 11 }} />
-                    <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
+                    <XAxis
+                      dataKey="knesset"
+                      tick={{ fontSize: 11, fill: 'hsl(var(--foreground))' }}
+                    />
+                    <YAxis
+                      domain={[0, 100]}
+                      tick={{ fontSize: 11, fill: 'hsl(var(--foreground))' }}
+                    />
                     <Tooltip
                       formatter={(value) => [`${Number(value).toFixed(1)}%`]}
                       contentStyle={{
@@ -267,7 +284,10 @@ export default function CityDetailPanel({
                         border: '1px solid hsl(var(--border))',
                         borderRadius: '0.5rem',
                         fontSize: '0.75rem',
+                        color: 'hsl(var(--popover-foreground))',
                       }}
+                      itemStyle={{ color: 'hsl(var(--popover-foreground))' }}
+                      labelStyle={{ color: 'hsl(var(--popover-foreground))' }}
                     />
                     <Line
                       type="monotone"

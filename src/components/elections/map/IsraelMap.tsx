@@ -142,15 +142,18 @@ export default function IsraelMap({
                       isSelected ? 'hsl(var(--primary))' : 'hsl(var(--border))'
                     }
                     strokeWidth={isSelected ? 2 : 0.5}
-                    className="cursor-pointer transition-colors duration-200 outline-none focus:outline-none"
+                    className="cursor-pointer outline-none focus:outline-none"
                     style={{
+                      default: {
+                        transition: 'filter 200ms, stroke 200ms',
+                      },
                       hover: {
-                        fill: 'hsl(var(--primary) / 0.3)',
+                        filter: 'brightness(1.35) saturate(1.2)',
                         stroke: 'hsl(var(--primary))',
                         strokeWidth: 1.5,
                       },
                       pressed: {
-                        fill: 'hsl(var(--primary) / 0.5)',
+                        filter: 'brightness(1.5) saturate(1.3)',
                       },
                     }}
                     onMouseEnter={(e) => handleMouseEnter(geo, e)}

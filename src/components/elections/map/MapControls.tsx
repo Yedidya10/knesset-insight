@@ -75,7 +75,8 @@ export default function MapControls({
         <ToggleGroupItem
           value="comparison"
           aria-label={t('viewMode.comparison')}
-          className="gap-1.5 text-xs"
+          className="gap-1.5 text-xs opacity-50"
+          disabled
         >
           <GitCompare className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">{t('viewMode.comparison')}</span>

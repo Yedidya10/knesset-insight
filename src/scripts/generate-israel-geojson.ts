@@ -15,8 +15,10 @@
 import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
-const GADM_URL =
+const GADM_ISR_URL =
   'https://geodata.ucdavis.edu/gadm/gadm4.1/json/gadm41_ISR_1.json';
+const GADM_PSE_URL =
+  'https://geodata.ucdavis.edu/gadm/gadm4.1/json/gadm41_PSE_1.json';
 const OUTPUT_DIR = join(process.cwd(), 'public', 'geo');
 const OUTPUT_FILE = join(OUTPUT_DIR, 'israel-municipalities.topojson');
 
@@ -73,21 +75,48 @@ const DISTRICT_MAP: Record<
     name_en: 'Golan',
     name_ar: 'الجولان',
   },
+  // PSE GADM district — Judea & Samaria
+  WestBank: {
+    code: '7',
+    name_he: 'יהודה ושומרון',
+    name_en: 'Judea & Samaria',
+    name_ar: 'يهودا والسامرة',
+  },
 };
 
 async function fetchGADMData(): Promise<GeoJSON.FeatureCollection> {
-  console.log(`📡 Downloading GADM Israel Level 1 from ${GADM_URL}...`);
-
-  const response = await fetch(GADM_URL);
-  if (!response.ok) {
+  console.log(`📡 Downloading GADM Israel Level 1 from ${GADM_ISR_URL}...`);
+  const isrResponse = await fetch(GADM_ISR_URL);
+  if (!isrResponse.ok) {
     throw new Error(
-      `GADM download failed: ${response.status} ${response.statusText}`,
+      `GADM ISR download failed: ${isrResponse.status} ${isrResponse.statusText}`,
     );
   }
+  const isrGeo = (await isrResponse.json()) as GeoJSON.FeatureCollection;
+  console.log(
+    `   ✅ Downloaded ${isrGeo.features.length} ISR district features`,
+  );
 
-  const geojson = (await response.json()) as GeoJSON.FeatureCollection;
-  console.log(`   ✅ Downloaded ${geojson.features.length} district features`);
-  return geojson;
+  console.log(`📡 Downloading GADM PSE Level 1 from ${GADM_PSE_URL}...`);
+  const pseResponse = await fetch(GADM_PSE_URL);
+  if (!pseResponse.ok) {
+    throw new Error(
+      `GADM PSE download failed: ${pseResponse.status} ${pseResponse.statusText}`,
+    );
+  }
+  const pseGeo = (await pseResponse.json()) as GeoJSON.FeatureCollection;
+  console.log(`   ✅ Downloaded ${pseGeo.features.length} PSE features`);
+
+  // Extract only WestBank from PSE, skip Gaza
+  const westBank = pseGeo.features.find(
+    (f) => f.properties?.NAME_1 === 'WestBank',
+  );
+  const combined: GeoJSON.FeatureCollection = {
+    type: 'FeatureCollection',
+    features: [...isrGeo.features, ...(westBank ? [westBank] : [])],
+  };
+  console.log(`   ✅ Combined: ${combined.features.length} total features`);
+  return combined;
 }
 
 function enrichFeatures(

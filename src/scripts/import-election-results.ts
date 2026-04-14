@@ -324,14 +324,13 @@ async function fetchDistrictMap(): Promise<Map<number, number>> {
     if (!isNaN(cityCode) && !isNaN(nafaCode) && nafaCode > 0) {
       // First digit of nafa code = CBS district code (1-7)
       const district = Math.floor(nafaCode / 10);
-      // Districts 1-6 match our GADM map, district 7 (Judea & Samaria) → skip
-      if (district >= 1 && district <= 6) {
+      if (district >= 1 && district <= 7) {
         map.set(cityCode, district);
       }
     }
   }
 
-  console.log(`  📍 Mapped ${map.size} settlements to 6 districts`);
+  console.log(`  📍 Mapped ${map.size} settlements to 7 districts`);
   return map;
 }
 
