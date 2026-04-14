@@ -1,4 +1,4 @@
-import { sql, eq, and, inArray } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 import { db } from '../../lib/db';
 import { committees, committeeMembers, members } from '../../lib/db/schema';
 import { fetchV4CommitteeMembers } from '../../lib/knesset/knesset-api-client';
@@ -7,6 +7,7 @@ import { runSyncJob, type SyncCheckpoint } from '../utils';
 import { appConfig } from '../../../app.config';
 
 const BATCH_SIZE = 50;
+const ATTENDANCE_UPDATE_BATCH_SIZE = 500;
 
 /**
  * Sync committee membership from OData v4 KNS_PersonToPosition +
@@ -130,85 +131,158 @@ async function syncCommitteeMemberRecords(
 }
 
 /**
- * Sync aggregated attendance stats from Open Knesset CSV.
- * Uses committee_meetings_attendees_mks_full_stats.csv which has
- * pre-aggregated per-MK per-committee per-knesset attendance.
+ * Sync attendance stats from Open Knesset per-session attendance CSV.
+ * Uses committee-meeting-attendees-mks-stats/mk_attendance.csv which has
+ * one row per MK per meeting attended. We aggregate to get:
+ *   - attended_meetings: count of meetings the MK attended
+ *   - protocol_meetings: total meetings for that committee+knesset
+ *   - attendance_percent: attended / protocol * 100
+ *
+ * The CSV uses mk_id (= mk_individual_id) which equals PersonID for newer MKs
+ * but differs for older ones. We use mk_individual.csv to bridge.
+ * The CSV committee_id matches the Knesset API CommitteeID stored in our DB.
  */
 async function syncAttendanceStats(
   committeeMap: Map<number, number>,
   memberMap: Map<number, number>,
 ): Promise<void> {
-  let csvRows: Record<string, string>[];
+  // Build mk_individual_id → PersonID mapping from OKnesset member data
+  let mkMembers: Record<string, string>[];
   try {
-    csvRows = await fetchOKnessetCSV<Record<string, string>>(
-      'people/committees/meeting_attendees_mks_full_stats/committee_meetings_attendees_mks_full_stats.csv',
+    mkMembers = await fetchOKnessetCSV<Record<string, string>>(
+      'members/mk_individual/mk_individual.csv',
     );
   } catch (err) {
     console.warn(
-      '  [committee-members] Failed to fetch attendance stats CSV, skipping:',
+      '  [committee-members] Failed to fetch mk_individual.csv, skipping attendance:',
+      err instanceof Error ? err.message : err,
+    );
+    return;
+  }
+
+  const mkIdToPersonId = new Map<number, number>();
+  for (const m of mkMembers) {
+    const mkId = Number(m.mk_individual_id);
+    const personId = Number(m.PersonID);
+    if (mkId && personId) mkIdToPersonId.set(mkId, personId);
+  }
+  console.log(
+    `  [committee-members] Built mk_individual_id → PersonID mapping: ${mkIdToPersonId.size} entries`,
+  );
+
+  let csvRows: Record<string, string>[];
+  try {
+    csvRows = await fetchOKnessetCSV<Record<string, string>>(
+      'people/committees/committee-meeting-attendees-mks-stats/mk_attendance.csv',
+    );
+  } catch (err) {
+    console.warn(
+      '  [committee-members] Failed to fetch mk_attendance.csv, skipping:',
       err instanceof Error ? err.message : err,
     );
     return;
   }
 
   console.log(
-    `  [committee-members] Loaded ${csvRows.length} attendance stat rows from Open Knesset`,
+    `  [committee-members] Loaded ${csvRows.length} attendance rows from Open Knesset`,
   );
 
-  // Filter to synced knessets and aggregate: sum across plenum/assembly/pagra
   const syncKnessets = new Set(appConfig.knesset.syncKnessets);
-  const statsMap = new Map<string, { attended: number; protocol: number }>();
+
+  // Pass 1: Count total meetings per committee+knesset (distinct meeting dates)
+  const totalMeetings = new Map<string, Set<string>>();
+  // Pass 2: Count attended meetings per MK (distinct meeting dates)
+  const attendedMeetings = new Map<string, Set<string>>();
 
   for (const row of csvRows) {
-    const kn = Number(row.knesset);
+    const kn = Number(row.knesset_num);
     if (!syncKnessets.has(kn)) continue;
 
     const committeeKnessetId = Number(row.committee_id);
-    const mkId = Number(row.mk_id);
     const committeeId = committeeMap.get(committeeKnessetId);
-    const memberId = memberMap.get(mkId);
-    if (!committeeId || !memberId) continue;
+    if (!committeeId) continue;
+
+    const meetingDate = row.meeting_start_date;
+    const ckKey = `${committeeId}:${kn}`;
+
+    // Track distinct meetings per committee+knesset
+    if (!totalMeetings.has(ckKey)) totalMeetings.set(ckKey, new Set());
+    totalMeetings.get(ckKey)!.add(meetingDate);
+
+    // Track attended meetings per MK+committee+knesset (distinct dates)
+    const mkId = Number(row.mk_id);
+    const personId = mkIdToPersonId.get(mkId);
+    const memberId = personId ? memberMap.get(personId) : undefined;
+    if (!memberId) continue;
 
     const key = `${committeeId}:${memberId}:${kn}`;
-    const existing = statsMap.get(key) ?? { attended: 0, protocol: 0 };
-    existing.attended += Number(row.attended_meetings) || 0;
-    existing.protocol += Number(row.protocol_meetings) || 0;
-    statsMap.set(key, existing);
+    if (!attendedMeetings.has(key)) attendedMeetings.set(key, new Set());
+    attendedMeetings.get(key)!.add(meetingDate);
+  }
+
+  // Build final stats
+  const statsMap = new Map<string, { attended: number; protocol: number }>();
+
+  for (const [key, dates] of attendedMeetings) {
+    const [committeeIdStr, , knStr] = key.split(':');
+    const ckKey = `${committeeIdStr}:${knStr}`;
+    const protocol = totalMeetings.get(ckKey)?.size ?? 0;
+    statsMap.set(key, { attended: dates.size, protocol });
   }
 
   console.log(
     `  [committee-members] Aggregated ${statsMap.size} attendance stat entries`,
   );
 
-  // Update existing committee_members rows with attendance stats
-  let updated = 0;
-  for (const [key, stats] of statsMap) {
+  // Update existing committee_members rows with attendance stats in batches
+  // to avoid thousands of round-trips to the database.
+  const updates = Array.from(statsMap.entries()).map(([key, stats]) => {
     const [committeeIdStr, memberIdStr, knStr] = key.split(':');
-    const committeeId = Number(committeeIdStr);
-    const memberId = Number(memberIdStr);
-    const knessetNum = Number(knStr);
     const percent =
       stats.protocol > 0
         ? Math.round((stats.attended / stats.protocol) * 10000) / 100
         : null;
 
-    await db
-      .update(committeeMembers)
-      .set({
-        attendedMeetings: stats.attended,
-        protocolMeetings: stats.protocol,
-        attendancePercent: percent,
-        updatedAt: new Date(),
-      })
-      .where(
-        and(
-          eq(committeeMembers.committeeId, committeeId),
-          eq(committeeMembers.memberId, memberId),
-          eq(committeeMembers.knessetNum, knessetNum),
-        ),
-      );
+    return {
+      committee_id: Number(committeeIdStr),
+      member_id: Number(memberIdStr),
+      knesset_num: Number(knStr),
+      attended_meetings: stats.attended,
+      protocol_meetings: stats.protocol,
+      attendance_percent: percent,
+    };
+  });
 
-    updated++;
+  let updated = 0;
+  for (let i = 0; i < updates.length; i += ATTENDANCE_UPDATE_BATCH_SIZE) {
+    const batch = updates.slice(i, i + ATTENDANCE_UPDATE_BATCH_SIZE);
+    const payload = JSON.stringify(batch);
+
+    await db.execute(sql`
+      WITH data AS (
+        SELECT *
+        FROM json_to_recordset(${payload}::json) AS x(
+          committee_id int,
+          member_id int,
+          knesset_num int,
+          attended_meetings int,
+          protocol_meetings int,
+          attendance_percent real
+        )
+      )
+      UPDATE committee_members AS cm
+      SET
+        attended_meetings = data.attended_meetings,
+        protocol_meetings = data.protocol_meetings,
+        attendance_percent = data.attendance_percent,
+        updated_at = NOW()
+      FROM data
+      WHERE cm.committee_id = data.committee_id
+        AND cm.member_id = data.member_id
+        AND cm.knesset_num = data.knesset_num
+    `);
+
+    updated += batch.length;
   }
 
   console.log(

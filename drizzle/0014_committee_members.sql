@@ -13,8 +13,7 @@ CREATE TABLE IF NOT EXISTS "committee_members" (
   "protocol_meetings" integer,
   "attendance_percent" real,
   "created_at" timestamp with time zone DEFAULT now(),
-  "updated_at" timestamp with time zone DEFAULT now(),
-  CONSTRAINT "committee_members_committee_id_member_id_knesset_num_unique" UNIQUE("committee_id","member_id","knesset_num")
+  "updated_at" timestamp with time zone DEFAULT now()
 );
 
 CREATE INDEX IF NOT EXISTS "idx_committee_members_committee" ON "committee_members" ("committee_id");
