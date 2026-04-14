@@ -384,7 +384,8 @@
       "currentKnesset": "Current Knesset",
       "viewCommittee": "View Committee",
       "leftAndReturned": "Left & returned",
-      "present": "Present"
+      "present": "Present",
+      "noData": "No data"
     }
   },
   "ai": {

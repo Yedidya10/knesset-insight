@@ -384,7 +384,8 @@
       "currentKnesset": "כנסת נוכחית",
       "viewCommittee": "צפייה בוועדה",
       "leftAndReturned": "עזב/ה וחזר/ה",
-      "present": "עד היום"
+      "present": "עד היום",
+      "noData": "אין נתונים"
     }
   },
   "ai": {

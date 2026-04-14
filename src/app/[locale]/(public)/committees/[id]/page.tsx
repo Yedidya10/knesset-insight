@@ -201,6 +201,11 @@ export default async function CommitteeDetailPage({ params }: Props) {
       name: committees.name,
       knessetNum: committees.knessetNum,
       isActive: committees.isActive,
+      memberCount: sql<number>`(
+        SELECT count(DISTINCT cm2.member_id)
+        FROM committee_members cm2
+        WHERE cm2.committee_id = ${committees.id}
+      )`,
     })
     .from(committees)
     .where(
@@ -471,17 +476,16 @@ export default async function CommitteeDetailPage({ params }: Props) {
                         <Badge variant="outline">
                           {t('knesset')} {rc.knessetNum}
                         </Badge>
-                        <span className="text-muted-foreground text-sm">
-                          {tDetail('viewCommittee')}
-                        </span>
+                        {rc.memberCount > 0 && (
+                          <span className="text-muted-foreground flex items-center gap-1 text-xs">
+                            <Users className="h-3 w-3" />
+                            {rc.memberCount} {t('members')}
+                          </span>
+                        )}
                       </div>
-                      {rc.isActive ? (
-                        <Badge className="bg-green-500/15 text-green-700 dark:text-green-400">
-                          {t('active')}
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary">{t('inactive')}</Badge>
-                      )}
+                      <span className="text-primary text-sm">
+                        {tDetail('viewCommittee')} →
+                      </span>
                     </Link>
                   ))}
                 </div>
@@ -580,15 +584,16 @@ function CommitteeMemberRow({ member, tDetail }: CommitteeMemberRowProps) {
           )}
         </div>
       </div>
-      {member.attendancePercent != null && (
+      {member.attendancePercent != null ||
+      (member.protocolMeetings != null && member.protocolMeetings > 0) ? (
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger
               render={<div className="flex shrink-0 items-center gap-2" />}
             >
-              <AttendanceBar percent={member.attendancePercent} />
+              <AttendanceBar percent={member.attendancePercent ?? 0} />
               <span className="text-muted-foreground w-10 text-end text-xs">
-                {Math.round(member.attendancePercent)}%
+                {Math.round(member.attendancePercent ?? 0)}%
               </span>
             </TooltipTrigger>
             <TooltipContent>
@@ -619,6 +624,10 @@ function CommitteeMemberRow({ member, tDetail }: CommitteeMemberRowProps) {
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
+      ) : (
+        <span className="text-muted-foreground/50 shrink-0 text-xs">
+          {tDetail('noData')}
+        </span>
       )}
     </Link>
   );
