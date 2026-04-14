@@ -318,3 +318,48 @@ export async function fetchV4DocumentBills(
     'v4-doc-bills',
   );
 }
+
+// ──────────────────────────────────────
+// Committee Members (OData v4)
+// ──────────────────────────────────────
+
+export interface V4CommitteeMembership {
+  Id: number;
+  PersonID: number;
+  PositionID: number;
+  KnessetNum: number;
+  CommitteeID: number;
+  CommitteeName: string;
+  DutyDesc: string | null;
+  IsCurrent: boolean;
+  StartDate: string | null;
+  FinishDate: string | null;
+  LastUpdatedDate: string | null;
+}
+
+/**
+ * Fetch committee membership records from OData v4 KNS_PersonToPosition.
+ * Filters to records where CommitteeID is not null.
+ * Supports incremental sync via LastUpdatedDate.
+ */
+export async function fetchV4CommitteeMembers(
+  knessetNums: readonly number[],
+  since?: Date,
+): Promise<V4CommitteeMembership[]> {
+  const knFilter = knessetNums.map((k) => `KnessetNum eq ${k}`).join(' or ');
+  const parts = [`CommitteeID ne null`, `(${knFilter})`];
+  if (since) {
+    parts.push(`LastUpdatedDate gt ${since.toISOString()}`);
+  }
+
+  return fetchAllODataV4<V4CommitteeMembership>(
+    'KNS_PersonToPosition',
+    {
+      $filter: parts.join(' and '),
+      $select:
+        'Id,PersonID,PositionID,KnessetNum,CommitteeID,CommitteeName,DutyDesc,IsCurrent,StartDate,FinishDate,LastUpdatedDate',
+      $orderby: 'LastUpdatedDate desc',
+    },
+    'v4-committee-members',
+  );
+}

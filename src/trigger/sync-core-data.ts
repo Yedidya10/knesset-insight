@@ -7,6 +7,7 @@ import { syncMembers } from '@/pipeline/jobs/sync-members';
 import { syncVotes } from '@/pipeline/jobs/sync-votes';
 import { syncBills } from '@/pipeline/jobs/sync-bills';
 import { syncCommittees } from '@/pipeline/jobs/sync-committees';
+import { syncCommitteeMembers } from '@/pipeline/jobs/sync-committee-members';
 
 export const syncCoreData = schedules.task({
   id: 'sync-core-data',
@@ -38,6 +39,9 @@ export const syncCoreData = schedules.task({
 
     logger.info('Syncing committees...');
     await syncCommittees();
+
+    logger.info('Syncing committee members...');
+    await syncCommitteeMembers();
 
     logger.info('Core data sync complete');
     return { success: true };

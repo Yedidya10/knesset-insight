@@ -371,7 +371,11 @@
       "noSessions": "لا توجد جلسات مسجلة",
       "viewProtocol": "عرض البروتوكول",
       "topicsDiscussed": "المواضيع المناقشة",
-      "sessionDate": "التاريخ"
+      "sessionDate": "التاريخ",
+      "committeeMembers": "أعضاء اللجنة",
+      "chair": "الرئيس",
+      "avgAttendance": "متوسط الحضور",
+      "attended": "الحضور"
     }
   },
   "ai": {

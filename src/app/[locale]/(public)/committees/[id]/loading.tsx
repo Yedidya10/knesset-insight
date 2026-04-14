@@ -45,7 +45,30 @@ export default function CommitteeDetailLoading() {
         </div>
 
         {/* Main */}
-        <div className="lg:col-span-2">
+        <div className="space-y-6 lg:col-span-2">
+          {/* Committee Members skeleton */}
+          <Card className="glass-card overflow-hidden">
+            <CardHeader>
+              <Skeleton className="h-6 w-36" />
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-3 rounded-lg border p-3"
+                >
+                  <Skeleton className="h-10 w-10 shrink-0 rounded-full" />
+                  <div className="min-w-0 flex-1 space-y-1.5">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-3 w-24" />
+                  </div>
+                  <Skeleton className="h-3 w-24 rounded-full" />
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          {/* Sessions skeleton */}
           <Card className="glass-card overflow-hidden">
             <CardHeader>
               <Skeleton className="h-6 w-40" />

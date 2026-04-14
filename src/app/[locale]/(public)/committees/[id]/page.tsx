@@ -1,14 +1,32 @@
 import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { Users, Calendar, FileText, ExternalLink } from 'lucide-react';
-import { eq, desc } from 'drizzle-orm';
+import {
+  Users,
+  Calendar,
+  FileText,
+  ExternalLink,
+  BarChart3,
+} from 'lucide-react';
+import { eq, desc, and } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { committees, committeeSessions, members } from '@/lib/db/schema';
+import {
+  committees,
+  committeeSessions,
+  committeeMembers,
+  members,
+  factions,
+} from '@/lib/db/schema';
 import { Link } from '@/i18n/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import MemberAvatar from '@/components/members/MemberAvatar';
 
 interface Props {
@@ -80,6 +98,50 @@ export default async function CommitteeDetailPage({ params }: Props) {
     .where(eq(committeeSessions.committeeId, committeeId))
     .orderBy(desc(committeeSessions.sessionDate))
     .limit(30);
+
+  // Fetch committee members with attendance stats
+  const cmMembers = await db
+    .select({
+      memberId: committeeMembers.memberId,
+      positionId: committeeMembers.positionId,
+      dutyDesc: committeeMembers.dutyDesc,
+      isCurrent: committeeMembers.isCurrent,
+      attendedMeetings: committeeMembers.attendedMeetings,
+      protocolMeetings: committeeMembers.protocolMeetings,
+      attendancePercent: committeeMembers.attendancePercent,
+      firstName: members.firstName,
+      lastName: members.lastName,
+      imageUrl: members.imageUrl,
+      factionName: factions.name,
+    })
+    .from(committeeMembers)
+    .innerJoin(members, eq(committeeMembers.memberId, members.id))
+    .leftJoin(factions, eq(members.factionId, factions.id))
+    .where(
+      and(
+        eq(committeeMembers.committeeId, committeeId),
+        eq(committeeMembers.isCurrent, true),
+      ),
+    )
+    .orderBy(committeeMembers.positionId, members.lastName);
+
+  // Separate chair (41) from regular members
+  const chair = cmMembers.find((m) => m.positionId === 41);
+  const regularMembers = cmMembers.filter((m) => m.positionId !== 41);
+
+  // Calculate average attendance for the committee
+  const membersWithAttendance = cmMembers.filter(
+    (m) => m.attendancePercent != null,
+  );
+  const avgAttendance =
+    membersWithAttendance.length > 0
+      ? Math.round(
+          membersWithAttendance.reduce(
+            (sum, m) => sum + (m.attendancePercent ?? 0),
+            0,
+          ) / membersWithAttendance.length,
+        )
+      : null;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
@@ -164,15 +226,69 @@ export default async function CommitteeDetailPage({ params }: Props) {
               </div>
               <Separator />
               <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">{t('members')}</span>
+                <span className="font-medium">{cmMembers.length}</span>
+              </div>
+              <Separator />
+              <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">{t('sessions')}</span>
                 <span className="font-medium">{sessions.length}</span>
               </div>
+              {avgAttendance != null && (
+                <>
+                  <Separator />
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">
+                      {tDetail('avgAttendance')}
+                    </span>
+                    <span className="font-medium">{avgAttendance}%</span>
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
         </div>
 
-        {/* Main Content — Sessions */}
-        <div className="lg:col-span-2">
+        {/* Main Content */}
+        <div className="space-y-6 lg:col-span-2">
+          {/* Committee Members */}
+          {cmMembers.length > 0 && (
+            <Card className="glass-card overflow-hidden">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="text-muted-foreground h-5 w-5" />
+                  {tDetail('committeeMembers')}
+                  <Badge variant="secondary" className="ms-auto">
+                    {cmMembers.length}
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {/* Chair first */}
+                  {chair && (
+                    <CommitteeMemberRow
+                      member={chair}
+                      isChair
+                      tDetail={tDetail}
+                    />
+                  )}
+                  {chair && regularMembers.length > 0 && (
+                    <Separator className="my-3" />
+                  )}
+                  {regularMembers.map((m) => (
+                    <CommitteeMemberRow
+                      key={m.memberId}
+                      member={m}
+                      tDetail={tDetail}
+                    />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Sessions */}
           <Card className="glass-card overflow-hidden">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -243,5 +359,101 @@ export default async function CommitteeDetailPage({ params }: Props) {
         </div>
       </div>
     </div>
+  );
+}
+
+// ──────────────────────────────────────
+// Committee Member Row
+// ──────────────────────────────────────
+
+function AttendanceBar({ percent }: { percent: number }) {
+  const color =
+    percent >= 70
+      ? 'bg-green-500'
+      : percent >= 40
+        ? 'bg-amber-500'
+        : 'bg-red-500';
+  return (
+    <div className="bg-muted h-2 w-16 overflow-hidden rounded-full">
+      <div
+        className={`h-full rounded-full ${color}`}
+        style={{ width: `${Math.min(percent, 100)}%` }}
+      />
+    </div>
+  );
+}
+
+interface CommitteeMemberRowProps {
+  member: {
+    memberId: number;
+    firstName: string | null;
+    lastName: string | null;
+    imageUrl: string | null;
+    factionName: string | null;
+    dutyDesc: string | null;
+    attendedMeetings: number | null;
+    protocolMeetings: number | null;
+    attendancePercent: number | null;
+  };
+  isChair?: boolean;
+  tDetail: (key: string) => string;
+}
+
+function CommitteeMemberRow({
+  member,
+  isChair,
+  tDetail,
+}: CommitteeMemberRowProps) {
+  return (
+    <Link
+      href={`/members/${member.memberId}`}
+      className="hover:bg-muted/50 flex items-center gap-3 rounded-lg p-2 transition-colors"
+    >
+      <MemberAvatar
+        member={{
+          firstName: member.firstName,
+          lastName: member.lastName,
+          imageUrl: member.imageUrl,
+        }}
+        size="sm"
+      />
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <span className="truncate text-sm font-medium">
+            {member.firstName} {member.lastName}
+          </span>
+          {isChair && (
+            <Badge className="bg-primary/15 text-primary text-xs">
+              {tDetail('chair')}
+            </Badge>
+          )}
+        </div>
+        {member.factionName && (
+          <p className="text-muted-foreground truncate text-xs">
+            {member.factionName}
+          </p>
+        )}
+      </div>
+      {member.attendancePercent != null && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger
+              render={<div className="flex shrink-0 items-center gap-2" />}
+            >
+              <AttendanceBar percent={member.attendancePercent} />
+              <span className="text-muted-foreground w-10 text-end text-xs">
+                {Math.round(member.attendancePercent)}%
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>
+                {tDetail('attended')}: {member.attendedMeetings ?? 0}/
+                {member.protocolMeetings ?? 0}
+              </p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
+    </Link>
   );
 }

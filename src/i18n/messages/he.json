@@ -370,7 +370,11 @@
       "noSessions": "אין ישיבות רשומות",
       "viewProtocol": "צפה בפרוטוקול",
       "topicsDiscussed": "נושאים שנדונו",
-      "sessionDate": "תאריך"
+      "sessionDate": "תאריך",
+      "committeeMembers": "חברי הוועדה",
+      "chair": "יו\"ר",
+      "avgAttendance": "נוכחות ממוצעת",
+      "attended": "נוכחות"
     }
   },
   "ai": {

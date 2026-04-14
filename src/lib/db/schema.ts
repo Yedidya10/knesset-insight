@@ -579,6 +579,41 @@ export const committeeSessions = pgTable('committee_sessions', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 });
 
+// ──────────────────────────────────────
+// Committee Members (membership + attendance stats)
+// ──────────────────────────────────────
+
+export const committeeMembers = pgTable(
+  'committee_members',
+  {
+    id: serial('id').primaryKey(),
+    committeeId: integer('committee_id')
+      .references(() => committees.id)
+      .notNull(),
+    memberId: integer('member_id')
+      .references(() => members.id)
+      .notNull(),
+    /** OData PositionID: 41=chair, 42/66=member, 67=deputy, 663=observer */
+    positionId: integer('position_id'),
+    dutyDesc: text('duty_desc'),
+    knessetNum: integer('knesset_num'),
+    isCurrent: boolean('is_current').default(true),
+    startDate: timestamp('start_date', { withTimezone: true }),
+    finishDate: timestamp('finish_date', { withTimezone: true }),
+    /** OData PersonToPositionID — for upsert */
+    knessetPositionId: integer('knesset_position_id').unique(),
+    /** Attendance: meetings attended */
+    attendedMeetings: integer('attended_meetings'),
+    /** Attendance: total meetings with protocol */
+    protocolMeetings: integer('protocol_meetings'),
+    /** Attendance: percentage 0–100 */
+    attendancePercent: real('attendance_percent'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+  },
+  (t) => [unique().on(t.committeeId, t.memberId, t.knessetNum)],
+);
+
 export const budgetItems = pgTable(
   'budget_items',
   {
@@ -1142,6 +1177,7 @@ export const committeesRelations = relations(committees, ({ one, many }) => ({
     references: [members.id],
   }),
   sessions: many(committeeSessions),
+  members: many(committeeMembers),
 }));
 
 export const committeeSessionsRelations = relations(
@@ -1150,6 +1186,20 @@ export const committeeSessionsRelations = relations(
     committee: one(committees, {
       fields: [committeeSessions.committeeId],
       references: [committees.id],
+    }),
+  }),
+);
+
+export const committeeMembersRelations = relations(
+  committeeMembers,
+  ({ one }) => ({
+    committee: one(committees, {
+      fields: [committeeMembers.committeeId],
+      references: [committees.id],
+    }),
+    member: one(members, {
+      fields: [committeeMembers.memberId],
+      references: [members.id],
     }),
   }),
 );

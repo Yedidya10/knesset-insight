@@ -370,7 +370,11 @@
       "noSessions": "Заседания не зарегистрированы",
       "viewProtocol": "Посмотреть протокол",
       "topicsDiscussed": "Обсуждаемые темы",
-      "sessionDate": "Дата"
+      "sessionDate": "Дата",
+      "committeeMembers": "Члены комитета",
+      "chair": "Председатель",
+      "avgAttendance": "Ср. посещаемость",
+      "attended": "Посещено"
     }
   },
   "ai": {

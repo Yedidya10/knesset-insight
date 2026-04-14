@@ -370,7 +370,11 @@
       "noSessions": "No sessions recorded",
       "viewProtocol": "View Protocol",
       "topicsDiscussed": "Topics Discussed",
-      "sessionDate": "Date"
+      "sessionDate": "Date",
+      "committeeMembers": "Committee Members",
+      "chair": "Chair",
+      "avgAttendance": "Avg. Attendance",
+      "attended": "Attended"
     }
   },
   "ai": {

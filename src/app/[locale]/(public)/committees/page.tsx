@@ -1,9 +1,9 @@
 import { getTranslations } from 'next-intl/server';
 import type { Metadata } from 'next';
 import { Users } from 'lucide-react';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, sql, and } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { committees } from '@/lib/db/schema';
+import { committees, committeeMembers } from '@/lib/db/schema';
 import { Link } from '@/i18n/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -27,6 +27,10 @@ export default async function CommitteesPage() {
       committeeType: committees.committeeType,
       knessetNum: committees.knessetNum,
       isActive: committees.isActive,
+      memberCount: sql<number>`(
+        SELECT count(*) FROM committee_members cm
+        WHERE cm.committee_id = ${committees.id} AND cm.is_current = true
+      )`.as('member_count'),
     })
     .from(committees)
     .orderBy(desc(committees.isActive), committees.name);
@@ -71,6 +75,12 @@ export default async function CommitteesPage() {
                         {t('knesset')} {committee.knessetNum}
                       </Badge>
                     )}
+                    {committee.memberCount > 0 && (
+                      <Badge variant="secondary" className="gap-1">
+                        <Users className="h-3 w-3" />
+                        {committee.memberCount}
+                      </Badge>
+                    )}
                   </CardContent>
                 </Card>
               </Link>
@@ -100,6 +110,12 @@ export default async function CommitteesPage() {
                     {committee.knessetNum && (
                       <Badge variant="secondary">
                         {t('knesset')} {committee.knessetNum}
+                      </Badge>
+                    )}
+                    {committee.memberCount > 0 && (
+                      <Badge variant="secondary" className="gap-1">
+                        <Users className="h-3 w-3" />
+                        {committee.memberCount}
                       </Badge>
                     )}
                   </CardContent>

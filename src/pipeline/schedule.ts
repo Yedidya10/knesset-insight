@@ -7,6 +7,7 @@ import { syncBillUnions } from './jobs/sync-bill-unions';
 import { syncBillSplits } from './jobs/sync-bill-splits';
 import { syncBillNames } from './jobs/sync-bill-names';
 import { syncCommittees } from './jobs/sync-committees';
+import { syncCommitteeMembers } from './jobs/sync-committee-members';
 import { syncMemberImages } from './jobs/sync-images';
 import { syncRegisteredParties } from './jobs/sync-registered-parties';
 import { syncElectoralLists } from './jobs/sync-electoral-lists';
@@ -33,6 +34,7 @@ export const syncJobs = {
   billSplits: syncBillSplits,
   billNames: syncBillNames,
   committees: syncCommittees,
+  committeeMembers: syncCommitteeMembers,
   images: syncMemberImages,
   registeredParties: syncRegisteredParties,
   electoralLists: syncElectoralLists,
@@ -60,6 +62,8 @@ export const syncJobs = {
     await syncBillSplits();
     await syncBillNames();
     await syncCommittees();
+    // Committee members must run after committees + members
+    await syncCommitteeMembers();
     await syncMemberImages();
     await syncRegisteredParties();
     await syncElectoralLists();
