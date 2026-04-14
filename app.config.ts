@@ -184,7 +184,7 @@ export const appConfig = {
     /** TopoJSON file path (relative to public/) */
     topoJsonPath: '/geo/israel-municipalities.topojson',
     /** Color scale for turnout choropleth — amber-200 → indigo-700 */
-    turnoutColorRange: ['#fde68a', '#4338ca'] as readonly [string, string],
+    turnoutColorRange: ['#d1fae5', '#065f46'] as readonly [string, string],
     /** CSV base URL pattern — replace {N} with knesset number */
     csvBaseUrl: 'https://media{N}.bechirot.gov.il/files/expc.csv',
   },

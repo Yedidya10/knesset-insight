@@ -18,18 +18,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 
-// Vibrant, distinguishable palette for up to 10 parties
+// Maximally distinct party colors (no two similar hues)
 const PARTY_COLORS = [
-  '#2563eb',
-  '#dc2626',
-  '#16a34a',
-  '#f59e0b',
-  '#8b5cf6',
-  '#ec4899',
-  '#06b6d4',
-  '#f97316',
-  '#6366f1',
-  '#84cc16',
+  '#2563eb', // blue
+  '#dc2626', // red
+  '#16a34a', // green
+  '#f59e0b', // amber
+  '#9333ea', // purple
+  '#ec4899', // pink
+  '#0891b2', // cyan
+  '#ea580c', // orange
+  '#4f46e5', // indigo
+  '#65a30d', // lime
 ];
 
 interface PartyResult {
@@ -189,14 +189,15 @@ export default function CityDetailPanel({
                         name,
                       ]}
                       contentStyle={{
-                        backgroundColor: 'hsl(var(--popover))',
-                        border: '1px solid hsl(var(--border))',
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
                         borderRadius: '0.5rem',
                         fontSize: '0.8rem',
-                        color: 'hsl(var(--popover-foreground))',
+                        color: '#f1f5f9',
+                        boxShadow: '0 10px 25px rgba(0, 0, 0, 0.3)',
                       }}
-                      itemStyle={{ color: 'hsl(var(--popover-foreground))' }}
-                      labelStyle={{ color: 'hsl(var(--popover-foreground))' }}
+                      itemStyle={{ color: '#f1f5f9' }}
+                      labelStyle={{ color: '#94a3b8' }}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -295,14 +296,15 @@ export default function CityDetailPanel({
                     <Tooltip
                       formatter={(value) => [`${Number(value).toFixed(1)}%`]}
                       contentStyle={{
-                        backgroundColor: 'hsl(var(--popover))',
-                        border: '1px solid hsl(var(--border))',
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
                         borderRadius: '0.5rem',
                         fontSize: '0.8rem',
-                        color: 'hsl(var(--popover-foreground))',
+                        color: '#f1f5f9',
+                        boxShadow: '0 10px 25px rgba(0, 0, 0, 0.3)',
                       }}
-                      itemStyle={{ color: 'hsl(var(--popover-foreground))' }}
-                      labelStyle={{ color: 'hsl(var(--popover-foreground))' }}
+                      itemStyle={{ color: '#f1f5f9' }}
+                      labelStyle={{ color: '#94a3b8' }}
                     />
                     <Line
                       type="monotone"
