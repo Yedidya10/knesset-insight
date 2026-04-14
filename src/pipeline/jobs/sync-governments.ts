@@ -116,14 +116,17 @@ async function syncGovernmentRecords(): Promise<number> {
 
   // 6. Process each government
   for (const [govNum, positions] of govGroups) {
-    // Derive date range from positions
+    // Derive date range and knesset number from positions
     let minStart: string | null = null;
     let maxEnd: string | null = null;
     let hasOpenEnd = false;
-    let knessetNum = 0;
+    const knessetNumCounts = new Map<number, number>();
 
     for (const pos of positions) {
-      if (pos.KnessetNum > knessetNum) knessetNum = pos.KnessetNum;
+      knessetNumCounts.set(
+        pos.KnessetNum,
+        (knessetNumCounts.get(pos.KnessetNum) ?? 0) + 1,
+      );
       const start = pos.StartDate?.split('T')[0] ?? null;
       const end = pos.FinishDate?.split('T')[0] ?? null;
 
@@ -135,13 +138,32 @@ async function syncGovernmentRecords(): Promise<number> {
       }
     }
 
-    // Find PM and alternate PM
+    // Use the most frequent KnessetNum (mode) — avoids mis-attribution
+    // when a caretaker government carries over into the next Knesset term
+    let knessetNum = 0;
+    let maxCount = 0;
+    for (const [kNum, count] of knessetNumCounts) {
+      if (count > maxCount || (count === maxCount && kNum < knessetNum)) {
+        knessetNum = kNum;
+        maxCount = count;
+      }
+    }
+
+    // Find PM (earliest start date) and alternate PM
     let pmPersonId: number | null = null;
+    let pmStartDate: string | null = null;
     let alternatePmPersonId: number | null = null;
 
     for (const pos of positions) {
       if (pos.PositionID === govPositionIds.primeMinister) {
-        pmPersonId = pos.PersonID;
+        const posStart = pos.StartDate?.split('T')[0] ?? null;
+        if (
+          pmPersonId === null ||
+          (posStart && (!pmStartDate || posStart < pmStartDate))
+        ) {
+          pmPersonId = pos.PersonID;
+          pmStartDate = posStart;
+        }
       }
       if (pos.PositionID === govPositionIds.alternatePm) {
         alternatePmPersonId = pos.PersonID;

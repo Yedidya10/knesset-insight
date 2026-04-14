@@ -3,7 +3,7 @@ import type { Metadata } from 'next';
 import {
   Code2,
   Scale,
-  Github,
+  ExternalLink,
   GitFork,
   GitBranch,
   FileCode,
@@ -64,7 +64,7 @@ export default async function OpenSourcePage() {
       {/* Repository */}
       <section className="mb-8">
         <div className="mb-3 flex items-center gap-2">
-          <Github className="text-primary h-5 w-5" />
+          <ExternalLink className="text-primary h-5 w-5" />
           <h2 className="text-xl font-semibold">{t('repoTitle')}</h2>
         </div>
         <p className="text-muted-foreground mb-3">{t('repoText')}</p>
@@ -74,7 +74,7 @@ export default async function OpenSourcePage() {
           rel="noopener noreferrer"
           className="bg-card hover:bg-accent inline-flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors"
         >
-          <Github className="h-4 w-4" />
+          <ExternalLink className="h-4 w-4" />
           {t('repoLink')}
         </a>
       </section>
