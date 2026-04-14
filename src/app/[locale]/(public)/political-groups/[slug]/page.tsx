@@ -51,7 +51,7 @@ export default async function PoliticalGroupDetailPage({ params }: Props) {
       isCurrent: factions.isCurrent,
       memberCount: sql<number>`(
         select count(*)::int from members
-        where members.faction_id = ${factions.id}
+        where members.faction_id = ${factions.id} and members.is_current = true
       )`,
     })
     .from(factions)
@@ -110,7 +110,7 @@ export default async function PoliticalGroupDetailPage({ params }: Props) {
         <CardContent className="-mt-10 px-6 pb-6">
           <div className="flex items-end gap-4">
             <div
-              className="flex h-16 w-16 items-center justify-center rounded-2xl bg-card ring-4 ring-card shadow-lg"
+              className="bg-card ring-card flex h-16 w-16 items-center justify-center rounded-2xl shadow-lg ring-4"
               style={{ color: group.color ?? undefined }}
             >
               <Users className="h-8 w-8" />
@@ -124,10 +124,14 @@ export default async function PoliticalGroupDetailPage({ params }: Props) {
                   {group.isActive ? t('active') : t('inactive')}
                 </Badge>
                 {group.foundedYear && (
-                  <Badge variant="outline">{t('foundedYear')}: {group.foundedYear}</Badge>
+                  <Badge variant="outline">
+                    {t('foundedYear')}: {group.foundedYear}
+                  </Badge>
                 )}
                 {group.dissolvedYear && (
-                  <Badge variant="outline">{t('dissolvedYear')}: {group.dissolvedYear}</Badge>
+                  <Badge variant="outline">
+                    {t('dissolvedYear')}: {group.dissolvedYear}
+                  </Badge>
                 )}
               </div>
             </div>
@@ -147,13 +151,16 @@ export default async function PoliticalGroupDetailPage({ params }: Props) {
                 <div key={l.id} className="flex items-center gap-2 text-sm">
                   <Link
                     href={`/political-groups/${l.sourceSlug}`}
-                    className="font-medium text-primary hover:underline"
+                    className="text-primary font-medium hover:underline"
                   >
                     {l.sourceName}
                   </Link>
-                  <ArrowRight className="h-3 w-3 text-muted-foreground shrink-0" />
+                  <ArrowRight className="text-muted-foreground h-3 w-3 shrink-0" />
                   <span className="text-muted-foreground">
-                    {t(relationshipLabels[l.relationshipType] ?? l.relationshipType)}
+                    {t(
+                      relationshipLabels[l.relationshipType] ??
+                        l.relationshipType,
+                    )}
                   </span>
                   {l.year && (
                     <Badge variant="outline" className="text-xs">
@@ -165,12 +172,15 @@ export default async function PoliticalGroupDetailPage({ params }: Props) {
               {lineageFrom.map((l) => (
                 <div key={l.id} className="flex items-center gap-2 text-sm">
                   <span className="text-muted-foreground">
-                    {t(relationshipLabels[l.relationshipType] ?? l.relationshipType)}
+                    {t(
+                      relationshipLabels[l.relationshipType] ??
+                        l.relationshipType,
+                    )}
                   </span>
-                  <ArrowRight className="h-3 w-3 text-muted-foreground shrink-0" />
+                  <ArrowRight className="text-muted-foreground h-3 w-3 shrink-0" />
                   <Link
                     href={`/political-groups/${l.targetSlug}`}
-                    className="font-medium text-primary hover:underline"
+                    className="text-primary font-medium hover:underline"
                   >
                     {l.targetName}
                   </Link>
@@ -186,7 +196,9 @@ export default async function PoliticalGroupDetailPage({ params }: Props) {
         )}
 
         {/* Factions across terms */}
-        <Card className={`glass-card overflow-hidden ${lineageFrom.length > 0 || lineageTo.length > 0 ? 'lg:col-span-2' : 'lg:col-span-3'}`}>
+        <Card
+          className={`glass-card overflow-hidden ${lineageFrom.length > 0 || lineageTo.length > 0 ? 'lg:col-span-2' : 'lg:col-span-3'}`}
+        >
           <CardHeader>
             <CardTitle className="text-lg">
               {t('factionsAcrossTerms')} ({groupFactions.length})
@@ -197,13 +209,13 @@ export default async function PoliticalGroupDetailPage({ params }: Props) {
               <div className="space-y-3">
                 {groupFactions.map((f) => (
                   <Link key={f.id} href={`/factions/${f.id}`}>
-                    <div className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50">
+                    <div className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-3 transition-colors">
                       <div>
                         <p className="font-medium">
                           <TranslatedText text={f.name} as="span" />
                         </p>
                         {f.knessetNum && (
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-muted-foreground text-xs">
                             {t('knesset', { num: f.knessetNum })}
                           </p>
                         )}
@@ -215,7 +227,10 @@ export default async function PoliticalGroupDetailPage({ params }: Props) {
                           </Badge>
                         )}
                         {f.isCoalition !== null && (
-                          <Badge variant={f.isCoalition ? 'default' : 'secondary'} className="text-xs">
+                          <Badge
+                            variant={f.isCoalition ? 'default' : 'secondary'}
+                            className="text-xs"
+                          >
                             {f.isCoalition ? t('coalition') : t('opposition')}
                           </Badge>
                         )}
@@ -225,9 +240,7 @@ export default async function PoliticalGroupDetailPage({ params }: Props) {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">
-                {t('noGroups')}
-              </p>
+              <p className="text-muted-foreground text-sm">{t('noGroups')}</p>
             )}
           </CardContent>
         </Card>

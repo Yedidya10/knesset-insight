@@ -36,16 +36,24 @@ export default async function FactionsTab({ knessetParam }: Props) {
       seats: factions.seats,
       memberCount: sql<number>`(
         select count(*)::int from members
-        where members.faction_id = ${factions.id}
+        where members.faction_id = ${factions.id} and members.is_current = true
       )`,
       politicalGroupSlug: politicalGroups.slug,
       politicalGroupName: politicalGroups.canonicalName,
       politicalGroupColor: politicalGroups.color,
     })
     .from(factions)
-    .leftJoin(politicalGroups, eq(factions.politicalGroupId, politicalGroups.id))
+    .leftJoin(
+      politicalGroups,
+      eq(factions.politicalGroupId, politicalGroups.id),
+    )
     .where(eq(factions.knessetNum, activeKnesset))
-    .orderBy(desc(factions.seats), desc(sql`(select count(*) from members where members.faction_id = ${factions.id})`));
+    .orderBy(
+      desc(factions.seats),
+      desc(
+        sql`(select count(*) from members where members.faction_id = ${factions.id} and members.is_current = true)`,
+      ),
+    );
 
   return (
     <div>
@@ -54,20 +62,22 @@ export default async function FactionsTab({ knessetParam }: Props) {
           availableKnessets={availableKnessets}
           activeKnesset={activeKnesset}
         />
-        <span className="text-sm text-muted-foreground">
+        <span className="text-muted-foreground text-sm">
           {data.length} {t('allFactions').toLowerCase()}
         </span>
       </div>
 
       {data.length > 0 ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 stagger-children">
+        <div className="stagger-children grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {data.map((faction) => (
             <Link key={faction.id} href={`/factions/${faction.id}`}>
-              <Card className={`glass-card hover-lift h-full overflow-hidden border-s-4 ${faction.isCoalition ? 'border-s-blue-500/50' : 'border-s-orange-500/50'}`}>
+              <Card
+                className={`glass-card hover-lift h-full overflow-hidden border-s-4 ${faction.isCoalition ? 'border-s-blue-500/50' : 'border-s-orange-500/50'}`}
+              >
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg">{faction.name}</CardTitle>
                   {faction.politicalGroupName && (
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-xs">
                       {faction.politicalGroupName}
                     </p>
                   )}
@@ -79,7 +89,9 @@ export default async function FactionsTab({ knessetParam }: Props) {
                     </Badge>
                   )}
                   {faction.isCoalition !== null && (
-                    <Badge variant={faction.isCoalition ? 'default' : 'outline'}>
+                    <Badge
+                      variant={faction.isCoalition ? 'default' : 'outline'}
+                    >
                       {faction.isCoalition ? t('coalition') : t('opposition')}
                     </Badge>
                   )}
@@ -94,8 +106,8 @@ export default async function FactionsTab({ knessetParam }: Props) {
           ))}
         </div>
       ) : (
-        <div className="mt-16 flex flex-col items-center gap-3 text-muted-foreground">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
+        <div className="text-muted-foreground mt-16 flex flex-col items-center gap-3">
+          <div className="bg-muted flex h-16 w-16 items-center justify-center rounded-2xl">
             <Building2 className="h-8 w-8 opacity-40" />
           </div>
           <p className="text-sm">{t('noFactions')}</p>
