@@ -8,6 +8,7 @@ import { syncBillSplits } from './jobs/sync-bill-splits';
 import { syncBillNames } from './jobs/sync-bill-names';
 import { syncCommittees } from './jobs/sync-committees';
 import { syncCommitteeMembers } from './jobs/sync-committee-members';
+import { syncCommitteeSessions } from './jobs/sync-committee-sessions';
 import { syncMemberImages } from './jobs/sync-images';
 import { syncRegisteredParties } from './jobs/sync-registered-parties';
 import { syncElectoralLists } from './jobs/sync-electoral-lists';
@@ -35,6 +36,7 @@ export const syncJobs = {
   billNames: syncBillNames,
   committees: syncCommittees,
   committeeMembers: syncCommitteeMembers,
+  committeeSessions: syncCommitteeSessions,
   images: syncMemberImages,
   registeredParties: syncRegisteredParties,
   electoralLists: syncElectoralLists,
@@ -64,6 +66,8 @@ export const syncJobs = {
     await syncCommittees();
     // Committee members must run after committees + members
     await syncCommitteeMembers();
+    // Sessions need committees to resolve CommitteeID → DB id
+    await syncCommitteeSessions();
     await syncMemberImages();
     await syncRegisteredParties();
     await syncElectoralLists();
