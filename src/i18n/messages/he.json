@@ -382,7 +382,9 @@
       "committeeHistory": "המשכיות הוועדה",
       "previousKnessets": "כנסות קודמות",
       "currentKnesset": "כנסת נוכחית",
-      "viewCommittee": "צפייה בוועדה"
+      "viewCommittee": "צפייה בוועדה",
+      "leftAndReturned": "עזב/ה וחזר/ה",
+      "present": "עד היום"
     }
   },
   "ai": {

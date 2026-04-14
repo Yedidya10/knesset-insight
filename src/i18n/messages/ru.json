@@ -382,7 +382,9 @@
       "committeeHistory": "История комитета",
       "previousKnessets": "Предыдущие кнессеты",
       "currentKnesset": "Текущий кнессет",
-      "viewCommittee": "Просмотр комитета"
+      "viewCommittee": "Просмотр комитета",
+      "leftAndReturned": "Покинул(а) и вернулся(ась)",
+      "present": "По настоящее время"
     }
   },
   "ai": {

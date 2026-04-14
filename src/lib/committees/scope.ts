@@ -41,6 +41,11 @@ export interface RawCommitteeMember {
   factionName: string | null;
 }
 
+export interface MemberStint {
+  start: Date | null;
+  finish: Date | null;
+}
+
 export interface DedupedCommitteeMember extends RawCommitteeMember {
   /** All distinct role labels for this member in this committee (primary first). */
   roleLabels: string[];
@@ -50,6 +55,8 @@ export interface DedupedCommitteeMember extends RawCommitteeMember {
   isDeputy: boolean;
   /** Earliest start date across all active rows for this member. */
   earliestStart: Date | null;
+  /** Merged active stints — multiple entries indicate the member left and returned. */
+  stints: MemberStint[];
 }
 
 const POSITION_LABEL_KEYS: Record<number, string> = {
@@ -105,6 +112,40 @@ export function dedupeCommitteeMembers(
         .filter((d): d is Date => d != null)
         .sort((a, b) => a.getTime() - b.getTime())[0] ?? null;
 
+    // Build merged stints from all rows to detect gaps (left & returned).
+    // Sort by start, merge overlapping/adjacent, keep non-overlapping separate.
+    const rawStints: MemberStint[] = group
+      .map((r) => ({
+        start: r.startDate,
+        finish: r.isCurrent === true || !r.finishDate ? null : r.finishDate,
+      }))
+      .sort((a, b) => {
+        if (!a.start && !b.start) return 0;
+        if (!a.start) return -1;
+        if (!b.start) return 1;
+        return a.start.getTime() - b.start.getTime();
+      });
+
+    const stints: MemberStint[] =
+      rawStints.length > 0 ? [{ ...rawStints[0] }] : [];
+    for (let i = 1; i < rawStints.length; i++) {
+      const prev = stints[stints.length - 1];
+      const curr = rawStints[i];
+      // Open-ended absorbs everything
+      if (prev.finish === null) continue;
+      // Overlapping or adjacent → merge
+      if (!curr.start || curr.start.getTime() <= prev.finish.getTime()) {
+        prev.finish =
+          curr.finish === null
+            ? null
+            : curr.finish.getTime() > prev.finish.getTime()
+              ? curr.finish
+              : prev.finish;
+      } else {
+        stints.push({ ...curr });
+      }
+    }
+
     deduped.push({
       ...primary,
       memberId,
@@ -112,6 +153,7 @@ export function dedupeCommitteeMembers(
       isChair: primary.positionId === 41,
       isDeputy: primary.positionId === 67,
       earliestStart,
+      stints,
     });
   }
 

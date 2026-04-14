@@ -524,9 +524,7 @@ function CommitteeMemberRow({ member, tDetail }: CommitteeMemberRowProps) {
   const startYear = member.earliestStart
     ? member.earliestStart.getFullYear()
     : null;
-  const startLabel = member.earliestStart
-    ? member.earliestStart.toLocaleDateString('he-IL')
-    : null;
+  const hasGap = member.stints.length > 1;
 
   return (
     <Link
@@ -563,6 +561,11 @@ function CommitteeMemberRow({ member, tDetail }: CommitteeMemberRowProps) {
               {label}
             </Badge>
           ))}
+          {hasGap && (
+            <Badge variant="outline" className="text-xs opacity-60">
+              {tDetail('leftAndReturned')}
+            </Badge>
+          )}
         </div>
         <div className="flex items-center gap-2 text-xs">
           {member.factionName && (
@@ -593,11 +596,26 @@ function CommitteeMemberRow({ member, tDetail }: CommitteeMemberRowProps) {
                 {tDetail('attended')}: {member.attendedMeetings ?? 0}/
                 {member.protocolMeetings ?? 0}
               </p>
-              {startLabel && (
+              {hasGap ? (
+                <div className="mt-1 space-y-0.5">
+                  {member.stints.map((stint, i) => (
+                    <p key={i} className="text-muted-foreground text-xs">
+                      {stint.start
+                        ? stint.start.toLocaleDateString('he-IL')
+                        : '—'}
+                      {' → '}
+                      {stint.finish
+                        ? stint.finish.toLocaleDateString('he-IL')
+                        : tDetail('present')}
+                    </p>
+                  ))}
+                </div>
+              ) : member.earliestStart ? (
                 <p className="text-muted-foreground text-xs">
-                  {tDetail('memberSince')}: {startLabel}
+                  {tDetail('memberSince')}:{' '}
+                  {member.earliestStart.toLocaleDateString('he-IL')}
                 </p>
-              )}
+              ) : null}
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

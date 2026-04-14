@@ -383,7 +383,9 @@
       "committeeHistory": "تاريخ اللجنة",
       "previousKnessets": "كنيست سابقة",
       "currentKnesset": "الكنيست الحالي",
-      "viewCommittee": "عرض اللجنة"
+      "viewCommittee": "عرض اللجنة",
+      "leftAndReturned": "غادر/ت وعاد/ت",
+      "present": "حتى الآن"
     }
   },
   "ai": {

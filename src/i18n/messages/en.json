@@ -382,7 +382,9 @@
       "committeeHistory": "Committee History",
       "previousKnessets": "Previous Knessets",
       "currentKnesset": "Current Knesset",
-      "viewCommittee": "View Committee"
+      "viewCommittee": "View Committee",
+      "leftAndReturned": "Left & returned",
+      "present": "Present"
     }
   },
   "ai": {
