@@ -21,7 +21,9 @@ const PM_POSITION_IDS: Set<number> = new Set([
 const MINISTER_POSITION_IDS: Set<number> = new Set(govPositionIds.minister);
 
 /** Deputy minister position IDs */
-const DEPUTY_MINISTER_POSITION_IDS: Set<number> = new Set(govPositionIds.deputyMinister);
+const DEPUTY_MINISTER_POSITION_IDS: Set<number> = new Set(
+  govPositionIds.deputyMinister,
+);
 
 interface Position {
   id: number;
@@ -44,7 +46,43 @@ interface GovernmentCompositionProps {
   positions: Position[];
 }
 
+/**
+ * Merge positions for the same person + role + ministry into a single entry.
+ * Picks the widest date range and the latest isCurrent status.
+ */
+function mergePositions(positions: Position[]): Position[] {
+  const groups = new Map<string, Position>();
+  for (const pos of positions) {
+    const key = `${pos.memberKnessetId}|${pos.positionId}|${pos.ministryKnessetId ?? 0}`;
+    const existing = groups.get(key);
+    if (!existing) {
+      groups.set(key, { ...pos });
+    } else {
+      // Extend date range
+      if (
+        pos.startDate &&
+        (!existing.startDate || pos.startDate < existing.startDate)
+      ) {
+        existing.startDate = pos.startDate;
+      }
+      if (pos.endDate === null) {
+        existing.endDate = null;
+        existing.isCurrent = true;
+      } else if (
+        existing.endDate !== null &&
+        pos.endDate &&
+        pos.endDate > existing.endDate
+      ) {
+        existing.endDate = pos.endDate;
+        existing.isCurrent = pos.isCurrent;
+      }
+    }
+  }
+  return [...groups.values()];
+}
+
 function PositionCard({ pos }: { pos: Position }) {
+  const t = useTranslations('governments');
   const memberName = pos.memberFirstName
     ? `${pos.memberFirstName} ${pos.memberLastName ?? ''}`
     : `ID: ${pos.memberKnessetId}`;
@@ -53,8 +91,10 @@ function PositionCard({ pos }: { pos: Position }) {
     ? `${pos.startDate}${pos.endDate ? ` — ${pos.endDate}` : ''}`
     : '';
 
+  const isActive = pos.isCurrent === true || pos.endDate === null;
+
   const inner = (
-    <div className="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-accent/50">
+    <div className="hover:bg-accent/50 flex items-center gap-3 rounded-lg p-2 transition-colors">
       <MemberAvatar
         member={{
           firstName: pos.memberFirstName,
@@ -64,19 +104,24 @@ function PositionCard({ pos }: { pos: Position }) {
         size="sm"
       />
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium leading-tight truncate">{memberName}</p>
+        <p className="truncate text-sm leading-tight font-medium">
+          {memberName}
+        </p>
         {pos.positionDesc && (
-          <p className="text-xs text-muted-foreground truncate">{pos.positionDesc}</p>
+          <p className="text-muted-foreground truncate text-xs">
+            {pos.positionDesc}
+          </p>
         )}
         {dateRange && (
-          <p className="text-xs text-muted-foreground">{dateRange}</p>
+          <p className="text-muted-foreground text-xs">{dateRange}</p>
         )}
       </div>
-      {pos.isCurrent === false && (
-        <Badge variant="outline" className="text-[10px] shrink-0">
-          סיום
-        </Badge>
-      )}
+      <Badge
+        variant={isActive ? 'default' : 'outline'}
+        className={`shrink-0 text-[10px] ${isActive ? 'bg-emerald-600 hover:bg-emerald-600' : ''}`}
+      >
+        {isActive ? t('active') : t('ended')}
+      </Badge>
     </div>
   );
 
@@ -91,12 +136,15 @@ export default function GovernmentComposition({
 }: GovernmentCompositionProps) {
   const t = useTranslations('governments');
 
-  // Group by ministry
-  const byMinistry = new Map<string, Position[]>();
+  // Merge duplicate positions (same person + role + ministry)
+  const merged = mergePositions(positions);
+
+  // Categorize positions
   const pmPositions: Position[] = [];
+  const byMinistry = new Map<string, Position[]>();
   const deputyMinisterPositions: Position[] = [];
 
-  for (const pos of positions) {
+  for (const pos of merged) {
     if (PM_POSITION_IDS.has(pos.positionId)) {
       pmPositions.push(pos);
     } else if (DEPUTY_MINISTER_POSITION_IDS.has(pos.positionId)) {
@@ -106,29 +154,47 @@ export default function GovernmentComposition({
       group.push(pos);
       byMinistry.set(pos.ministryName, group);
     } else if (pos.ministryName) {
-      // Other ministry-related positions
       const group = byMinistry.get(pos.ministryName) ?? [];
       group.push(pos);
       byMinistry.set(pos.ministryName, group);
     }
   }
 
-  // Sort ministries alphabetically
-  const sortedMinistries = [...byMinistry.entries()].sort(([a], [b]) =>
-    a.localeCompare(b, 'he'),
+  // Sort PM positions: PM first, then alternate PM, etc., each by start date
+  pmPositions.sort((a, b) => {
+    if (a.positionId !== b.positionId) return a.positionId - b.positionId;
+    return (a.startDate ?? '').localeCompare(b.startDate ?? '');
+  });
+
+  // Sort each ministry's holders by start date
+  const sortedMinistries = [...byMinistry.entries()]
+    .sort(([a], [b]) => a.localeCompare(b, 'he'))
+    .map(([name, holders]) => {
+      holders.sort((a, b) =>
+        (a.startDate ?? '').localeCompare(b.startDate ?? ''),
+      );
+      return [name, holders] as const;
+    });
+
+  // Sort deputy ministers by start date
+  deputyMinisterPositions.sort((a, b) =>
+    (a.startDate ?? '').localeCompare(b.startDate ?? ''),
   );
 
   return (
     <div className="space-y-6">
-      {/* PM Section */}
+      {/* Leadership Section */}
       {pmPositions.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">{t('primeMinister')}</CardTitle>
+            <CardTitle className="text-base">{t('leadership')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-1">
             {pmPositions.map((pos) => (
-              <PositionCard key={pos.id} pos={pos} />
+              <PositionCard
+                key={`${pos.memberKnessetId}-${pos.positionId}`}
+                pos={pos}
+              />
             ))}
           </CardContent>
         </Card>
@@ -142,16 +208,19 @@ export default function GovernmentComposition({
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {sortedMinistries.map(([ministryName, ministers]) => (
+              {sortedMinistries.map(([ministryName, holders]) => (
                 <div
                   key={ministryName}
-                  className="rounded-lg border p-3 space-y-1"
+                  className="space-y-1 rounded-lg border p-3"
                 >
-                  <h4 className="text-sm font-semibold text-primary mb-2 truncate">
+                  <h4 className="text-primary mb-2 truncate text-sm font-semibold">
                     {ministryName}
                   </h4>
-                  {ministers.map((pos) => (
-                    <PositionCard key={pos.id} pos={pos} />
+                  {holders.map((pos) => (
+                    <PositionCard
+                      key={`${pos.memberKnessetId}-${pos.positionId}-${pos.ministryKnessetId}`}
+                      pos={pos}
+                    />
                   ))}
                 </div>
               ))}
@@ -164,14 +233,15 @@ export default function GovernmentComposition({
       {deputyMinisterPositions.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">
-              {t('deputyMinister')}
-            </CardTitle>
+            <CardTitle className="text-base">{t('deputyMinister')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid gap-1 sm:grid-cols-2 lg:grid-cols-3">
               {deputyMinisterPositions.map((pos) => (
-                <PositionCard key={pos.id} pos={pos} />
+                <PositionCard
+                  key={`${pos.memberKnessetId}-${pos.positionId}`}
+                  pos={pos}
+                />
               ))}
             </div>
           </CardContent>

@@ -60,6 +60,7 @@ export default async function GovernmentsPage({ searchParams }: Props) {
         select count(distinct fcp.faction_id)::int
         from faction_coalition_periods fcp
         where fcp.government_num = ${governments.governmentNum}
+          and fcp.knesset_num = ${governments.knessetNum}
       )`,
     })
     .from(governments)

@@ -662,7 +662,11 @@
     "filterByKnesset": "Фильтр по Кнессету",
     "allKnessets": "Все Кнессеты",
     "viewDetails": "Подробнее",
-    "backToList": "Назад к списку правительств"
+    "backToList": "Назад к списку правительств",
+    "active": "Активный",
+    "ended": "Завершено",
+    "leadership": "Руководство правительства",
+    "positionHolders": "{count} должностных лиц"
   },
   "politics": {
     "title": "Политика",

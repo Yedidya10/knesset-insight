@@ -662,7 +662,11 @@
     "filterByKnesset": "Filter by Knesset",
     "allKnessets": "All Knessets",
     "viewDetails": "View Details",
-    "backToList": "Back to Governments"
+    "backToList": "Back to Governments",
+    "active": "Active",
+    "ended": "Ended",
+    "leadership": "Government Leadership",
+    "positionHolders": "{count} Position Holders"
   },
   "politics": {
     "title": "Politics",

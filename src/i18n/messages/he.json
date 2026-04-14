@@ -662,7 +662,11 @@
     "filterByKnesset": "סנן לפי כנסת",
     "allKnessets": "כל הכנסות",
     "viewDetails": "צפייה בפרטים",
-    "backToList": "חזרה לרשימת הממשלות"
+    "backToList": "חזרה לרשימת הממשלות",
+    "active": "פעיל",
+    "ended": "סיום",
+    "leadership": "הנהגת הממשלה",
+    "positionHolders": "{count} בעלי תפקידים"
   },
   "politics": {
     "title": "פוליטיקה",

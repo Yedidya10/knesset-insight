@@ -1,4 +1,4 @@
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import { db } from '../../lib/db';
 import {
   governments,
@@ -138,10 +138,11 @@ async function syncGovernmentRecords(): Promise<number> {
     }
     if (!isFinite(knessetNum)) knessetNum = 0;
 
-    // Find PM (earliest start date) and alternate PM
+    // Find PM (earliest start date) and alternate PM (earliest start date)
     let pmPersonId: number | null = null;
     let pmStartDate: string | null = null;
     let alternatePmPersonId: number | null = null;
+    let altPmStartDate: string | null = null;
 
     for (const pos of positions) {
       if (pos.PositionID === govPositionIds.primeMinister) {
@@ -155,7 +156,14 @@ async function syncGovernmentRecords(): Promise<number> {
         }
       }
       if (pos.PositionID === govPositionIds.alternatePm) {
-        alternatePmPersonId = pos.PersonID;
+        const posStart = pos.StartDate?.split('T')[0] ?? null;
+        if (
+          alternatePmPersonId === null ||
+          (posStart && (!altPmStartDate || posStart < altPmStartDate))
+        ) {
+          alternatePmPersonId = pos.PersonID;
+          altPmStartDate = posStart;
+        }
       }
     }
 
@@ -212,9 +220,45 @@ async function syncGovernmentRecords(): Promise<number> {
       }
     }
 
+    // Merge consecutive positions: same person + position + ministry where
+    // record A's endDate === record B's startDate (cross-Knesset continuations).
+    uniquePositions.sort((a, b) => {
+      if (a.PersonID !== b.PersonID) return a.PersonID - b.PersonID;
+      if (a.PositionID !== b.PositionID) return a.PositionID - b.PositionID;
+      const aMin = a.GovMinistryID ?? 0;
+      const bMin = b.GovMinistryID ?? 0;
+      if (aMin !== bMin) return aMin - bMin;
+      const aStart = a.StartDate?.split('T')[0] ?? '';
+      const bStart = b.StartDate?.split('T')[0] ?? '';
+      return aStart.localeCompare(bStart);
+    });
+
+    const mergedPositions: GovPositionRaw[] = [];
+    for (const pos of uniquePositions) {
+      const prev = mergedPositions[mergedPositions.length - 1];
+      if (
+        prev &&
+        prev.PersonID === pos.PersonID &&
+        prev.PositionID === pos.PositionID &&
+        (prev.GovMinistryID ?? 0) === (pos.GovMinistryID ?? 0) &&
+        prev.FinishDate != null &&
+        pos.StartDate != null &&
+        prev.FinishDate.split('T')[0] === pos.StartDate.split('T')[0]
+      ) {
+        // Extend previous record to cover this one
+        prev.FinishDate = pos.FinishDate;
+        prev.IsCurrent = pos.IsCurrent;
+      } else {
+        mergedPositions.push({ ...pos });
+      }
+    }
+
+    const dupeCount = positions.length - uniquePositions.length;
+    const mergeCount = uniquePositions.length - mergedPositions.length;
+
     // Upsert positions in batches
-    for (let i = 0; i < uniquePositions.length; i += BATCH_SIZE) {
-      const batch = uniquePositions.slice(i, i + BATCH_SIZE);
+    for (let i = 0; i < mergedPositions.length; i += BATCH_SIZE) {
+      const batch = mergedPositions.slice(i, i + BATCH_SIZE);
       const rows = batch.map((pos) => ({
         governmentId: govDbId,
         memberId: personToMemberId.get(pos.PersonID) ?? null,
@@ -252,9 +296,39 @@ async function syncGovernmentRecords(): Promise<number> {
         });
     }
 
-    totalPositions += uniquePositions.length;
+    // Delete stale positions from previous syncs that were merged or removed.
+    // Collect the start dates of all merged positions as composite keys.
+    const mergedKeys = mergedPositions.map(
+      (p) =>
+        `${p.PersonID}|${p.PositionID}|${p.GovMinistryID ?? 0}|${p.StartDate?.split('T')[0] ?? ''}`,
+    );
+    const existingRows = await db
+      .select({
+        id: governmentPositions.id,
+        memberKnessetId: governmentPositions.memberKnessetId,
+        positionId: governmentPositions.positionId,
+        govMinistryId: governmentPositions.govMinistryId,
+        startDate: governmentPositions.startDate,
+      })
+      .from(governmentPositions)
+      .where(eq(governmentPositions.governmentId, govDbId));
+    const staleIds: number[] = [];
+    const mergedKeySet = new Set(mergedKeys);
+    for (const row of existingRows) {
+      const key = `${row.memberKnessetId}|${row.positionId}|${row.govMinistryId ?? 0}|${row.startDate ?? ''}`;
+      if (!mergedKeySet.has(key)) {
+        staleIds.push(row.id);
+      }
+    }
+    if (staleIds.length > 0) {
+      await db
+        .delete(governmentPositions)
+        .where(inArray(governmentPositions.id, staleIds));
+    }
+
+    totalPositions += mergedPositions.length;
     console.log(
-      `  [governments] Gov ${govNum} (K${knessetNum}): ${uniquePositions.length} positions (${positions.length - uniquePositions.length} dupes removed), PM=${pmPersonId ?? 'N/A'}`,
+      `  [governments] Gov ${govNum} (K${knessetNum}): ${mergedPositions.length} positions (${dupeCount} dupes, ${mergeCount} merged), PM=${pmPersonId ?? 'N/A'}`,
     );
   }
 

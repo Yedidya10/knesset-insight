@@ -663,7 +663,11 @@
     "filterByKnesset": "تصفية حسب الكنيست",
     "allKnessets": "جميع الكنيست",
     "viewDetails": "عرض التفاصيل",
-    "backToList": "العودة إلى قائمة الحكومات"
+    "backToList": "العودة إلى قائمة الحكومات",
+    "active": "نشط",
+    "ended": "انتهى",
+    "leadership": "قيادة الحكومة",
+    "positionHolders": "{count} أصحاب مناصب"
   },
   "politics": {
     "title": "السياسة",

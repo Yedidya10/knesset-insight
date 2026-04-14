@@ -46,6 +46,7 @@ export const governmentsRouter = router({
             select count(distinct fcp.faction_id)::int
             from faction_coalition_periods fcp
             where fcp.government_num = ${governments.governmentNum}
+              and fcp.knesset_num = ${governments.knessetNum}
           )`,
         })
         .from(governments)
@@ -128,10 +129,7 @@ export const governmentsRouter = router({
           eq(governmentPositions.govMinistryId, govMinistries.id),
         )
         .where(eq(governmentPositions.governmentId, govRecord.id))
-        .orderBy(
-          governmentPositions.positionId,
-          governmentPositions.startDate,
-        );
+        .orderBy(governmentPositions.positionId, governmentPositions.startDate);
 
       // 5. Get coalition factions
       const coalitionFactions = await db
@@ -145,20 +143,11 @@ export const governmentsRouter = router({
           periodEnd: factionCoalitionPeriods.endDate,
         })
         .from(factionCoalitionPeriods)
-        .innerJoin(
-          factions,
-          eq(factionCoalitionPeriods.factionId, factions.id),
-        )
+        .innerJoin(factions, eq(factionCoalitionPeriods.factionId, factions.id))
         .where(
           and(
-            eq(
-              factionCoalitionPeriods.governmentNum,
-              input.governmentNum,
-            ),
-            eq(
-              factionCoalitionPeriods.knessetNum,
-              govRecord.knessetNum,
-            ),
+            eq(factionCoalitionPeriods.governmentNum, input.governmentNum),
+            eq(factionCoalitionPeriods.knessetNum, govRecord.knessetNum),
           ),
         );
 

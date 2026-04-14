@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import MemberAvatar from '@/components/members/MemberAvatar';
 import GovernmentComposition from '@/components/governments/GovernmentComposition';
 import CoalitionBreakdown from '@/components/governments/CoalitionBreakdown';
+import { appConfig } from '../../../../../app.config';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -234,7 +235,15 @@ export default async function GovernmentDetailPage({ params }: Props) {
           <div className="mt-3 flex flex-wrap gap-2">
             <Badge variant="secondary">
               {t('ministerCount', {
-                count: new Set(positions.map((p) => p.memberKnessetId)).size,
+                count: new Set(
+                  positions
+                    .filter((p) =>
+                      appConfig.knesset.govPositionIds.minister.includes(
+                        p.positionId,
+                      ),
+                    )
+                    .map((p) => p.memberKnessetId),
+                ).size,
               })}
             </Badge>
             {coalitionFactions.length > 0 && (
