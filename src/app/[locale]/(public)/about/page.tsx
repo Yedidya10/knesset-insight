@@ -10,7 +10,7 @@ import {
   Shield,
   Globe,
   Ban,
-  Github,
+  Code,
   Cpu,
 } from 'lucide-react';
 
@@ -38,7 +38,7 @@ export default async function AboutPage() {
     { key: 'transparency' as const, icon: Eye },
     { key: 'accessibility' as const, icon: Globe },
     { key: 'nonPartisan' as const, icon: Ban },
-    { key: 'openSource' as const, icon: Github },
+    { key: 'openSource' as const, icon: Code },
   ];
 
   return (
