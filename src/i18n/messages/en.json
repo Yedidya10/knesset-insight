@@ -955,6 +955,145 @@
     "electionMap": {
       "title": "Election Map — Knesset Insight",
       "description": "Interactive map of Israeli election results by city — voter turnout, party breakdown and trends"
+    },
+    "about": {
+      "title": "About — Knesset Insight",
+      "description": "About Knesset Insight — our mission, team and vision"
+    },
+    "openSource": {
+      "title": "Open Source — Knesset Insight",
+      "description": "Knesset Insight is an open-source platform — view the source code and contribute"
+    },
+    "dataSources": {
+      "title": "Data Sources — Knesset Insight",
+      "description": "Knesset Insight data sources — Knesset API, Open Knesset and more"
+    },
+    "privacy": {
+      "title": "Privacy Policy — Knesset Insight",
+      "description": "Knesset Insight privacy policy — how we collect and protect your data"
+    },
+    "terms": {
+      "title": "Terms of Use — Knesset Insight",
+      "description": "Knesset Insight terms of use"
     }
+  },
+  "aboutPage": {
+    "title": "About Knesset Insight",
+    "missionTitle": "Our Mission",
+    "missionText": "Knesset Insight is a civic-tech platform dedicated to making Israeli parliamentary data accessible to the public. We believe that parliamentary transparency is a cornerstone of a healthy democracy, and every citizen deserves a simple, accessible tool to follow their elected representatives.",
+    "whatWeDoTitle": "What We Do",
+    "whatWeDoItems": {
+      "members": "Track MK activity — votes, legislative initiatives, committee attendance",
+      "votes": "Present all plenary votes with breakdowns by faction, coalition and opposition",
+      "legislation": "Display the full legislative pipeline — from initial proposal to official publication",
+      "data": "Transform raw data into insights using visualizations and artificial intelligence",
+      "transparency": "Enable the public to follow, compare and understand parliamentary processes"
+    },
+    "valuesTitle": "Our Values",
+    "values": {
+      "transparency": "Transparency",
+      "transparencyDesc": "All our data comes from public, open sources. Our code is open to everyone.",
+      "accessibility": "Accessibility",
+      "accessibilityDesc": "The platform is available in Hebrew, English, Arabic and Russian, with full RTL and WCAG 2.1 support.",
+      "nonPartisan": "Non-Partisan",
+      "nonPartisanDesc": "We are not affiliated with any political party or movement. The data speaks for itself.",
+      "openSource": "Open Source",
+      "openSourceDesc": "All platform code is open on GitHub under the MIT license. Contributions are welcome!"
+    },
+    "techTitle": "Technology",
+    "techText": "The platform is built with Next.js, React, TypeScript and Tailwind CSS. Data is stored in Supabase (PostgreSQL) with Drizzle ORM. Automatic syncing with the Knesset API and Open Knesset runs every few hours."
+  },
+  "openSourcePage": {
+    "title": "Open Source",
+    "intro": "Knesset Insight is a fully open-source project. Every line of code is available for review, forking and contribution.",
+    "licenseTitle": "License",
+    "licenseText": "The project is distributed under the MIT License — you can freely use the code for any purpose, including commercial use.",
+    "repoTitle": "Repository",
+    "repoText": "The source code is available on GitHub:",
+    "repoLink": "Yedidya10/knesset-insight",
+    "contributeTitle": "How to Contribute",
+    "contributeSteps": {
+      "fork": "Fork the repository on GitHub",
+      "branch": "Create a new branch for your feature or fix",
+      "code": "Write clean TypeScript code",
+      "pr": "Open a Pull Request with a detailed description"
+    },
+    "stackTitle": "Tech Stack",
+    "stack": {
+      "framework": "Next.js 15 (App Router) + React 19",
+      "language": "TypeScript",
+      "styling": "Tailwind CSS 4 + shadcn/ui",
+      "database": "Supabase (PostgreSQL) + Drizzle ORM",
+      "cache": "Upstash Redis",
+      "ai": "Vercel AI SDK (Gemini / OpenAI)",
+      "i18n": "next-intl (Hebrew, English, Arabic, Russian)",
+      "api": "tRPC",
+      "pwa": "Serwist"
+    }
+  },
+  "dataSourcesPage": {
+    "title": "Data Sources",
+    "intro": "Knesset Insight syncs data from several public, open sources. Data is updated automatically every few hours to ensure accuracy and freshness.",
+    "knessetApiTitle": "Official Knesset API (OData)",
+    "knessetApiText": "The primary source for Knesset data. Includes information on MKs, plenary votes, bills, committees and factions. Data syncs every 6 hours.",
+    "knessetApiUrl": "knesset.gov.il/Odata/ParliamentInfo.svc",
+    "oknessetTitle": "Open Knesset (The Public Knowledge Workshop)",
+    "oknessetText": "Processed and enriched data from the Open Knesset project by the Public Knowledge Workshop (Hasadna). Includes additional data not available through the official API.",
+    "oknessetUrl": "oknesset.org",
+    "openBudgetTitle": "Open Budget",
+    "openBudgetText": "State budget data from the Open Budget project. Includes budget allocations by ministry and budget items.",
+    "openBudgetUrl": "open-budget.org.il",
+    "electionResultsTitle": "Central Elections Committee",
+    "electionResultsText": "Official Knesset election results by municipality, including voter turnout and party distribution.",
+    "electionResultsUrl": "votes25.bechirot.gov.il",
+    "updateFrequency": "Update Frequency",
+    "updateEvery6Hours": "Every 6 hours",
+    "updateDaily": "Daily",
+    "updateOnElection": "Per election cycle",
+    "accuracyNote": "Note: Data comes directly from official sources. We strive for maximum accuracy, but there may be temporary gaps between source updates and platform updates."
+  },
+  "privacyPage": {
+    "title": "Privacy Policy",
+    "lastUpdated": "Last updated: April 2026",
+    "introTitle": "General",
+    "introText": "Knesset Insight (\"the Platform\") is committed to protecting your privacy. This policy explains what data we collect, how we use it, and how we protect it.",
+    "collectTitle": "Information We Collect",
+    "collectItems": {
+      "account": "Account details: email address upon registration via Supabase Auth.",
+      "usage": "Usage data: pages viewed, searches and actions on the site (non-personally identifiable).",
+      "ai": "AI conversations: chat content with the AI assistant is stored to improve the service."
+    },
+    "useTitle": "How We Use Information",
+    "useItems": {
+      "service": "Providing and maintaining the service.",
+      "improve": "Improving user experience.",
+      "security": "Security and abuse prevention."
+    },
+    "sharingTitle": "Sharing with Third Parties",
+    "sharingText": "We do not sell, rent or share personal information with third parties for marketing purposes. Data is stored solely through Supabase and Upstash.",
+    "cookiesTitle": "Cookies",
+    "cookiesText": "The platform uses essential cookies only for authentication and session management. No tracking or advertising cookies are used.",
+    "rightsTitle": "Your Rights",
+    "rightsText": "You can request to view, correct or delete your personal information at any time. Contact us at the email below.",
+    "contactTitle": "Contact",
+    "contactText": "For privacy-related questions, contact us:"
+  },
+  "termsPage": {
+    "title": "Terms of Use",
+    "lastUpdated": "Last updated: April 2026",
+    "introTitle": "General",
+    "introText": "Use of Knesset Insight (\"the Service\") is subject to these terms. Continued use of the Service constitutes acceptance of these terms.",
+    "serviceTitle": "Service Description",
+    "serviceText": "Knesset Insight presents public data from the Israeli Knesset and open government sources. Data is provided as-is without warranty of accuracy.",
+    "dataTitle": "Use of Data",
+    "dataText": "Data displayed on the platform comes from public, open sources. It may be used for any lawful purpose. Attribution is recommended.",
+    "aiTitle": "Use of Artificial Intelligence",
+    "aiText": "The platform includes AI components that generate automatic content (summaries, analyses). This content does not constitute professional advice and may contain inaccuracies.",
+    "accountTitle": "User Accounts",
+    "accountText": "Registration is handled through Supabase Auth. Users are responsible for maintaining their access credentials. Accounts can be deleted at any time.",
+    "limitationTitle": "Limitation of Liability",
+    "limitationText": "Knesset Insight is not liable for any damages arising from use of the platform or reliance on the data presented. Information is provided for informational purposes only.",
+    "changesTitle": "Changes to Terms",
+    "changesText": "We may update these terms from time to time. Material changes will be published on the platform."
   }
 }
