@@ -81,7 +81,8 @@ export async function fetchBillDocuments(
 
 /**
  * Read text content from a bill document.
- * - PDF → Gemini Flash for OCR/text extraction
+ * - PDF → unpdf for local text extraction (no AI needed)
+ * - DOC/DOCX → officeparser for local text extraction
  * - DOC/DOCX → officeparser for local text extraction
  */
 export async function readDocument(doc: BillDocument): Promise<string | null> {

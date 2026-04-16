@@ -254,11 +254,9 @@ export const appConfig = {
     targetKnessets: [25, 24, 23] as readonly number[],
     /** Batch size for AI summary generation */
     batchSize: Number(process.env.BILL_SUMMARY_BATCH_SIZE ?? 10),
-    /** Document reader config for bill PDF/DOC text extraction */
+    /** Document reader config for bill PDF/DOC text extraction (all local) */
     documentReader: {
-      /** Gemini model for PDF text extraction */
-      pdfModel: process.env.BILL_DOC_PDF_MODEL ?? 'gemini-2.5-flash',
-      /** Max pages to read from a bill PDF */
+      /** Max pages to read from a bill PDF (local extraction via unpdf) */
       maxPages: Number(process.env.BILL_DOC_MAX_PAGES ?? 30),
       /** Max characters of document text to include in prompt */
       maxDocumentChars: Number(process.env.BILL_DOC_MAX_CHARS ?? 8000),

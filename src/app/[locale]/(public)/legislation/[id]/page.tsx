@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
 import type { Metadata } from 'next';
 import { eq, desc, sql, inArray, and } from 'drizzle-orm';
-import { Users, ExternalLink, Layers, UserMinus } from 'lucide-react';
+import { Users, ExternalLink, Layers, UserMinus, Sparkles } from 'lucide-react';
 import { db } from '@/lib/db';
 import {
   bills,
@@ -488,7 +488,11 @@ export default async function BillDetailPage({ params }: Props) {
               <h2 className="text-sm font-semibold">
                 {t('summary')}
                 {!bill.summary && bill.aiSummary && (
-                  <Badge variant="outline" className="ms-2 text-xs font-normal">
+                  <Badge
+                    variant="outline"
+                    className="ms-2 gap-1 text-xs font-normal"
+                  >
+                    <Sparkles className="h-3 w-3 text-amber-500" />
                     {t('aiSummary')}
                   </Badge>
                 )}

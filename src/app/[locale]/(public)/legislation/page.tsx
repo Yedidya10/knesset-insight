@@ -1,4 +1,4 @@
-import { getTranslations } from 'next-intl/server';
+import { getTranslations, getLocale } from 'next-intl/server';
 import type { Metadata } from 'next';
 import {
   Gavel,
@@ -6,6 +6,7 @@ import {
   GitBranch,
   Pause,
   ArrowLeftRight,
+  Sparkles,
 } from 'lucide-react';
 import { desc, asc, eq, sql, ilike, and, or, exists } from 'drizzle-orm';
 import { Link } from '@/i18n/navigation';
@@ -56,6 +57,7 @@ export const dynamic = 'force-dynamic';
 export default async function LegislationPage({ searchParams }: Props) {
   const t = await getTranslations('legislation');
   const tCommon = await getTranslations('common');
+  const locale = await getLocale();
   const params = await searchParams;
   const knessetNum = params.knesset ? Number(params.knesset) : undefined;
   const billType = params.type ?? '';
@@ -113,6 +115,7 @@ export default async function LegislationPage({ searchParams }: Props) {
         subTypeId: bills.subTypeId,
         knessetNum: bills.knessetNum,
         proposedDate: bills.proposedDate,
+        aiSummary: bills.aiSummary,
       })
       .from(bills)
       .where(whereClause)
@@ -204,6 +207,12 @@ export default async function LegislationPage({ searchParams }: Props) {
                               </span>
                             )}
                           </div>
+                          {bill.aiSummary && (
+                            <p className="text-muted-foreground mt-1.5 line-clamp-2 text-sm leading-relaxed">
+                              <Sparkles className="me-1 inline h-3.5 w-3.5 text-amber-500" />
+                              {bill.aiSummary[locale] ?? bill.aiSummary.he}
+                            </p>
+                          )}
                         </div>
                         <div className="flex items-center gap-2">
                           {specialStatus === 'merged' && (
