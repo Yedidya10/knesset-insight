@@ -1,3 +1,12 @@
+'use client';
+
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+
 interface SeatSegment {
   slug: string;
   name: string;
@@ -24,39 +33,52 @@ export default function SeatProjectionBar({
   return (
     <div className="space-y-2">
       {/* Bar */}
-      <div className="relative flex h-8 w-full overflow-hidden rounded-lg bg-muted">
-        {segments.map((s) => {
-          const width = (s.seats / totalSeats) * 100;
-          if (width <= 0) return null;
-          return (
-            <div
-              key={s.slug}
-              className="relative flex items-center justify-center overflow-hidden text-[10px] font-medium text-white transition-all"
-              style={{
-                width: `${width}%`,
-                backgroundColor: s.color,
-              }}
-              title={`${s.name}: ${s.seats}`}
-            >
-              {s.seats >= 4 && <span className="truncate px-0.5">{s.seats}</span>}
-            </div>
-          );
-        })}
+      <div className="bg-muted relative flex h-8 w-full overflow-hidden rounded-lg">
+        <TooltipProvider>
+          {segments.map((s) => {
+            const width = (s.seats / totalSeats) * 100;
+            if (width <= 0) return null;
+            return (
+              <Tooltip key={s.slug}>
+                <TooltipTrigger
+                  render={
+                    <div
+                      className="relative flex items-center justify-center overflow-hidden text-[10px] font-medium text-white transition-all"
+                      style={{
+                        width: `${width}%`,
+                        backgroundColor: s.color,
+                      }}
+                    />
+                  }
+                >
+                  {s.seats >= 4 && (
+                    <span className="truncate px-0.5">{s.seats}</span>
+                  )}
+                </TooltipTrigger>
+                <TooltipContent>
+                  {s.name}: {s.seats}
+                </TooltipContent>
+              </Tooltip>
+            );
+          })}
+        </TooltipProvider>
         {assignedSeats < totalSeats && (
           <div
-            className="flex items-center justify-center text-[10px] text-muted-foreground"
-            style={{ width: `${((totalSeats - assignedSeats) / totalSeats) * 100}%` }}
+            className="text-muted-foreground flex items-center justify-center text-[10px]"
+            style={{
+              width: `${((totalSeats - assignedSeats) / totalSeats) * 100}%`,
+            }}
           />
         )}
         {/* Majority line */}
         <div
-          className="absolute top-0 h-full border-e-2 border-dashed border-foreground/50"
+          className="border-foreground/50 absolute top-0 h-full border-e-2 border-dashed"
           style={{ insetInlineStart: `${(majorityLine / totalSeats) * 100}%` }}
         />
       </div>
 
       {/* Legend row */}
-      <div className="flex items-center justify-between text-xs text-muted-foreground">
+      <div className="text-muted-foreground flex items-center justify-between text-xs">
         <span>0</span>
         <span>
           {majorityLabel}: {majorityLine}

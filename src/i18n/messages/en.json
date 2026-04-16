@@ -945,6 +945,7 @@
       "very_strongly_against": "Voted very strongly against (<5%)"
     },
     "cohesion": "Cohesion",
+    "cohesionExplainer": "High cohesion means faction members voted uniformly. This can reflect a clear party stance, but may also indicate voting discipline that limits individual MK independence.",
     "evidence": "Evidence",
     "relevantVotes": "Relevant votes",
     "proPosition": "What a FOR vote means",
@@ -953,7 +954,9 @@
     "allTypes": "All types",
     "searchPlaceholder": "Search policies\u2026",
     "clearFilters": "Clear filters",
-    "score": "{score}% for"
+    "score": "{score}% for",
+    "viewVote": "View vote",
+    "viewBill": "View bill"
   },
   "seo": {
     "siteName": "Knesset Insight",

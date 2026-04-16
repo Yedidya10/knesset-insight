@@ -5,6 +5,11 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 import { appConfig } from '../../../app.config';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 const sizeMap = {
   sm: { container: 'h-7 w-7', text: 'text-xs', px: 28 },
@@ -44,7 +49,8 @@ export default function MemberAvatar({
   // Wikimedia images are already pre-sized thumbnails — skip Next.js proxy
   // to avoid 429 rate-limits from bulk server-side fetches
   const isWikimedia =
-    member.imageUrl?.includes('wikimedia.org') || member.imageUrl?.includes('wikipedia.org');
+    member.imageUrl?.includes('wikimedia.org') ||
+    member.imageUrl?.includes('wikipedia.org');
 
   const attributionKey = member.imageSource as
     | 'oknesset'
@@ -57,15 +63,14 @@ export default function MemberAvatar({
       ? t(`attribution.${attributionKey}`)
       : undefined;
 
-  return (
+  const avatarNode = (
     <div
       className={cn(
-        'relative shrink-0 overflow-hidden rounded-full bg-primary/10',
+        'bg-primary/10 relative shrink-0 overflow-hidden rounded-full',
         s.container,
         ring,
         className,
       )}
-      title={tooltip}
     >
       {showImage ? (
         <Image
@@ -83,7 +88,7 @@ export default function MemberAvatar({
       ) : (
         <span
           className={cn(
-            'flex h-full w-full items-center justify-center font-semibold text-primary',
+            'text-primary flex h-full w-full items-center justify-center font-semibold',
             s.text,
           )}
         >
@@ -91,5 +96,16 @@ export default function MemberAvatar({
         </span>
       )}
     </div>
+  );
+
+  if (!tooltip) return avatarNode;
+
+  return (
+    <Tooltip>
+      <TooltipTrigger render={<div className="inline-flex" />}>
+        {avatarNode}
+      </TooltipTrigger>
+      <TooltipContent>{tooltip}</TooltipContent>
+    </Tooltip>
   );
 }

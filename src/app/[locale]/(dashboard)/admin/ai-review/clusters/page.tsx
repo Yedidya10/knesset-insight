@@ -12,7 +12,12 @@ import {
 import { eq, and, lt, desc, sql } from 'drizzle-orm';
 import { Link } from '@/i18n/navigation';
 import { db } from '@/lib/db';
-import { bills, billClusters, billClusterMembers, billEmbeddings } from '@/lib/db/schema';
+import {
+  bills,
+  billClusters,
+  billClusterMembers,
+  billEmbeddings,
+} from '@/lib/db/schema';
 import { appConfig } from '@/../app.config';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -42,11 +47,15 @@ export default async function AdminClustersReviewPage() {
       .from(billClusters)
       .where(eq(billClusters.aiProcessed, true)),
     db
-      .select({ count: sql<number>`count(distinct ${billClusterMembers.clusterId})` })
+      .select({
+        count: sql<number>`count(distinct ${billClusterMembers.clusterId})`,
+      })
       .from(billClusterMembers)
       .where(sql`${billClusterMembers.relationshipType} IN ('union', 'split')`),
     db
-      .select({ count: sql<number>`count(distinct ${billClusterMembers.clusterId})` })
+      .select({
+        count: sql<number>`count(distinct ${billClusterMembers.clusterId})`,
+      })
       .from(billClusterMembers)
       .where(eq(billClusterMembers.relationshipType, 'name-similarity')),
     db
@@ -105,7 +114,8 @@ export default async function AdminClustersReviewPage() {
   const totalBills = Number(totalBillsR[0]?.count ?? 0);
   const embeddedBills = Number(embeddedBillsR[0]?.count ?? 0);
   const pendingReview = Number(pendingReviewR[0]?.count ?? 0);
-  const aiAccuracy = aiClusters > 0 ? Math.round((approvedAi / aiClusters) * 100) : 0;
+  const aiAccuracy =
+    aiClusters > 0 ? Math.round((approvedAi / aiClusters) * 100) : 0;
   const embeddingCoverage =
     totalBills > 0 ? Math.round((embeddedBills / totalBills) * 100) : 0;
 
@@ -157,7 +167,12 @@ export default async function AdminClustersReviewPage() {
       label: tStats('aiAccuracy'),
       value: `${aiAccuracy}%`,
       icon: BarChart3,
-      color: aiAccuracy >= 80 ? 'text-green-500' : aiAccuracy >= 50 ? 'text-amber-500' : 'text-red-500',
+      color:
+        aiAccuracy >= 80
+          ? 'text-green-500'
+          : aiAccuracy >= 50
+            ? 'text-amber-500'
+            : 'text-red-500',
     },
     {
       label: tStats('embeddingCoverage'),
@@ -183,7 +198,7 @@ export default async function AdminClustersReviewPage() {
     <div className="space-y-8">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Shield className="h-8 w-8 text-primary" />
+        <Shield className="text-primary h-8 w-8" />
         <div>
           <h1 className="text-3xl font-bold">{t('clusterReview')}</h1>
           <p className="text-muted-foreground">
@@ -194,14 +209,16 @@ export default async function AdminClustersReviewPage() {
 
       {/* Stats Grid */}
       <section>
-        <h2 className="text-xl font-semibold mb-4">{tStats('title')}</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <h2 className="mb-4 text-xl font-semibold">{tStats('title')}</h2>
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           {statCards.map((stat) => (
             <Card key={stat.label}>
               <CardContent className="p-4">
-                <div className="flex items-center gap-2 mb-2">
+                <div className="mb-2 flex items-center gap-2">
                   <stat.icon className={`h-5 w-5 ${stat.color}`} />
-                  <span className="text-sm text-muted-foreground">{stat.label}</span>
+                  <span className="text-muted-foreground text-sm">
+                    {stat.label}
+                  </span>
                 </div>
                 <p className="text-2xl font-bold">{stat.value}</p>
               </CardContent>
@@ -211,7 +228,7 @@ export default async function AdminClustersReviewPage() {
 
         {/* Embedding progress bar */}
         <div className="mt-4">
-          <div className="flex justify-between text-sm text-muted-foreground mb-1">
+          <div className="text-muted-foreground mb-1 flex justify-between text-sm">
             <span>{tStats('embeddingCoverage')}</span>
             <span>
               {embeddedBills} / {totalBills}
@@ -223,7 +240,7 @@ export default async function AdminClustersReviewPage() {
 
       {/* Manual Link Form */}
       <section>
-        <h2 className="text-xl font-semibold mb-4">{t('manualLink')}</h2>
+        <h2 className="mb-4 text-xl font-semibold">{t('manualLink')}</h2>
         <Card>
           <CardContent className="p-4">
             <AdminManualLinkForm />
@@ -233,10 +250,10 @@ export default async function AdminClustersReviewPage() {
 
       {/* Review Queue */}
       <section>
-        <h2 className="text-xl font-semibold mb-4">{t('reviewQueue')}</h2>
+        <h2 className="mb-4 text-xl font-semibold">{t('reviewQueue')}</h2>
         {queueWithBills.length === 0 ? (
           <Card>
-            <CardContent className="p-8 text-center text-muted-foreground">
+            <CardContent className="text-muted-foreground p-8 text-center">
               {t('noItemsInQueue')}
             </CardContent>
           </Card>
@@ -244,14 +261,14 @@ export default async function AdminClustersReviewPage() {
           <div className="space-y-4">
             {queueWithBills.map((cluster) => (
               <Card key={cluster.id}>
-                <CardContent className="p-4 space-y-3">
+                <CardContent className="space-y-3 p-4">
                   {/* Cluster header */}
                   <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
                         <Link
                           href={`/legislation/laws/${cluster.id}`}
-                          className="font-semibold hover:text-primary transition-colors truncate"
+                          className="hover:text-primary truncate font-semibold transition-colors"
                         >
                           {cluster.name}
                         </Link>
@@ -265,15 +282,15 @@ export default async function AdminClustersReviewPage() {
                         )}
                       </div>
                       {cluster.description && (
-                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                        <p className="text-muted-foreground mt-1 line-clamp-2 text-sm">
                           {cluster.description}
                         </p>
                       )}
                     </div>
 
-                    <div className="flex items-center gap-3 shrink-0">
+                    <div className="flex shrink-0 items-center gap-3">
                       <div className="text-end">
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-muted-foreground text-xs">
                           {t('confidence')}
                         </span>
                         <p className="text-lg font-bold text-orange-500">
@@ -289,7 +306,7 @@ export default async function AdminClustersReviewPage() {
                   {/* Member bills */}
                   {cluster.bills.length > 0 && (
                     <div className="border-t pt-3">
-                      <p className="text-sm font-medium text-muted-foreground mb-2">
+                      <p className="text-muted-foreground mb-2 text-sm font-medium">
                         {t('memberBills')} ({cluster.billCount})
                       </p>
                       <div className="space-y-2">
@@ -304,22 +321,16 @@ export default async function AdminClustersReviewPage() {
                             >
                               {bill.billName}
                             </Link>
-                            <Badge
-                              variant="outline"
-                              className="text-xs"
-                            >
+                            <Badge variant="outline" className="text-xs">
                               {bill.relationshipType}
                             </Badge>
                             {bill.confidence != null && (
-                              <span className="text-xs text-muted-foreground">
+                              <span className="text-muted-foreground text-xs">
                                 ({Math.round(bill.confidence * 100)}%)
                               </span>
                             )}
                             {bill.aiReasoning && (
-                              <span
-                                className="text-xs text-muted-foreground truncate max-w-xs"
-                                title={bill.aiReasoning}
-                              >
+                              <span className="text-muted-foreground max-w-xs truncate text-xs">
                                 — {bill.aiReasoning}
                               </span>
                             )}

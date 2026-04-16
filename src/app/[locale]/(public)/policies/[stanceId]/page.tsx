@@ -217,6 +217,168 @@ export default async function PolicyDetailPage({ params }: Props) {
     }));
   }
 
+  // Build faction tiers
+  type FactionItem = {
+    factionId: number;
+    name: string;
+    color: string | null;
+    isCoalition: boolean | null;
+    score: number;
+    voteCount: number;
+    cohesion: number;
+    participatingMembers: number;
+  };
+
+  let factionTiers: Array<{
+    level: string;
+    min: number;
+    items: FactionItem[];
+  }> = [];
+
+  if (voteIds.length > 0) {
+    // Aggregate member scores by faction
+    const factionAgg = new Map<
+      number,
+      {
+        factionId: number;
+        name: string;
+        color: string | null;
+        isCoalition: boolean | null;
+        scores: number[];
+      }
+    >();
+
+    // Get faction info and member alignment data from mkScores
+    const factionMemberVotes = await db
+      .select({
+        memberId: members.id,
+        factionId: factions.id,
+        factionName: factions.name,
+        factionColor: factions.color,
+        factionIsCoalition: factions.isCoalition,
+        voteValue: memberVotes.voteValue,
+        voteId: memberVotes.voteId,
+      })
+      .from(memberVotes)
+      .innerJoin(members, eq(memberVotes.memberId, members.id))
+      .innerJoin(factions, eq(members.factionId, factions.id))
+      .where(sql`${memberVotes.voteId} IN ${voteIds}`);
+
+    const alignmentMap = new Map<number, string>();
+    for (const v of relevantVotes) {
+      alignmentMap.set(v.voteId, v.alignment);
+    }
+
+    // Build per-member scores within each faction
+    const factionMemberScores = new Map<
+      number, // factionId
+      Map<number, { match: number; total: number }> // memberId -> score
+    >();
+
+    const factionInfo = new Map<
+      number,
+      { name: string; color: string | null; isCoalition: boolean | null }
+    >();
+
+    for (const row of factionMemberVotes) {
+      if (row.voteValue === 'absent' || !row.factionId) continue;
+
+      if (!factionInfo.has(row.factionId)) {
+        factionInfo.set(row.factionId, {
+          name: row.factionName ?? '',
+          color: row.factionColor,
+          isCoalition: row.factionIsCoalition,
+        });
+      }
+
+      if (!factionMemberScores.has(row.factionId)) {
+        factionMemberScores.set(row.factionId, new Map());
+      }
+      const memberMap = factionMemberScores.get(row.factionId)!;
+      if (!memberMap.has(row.memberId)) {
+        memberMap.set(row.memberId, { match: 0, total: 0 });
+      }
+      const ms = memberMap.get(row.memberId)!;
+      ms.total++;
+
+      const alignment = alignmentMap.get(row.voteId);
+      const votedInDirection =
+        (alignment === 'supports' && row.voteValue === 'for') ||
+        (alignment === 'opposes' && row.voteValue === 'against');
+      if (votedInDirection) ms.match++;
+    }
+
+    // Calculate faction-level stats
+    const SCORE_TIERS_FACTION = [
+      { level: 'very_strongly_for', min: 95 },
+      { level: 'strongly_for', min: 80 },
+      { level: 'moderately_for', min: 60 },
+      { level: 'slightly_for', min: 40 },
+      { level: 'slightly_against', min: 25 },
+      { level: 'moderately_against', min: 15 },
+      { level: 'strongly_against', min: 5 },
+      { level: 'very_strongly_against', min: 0 },
+    ] as const;
+
+    const factionTiered = new Map<string, FactionItem[]>();
+
+    for (const [factionId, memberMap] of factionMemberScores) {
+      const info = factionInfo.get(factionId);
+      if (!info) continue;
+
+      const memberScores: number[] = [];
+      let totalVotes = 0;
+      for (const ms of memberMap.values()) {
+        if (ms.total >= minVotes) {
+          memberScores.push(ms.match / ms.total);
+          totalVotes += ms.total;
+        }
+      }
+
+      if (memberScores.length === 0) continue;
+
+      const avgScore = Math.round(
+        (memberScores.reduce((a, b) => a + b, 0) / memberScores.length) * 100,
+      );
+
+      // Cohesion = 100 - stddev of member scores * 100
+      const mean =
+        memberScores.reduce((a, b) => a + b, 0) / memberScores.length;
+      const variance =
+        memberScores.reduce((sum, s) => sum + (s - mean) ** 2, 0) /
+        memberScores.length;
+      const cohesion = Math.round(100 - Math.sqrt(variance) * 100);
+
+      let tier = 'very_strongly_against';
+      for (const t of SCORE_TIERS_FACTION) {
+        if (avgScore >= t.min) {
+          tier = t.level;
+          break;
+        }
+      }
+
+      if (!factionTiered.has(tier)) factionTiered.set(tier, []);
+      factionTiered.get(tier)!.push({
+        factionId,
+        name: info.name,
+        color: info.color,
+        isCoalition: info.isCoalition,
+        score: avgScore,
+        voteCount: totalVotes,
+        cohesion,
+        participatingMembers: memberScores.length,
+      });
+    }
+
+    factionTiers = SCORE_TIERS_FACTION.filter((t) =>
+      factionTiered.has(t.level),
+    ).map((t) => ({
+      level: t.level,
+      min: t.min,
+      items: factionTiered.get(t.level)!.sort((a, b) => b.score - a.score),
+    }));
+  }
+
   return (
     <PolicyDetailClient
       stance={{
@@ -227,7 +389,8 @@ export default async function PolicyDetailPage({ params }: Props) {
         stanceType: stance.stanceType,
         voteCount: stance.voteCount,
       }}
-      tiers={memberTiers}
+      memberTiers={memberTiers}
+      factionTiers={factionTiers}
       relevantVotes={relevantVotes.map((v) => ({
         voteId: v.voteId,
         title: v.title,

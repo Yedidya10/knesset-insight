@@ -36,6 +36,7 @@ import { Button } from '@/components/ui/button';
 import TranslatedText from '@/components/ui/translated-text';
 import MemberAvatar from '@/components/members/MemberAvatar';
 import MemberBillsList from '@/components/members/MemberBillsList';
+import VoteDistributionBar from '@/components/members/VoteDistributionBar';
 import IntegrityTab from '@/components/integrity/IntegrityTab';
 
 interface Props {
@@ -501,44 +502,31 @@ export default async function MemberProfilePage({ params }: Props) {
 
               {/* Vote distribution bar */}
               {totalVotes > 0 && (
-                <div className="mb-4 flex h-4 overflow-hidden rounded-full">
-                  {stats.for > 0 && (
-                    <div
-                      className="bg-green-500"
-                      style={{
-                        width: `${(stats.for / totalVotes) * 100}%`,
-                      }}
-                      title={`${tVotes('for')}: ${stats.for}`}
-                    />
-                  )}
-                  {stats.against > 0 && (
-                    <div
-                      className="bg-red-500"
-                      style={{
-                        width: `${(stats.against / totalVotes) * 100}%`,
-                      }}
-                      title={`${tVotes('against')}: ${stats.against}`}
-                    />
-                  )}
-                  {stats.abstain > 0 && (
-                    <div
-                      className="bg-yellow-500"
-                      style={{
-                        width: `${(stats.abstain / totalVotes) * 100}%`,
-                      }}
-                      title={`${tVotes('abstain')}: ${stats.abstain}`}
-                    />
-                  )}
-                  {stats.absent > 0 && (
-                    <div
-                      className="bg-muted-foreground/30"
-                      style={{
-                        width: `${(stats.absent / totalVotes) * 100}%`,
-                      }}
-                      title={`${tVotes('absent')}: ${stats.absent}`}
-                    />
-                  )}
-                </div>
+                <VoteDistributionBar
+                  total={totalVotes}
+                  segments={[
+                    {
+                      label: tVotes('for'),
+                      count: stats.for,
+                      color: 'bg-green-500',
+                    },
+                    {
+                      label: tVotes('against'),
+                      count: stats.against,
+                      color: 'bg-red-500',
+                    },
+                    {
+                      label: tVotes('abstain'),
+                      count: stats.abstain,
+                      color: 'bg-yellow-500',
+                    },
+                    {
+                      label: tVotes('absent'),
+                      count: stats.absent,
+                      color: 'bg-muted-foreground/30',
+                    },
+                  ]}
+                />
               )}
 
               <Separator className="my-4" />

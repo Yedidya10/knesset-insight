@@ -96,21 +96,13 @@ export default async function CommitteesPage() {
                       </Badge>
                     )}
                     {committee.memberCount > 0 && (
-                      <Badge
-                        variant="secondary"
-                        className="gap-1"
-                        title={`${committee.memberCount} ${t('members')}`}
-                      >
+                      <Badge variant="secondary" className="gap-1">
                         <Users className="h-3 w-3" />
                         {committee.memberCount}
                       </Badge>
                     )}
                     {committee.previousKnessetCount > 0 && (
-                      <Badge
-                        variant="outline"
-                        className="gap-1 opacity-60"
-                        title={t('detail.previousKnessets')}
-                      >
+                      <Badge variant="outline" className="gap-1 opacity-60">
                         <History className="h-3 w-3" />+
                         {committee.previousKnessetCount}
                       </Badge>
@@ -147,11 +139,7 @@ export default async function CommitteesPage() {
                       </Badge>
                     )}
                     {committee.memberCount > 0 && (
-                      <Badge
-                        variant="secondary"
-                        className="gap-1"
-                        title={`${committee.memberCount} ${t('members')}`}
-                      >
+                      <Badge variant="secondary" className="gap-1">
                         <Users className="h-3 w-3" />
                         {committee.memberCount}
                       </Badge>

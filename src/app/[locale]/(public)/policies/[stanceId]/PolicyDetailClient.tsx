@@ -10,20 +10,51 @@ import {
   Building2,
   ChevronDown,
   ExternalLink,
+  FileText,
+  Info,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import {
   POLICY_DOMAINS,
   type PolicyDomain,
 } from '@/lib/knesset/policy-domains';
 
-type Tier = {
+type MemberTier = {
   level: string;
   min: number;
-  items: Array<Record<string, unknown>>;
+  items: Array<{
+    memberId: number;
+    name: string;
+    imageUrl: string | null;
+    factionName: string | null;
+    factionColor: string | null;
+    score: number;
+    voteCount: number;
+  }>;
+};
+
+type FactionTier = {
+  level: string;
+  min: number;
+  items: Array<{
+    factionId: number;
+    name: string;
+    color: string | null;
+    isCoalition: boolean | null;
+    score: number;
+    voteCount: number;
+    cohesion: number;
+    participatingMembers: number;
+  }>;
 };
 
 type RelevantVote = {
@@ -49,14 +80,16 @@ type PolicyStance = {
 
 interface PolicyDetailClientProps {
   stance: PolicyStance;
-  tiers: Tier[];
+  memberTiers: MemberTier[];
+  factionTiers: FactionTier[];
   relevantVotes: RelevantVote[];
   initialView: 'members' | 'factions';
 }
 
 export default function PolicyDetailClient({
   stance,
-  tiers,
+  memberTiers,
+  factionTiers,
   relevantVotes,
   initialView,
 }: PolicyDetailClientProps) {
@@ -124,88 +157,85 @@ export default function PolicyDetailClient({
       </div>
 
       {/* Tiers */}
-      {tiers.length > 0 ? (
-        <div className="space-y-6">
-          {tiers.map((tier) => (
-            <div key={tier.level}>
-              <h2 className="text-muted-foreground mb-3 text-sm font-semibold tracking-wider uppercase">
-                {t(`tier.${tier.level}`)}
-              </h2>
-              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                {tier.items.map((item: Record<string, unknown>) => {
-                  if (view === 'members') {
-                    const mk = item as {
-                      memberId: number;
-                      name: string;
-                      imageUrl: string | null;
-                      factionName: string | null;
-                      factionColor: string | null;
-                      score: number;
-                      voteCount: number;
-                    };
-                    return (
-                      <Link key={mk.memberId} href={`/members/${mk.memberId}`}>
-                        <Card className="hover-lift">
-                          <CardContent className="flex items-center gap-3 p-3">
-                            <div
-                              className="bg-muted flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full"
-                              style={
-                                mk.factionColor
-                                  ? {
-                                      borderLeft: `3px solid ${mk.factionColor}`,
-                                    }
-                                  : undefined
-                              }
-                            >
-                              {mk.imageUrl ? (
-                                <Image
-                                  src={mk.imageUrl}
-                                  alt={mk.name}
-                                  width={40}
-                                  height={40}
-                                  className="h-full w-full object-cover"
-                                />
-                              ) : (
-                                <Users className="text-muted-foreground h-5 w-5" />
-                              )}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate text-sm font-medium">
-                                {mk.name}
+      {view === 'members' ? (
+        memberTiers.length > 0 ? (
+          <div className="space-y-6">
+            {memberTiers.map((tier) => (
+              <div key={tier.level}>
+                <h2 className="text-muted-foreground mb-3 text-sm font-semibold tracking-wider uppercase">
+                  {t(`tier.${tier.level}`)}
+                </h2>
+                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  {tier.items.map((mk) => (
+                    <Link key={mk.memberId} href={`/members/${mk.memberId}`}>
+                      <Card className="hover-lift">
+                        <CardContent className="flex items-center gap-3 p-3">
+                          <div
+                            className="bg-muted flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full"
+                            style={
+                              mk.factionColor
+                                ? {
+                                    borderInlineStart: `3px solid ${mk.factionColor}`,
+                                  }
+                                : undefined
+                            }
+                          >
+                            {mk.imageUrl ? (
+                              <Image
+                                src={mk.imageUrl}
+                                alt={mk.name}
+                                width={40}
+                                height={40}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <Users className="text-muted-foreground h-5 w-5" />
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium">
+                              {mk.name}
+                            </p>
+                            {mk.factionName && (
+                              <p className="text-muted-foreground truncate text-xs">
+                                {mk.factionName}
                               </p>
-                              {mk.factionName && (
-                                <p className="text-muted-foreground truncate text-xs">
-                                  {mk.factionName}
-                                </p>
-                              )}
-                            </div>
-                            <div className="text-end">
-                              <span className="text-sm font-bold">
-                                {t('score', { score: mk.score })}
-                              </span>
-                              <p className="text-muted-foreground text-xs">
-                                {mk.voteCount}{' '}
-                                {t('voteCount', { count: mk.voteCount })}
-                              </p>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      </Link>
-                    );
-                  }
-
-                  // Factions view
-                  const faction = item as {
-                    factionId: number;
-                    name: string;
-                    color: string | null;
-                    isCoalition: boolean | null;
-                    score: number;
-                    voteCount: number;
-                    cohesion: number;
-                    participatingMembers: number;
-                  };
-                  return (
+                            )}
+                          </div>
+                          <div className="text-end">
+                            <span className="text-sm font-bold">
+                              {t('score', { score: mk.score })}
+                            </span>
+                            <p className="text-muted-foreground text-xs">
+                              {t('voteCount', { count: mk.voteCount })}
+                            </p>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-muted-foreground mt-16 flex flex-col items-center gap-3">
+            <div className="bg-muted flex h-16 w-16 items-center justify-center rounded-2xl">
+              <Target className="h-8 w-8 opacity-40" />
+            </div>
+            <p className="text-sm">{t('noResults')}</p>
+          </div>
+        )
+      ) : factionTiers.length > 0 ? (
+        <TooltipProvider>
+          <div className="space-y-6">
+            {factionTiers.map((tier) => (
+              <div key={tier.level}>
+                <h2 className="text-muted-foreground mb-3 text-sm font-semibold tracking-wider uppercase">
+                  {t(`tier.${tier.level}`)}
+                </h2>
+                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  {tier.items.map((faction) => (
                     <Card key={faction.factionId} className="hover-lift">
                       <CardContent className="flex items-center gap-3 p-3">
                         <div
@@ -226,18 +256,28 @@ export default function PolicyDetailClient({
                           <span className="text-sm font-bold">
                             {t('score', { score: faction.score })}
                           </span>
-                          <p className="text-muted-foreground text-xs">
-                            {t('cohesion')}: {faction.cohesion}%
-                          </p>
+                          <Tooltip>
+                            <TooltipTrigger
+                              render={
+                                <p className="text-muted-foreground inline-flex cursor-help items-center gap-1 text-xs" />
+                              }
+                            >
+                              {t('cohesion')}: {faction.cohesion}%
+                              <Info className="h-3 w-3 opacity-50" />
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom" className="max-w-xs">
+                              {t('cohesionExplainer')}
+                            </TooltipContent>
+                          </Tooltip>
                         </div>
                       </CardContent>
                     </Card>
-                  );
-                })}
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </TooltipProvider>
       ) : (
         <div className="text-muted-foreground mt-16 flex flex-col items-center gap-3">
           <div className="bg-muted flex h-16 w-16 items-center justify-center rounded-2xl">
@@ -250,7 +290,8 @@ export default function PolicyDetailClient({
       {/* Relevant Votes (Evidence) */}
       {relevantVotes.length > 0 && (
         <div className="mt-10">
-          <button
+          <Button
+            variant="ghost"
             onClick={() => setShowVotes(!showVotes)}
             className="text-muted-foreground hover:text-foreground mb-4 flex items-center gap-1.5 text-sm font-semibold tracking-wider uppercase transition-colors"
           >
@@ -261,61 +302,80 @@ export default function PolicyDetailClient({
                 showVotes && 'rotate-180',
               )}
             />
-          </button>
+          </Button>
           {showVotes && (
             <div className="space-y-2">
-              {relevantVotes.map((vote) => (
-                <Card key={vote.voteId} className="glass-card">
-                  <CardContent className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium">{vote.title}</p>
-                      {vote.proPosition && (
-                        <p className="text-muted-foreground mt-0.5 text-xs">
-                          {t('proPosition')}:{' '}
-                          {vote.proPosition[locale] ?? vote.proPosition.he}
-                        </p>
-                      )}
-                      <div className="text-muted-foreground mt-1 flex flex-wrap items-center gap-2 text-xs">
-                        {vote.voteDate && (
-                          <span>
-                            {new Date(vote.voteDate).toLocaleDateString(
-                              locale === 'he' ? 'he-IL' : locale,
+              <TooltipProvider>
+                {relevantVotes.map((vote) => (
+                  <Card key={vote.voteId} className="glass-card">
+                    <CardContent className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium">{vote.title}</p>
+                        {vote.proPosition && (
+                          <p className="text-muted-foreground mt-0.5 text-xs">
+                            {t('proPosition')}:{' '}
+                            {vote.proPosition[locale] ?? vote.proPosition.he}
+                          </p>
+                        )}
+                        <div className="text-muted-foreground mt-1 flex flex-wrap items-center gap-2 text-xs">
+                          {vote.voteDate && (
+                            <span>
+                              {new Date(vote.voteDate).toLocaleDateString(
+                                locale === 'he' ? 'he-IL' : locale,
+                              )}
+                            </span>
+                          )}
+                          {vote.forCount != null &&
+                            vote.againstCount != null && (
+                              <span>
+                                {vote.forCount}-{vote.againstCount}
+                              </span>
                             )}
-                          </span>
-                        )}
-                        {vote.forCount != null && vote.againstCount != null && (
-                          <span>
-                            {vote.forCount}-{vote.againstCount}
-                          </span>
-                        )}
-                        <Badge
-                          variant={vote.isAccepted ? 'default' : 'secondary'}
-                          className="text-[10px]"
-                        >
-                          {vote.isAccepted ? '✅' : '❌'}
-                        </Badge>
-                        <Badge variant="outline" className="text-[10px]">
-                          {vote.alignment === 'supports' ? '➕' : '➖'}
-                        </Badge>
+                          <Badge
+                            variant={vote.isAccepted ? 'default' : 'secondary'}
+                            className="text-[10px]"
+                          >
+                            {vote.isAccepted ? '✅' : '❌'}
+                          </Badge>
+                          <Badge variant="outline" className="text-[10px]">
+                            {vote.alignment === 'supports' ? '➕' : '➖'}
+                          </Badge>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <Link href={`/votes/${vote.voteId}`}>
-                        <Button variant="ghost" size="sm" className="gap-1">
-                          <ExternalLink className="h-3 w-3" />
-                        </Button>
-                      </Link>
-                      {vote.billId && (
-                        <Link href={`/legislation/${vote.billId}`}>
-                          <Button variant="ghost" size="sm" className="gap-1">
-                            <ExternalLink className="h-3 w-3" />
-                          </Button>
-                        </Link>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                      <div className="flex items-center gap-1.5">
+                        <Tooltip>
+                          <TooltipTrigger
+                            render={<Link href={`/votes/${vote.voteId}`} />}
+                          >
+                            <Button variant="ghost" size="sm" className="gap-1">
+                              <ExternalLink className="h-3 w-3" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>{t('viewVote')}</TooltipContent>
+                        </Tooltip>
+                        {vote.billId && (
+                          <Tooltip>
+                            <TooltipTrigger
+                              render={
+                                <Link href={`/legislation/${vote.billId}`} />
+                              }
+                            >
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="gap-1"
+                              >
+                                <FileText className="h-3 w-3" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>{t('viewBill')}</TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </TooltipProvider>
             </div>
           )}
         </div>

@@ -95,3 +95,46 @@ Use logical properties (`start`/`end`) instead of `left`/`right` for RTL/LTR com
 - `ps-*` / `pe-*` instead of `pl-*` / `pr-*`
 - `ms-*` / `me-*` instead of `ml-*` / `mr-*`
 - `start-*` / `end-*` instead of `left-*` / `right-*`
+
+## Never use raw HTML `title` attribute for tooltips
+
+Always use the shadcn/ui `Tooltip` component — **never** use the HTML `title` attribute for contextual hints or hover labels:
+
+```tsx
+// ❌ Never do this
+<button title="Delete item">🗑️</button>;
+
+// ✅ Always do this
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+
+<TooltipProvider>
+  <Tooltip>
+    <TooltipTrigger render={<Button variant="ghost" size="sm" />}>
+      🗑️
+    </TooltipTrigger>
+    <TooltipContent>{t('deleteItem')}</TooltipContent>
+  </Tooltip>
+</TooltipProvider>;
+```
+
+Wrap a group of tooltip triggers in a single `<TooltipProvider>` to share delay settings. Every tooltip label must use `next-intl` `t()` — never hardcode strings.
+
+**Exception**: `alt` attributes on `<Image>` for accessibility are not tooltips and remain as-is.
+
+## Never use raw HTML interactive elements
+
+This extends beyond form elements. Always prefer the project's UI components:
+
+| ❌ Never use                   | ✅ Always use                                                                        |
+| ------------------------------ | ------------------------------------------------------------------------------------ |
+| `<button>` (for any clickable) | `<Button>` from `@/components/ui/button`                                             |
+| `<a>` for internal navigation  | `<Link>` from `@/i18n/navigation`                                                    |
+| `title="..."` for hover hints  | `<Tooltip>` + `<TooltipTrigger>` + `<TooltipContent>` from `@/components/ui/tooltip` |
+| `<dialog>` / custom modals     | `<Dialog>` from `@/components/ui/dialog`                                             |
+
+**Exception**: The small inline `<button>` used to clear a search input's X icon is acceptable (see `LegislationFilter.tsx`).

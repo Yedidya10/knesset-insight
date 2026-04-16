@@ -4,6 +4,12 @@ import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { cn } from '@/lib/utils';
 import { AIConfidenceBadge } from './AIConfidenceBadge';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface GraphNode {
   id: number;
@@ -79,7 +85,7 @@ export function ClusterRelationshipGraph({
           const kNodes = nodesByKnesset.get(kNum)!;
           return (
             <div key={kNum} className="flex flex-col gap-2">
-              <h4 className="text-xs font-semibold text-muted-foreground">
+              <h4 className="text-muted-foreground text-xs font-semibold">
                 {t('knessetNum', { num: kNum })}
               </h4>
               {kNodes.map((node) => {
@@ -93,36 +99,47 @@ export function ClusterRelationshipGraph({
                     href={`/legislation/${node.id}`}
                     className={cn(
                       'block rounded-lg border-2 p-3 transition-colors hover:shadow-md',
-                      KNESSET_COLORS[kNum] ?? 'border-gray-400 bg-gray-50 dark:bg-gray-950/30',
-                      node.isPrimary && 'ring-2 ring-primary/40',
+                      KNESSET_COLORS[kNum] ??
+                        'border-gray-400 bg-gray-50 dark:bg-gray-950/30',
+                      node.isPrimary && 'ring-primary/40 ring-2',
                     )}
                   >
-                    <p className="text-sm font-medium leading-snug line-clamp-2">
+                    <p className="line-clamp-2 text-sm leading-snug font-medium">
                       {node.name}
                     </p>
                     <div className="mt-1 flex items-center gap-1.5">
-                      <span className="text-[10px] text-muted-foreground">
+                      <span className="text-muted-foreground text-[10px]">
                         {node.currentStage}
                       </span>
                       {hasAiEdge && aiEdge && (
-                        <AIConfidenceBadge confidence={aiEdge.confidence ?? null} />
+                        <AIConfidenceBadge
+                          confidence={aiEdge.confidence ?? null}
+                        />
                       )}
                     </div>
                     {/* Connection indicators */}
                     <div className="mt-1.5 flex gap-1">
-                      {nodeEdges.map((edge, i) => (
-                        <span
-                          key={i}
-                          className={cn(
-                            'h-1.5 w-4 rounded-full',
-                            edge.type === 'union' && 'bg-violet-500',
-                            edge.type === 'split' && 'bg-sky-500',
-                            edge.type === 'name-similarity' && 'bg-amber-500',
-                            edge.type === 'ai' && 'bg-primary/50',
-                          )}
-                          title={edge.type}
-                        />
-                      ))}
+                      <TooltipProvider>
+                        {nodeEdges.map((edge, i) => (
+                          <Tooltip key={i}>
+                            <TooltipTrigger
+                              render={
+                                <span
+                                  className={cn(
+                                    'h-1.5 w-4 rounded-full',
+                                    edge.type === 'union' && 'bg-violet-500',
+                                    edge.type === 'split' && 'bg-sky-500',
+                                    edge.type === 'name-similarity' &&
+                                      'bg-amber-500',
+                                    edge.type === 'ai' && 'bg-primary/50',
+                                  )}
+                                />
+                              }
+                            />
+                            <TooltipContent>{edge.type}</TooltipContent>
+                          </Tooltip>
+                        ))}
+                      </TooltipProvider>
                     </div>
                   </Link>
                 );
@@ -133,7 +150,7 @@ export function ClusterRelationshipGraph({
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+      <div className="text-muted-foreground flex flex-wrap items-center gap-4 text-xs">
         <div className="flex items-center gap-1.5">
           <span className="h-2 w-4 rounded-full bg-violet-500" />
           <span>{t('special.merged')}</span>
@@ -147,13 +164,18 @@ export function ClusterRelationshipGraph({
           <span>{t('clusters.whyRelated')}</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="h-2 w-4 rounded-full bg-primary/50" />
+          <span className="bg-primary/50 h-2 w-4 rounded-full" />
           <span>{t('clusters.aiMatched')}</span>
         </div>
-        <span className="mx-2 text-muted-foreground/40">|</span>
+        <span className="text-muted-foreground/40 mx-2">|</span>
         {uniqueKnessets.map((k) => (
           <div key={k} className="flex items-center gap-1">
-            <span className={cn('h-2.5 w-2.5 rounded-full', KNESSET_DOT_COLORS[k] ?? 'bg-gray-500')} />
+            <span
+              className={cn(
+                'h-2.5 w-2.5 rounded-full',
+                KNESSET_DOT_COLORS[k] ?? 'bg-gray-500',
+              )}
+            />
             <span>K{k}</span>
           </div>
         ))}
