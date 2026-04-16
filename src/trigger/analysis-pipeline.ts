@@ -11,6 +11,7 @@ import { computeBillClusters } from '@/pipeline/jobs/compute-bill-clusters';
 import { generateBillEmbeddings } from '@/pipeline/jobs/generate-bill-embeddings';
 import { aiClusterBills } from '@/pipeline/jobs/ai-cluster-bills';
 import { generateBillSummaries } from '@/pipeline/jobs/generate-bill-summaries';
+import { classifyVoteStances } from '@/pipeline/jobs/classify-vote-stances';
 
 export const analysisPipeline = schedules.task({
   id: 'analysis-pipeline',
@@ -45,6 +46,9 @@ export const analysisPipeline = schedules.task({
 
     logger.info('Generating bill summaries...');
     await generateBillSummaries();
+
+    logger.info('Classifying votes into policy stances...');
+    await classifyVoteStances();
 
     logger.info('Analysis pipeline complete');
     return { success: true };

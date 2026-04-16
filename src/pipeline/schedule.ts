@@ -24,6 +24,7 @@ import { computeBillClusters } from './jobs/compute-bill-clusters';
 import { generateBillEmbeddings } from './jobs/generate-bill-embeddings';
 import { aiClusterBills } from './jobs/ai-cluster-bills';
 import { generateBillSummaries } from './jobs/generate-bill-summaries';
+import { classifyVoteStances } from './jobs/classify-vote-stances';
 
 export const syncJobs = {
   members: syncMembers,
@@ -53,6 +54,7 @@ export const syncJobs = {
   generateBillEmbeddings: generateBillEmbeddings,
   aiClusterBills: aiClusterBills,
   generateBillSummaries: generateBillSummaries,
+  classifyVoteStances: classifyVoteStances,
   all: async () => {
     await syncMembers();
     await syncVotes();
@@ -90,6 +92,8 @@ export const syncJobs = {
     await aiClusterBills();
     // AI bill summaries (must run after bills synced)
     await generateBillSummaries();
+    // AI vote → stance classification (must run after bill summaries)
+    await classifyVoteStances();
   },
 } as const;
 

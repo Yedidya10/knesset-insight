@@ -1,6 +1,6 @@
 import { sql, eq, and, isNull, inArray, or, like, max } from 'drizzle-orm';
 import { db } from '../../lib/db';
-import { bills, billStageSummaries } from '../../lib/db/schema';
+import { bills, billDocuments, billStageSummaries } from '../../lib/db/schema';
 import { generateBillSummary } from '../../lib/ai/legislation/summary-generator';
 import { detectBudgetBillType } from '../../lib/ai/legislation/budget-bill-utils';
 import { appConfig } from '../../../app.config';
@@ -69,7 +69,11 @@ export async function generateBillSummaries(): Promise<void> {
           ),
         ),
       )
-      .orderBy(sql`${bills.lastUpdate} DESC NULLS LAST`)
+      .orderBy(
+        // Phase 1: bills with documents first (local extraction, no Tavily cost)
+        sql`(EXISTS (SELECT 1 FROM ${billDocuments} WHERE ${billDocuments.billId} = ${bills.id})) DESC`,
+        sql`${bills.lastUpdate} DESC NULLS LAST`,
+      )
       .limit(batchSize);
 
     if (candidates.length === 0) {
