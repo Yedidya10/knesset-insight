@@ -237,33 +237,52 @@ export default function PolicyDetailClient({
                 <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                   {tier.items.map((faction) => (
                     <Card key={faction.factionId} className="hover-lift">
-                      <CardContent className="flex items-center gap-3 p-3">
-                        <div
-                          className="h-10 w-1.5 rounded-full"
-                          style={{
-                            backgroundColor: faction.color ?? '#94a3b8',
-                          }}
-                        />
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium">
-                            {faction.name}
-                          </p>
-                          <p className="text-muted-foreground text-xs">
-                            {faction.participatingMembers} {t('tabs.members')}
-                          </p>
+                      <CardContent className="space-y-2.5 p-4">
+                        {/* Top row: faction name + score */}
+                        <div className="flex items-center gap-3">
+                          <div
+                            className="h-8 w-1.5 shrink-0 rounded-full"
+                            style={{
+                              backgroundColor: faction.color ?? '#94a3b8',
+                            }}
+                          />
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium">
+                              {faction.name}
+                            </p>
+                            <p className="text-muted-foreground text-xs">
+                              {faction.participatingMembers} {t('tabs.members')}
+                            </p>
+                          </div>
+                          <span className="text-lg font-bold tabular-nums">
+                            {faction.score}%
+                          </span>
                         </div>
-                        <div className="text-end">
-                          <span className="text-sm font-bold">
+
+                        {/* Score bar */}
+                        <div className="bg-muted h-1.5 w-full overflow-hidden rounded-full">
+                          <div
+                            className="h-full rounded-full transition-all"
+                            style={{
+                              width: `${faction.score}%`,
+                              backgroundColor: faction.color ?? '#94a3b8',
+                            }}
+                          />
+                        </div>
+
+                        {/* Bottom row: cohesion badge */}
+                        <div className="flex items-center justify-between">
+                          <span className="text-muted-foreground text-xs">
                             {t('score', { score: faction.score })}
                           </span>
                           <Tooltip>
                             <TooltipTrigger
                               render={
-                                <p className="text-muted-foreground inline-flex cursor-help items-center gap-1 text-xs" />
+                                <span className="bg-muted inline-flex cursor-help items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] tabular-nums" />
                               }
                             >
-                              {t('cohesion')}: {faction.cohesion}%
-                              <Info className="h-3 w-3 opacity-50" />
+                              {t('cohesion')} {faction.cohesion}%
+                              <Info className="h-3 w-3 opacity-40" />
                             </TooltipTrigger>
                             <TooltipContent side="bottom" className="max-w-xs">
                               {t('cohesionExplainer')}
