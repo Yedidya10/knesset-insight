@@ -11,6 +11,7 @@ import { integrityRouter } from './integrity';
 import { elections2026Router } from './elections-2026';
 import { electionMapRouter } from './election-map';
 import { billClustersRouter } from './bill-clusters';
+import { policiesRouter } from './policies';
 import { adminRouter } from './admin';
 
 export const appRouter = router({
@@ -26,6 +27,7 @@ export const appRouter = router({
   elections2026: elections2026Router,
   electionMap: electionMapRouter,
   billClusters: billClustersRouter,
+  policies: policiesRouter,
   admin: adminRouter,
 });
 

@@ -227,7 +227,7 @@ export const appConfig = {
       model: process.env.BILL_SUMMARY_AI_MODEL ?? 'claude-sonnet-4-20250514',
       maxTokens: Number(process.env.BILL_SUMMARY_AI_MAX_TOKENS ?? 2048),
       dailyTokenBudget: Number(
-        process.env.BILL_SUMMARY_DAILY_TOKEN_BUDGET ?? 300_000,
+        process.env.BILL_SUMMARY_DAILY_TOKEN_BUDGET ?? 5_000_000,
       ),
     },
     webSearch: {
@@ -251,9 +251,9 @@ export const appConfig = {
       ],
     },
     /** Only generate summaries for bills in these knessets */
-    targetKnessets: [25, 24, 23] as readonly number[],
+    targetKnessets: [25, 24, 23, 22, 21] as readonly number[],
     /** Batch size for AI summary generation */
-    batchSize: Number(process.env.BILL_SUMMARY_BATCH_SIZE ?? 10),
+    batchSize: Number(process.env.BILL_SUMMARY_BATCH_SIZE ?? 100),
     /** Document reader config for bill PDF/DOC text extraction (all local) */
     documentReader: {
       /** Max pages to read from a bill PDF (local extraction via unpdf) */
@@ -262,6 +262,38 @@ export const appConfig = {
       maxDocumentChars: Number(process.env.BILL_DOC_MAX_CHARS ?? 8000),
       /** Document type priority (GroupTypeID, highest first) */
       typePriority: [4, 2, 1, 3, 60, 59, 12, 17] as readonly number[],
+    },
+  },
+
+  // Policy Stances — TheyVoteForYou-style vote classification
+  policyStances: {
+    ai: {
+      /** Model for vote classification */
+      model: process.env.STANCE_AI_MODEL ?? 'claude-sonnet-4-20250514',
+      /** Max tokens per classification (multi-stance output) */
+      maxTokens: Number(process.env.STANCE_AI_MAX_TOKENS ?? 1500),
+    },
+    /** Confidence threshold for DIRECT stances — below goes to admin review */
+    directReviewThreshold: Number(
+      process.env.STANCE_DIRECT_REVIEW_THRESHOLD ?? 0.75,
+    ),
+    /** Confidence threshold for DERIVED stances — higher bar */
+    derivedReviewThreshold: Number(
+      process.env.STANCE_DERIVED_REVIEW_THRESHOLD ?? 0.85,
+    ),
+    /** Max votes per batch (for multi-vote bills) */
+    batchSize: Number(process.env.STANCE_BATCH_SIZE ?? 15),
+    /** Minimum votes needed to display MK/faction score on a stance */
+    minVotesForScore: Number(process.env.STANCE_MIN_VOTES ?? 2),
+    incrementalBackfill: {
+      /** Embedding similarity threshold for pre-filtering bills */
+      similarityThreshold: Number(
+        process.env.STANCE_SIMILARITY_THRESHOLD ?? 0.3,
+      ),
+      /** Max bills to send to Claude per incremental backfill */
+      maxBillsPerScan: Number(process.env.STANCE_MAX_BILLS_PER_SCAN ?? 2000),
+      /** Model for incremental scan */
+      model: process.env.STANCE_INCREMENTAL_MODEL ?? 'claude-sonnet-4-20250514',
     },
   },
 } as const;

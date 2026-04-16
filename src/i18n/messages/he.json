@@ -37,6 +37,7 @@
     "budget": "תקציב",
     "committees": "ועדות",
     "governments": "ממשלות",
+    "policies": "מדיניות",
     "factions": "סיעות",
     "compare": "השוואה",
     "search": "חיפוש",
@@ -920,6 +921,39 @@
       }
     }
   },
+  "policies": {
+    "title": "עמדות מדיניות",
+    "subtitle": "כיצד חברי הכנסת והסיעות הצביעו בנושאי מפתח",
+    "noResults": "לא נמצאו עמדות מדיניות",
+    "voteCount": "{count} הצבעות",
+    "stanceType": {
+      "direct": "ישירה",
+      "derived": "נגזרת"
+    },
+    "tabs": {
+      "members": "חברי כנסת",
+      "factions": "סיעות"
+    },
+    "tier": {
+      "very_strongly_for": "הצביעו באופן עקבי בעד (>95%)",
+      "strongly_for": "הצביעו ברוב המקרים בעד (80–95%)",
+      "moderately_for": "הצביעו לעיתים קרובות בעד (60–80%)",
+      "slightly_for": "הצביעו לעיתים בעד (40–60%)",
+      "slightly_against": "הצביעו לעיתים נגד (25–40%)",
+      "moderately_against": "הצביעו לעיתים קרובות נגד (15–25%)",
+      "strongly_against": "הצביעו ברוב המקרים נגד (5–15%)",
+      "very_strongly_against": "הצביעו באופן עקבי נגד (<5%)"
+    },
+    "cohesion": "לכידות",
+    "evidence": "אסמכתאות",
+    "relevantVotes": "הצבעות רלוונטיות",
+    "proPosition": "משמעות הצבעה בעד",
+    "filterByDomain": "סינון לפי תחום",
+    "allDomains": "כל התחומים",
+    "allTypes": "כל הסוגים",
+    "searchPlaceholder": "חיפוש עמדה…",
+    "score": "{score}% בעד"
+  },
   "seo": {
     "siteName": "כנסת אינסייט",
     "defaultDescription": "פלטפורמה לנגישות מידע פרלמנטרי ישראלי — חברי כנסת, הצבעות, חקיקה, ועדות ותקציב",
@@ -974,6 +1008,14 @@
     "electionMap": {
       "title": "מפת בחירות — כנסת אינסייט",
       "description": "מפת תוצאות בחירות לפי יישוב — אחוזי הצבעה, סיעות ומגמות"
+    },
+    "policies": {
+      "title": "עמדות מדיניות — כנסת אינסייט",
+      "description": "עמדות מדיניות של חברי כנסת וסיעות — כיצד הצביעו בנושאי מפתח",
+      "detail": {
+        "title": "{name} — עמדת מדיניות",
+        "description": "{name} — הצבעות חברי כנסת וסיעות בנושא"
+      }
     },
     "about": {
       "title": "אודות — כנסת אינסייט",

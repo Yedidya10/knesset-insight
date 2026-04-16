@@ -37,6 +37,7 @@
     "budget": "Budget",
     "committees": "Committees",
     "governments": "Governments",
+    "policies": "Policies",
     "factions": "Factions",
     "compare": "Compare",
     "search": "Search",
@@ -920,6 +921,39 @@
       }
     }
   },
+  "policies": {
+    "title": "Policy Positions",
+    "subtitle": "How MKs and factions voted on key issues",
+    "noResults": "No policy positions found",
+    "voteCount": "{count} votes",
+    "stanceType": {
+      "direct": "Direct",
+      "derived": "Derived"
+    },
+    "tabs": {
+      "members": "MKs",
+      "factions": "Factions"
+    },
+    "tier": {
+      "very_strongly_for": "Voted very strongly for (>95%)",
+      "strongly_for": "Voted mostly for (80\u201395%)",
+      "moderately_for": "Voted moderately for (60\u201380%)",
+      "slightly_for": "Voted sometimes for (40\u201360%)",
+      "slightly_against": "Voted sometimes against (25\u201340%)",
+      "moderately_against": "Voted moderately against (15\u201325%)",
+      "strongly_against": "Voted mostly against (5\u201315%)",
+      "very_strongly_against": "Voted very strongly against (<5%)"
+    },
+    "cohesion": "Cohesion",
+    "evidence": "Evidence",
+    "relevantVotes": "Relevant votes",
+    "proPosition": "What a FOR vote means",
+    "filterByDomain": "Filter by domain",
+    "allDomains": "All domains",
+    "allTypes": "All types",
+    "searchPlaceholder": "Search policies\u2026",
+    "score": "{score}% for"
+  },
   "seo": {
     "siteName": "Knesset Insight",
     "defaultDescription": "Israeli parliamentary data platform — MKs, votes, legislation, committees and budget",
@@ -974,6 +1008,14 @@
     "electionMap": {
       "title": "Election Map — Knesset Insight",
       "description": "Interactive map of Israeli election results by city — voter turnout, party breakdown and trends"
+    },
+    "policies": {
+      "title": "Policy Positions — Knesset Insight",
+      "description": "Policy positions of MKs and factions — how they voted on key issues",
+      "detail": {
+        "title": "{name} — Policy Position",
+        "description": "{name} — MK and faction votes on this issue"
+      }
     },
     "about": {
       "title": "About — Knesset Insight",

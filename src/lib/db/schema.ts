@@ -1453,3 +1453,135 @@ export const electionCityPartyResultsRelations = relations(
     }),
   }),
 );
+
+// ──────────────────────────────────────
+// Policy Stances (TheyVoteForYou-inspired)
+// ──────────────────────────────────────
+
+export const policyStances = pgTable('policy_stances', {
+  id: serial('id').primaryKey(),
+  label: jsonb('label').notNull(), // {he, en, ar, ru}
+  description: jsonb('description'), // {he, en, ar, ru}
+  domain: text('domain'), // e.g. 'housing', 'security'
+  stanceType: text('stance_type').notNull().default('direct'), // 'direct' | 'derived'
+  isActive: boolean('is_active').default(true),
+  voteCount: integer('vote_count').default(0),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
+});
+
+export const voteStanceAlignment = pgTable(
+  'vote_stance_alignment',
+  {
+    id: serial('id').primaryKey(),
+    voteId: integer('vote_id')
+      .references(() => votes.id)
+      .notNull(),
+    stanceId: integer('stance_id')
+      .references(() => policyStances.id)
+      .notNull(),
+    alignment: text('alignment').notNull(), // 'supports' | 'opposes'
+    proPosition: jsonb('pro_position').notNull(), // {he, en, ar, ru}
+    confidence: real('confidence').notNull(),
+    needsReview: boolean('needs_review').default(false),
+    reviewedBy: text('reviewed_by'),
+    reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  },
+  (t) => [unique().on(t.voteId, t.stanceId)],
+);
+
+export const billClassificationContext = pgTable(
+  'bill_classification_context',
+  {
+    billId: integer('bill_id')
+      .references(() => bills.id)
+      .primaryKey(),
+    documentText: text('document_text'),
+    tavilyContext: text('tavily_context'),
+    aiTopics: text('ai_topics').array(),
+    aiSummary: jsonb('ai_summary'),
+    contextCreatedAt: timestamp('context_created_at', {
+      withTimezone: true,
+    }).defaultNow(),
+  },
+);
+
+export const stanceBackfillLog = pgTable('stance_backfill_log', {
+  stanceId: integer('stance_id')
+    .references(() => policyStances.id)
+    .primaryKey(),
+  backfillStatus: text('backfill_status').notNull(), // 'pending' | 'in_progress' | 'completed' | 'failed'
+  billsScanned: integer('bills_scanned').default(0),
+  billsMatched: integer('bills_matched').default(0),
+  startedAt: timestamp('started_at', { withTimezone: true }),
+  completedAt: timestamp('completed_at', { withTimezone: true }),
+  errorMessage: text('error_message'),
+});
+
+export const pipelineRunLog = pgTable('pipeline_run_log', {
+  id: serial('id').primaryKey(),
+  jobName: text('job_name').notNull(),
+  runStatus: text('run_status').notNull(), // 'running' | 'completed' | 'failed' | 'partial'
+  startedAt: timestamp('started_at', { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  completedAt: timestamp('completed_at', { withTimezone: true }),
+  itemsProcessed: integer('items_processed').default(0),
+  itemsFailed: integer('items_failed').default(0),
+  itemsSkipped: integer('items_skipped').default(0),
+  tokensUsed: integer('tokens_used').default(0),
+  tavilyCalls: integer('tavily_calls').default(0),
+  estimatedCostUsd: real('estimated_cost_usd').default(0),
+  configSnapshot: jsonb('config_snapshot'),
+  checkpoint: text('checkpoint'),
+  errorSummary: text('error_summary'),
+  metadata: jsonb('metadata'),
+});
+
+export const pipelineItemLog = pgTable('pipeline_item_log', {
+  id: serial('id').primaryKey(),
+  runId: integer('run_id')
+    .references(() => pipelineRunLog.id)
+    .notNull(),
+  itemType: text('item_type').notNull(), // 'bill' | 'vote' | 'document' | 'stance'
+  itemId: integer('item_id').notNull(),
+  status: text('status').notNull(), // 'success' | 'failed' | 'skipped' | 'needs_review'
+  durationMs: integer('duration_ms'),
+  tokensUsed: integer('tokens_used'),
+  errorCode: text('error_code'),
+  errorMessage: text('error_message'),
+  aiResponse: jsonb('ai_response'),
+  tavilyResults: jsonb('tavily_results'),
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+});
+
+// Policy Stances — Relations
+export const policyStancesRelations = relations(policyStances, ({ many }) => ({
+  alignments: many(voteStanceAlignment),
+}));
+
+export const voteStanceAlignmentRelations = relations(
+  voteStanceAlignment,
+  ({ one }) => ({
+    vote: one(votes, {
+      fields: [voteStanceAlignment.voteId],
+      references: [votes.id],
+    }),
+    stance: one(policyStances, {
+      fields: [voteStanceAlignment.stanceId],
+      references: [policyStances.id],
+    }),
+  }),
+);
+
+export const pipelineItemLogRelations = relations(
+  pipelineItemLog,
+  ({ one }) => ({
+    run: one(pipelineRunLog, {
+      fields: [pipelineItemLog.runId],
+      references: [pipelineRunLog.id],
+    }),
+  }),
+);
