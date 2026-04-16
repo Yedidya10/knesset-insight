@@ -952,6 +952,7 @@
     "allDomains": "All domains",
     "allTypes": "All types",
     "searchPlaceholder": "Search policies\u2026",
+    "clearFilters": "Clear filters",
     "score": "{score}% for"
   },
   "seo": {

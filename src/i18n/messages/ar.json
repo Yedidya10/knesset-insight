@@ -953,6 +953,7 @@
     "allDomains": "جميع المجالات",
     "allTypes": "جميع الأنواع",
     "searchPlaceholder": "بحث في السياسات…",
+    "clearFilters": "مسح التصفية",
     "score": "{score}% لصالح"
   },
   "seo": {

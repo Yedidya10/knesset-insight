@@ -1,6 +1,6 @@
 import { getTranslations, getLocale } from 'next-intl/server';
 import type { Metadata } from 'next';
-import { Target, Search } from 'lucide-react';
+import { Target } from 'lucide-react';
 import { desc, eq, sql, ilike, and } from 'drizzle-orm';
 import { Link } from '@/i18n/navigation';
 import { db } from '@/lib/db';
@@ -8,6 +8,7 @@ import { policyStances } from '@/lib/db/schema';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import PaginationNav from '@/components/ui/pagination-nav';
+import PoliciesFilter from '@/components/policies/PoliciesFilter';
 import {
   POLICY_DOMAINS,
   type PolicyDomain,
@@ -98,46 +99,13 @@ export default async function PoliciesPage({ searchParams }: Props) {
       </div>
 
       {/* Filters */}
-      <div className="mb-6 flex flex-wrap gap-2">
-        <form method="get" className="flex items-center gap-2">
-          <div className="relative">
-            <Search className="text-muted-foreground absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2" />
-            <input
-              type="text"
-              name="search"
-              defaultValue={searchQuery}
-              placeholder={t('searchPlaceholder')}
-              className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring h-9 rounded-md border ps-9 pe-3 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-            />
-          </div>
-          <select
-            name="domain"
-            defaultValue={domainFilter}
-            className="border-input bg-background ring-offset-background focus-visible:ring-ring h-9 rounded-md border px-3 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-          >
-            <option value="">{t('allDomains')}</option>
-            {POLICY_DOMAIN_LIST.map((d) => (
-              <option key={d} value={d}>
-                {POLICY_DOMAINS[d][locale]}
-              </option>
-            ))}
-          </select>
-          <select
-            name="type"
-            defaultValue={typeFilter}
-            className="border-input bg-background ring-offset-background focus-visible:ring-ring h-9 rounded-md border px-3 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-          >
-            <option value="">{t('allTypes')}</option>
-            <option value="direct">{t('stanceType.direct')}</option>
-            <option value="derived">{t('stanceType.derived')}</option>
-          </select>
-          <button
-            type="submit"
-            className="bg-primary text-primary-foreground hover:bg-primary/90 h-9 rounded-md px-4 text-sm font-medium"
-          >
-            <Search className="h-4 w-4" />
-          </button>
-        </form>
+      <div className="mb-6">
+        <PoliciesFilter
+          currentSearch={searchQuery}
+          currentDomain={domainFilter}
+          currentType={typeFilter}
+          locale={locale}
+        />
       </div>
 
       {data.length > 0 ? (
