@@ -1164,5 +1164,39 @@
   "dataDisclosure": {
     "message": "המידע באתר עשוי להיות חלקי ומתייחס בעיקר לכנסות 20–25. האתר מתעדכן באופן שוטף ונתונים נוספים מתווספים עם הזמן.",
     "dismiss": "סגור הודעה"
+  },
+  "bugReport": {
+    "button": "דיווח על שגיאה",
+    "title": "דיווח על שגיאה",
+    "description": "מצאת באג או בעיה? ספרו לנו ונתקן בהקדם.",
+    "titleLabel": "כותרת",
+    "titlePlaceholder": "תיאור קצר של הבעיה",
+    "descriptionLabel": "תיאור מפורט",
+    "descriptionPlaceholder": "תארו את הבעיה — מה קרה, מה ציפיתם שיקרה, ואילו צעדים ביצעתם",
+    "categoryLabel": "קטגוריה",
+    "categoryPlaceholder": "בחרו קטגוריה",
+    "categories": {
+      "ui": "בעיית תצוגה",
+      "data": "נתון שגוי",
+      "performance": "ביצועים",
+      "translation": "שגיאת תרגום",
+      "accessibility": "נגישות",
+      "other": "אחר"
+    },
+    "images": "צילומי מסך (אופציונלי)",
+    "addImage": "הוסף תמונה",
+    "removeImage": "הסר תמונה",
+    "maxImages": "עד {max} תמונות",
+    "maxSize": "עד 2MB לתמונה",
+    "pageUrl": "כתובת העמוד",
+    "submit": "שלח דיווח",
+    "submitting": "שולח...",
+    "success": "הדיווח נשלח בהצלחה! תודה על העזרה.",
+    "error": "שליחת הדיווח נכשלה. אנא נסו שוב.",
+    "errorTitleRequired": "נדרשת כותרת",
+    "errorDescriptionRequired": "נדרש תיאור",
+    "errorImageTooLarge": "התמונה גדולה מדי (מקסימום 2MB)",
+    "errorTooManyImages": "ניתן לצרף עד {max} תמונות",
+    "errorRateLimit": "שלחתם יותר מדי דיווחים. נסו שוב מאוחר יותר."
   }
 }

@@ -1164,5 +1164,39 @@
   "dataDisclosure": {
     "message": "Data on this site may be partial, primarily covering Knesset terms 20–25. The site is continuously updated and more data is added over time.",
     "dismiss": "Dismiss notice"
+  },
+  "bugReport": {
+    "button": "Report a Bug",
+    "title": "Report a Bug",
+    "description": "Found a bug or issue? Let us know and we'll fix it.",
+    "titleLabel": "Title",
+    "titlePlaceholder": "Brief description of the issue",
+    "descriptionLabel": "Detailed Description",
+    "descriptionPlaceholder": "Describe the issue — what happened, what you expected, and what steps you took",
+    "categoryLabel": "Category",
+    "categoryPlaceholder": "Select a category",
+    "categories": {
+      "ui": "Display Issue",
+      "data": "Incorrect Data",
+      "performance": "Performance",
+      "translation": "Translation Error",
+      "accessibility": "Accessibility",
+      "other": "Other"
+    },
+    "images": "Screenshots (optional)",
+    "addImage": "Add Image",
+    "removeImage": "Remove Image",
+    "maxImages": "Up to {max} images",
+    "maxSize": "Up to 2MB per image",
+    "pageUrl": "Page URL",
+    "submit": "Submit Report",
+    "submitting": "Submitting...",
+    "success": "Report submitted successfully! Thank you for helping.",
+    "error": "Failed to submit report. Please try again.",
+    "errorTitleRequired": "Title is required",
+    "errorDescriptionRequired": "Description is required",
+    "errorImageTooLarge": "Image is too large (max 2MB)",
+    "errorTooManyImages": "You can attach up to {max} images",
+    "errorRateLimit": "Too many reports submitted. Please try again later."
   }
 }

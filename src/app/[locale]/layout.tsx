@@ -14,6 +14,7 @@ import Footer from '../../components/layout/Footer';
 import { DataDisclosureBanner } from '../../components/layout/DataDisclosureBanner';
 import { ThemeProvider } from '../../components/layout/ThemeProvider';
 import { AdminEditProvider } from '../../components/admin/AdminEditProvider';
+import { BugReportButton } from '../../components/shared/BugReportButton';
 
 const rubik = Rubik({
   variable: '--font-rubik',
@@ -111,6 +112,7 @@ export default async function LocaleLayout({ children, params }: Props) {
                 <Header />
                 <main className="flex-1">{children}</main>
                 <Footer />
+                <BugReportButton />
               </div>
             </AdminEditProvider>
           </NextIntlClientProvider>

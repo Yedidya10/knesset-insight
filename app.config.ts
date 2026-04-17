@@ -265,6 +265,22 @@ export const appConfig = {
     },
   },
 
+  // Bug Report → GitHub Issues
+  bugReport: {
+    github: {
+      owner: process.env.BUG_REPORT_GITHUB_OWNER ?? 'Yedidya10',
+      repo: process.env.BUG_REPORT_GITHUB_REPO ?? 'knesset-insight',
+    },
+    /** Max number of images per report */
+    maxImages: Number(process.env.BUG_REPORT_MAX_IMAGES ?? 3),
+    /** Max single image size in bytes (2 MB) */
+    maxImageSizeBytes: Number(
+      process.env.BUG_REPORT_MAX_IMAGE_SIZE ?? 2 * 1024 * 1024,
+    ),
+    /** Rate limit: max reports per hour per IP */
+    rateLimitPerHour: Number(process.env.BUG_REPORT_RATE_LIMIT ?? 5),
+  },
+
   // Policy Stances — TheyVoteForYou-style vote classification
   policyStances: {
     ai: {
