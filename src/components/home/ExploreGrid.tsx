@@ -3,7 +3,6 @@ import { Link } from '@/i18n/navigation';
 import {
   Users,
   ScrollText,
-  Vote,
   Building2,
   Flag,
   Landmark,
@@ -19,7 +18,6 @@ import AnimatedSection from '@/components/ui/animated-section';
 const sections = [
   { key: 'members', href: '/members', icon: Users },
   { key: 'legislation', href: '/legislation', icon: ScrollText },
-  { key: 'votes', href: '/votes', icon: Vote },
   { key: 'committees', href: '/committees', icon: Building2 },
   { key: 'factions', href: '/factions', icon: Flag },
   { key: 'governments', href: '/governments', icon: Landmark },

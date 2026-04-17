@@ -16,7 +16,6 @@ import KnessetHemicycle, {
   type SeatData,
 } from '@/components/home/KnessetHemicycle';
 import FloatingDataCards from '@/components/home/FloatingDataCards';
-import StatTicker from '@/components/home/StatTicker';
 
 export default async function HeroSection() {
   const t = await getTranslations('home');
@@ -33,13 +32,6 @@ export default async function HeroSection() {
   let activeBillsCount = 0;
   let electionDaysLeft: number | null = null;
   let factionStats = { total: 0, coalitionSeats: 0, oppositionSeats: 0 };
-  let tickerStats = {
-    votes: 0,
-    bills: 0,
-    committees: 0,
-    factions: 0,
-    sessions: 0,
-  };
 
   try {
     const [
@@ -47,9 +39,6 @@ export default async function HeroSection() {
       currentFactions,
       [latestVoteRow] = [null],
       [{ count: billCount }],
-      [{ count: voteCount }],
-      [{ count: committeeCount }],
-      [{ count: sessionCount }],
       campaign,
     ] = await Promise.all([
       // Members with faction info
@@ -91,17 +80,6 @@ export default async function HeroSection() {
         .where(
           sql`${bills.status} IS NOT NULL AND ${bills.status} NOT IN ('stopped', 'merged', 'removed')`,
         ),
-      // Votes count
-      db.select({ count: sql<number>`count(*)::int` }).from(votes),
-      // Committees count
-      db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(sql`committees`)
-        .where(sql`is_active = true`),
-      // Committee sessions count
-      db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(sql`committee_sessions`),
       // Election campaign
       db
         .select({ electionDate: electionCampaigns.electionDate })
@@ -161,38 +139,9 @@ export default async function HeroSection() {
         electionDaysLeft = Math.ceil(diff / (1000 * 60 * 60 * 24));
       }
     }
-
-    // Ticker stats
-    tickerStats = {
-      votes: voteCount,
-      bills: billCount,
-      committees: committeeCount,
-      factions: currentFactions.length,
-      sessions: sessionCount,
-    };
   } catch (e) {
     console.error('Failed to fetch hero data:', e);
   }
-
-  const tickerItems = [
-    { label: t('stats.totalVotes'), value: tickerStats.votes.toLocaleString() },
-    {
-      label: t('stats.billsProposed'),
-      value: tickerStats.bills.toLocaleString(),
-    },
-    {
-      label: t('stats.activeCommittees'),
-      value: tickerStats.committees.toLocaleString(),
-    },
-    {
-      label: t('stats.activeFactions'),
-      value: tickerStats.factions.toLocaleString(),
-    },
-    {
-      label: t('stats.committeeSessions'),
-      value: tickerStats.sessions.toLocaleString(),
-    },
-  ];
 
   return (
     <section className="border-border/20 relative overflow-hidden border-b">
@@ -275,9 +224,6 @@ export default async function HeroSection() {
           </AnimatedSection>
         </div>
       </div>
-
-      {/* Bottom stat ticker */}
-      <StatTicker items={tickerItems} />
     </section>
   );
 }

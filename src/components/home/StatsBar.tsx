@@ -72,7 +72,7 @@ export default async function StatsBar() {
       icon: Vote,
       color: 'text-chart-1',
       bg: 'bg-chart-1/10',
-      href: '/votes',
+      href: '/legislation',
     },
     {
       label: t('billsProposed'),

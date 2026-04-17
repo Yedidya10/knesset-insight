@@ -55,7 +55,7 @@ export default async function LatestVotes() {
             variant="ghost"
             size="sm"
             className="text-muted-foreground"
-            render={<Link href="/votes" />}
+            render={<Link href="/legislation" />}
           >
             {t('viewAll')}
             <ArrowRight className="ms-1 h-4 w-4 rtl:rotate-180" />
