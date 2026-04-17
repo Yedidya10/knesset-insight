@@ -3,7 +3,7 @@
 ## Project Overview
 
 Knesset Insight is a civic-tech platform for Israeli parliamentary data.
-See `PLAN.md` for the full architecture and feature spec.
+See `README.md` for the project overview and structure.
 
 ## Detailed Instruction Files
 
