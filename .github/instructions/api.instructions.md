@@ -1,5 +1,5 @@
 ---
-applyTo: "src/server/**,src/app/api/**"
+applyTo: 'src/server/**,src/app/api/**'
 ---
 
 # API & Backend Instructions
@@ -7,17 +7,19 @@ applyTo: "src/server/**,src/app/api/**"
 ## Rules
 
 1. **All configurable values from `appConfig`** — never hardcode limits, URLs, or schedules:
+
    ```typescript
    import { appConfig } from '@/app.config';
-   
+
    // ✅ Correct
    const limit = appConfig.rateLimit.auth;
-   
+
    // ❌ Wrong
    const limit = 200;
    ```
 
 2. **Input validation with Zod** — every tRPC procedure and route handler must validate inputs:
+
    ```typescript
    const input = z.object({
      memberId: z.number().int().positive(),
@@ -31,6 +33,7 @@ applyTo: "src/server/**,src/app/api/**"
    - AI Chat: `appConfig.ai.dailyChatLimit` chats/day (registered only)
 
 4. **AI endpoints require authentication**:
+
    ```typescript
    // In tRPC: use protectedProcedure (not publicProcedure)
    export const aiRouter = router({

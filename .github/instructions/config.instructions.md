@@ -1,5 +1,5 @@
 ---
-applyTo: "app.config.ts,src/lib/config.ts,.env*"
+applyTo: 'app.config.ts,src/lib/config.ts,.env*'
 ---
 
 # Configuration & Scalability Instructions

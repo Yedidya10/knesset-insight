@@ -1,5 +1,5 @@
 ---
-applyTo: "public/**,next.config.ts,src/app/manifest.ts"
+applyTo: 'public/**,next.config.ts,src/app/manifest.ts'
 ---
 
 # PWA (Progressive Web App) Instructions
@@ -34,6 +34,7 @@ The project uses **serwist** (next-pwa successor) for PWA support.
    - Show only on supported browsers, dismiss gracefully
 
 5. **Icons**:
+
    ```
    public/icons/
    ├── icon-192x192.png
@@ -43,9 +44,10 @@ The project uses **serwist** (next-pwa successor) for PWA support.
    ```
 
 6. **next.config.ts** — configure serwist plugin:
+
    ```typescript
    import withSerwistInit from '@serwist/next';
-   
+
    const withSerwist = withSerwistInit({
      swSrc: 'src/sw.ts',
      swDest: 'public/sw.js',

@@ -1,5 +1,5 @@
 ---
-applyTo: "src/components/**"
+applyTo: 'src/components/**'
 ---
 
 # Component Development Instructions
@@ -12,14 +12,16 @@ applyTo: "src/components/**"
    - Browser APIs (localStorage, IntersectionObserver)
 
 2. **All displayed text via `t()`** — import `useTranslations` from `next-intl`:
+
    ```tsx
    import { useTranslations } from 'next-intl';
-   
+
    export function MemberCard({ member }: Props) {
      const t = useTranslations('members');
      return <h2>{t('card.title')}</h2>;
    }
    ```
+
    For Server Components, use `getTranslations` instead.
 
 3. **RTL-safe styling** — use logical properties:
@@ -34,6 +36,7 @@ applyTo: "src/components/**"
    - `float-start` not `float-left`
 
 4. **Dark mode** — always provide `dark:` variants for colors:
+
    ```tsx
    <div className="bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100">
    ```
@@ -51,7 +54,7 @@ applyTo: "src/components/**"
    - Vote For: `#388E3C`
    - Vote Against: `#D32F2F`
    - Abstain: `#FFA000`
-   Define these in a shared constant, not hardcoded per component.
+     Define these in a shared constant, not hardcoded per component.
 
 7. **Loading states** — use React `Suspense` with skeleton placeholders. Skeletons should match the component's layout.
 

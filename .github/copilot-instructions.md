@@ -5,14 +5,36 @@
 Knesset Insight is a civic-tech platform for Israeli parliamentary data.
 See `PLAN.md` for the full architecture and feature spec.
 
+## Detailed Instruction Files
+
+This file provides the global rules loaded in **every** conversation.
+For domain-specific rules, see the files in `.github/instructions/` — each is loaded automatically when you work on matching files (based on its `applyTo` frontmatter):
+
+| File                             | Applies to                                           | Summary                                                         |
+| -------------------------------- | ---------------------------------------------------- | --------------------------------------------------------------- |
+| `ai-provider.instructions.md`    | `src/lib/ai/**`                                      | AI abstraction layer, Vercel AI SDK, Gemini/OpenAI config       |
+| `api.instructions.md`            | `src/server/**`, `src/app/api/**`                    | Zod validation, rate limiting, auth, Drizzle, caching           |
+| `components.instructions.md`     | `src/components/**`                                  | Server vs Client components, `t()`, RTL, a11y, dark mode        |
+| `config.instructions.md`         | `app.config.ts`, `src/lib/config.ts`, `.env*`        | Central config pattern, env vars, feature flags                 |
+| `i18n.instructions.md`           | `src/i18n/**`                                        | 4 locales (he/en/ar/ru), key naming, pluralization (ICU)        |
+| `pages.instructions.md`          | `src/app/**`                                         | Route groups, metadata, layouts, PWA caching                    |
+| `pipeline.instructions.md`       | `src/pipeline/**`                                    | Cron from config, incremental sync, retry, cache invalidation   |
+| `pwa.instructions.md`            | `public/**`, `next.config.ts`, `src/app/manifest.ts` | Serwist setup, service worker, offline, install prompt          |
+| `styling-rtl.instructions.md`    | `**/*.css`, `**/*.tsx`, `src/components/**`          | Logical properties (`ms-`/`me-`/`start`/`end`), dark mode       |
+| `ui-consistency.instructions.md` | `src/components/**`, `src/app/**`                    | shadcn/ui only, filter pattern, card/header/no-results patterns |
+| `aikido_rules.instructions.md`   | `**`                                                 | Security scanning with Aikido MCP                               |
+
+> **When multiple domains overlap** (e.g. creating a new page with filters), all matching instruction files are loaded together. This file provides the baseline; the detailed files provide the specifics.
+
 ## Core Principles
 
-1. **All user-facing text must be translated** — never hardcode Hebrew/English strings. Use `next-intl` `t()` function. Every string must exist in all 4 locale files: `he.json`, `en.json`, `ar.json`, `ru.json`.
-2. **RTL/LTR is automatic** — Hebrew and Arabic are RTL, English and Russian are LTR. Use logical CSS properties (`start`/`end` instead of `left`/`right`). The `dir` attribute is set per-locale in the root layout.
-3. **AI provider is abstracted** — never import `openai` or `@google/generative-ai` directly. Use `@/lib/ai/provider` which reads from `appConfig.ai.provider`.
-4. **All magic numbers go through config** — rate limits, daily chat limits, cron schedules, API URLs — all defined in `app.config.ts` and backed by env vars.
+1. **All user-facing text must be translated** — never hardcode Hebrew/English strings. Use `next-intl` `t()` function. Every string must exist in all 4 locale files: `he.json`, `en.json`, `ar.json`, `ru.json`. _(Details: `i18n.instructions.md`)_
+2. **RTL/LTR is automatic** — Hebrew and Arabic are RTL, English and Russian are LTR. Use logical CSS properties (`start`/`end` instead of `left`/`right`). The `dir` attribute is set per-locale in the root layout. _(Details: `styling-rtl.instructions.md`)_
+3. **AI provider is abstracted** — never import `openai` or `@google/generative-ai` directly. Use `@/lib/ai/provider` which reads from `appConfig.ai.provider`. _(Details: `ai-provider.instructions.md`)_
+4. **All magic numbers go through config** — rate limits, daily chat limits, cron schedules, API URLs — all defined in `app.config.ts` and backed by env vars. _(Details: `config.instructions.md`)_
 5. **AI Chat is for registered users only** — any AI chat endpoint must verify authentication. Anonymous users see a prompt to sign up.
-6. **PWA compliance** — pages should work offline where possible. Use service worker caching strategies. All icons/manifest are in `public/`.
+6. **PWA compliance** — pages should work offline where possible. Use service worker caching strategies. All icons/manifest are in `public/`. _(Details: `pwa.instructions.md`)_
+7. **UI consistency** — always use shadcn/ui components (`<Button>`, `<Input>`, `<Select>`) instead of raw HTML elements. Follow established card, header, filter, and no-results patterns. _(Details: `ui-consistency.instructions.md`)_
 
 ## Tech Stack
 
@@ -34,6 +56,8 @@ See `PLAN.md` for the full architecture and feature spec.
 
 ## When Writing Components
 
+> Full rules: `components.instructions.md` + `ui-consistency.instructions.md` + `styling-rtl.instructions.md`
+
 - Use Server Components by default, Client Components only when needed
 - Use `useTranslations()` from `next-intl` for any displayed text
 - Support dark mode via Tailwind `dark:` prefix
@@ -42,6 +66,8 @@ See `PLAN.md` for the full architecture and feature spec.
 - **No duplicate UI elements** — never render the same visual component (e.g. a stage pipeline / stepper) twice on a page in different sections. If a component needs both display and interaction (e.g. stage stepper + vote drill-down), use a single interactive component that serves both purposes. Related data (e.g. votes) should be listed separately without duplicating the parent navigation.
 
 ## When Writing API Endpoints
+
+> Full rules: `api.instructions.md`
 
 - Validate inputs with Zod
 - Use `appConfig` for any configurable values
@@ -53,6 +79,15 @@ See `PLAN.md` for the full architecture and feature spec.
 - All DB access through Drizzle ORM — never raw SQL in application code
 - Use tRPC routers for client-facing data
 - Cache heavy queries in Redis with configurable TTL
+
+## When Working with the Pipeline
+
+> Full rules: `pipeline.instructions.md`
+
+- Cron schedules and data source URLs from `appConfig` — never hardcode
+- Always incremental sync using `lastSyncTimestamp`
+- Retry 3× with exponential backoff; structured logging on failure
+- After sync: invalidate Redis cache + regenerate AI embeddings
 
 ## When Writing Scripts (`src/scripts/`)
 

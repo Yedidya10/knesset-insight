@@ -1,5 +1,5 @@
 ---
-applyTo: "src/pipeline/**"
+applyTo: 'src/pipeline/**'
 ---
 
 # Data Pipeline Instructions
@@ -7,9 +7,10 @@ applyTo: "src/pipeline/**"
 ## Rules
 
 1. **Cron schedules from config** — never hardcode cron expressions:
+
    ```typescript
    import { appConfig } from '@/app.config';
-   
+
    export const syncVotes = schedules.task({
      id: 'sync-votes',
      cron: appConfig.sync.odata,
@@ -18,6 +19,7 @@ applyTo: "src/pipeline/**"
    ```
 
 2. **Data source URLs from config** — use `appConfig.dataSources`:
+
    ```typescript
    const url = `${appConfig.dataSources.knessetOdata}/ParliamentInfo.svc/KNS_Bill`;
    ```

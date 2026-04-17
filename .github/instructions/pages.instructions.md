@@ -1,5 +1,5 @@
 ---
-applyTo: "src/app/**"
+applyTo: 'src/app/**'
 ---
 
 # Pages & Routing Instructions
@@ -12,10 +12,11 @@ applyTo: "src/app/**"
    - `(dashboard)` — requires authentication (redirect to login if not authenticated)
 
 2. **Every page with user-facing text** must use `next-intl`:
+
    ```typescript
    // Server Component
    import { getTranslations } from 'next-intl/server';
-   
+
    export default async function MembersPage() {
      const t = await getTranslations('members');
      return <h1>{t('list.title')}</h1>;
@@ -23,6 +24,7 @@ applyTo: "src/app/**"
    ```
 
 3. **Metadata** — use `generateMetadata` with translations for SEO:
+
    ```typescript
    export async function generateMetadata({ params }: Props) {
      const t = await getTranslations('members');
@@ -39,6 +41,7 @@ applyTo: "src/app/**"
    - Add `<link rel="manifest" href="/manifest.json" />` in root layout
 
 5. **Layout** — the root layout sets `dir` and `lang` per locale:
+
    ```tsx
    <html lang={locale} dir={isRTL(locale) ? 'rtl' : 'ltr'}>
    ```
