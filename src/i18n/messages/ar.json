@@ -49,23 +49,89 @@
   },
   "home": {
     "title": "بصيرة الكنيست",
-    "subtitle": "المعلومات البرلمانية — بشكل بسيط ومتاح",
-    "todayInKnesset": "اليوم في الكنيست",
-    "latestVote": "آخر تصويت",
-    "activeLegislation": "تشريعات قيد التنفيذ",
-    "budgetOverview": "الميزانية — نظرة سريعة",
-    "stats": {
-      "activeMembers": "أعضاء نشطون",
-      "totalVotes": "إجمالي التصويتات",
-      "activeParties": "كتل نشطة",
-      "activeFactions": "كتل نشطة"
+    "subtitle": "الديمقراطية بالأرقام",
+    "coalition": "الائتلاف",
+    "opposition": "المعارضة",
+    "hero": {
+      "latestVote": "آخر تصويت",
+      "approved": "مُوافَق",
+      "rejected": "مرفوض",
+      "activeBills": "مشاريع قوانين نشطة",
+      "activeBillsLabel": "تشريعات قيد التنفيذ",
+      "electionIn": "الانتخابات بعد",
+      "days": "يوم",
+      "factions": "كتل"
     },
-    "quickLinks": {
+    "stats": {
+      "totalVotes": "تصويتات الهيئة العامة",
+      "billsProposed": "مشاريع قوانين",
+      "activeCommittees": "لجان نشطة",
+      "activeFactions": "كتل نشطة",
+      "committeeSessions": "جلسات اللجان",
+      "integrityCases": "قضايا نزاهة"
+    },
+    "latestVotes": {
+      "title": "أحدث التصويتات",
+      "viewAll": "جميع التصويتات",
+      "approved": "مُوافَق",
+      "rejected": "مرفوض",
+      "for": "مع",
+      "against": "ضد"
+    },
+    "activeLegislation": {
+      "title": "تشريعات قيد التنفيذ",
+      "viewAll": "جميع التشريعات",
+      "proposed": "مُقدَّم"
+    },
+    "elections": {
+      "title": "انتخابات 2026",
+      "viewAll": "مركز الانتخابات",
+      "daysLeft": "يوم للانتخابات",
+      "latestPolls": "أحدث الاستطلاعات",
+      "projectedSeats": "مقاعد متوقعة"
+    },
+    "memberSpotlight": {
+      "title": "أعضاء نشطون",
+      "viewAll": "جميع الأعضاء",
+      "recentVotes": "تصويتات أخيرة"
+    },
+    "integrity": {
+      "title": "الشفافية والنزاهة",
+      "viewAll": "المزيد",
+      "cases": "قضايا",
+      "corporateLinks": "روابط مؤسسية",
+      "lobbyistMeetings": "اجتماعات مع لوبيين",
+      "severity": {
+        "info": "معلومات",
+        "warning": "تحذير",
+        "serious": "خطير",
+        "critical": "حرج"
+      }
+    },
+    "explore": {
+      "title": "اكتشف جميع المحتويات",
+      "members": "أعضاء الكنيست",
       "membersDesc": "ملفات شخصية، حضور ومشاركة في التصويت",
-      "votesDesc": "تصويتات الهيئة العامة ونتائجها",
+      "legislation": "التشريعات",
       "legislationDesc": "مشاريع قوانين ومتابعة التشريعات",
-      "partiesDesc": "كتل، ائتلاف ومعارضة",
-      "factionsDesc": "كتل، ائتلاف ومعارضة"
+      "votes": "التصويتات",
+      "votesDesc": "تصويتات الهيئة العامة ونتائجها",
+      "committees": "اللجان",
+      "committeesDesc": "لجان الكنيست، جلسات وبروتوكولات",
+      "factions": "الكتل",
+      "factionsDesc": "كتل، ائتلاف ومعارضة",
+      "governments": "الحكومات",
+      "governmentsDesc": "تركيبة الحكومة، الوزراء وفترات الخدمة",
+      "politicalGroups": "المجموعات السياسية",
+      "politicalGroupsDesc": "أحزاب، اندماجات، انقسامات وسلالات",
+      "budget": "الميزانية",
+      "budgetDesc": "توزيع الميزانية حسب الوزارات",
+      "elections2026": "انتخابات 2026",
+      "elections2026Desc": "استطلاعات، مرشحون وتوقعات مقاعد",
+      "policies": "السياسات",
+      "policiesDesc": "مواقف سياسية لأعضاء الكنيست والكتل",
+      "electionMap": "خريطة الانتخابات",
+      "electionMapDesc": "نتائج الانتخابات حسب المدن والمناطق"
     }
   },
   "members": {

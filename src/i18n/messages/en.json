@@ -49,23 +49,89 @@
   },
   "home": {
     "title": "Knesset Insight",
-    "subtitle": "Parliamentary data — simple and accessible",
-    "todayInKnesset": "Today in Knesset",
-    "latestVote": "Latest Vote",
-    "activeLegislation": "Active Legislation",
-    "budgetOverview": "Budget — Quick View",
-    "stats": {
-      "activeMembers": "Active Members",
-      "totalVotes": "Total Votes",
-      "activeParties": "Active Factions",
-      "activeFactions": "Active Factions"
+    "subtitle": "Democracy in numbers",
+    "coalition": "Coalition",
+    "opposition": "Opposition",
+    "hero": {
+      "latestVote": "Latest Vote",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "activeBills": "Active Bills",
+      "activeBillsLabel": "Legislation in Progress",
+      "electionIn": "Election in",
+      "days": "days",
+      "factions": "factions"
     },
-    "quickLinks": {
+    "stats": {
+      "totalVotes": "Plenary Votes",
+      "billsProposed": "Bills Proposed",
+      "activeCommittees": "Active Committees",
+      "activeFactions": "Active Factions",
+      "committeeSessions": "Committee Sessions",
+      "integrityCases": "Integrity Cases"
+    },
+    "latestVotes": {
+      "title": "Latest Votes",
+      "viewAll": "All Votes",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "for": "For",
+      "against": "Against"
+    },
+    "activeLegislation": {
+      "title": "Active Legislation",
+      "viewAll": "All Legislation",
+      "proposed": "Proposed"
+    },
+    "elections": {
+      "title": "Elections 2026",
+      "viewAll": "Election Center",
+      "daysLeft": "days to election",
+      "latestPolls": "Latest Polls",
+      "projectedSeats": "projected seats"
+    },
+    "memberSpotlight": {
+      "title": "Active MKs",
+      "viewAll": "All Members",
+      "recentVotes": "recent votes"
+    },
+    "integrity": {
+      "title": "Transparency & Integrity",
+      "viewAll": "Learn More",
+      "cases": "Cases",
+      "corporateLinks": "Corporate Links",
+      "lobbyistMeetings": "Lobbyist Meetings",
+      "severity": {
+        "info": "Info",
+        "warning": "Warning",
+        "serious": "Serious",
+        "critical": "Critical"
+      }
+    },
+    "explore": {
+      "title": "Explore All Content",
+      "members": "Members of Knesset",
       "membersDesc": "Profiles, attendance and voting participation",
-      "votesDesc": "Plenary votes and their outcomes",
+      "legislation": "Legislation",
       "legislationDesc": "Bills and legislative tracking",
-      "partiesDesc": "Factions, coalition and opposition",
-      "factionsDesc": "Factions, coalition and opposition"
+      "votes": "Votes",
+      "votesDesc": "Plenary votes and their outcomes",
+      "committees": "Committees",
+      "committeesDesc": "Knesset committees, sessions and protocols",
+      "factions": "Factions",
+      "factionsDesc": "Factions, coalition and opposition",
+      "governments": "Governments",
+      "governmentsDesc": "Government composition, ministers and terms",
+      "politicalGroups": "Political Groups",
+      "politicalGroupsDesc": "Parties, mergers, splits and lineage",
+      "budget": "Budget",
+      "budgetDesc": "Budget allocations by ministry",
+      "elections2026": "Elections 2026",
+      "elections2026Desc": "Polls, candidates and seat projections",
+      "policies": "Policies",
+      "policiesDesc": "Policy stances of MKs and factions",
+      "electionMap": "Election Map",
+      "electionMapDesc": "Election results by city and region"
     }
   },
   "members": {

@@ -49,23 +49,89 @@
   },
   "home": {
     "title": "Кнессет Инсайт",
-    "subtitle": "Парламентская информация — просто и доступно",
-    "todayInKnesset": "Сегодня в Кнессете",
-    "latestVote": "Последнее голосование",
-    "activeLegislation": "Текущее законодательство",
-    "budgetOverview": "Бюджет — быстрый обзор",
-    "stats": {
-      "activeMembers": "Активные депутаты",
-      "totalVotes": "Всего голосований",
-      "activeParties": "Активные фракции",
-      "activeFactions": "Активные фракции"
+    "subtitle": "Демократия в цифрах",
+    "coalition": "Коалиция",
+    "opposition": "Оппозиция",
+    "hero": {
+      "latestVote": "Последнее голосование",
+      "approved": "Одобрено",
+      "rejected": "Отклонено",
+      "activeBills": "Активные законопроекты",
+      "activeBillsLabel": "Законодательство в процессе",
+      "electionIn": "Выборы через",
+      "days": "дней",
+      "factions": "фракций"
     },
-    "quickLinks": {
+    "stats": {
+      "totalVotes": "Голосования пленума",
+      "billsProposed": "Законопроекты",
+      "activeCommittees": "Активные комитеты",
+      "activeFactions": "Активные фракции",
+      "committeeSessions": "Заседания комитетов",
+      "integrityCases": "Дела честности"
+    },
+    "latestVotes": {
+      "title": "Последние голосования",
+      "viewAll": "Все голосования",
+      "approved": "Одобрено",
+      "rejected": "Отклонено",
+      "for": "За",
+      "against": "Против"
+    },
+    "activeLegislation": {
+      "title": "Текущее законодательство",
+      "viewAll": "Всё законодательство",
+      "proposed": "Предложено"
+    },
+    "elections": {
+      "title": "Выборы 2026",
+      "viewAll": "Центр выборов",
+      "daysLeft": "дней до выборов",
+      "latestPolls": "Последние опросы",
+      "projectedSeats": "прогноз мандатов"
+    },
+    "memberSpotlight": {
+      "title": "Активные депутаты",
+      "viewAll": "Все депутаты",
+      "recentVotes": "недавние голосования"
+    },
+    "integrity": {
+      "title": "Прозрачность и честность",
+      "viewAll": "Подробнее",
+      "cases": "Дела",
+      "corporateLinks": "Корпоративные связи",
+      "lobbyistMeetings": "Встречи с лоббистами",
+      "severity": {
+        "info": "Информация",
+        "warning": "Предупреждение",
+        "serious": "Серьёзное",
+        "critical": "Критическое"
+      }
+    },
+    "explore": {
+      "title": "Исследуйте весь контент",
+      "members": "Депутаты Кнессета",
       "membersDesc": "Профили, посещаемость и участие в голосованиях",
-      "votesDesc": "Голосования пленума и их результаты",
+      "legislation": "Законодательство",
       "legislationDesc": "Законопроекты и отслеживание законодательства",
-      "partiesDesc": "Фракции, коалиция и оппозиция",
-      "factionsDesc": "Фракции, коалиция и оппозиция"
+      "votes": "Голосования",
+      "votesDesc": "Голосования пленума и их результаты",
+      "committees": "Комитеты",
+      "committeesDesc": "Комитеты Кнессета, заседания и протоколы",
+      "factions": "Фракции",
+      "factionsDesc": "Фракции, коалиция и оппозиция",
+      "governments": "Правительства",
+      "governmentsDesc": "Состав правительства, министры и сроки",
+      "politicalGroups": "Политические группы",
+      "politicalGroupsDesc": "Партии, слияния, расколы и генеалогия",
+      "budget": "Бюджет",
+      "budgetDesc": "Бюджетные ассигнования по министерствам",
+      "elections2026": "Выборы 2026",
+      "elections2026Desc": "Опросы, кандидаты и прогнозы мандатов",
+      "policies": "Политика",
+      "policiesDesc": "Политические позиции депутатов и фракций",
+      "electionMap": "Карта выборов",
+      "electionMapDesc": "Результаты выборов по городам и регионам"
     }
   },
   "members": {

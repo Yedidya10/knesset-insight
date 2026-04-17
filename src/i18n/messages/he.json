@@ -49,23 +49,89 @@
   },
   "home": {
     "title": "כנסת אינסייט",
-    "subtitle": "המידע הפרלמנטרי — בצורה פשוטה ונגישה",
-    "todayInKnesset": "היום בכנסת",
-    "latestVote": "הצבעה אחרונה",
-    "activeLegislation": "חקיקה בתהליך",
-    "budgetOverview": "תקציב — מבט מהיר",
-    "stats": {
-      "activeMembers": "חברי כנסת פעילים",
-      "totalVotes": "סך הצבעות",
-      "activeParties": "סיעות פעילות",
-      "activeFactions": "סיעות פעילות"
+    "subtitle": "הדמוקרטיה במספרים",
+    "coalition": "קואליציה",
+    "opposition": "אופוזיציה",
+    "hero": {
+      "latestVote": "הצבעה אחרונה",
+      "approved": "אושר",
+      "rejected": "נדחה",
+      "activeBills": "הצעות חוק פעילות",
+      "activeBillsLabel": "חקיקה בתהליך",
+      "electionIn": "בחירות בעוד",
+      "days": "ימים",
+      "factions": "סיעות"
     },
-    "quickLinks": {
+    "stats": {
+      "totalVotes": "הצבעות מליאה",
+      "billsProposed": "הצעות חוק",
+      "activeCommittees": "ועדות פעילות",
+      "activeFactions": "סיעות פעילות",
+      "committeeSessions": "ישיבות ועדה",
+      "integrityCases": "תיקי יושרה"
+    },
+    "latestVotes": {
+      "title": "הצבעות אחרונות",
+      "viewAll": "כל ההצבעות",
+      "approved": "אושר",
+      "rejected": "נדחה",
+      "for": "בעד",
+      "against": "נגד"
+    },
+    "activeLegislation": {
+      "title": "חקיקה בתהליך",
+      "viewAll": "כל החקיקה",
+      "proposed": "הוגשה"
+    },
+    "elections": {
+      "title": "בחירות 2026",
+      "viewAll": "למרכז הבחירות",
+      "daysLeft": "ימים לבחירות",
+      "latestPolls": "סקרים אחרונים",
+      "projectedSeats": "מנדטים צפויים"
+    },
+    "memberSpotlight": {
+      "title": "ח\"כים פעילים",
+      "viewAll": "כל חברי הכנסת",
+      "recentVotes": "הצבעות אחרונות"
+    },
+    "integrity": {
+      "title": "שקיפות ויושרה",
+      "viewAll": "עוד מידע",
+      "cases": "תיקים",
+      "corporateLinks": "זיקות עסקיות",
+      "lobbyistMeetings": "פגישות שתדלנים",
+      "severity": {
+        "info": "מידע",
+        "warning": "אזהרה",
+        "serious": "חמור",
+        "critical": "קריטי"
+      }
+    },
+    "explore": {
+      "title": "גלו את כל התכנים",
+      "members": "חברי כנסת",
       "membersDesc": "פרופילים, נוכחות והשתתפות בהצבעות",
-      "votesDesc": "הצבעות המליאה ותוצאותיהן",
+      "legislation": "חקיקה",
       "legislationDesc": "הצעות חוק ומעקב אחרי תהליכי חקיקה",
-      "partiesDesc": "סיעות, קואליציה ואופוזיציה",
-      "factionsDesc": "סיעות, קואליציה ואופוזיציה"
+      "votes": "הצבעות",
+      "votesDesc": "הצבעות מליאה ותוצאותיהן",
+      "committees": "ועדות",
+      "committeesDesc": "ועדות הכנסת, ישיבות ופרוטוקולים",
+      "factions": "סיעות",
+      "factionsDesc": "סיעות, קואליציה ואופוזיציה",
+      "governments": "ממשלות",
+      "governmentsDesc": "הרכבי ממשלה, שרים ותקופות כהונה",
+      "politicalGroups": "קבוצות פוליטיות",
+      "politicalGroupsDesc": "מפלגות, מיזוגים, פיצולים וליניג׳",
+      "budget": "תקציב",
+      "budgetDesc": "הקצאות תקציב לפי משרדים",
+      "elections2026": "בחירות 2026",
+      "elections2026Desc": "סקרים, מועמדים ותחזיות מנדטים",
+      "policies": "מדיניות",
+      "policiesDesc": "עמדות מדיניות של ח\"כים וסיעות",
+      "electionMap": "מפת בחירות",
+      "electionMapDesc": "תוצאות בחירות לפי ערים ואזורים"
     }
   },
   "members": {

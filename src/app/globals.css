@@ -1,6 +1,6 @@
-@import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -128,7 +128,7 @@
   html {
     @apply font-sans;
   }
-  html[lang="ar"] {
+  html[lang='ar'] {
     font-family: var(--font-noto-arabic), var(--font-rubik), sans-serif;
   }
 
@@ -137,7 +137,7 @@
    * even inside RTL layouts. This prevents reversed digit order.
    */
   time,
-  [dir="rtl"] .data-ltr {
+  [dir='rtl'] .data-ltr {
     direction: ltr;
     unicode-bidi: isolate;
   }
@@ -146,10 +146,10 @@
 /* ── Modern UI utilities ── */
 @layer utilities {
   .glass {
-    @apply bg-background/60 backdrop-blur-xl border border-border/40;
+    @apply bg-background/60 border-border/40 border backdrop-blur-xl;
   }
   .glass-card {
-    @apply bg-card/80 backdrop-blur-lg border border-border/30 shadow-sm;
+    @apply bg-card/80 border-border/30 border shadow-sm backdrop-blur-lg;
   }
   .gradient-border {
     @apply relative;
@@ -180,15 +180,90 @@
     }
   }
   .glow-primary {
-    box-shadow: 0 0 20px oklch(0.45 0.18 255 / 0.15),
-                0 0 40px oklch(0.45 0.18 255 / 0.05);
+    box-shadow:
+      0 0 20px oklch(0.45 0.18 255 / 0.15),
+      0 0 40px oklch(0.45 0.18 255 / 0.05);
   }
   .hover-lift {
     @apply transition-all duration-300;
     &:hover {
-      @apply shadow-md ring-1 ring-primary/10;
+      @apply ring-primary/10 shadow-md ring-1;
     }
   }
+}
+
+/* ── Homepage hero animations ── */
+@keyframes hero-float-1 {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+@keyframes hero-float-2 {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+@keyframes hero-float-3 {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+@keyframes hero-float-4 {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+@keyframes ticker-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+@keyframes seat-pulse {
+  0%,
+  100% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.animate-hero-float-1 {
+  animation: hero-float-1 4s ease-in-out infinite;
+}
+.animate-hero-float-2 {
+  animation: hero-float-2 5s ease-in-out infinite 0.5s;
+}
+.animate-hero-float-3 {
+  animation: hero-float-3 4.5s ease-in-out infinite 1s;
+}
+.animate-hero-float-4 {
+  animation: hero-float-4 5.5s ease-in-out infinite 1.5s;
+}
+.animate-ticker {
+  animation: ticker-scroll 30s linear infinite;
+}
+.animate-seat-pulse {
+  animation: seat-pulse 3s ease-in-out infinite;
 }
 
 /* ── Animations ── */
@@ -204,18 +279,32 @@
 }
 
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-6px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
 }
 
 @keyframes mesh-shift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 
 .animate-fade-in-up {
@@ -240,15 +329,33 @@
 .stagger-children > * {
   animation: fade-in-up 0.4s ease-out both;
 }
-.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
-.stagger-children > *:nth-child(2) { animation-delay: 50ms; }
-.stagger-children > *:nth-child(3) { animation-delay: 100ms; }
-.stagger-children > *:nth-child(4) { animation-delay: 150ms; }
-.stagger-children > *:nth-child(5) { animation-delay: 200ms; }
-.stagger-children > *:nth-child(6) { animation-delay: 250ms; }
-.stagger-children > *:nth-child(7) { animation-delay: 300ms; }
-.stagger-children > *:nth-child(8) { animation-delay: 350ms; }
-.stagger-children > *:nth-child(n+9) { animation-delay: 400ms; }
+.stagger-children > *:nth-child(1) {
+  animation-delay: 0ms;
+}
+.stagger-children > *:nth-child(2) {
+  animation-delay: 50ms;
+}
+.stagger-children > *:nth-child(3) {
+  animation-delay: 100ms;
+}
+.stagger-children > *:nth-child(4) {
+  animation-delay: 150ms;
+}
+.stagger-children > *:nth-child(5) {
+  animation-delay: 200ms;
+}
+.stagger-children > *:nth-child(6) {
+  animation-delay: 250ms;
+}
+.stagger-children > *:nth-child(7) {
+  animation-delay: 300ms;
+}
+.stagger-children > *:nth-child(8) {
+  animation-delay: 350ms;
+}
+.stagger-children > *:nth-child(n + 9) {
+  animation-delay: 400ms;
+}
 
 /* Respect reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
@@ -256,6 +363,12 @@
   .animate-shimmer,
   .animate-float,
   .animate-mesh,
+  .animate-hero-float-1,
+  .animate-hero-float-2,
+  .animate-hero-float-3,
+  .animate-hero-float-4,
+  .animate-ticker,
+  .animate-seat-pulse,
   .stagger-children > * {
     animation: none !important;
     opacity: 1 !important;
