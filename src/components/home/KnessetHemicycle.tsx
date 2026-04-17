@@ -25,9 +25,11 @@ interface KnessetHemicycleProps {
 }
 
 /**
- * Compute hemicycle seat positions — 5 concentric arcs, proper semicircle.
- * Coalition on the right (speaker's left), opposition on the left (speaker's right).
- * Arc spans from π (180°) to 0° with a small gap at the center (90°).
+ * Compute hemicycle seat positions — 5 concentric arcs, symmetric semicircle.
+ * Each half spans exactly 90°:
+ *   Coalition (right):  π/2 → 0   (90° → 0°)
+ *   Opposition (left):  π   → π/2 (180° → 90°)
+ * A small gap separates the halves at the 90° vertical center line.
  */
 function computeSeatPositions(seats: SeatData[]) {
   const rows = [18, 22, 24, 28, 28]; // seats per row (inner → outer)
@@ -47,11 +49,7 @@ function computeSeatPositions(seats: SeatData[]) {
   const centerY = 420;
   const innerRadius = 175;
   const rowSpacing = 38;
-  const gapAngle = 0.1; // radians gap at center vertical
-
-  // Angle range endpoints with a small margin from 0° and 180°
-  const startAngle = Math.PI - 0.12; // ~177° (left edge)
-  const endAngle = 0.12; // ~3° (right edge)
+  const gapAngle = 0.06; // radians — half-gap from center line (each side)
 
   let coalitionIdx = 0;
   let oppositionIdx = 0;
@@ -65,16 +63,14 @@ function computeSeatPositions(seats: SeatData[]) {
     );
     const oppositionInRow = seatsInRow - coalitionInRow;
 
-    // Coalition: right half — from (π/2 - gap) down to endAngle
-    const coalStartAngle = Math.PI / 2 - gapAngle;
-    const coalEndAngle = endAngle;
+    // Coalition: right half — from (π/2 - gap) to 0
     for (
       let i = 0;
       i < coalitionInRow && coalitionIdx < coalition.length;
       i++
     ) {
       const t = coalitionInRow > 1 ? i / (coalitionInRow - 1) : 0.5;
-      const angle = coalStartAngle + t * (coalEndAngle - coalStartAngle);
+      const angle = (Math.PI / 2 - gapAngle) * (1 - t); // π/2-gap → 0
       positioned.push({
         seat: coalition[coalitionIdx++],
         cx: centerX + radius * Math.cos(angle),
@@ -83,16 +79,14 @@ function computeSeatPositions(seats: SeatData[]) {
       });
     }
 
-    // Opposition: left half — from startAngle down to (π/2 + gap)
-    const oppStartAngle = startAngle;
-    const oppEndAngle = Math.PI / 2 + gapAngle;
+    // Opposition: left half — from π to (π/2 + gap)
     for (
       let i = 0;
       i < oppositionInRow && oppositionIdx < opposition.length;
       i++
     ) {
       const t = oppositionInRow > 1 ? i / (oppositionInRow - 1) : 0.5;
-      const angle = oppStartAngle + t * (oppEndAngle - oppStartAngle);
+      const angle = Math.PI - t * (Math.PI / 2 - gapAngle); // π → π/2+gap
       positioned.push({
         seat: opposition[oppositionIdx++],
         cx: centerX + radius * Math.cos(angle),
