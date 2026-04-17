@@ -11,6 +11,7 @@ import { routing } from '@/i18n/routing';
 import { appConfig } from '../../../app.config';
 import Header from '../../components/layout/Header';
 import Footer from '../../components/layout/Footer';
+import { DataDisclosureBanner } from '../../components/layout/DataDisclosureBanner';
 import { ThemeProvider } from '../../components/layout/ThemeProvider';
 import { AdminEditProvider } from '../../components/admin/AdminEditProvider';
 
@@ -106,6 +107,7 @@ export default async function LocaleLayout({ children, params }: Props) {
           <NextIntlClientProvider locale={locale} messages={messages}>
             <AdminEditProvider>
               <div className="flex min-h-screen flex-col">
+                <DataDisclosureBanner />
                 <Header />
                 <main className="flex-1">{children}</main>
                 <Footer />

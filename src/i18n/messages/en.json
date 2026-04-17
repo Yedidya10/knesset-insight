@@ -1160,5 +1160,9 @@
     "limitationText": "Knesset Insight is not liable for any damages arising from use of the platform or reliance on the data presented. Information is provided for informational purposes only.",
     "changesTitle": "Changes to Terms",
     "changesText": "We may update these terms from time to time. Material changes will be published on the platform."
+  },
+  "dataDisclosure": {
+    "message": "Data on this site may be partial, primarily covering Knesset terms 20–25. The site is continuously updated and more data is added over time.",
+    "dismiss": "Dismiss notice"
   }
 }
