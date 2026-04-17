@@ -476,7 +476,7 @@
     "seats": "Seats",
     "threshold": "Threshold",
     "elected": "Passed threshold",
-    "notElected": "Did not pass",
+    "notElected": "Did not pass the electoral threshold",
     "componentParties": "Parties in list",
     "resultingFaction": "Resulting faction",
     "knesset": "Knesset {num}",

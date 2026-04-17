@@ -476,7 +476,7 @@
     "seats": "Мандаты",
     "threshold": "Барьер",
     "elected": "Преодолен барьер",
-    "notElected": "Не преодолен",
+    "notElected": "Не преодолел электоральный барьер",
     "componentParties": "Партии в списке",
     "resultingFaction": "Фракция в Кнессете",
     "knesset": "Кнессет {num}",

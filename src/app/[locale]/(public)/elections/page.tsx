@@ -1,12 +1,17 @@
 import { getTranslations } from 'next-intl/server';
 import type { Metadata } from 'next';
-import { Vote, ArrowRight, Map } from 'lucide-react';
-import { sql, eq, desc } from 'drizzle-orm';
+import { Vote, ArrowRight, Map, Ban } from 'lucide-react';
+import { eq, desc } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { electoralLists } from '@/lib/db/schema';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { Link } from '@/i18n/navigation';
 import { appConfig } from '../../../../../app.config';
 
@@ -131,80 +136,108 @@ export default async function ElectionsPage({ searchParams }: Props) {
       )}
 
       {data.length > 0 ? (
-        <div className="space-y-3">
-          {/* Header row */}
-          <div className="text-muted-foreground hidden items-center gap-4 px-4 text-xs font-medium sm:flex">
-            <span className="w-16">{t('ballotLetters')}</span>
+        <div className="space-y-2">
+          {/* Header row — desktop only */}
+          <div className="text-muted-foreground hidden items-center gap-4 px-4 ps-5 pb-1 text-xs font-medium tracking-wider uppercase sm:flex">
+            <span className="w-16 text-center">{t('ballotLetters')}</span>
             <span className="flex-1">{t('listName')}</span>
-            <span className="w-24 text-end">{t('totalVotes')}</span>
+            <span className="w-28 text-end">{t('totalVotes')}</span>
             <span className="w-16 text-end">{t('percentage')}</span>
-            <span className="w-16 text-end">{t('seats')}</span>
+            <span className="w-32 pe-2 text-end">{t('seats')}</span>
+            <span className="w-8" />
           </div>
 
-          {data.map((list) => (
-            <div key={list.id} className="group relative">
-              <Link href={`/elections/${list.id}`}>
-                <Card
-                  className={`glass-card hover-lift overflow-hidden transition-colors ${
-                    list.isElected
-                      ? 'border-s-4 border-s-green-500/50'
-                      : 'border-s-muted/30 border-s-4'
-                  }`}
-                >
-                  <CardContent className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:gap-4">
-                    <span className="text-primary w-16 text-center font-mono text-lg font-bold">
-                      {list.ballotLetters}
-                    </span>
-                    <div className="flex-1">
-                      <span className="font-medium">{list.name}</span>
-                      <div className="mt-1 sm:hidden">
-                        <div className="text-muted-foreground flex gap-2 text-xs">
-                          {list.totalVotes && (
-                            <span>
-                              {list.totalVotes.toLocaleString()}{' '}
-                              {t('totalVotes').toLowerCase()}
-                            </span>
-                          )}
-                          {list.votePercentage && (
-                            <span>{list.votePercentage}%</span>
+          <TooltipProvider>
+            {data.map((list) => (
+              <div key={list.id} className="group relative">
+                <Link href={`/elections/${list.id}`}>
+                  <Card
+                    className={`glass-card hover-lift overflow-hidden ${
+                      list.isElected
+                        ? 'border-s-4 border-s-green-500/50'
+                        : 'border-s-destructive/30 border-s-4'
+                    }`}
+                  >
+                    <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:gap-4">
+                      {/* Ballot letters */}
+                      <span className="bg-primary/10 text-primary inline-flex w-16 items-center justify-center rounded-lg py-1 font-mono text-lg font-bold">
+                        {list.ballotLetters}
+                      </span>
+
+                      {/* Party name */}
+                      <div className="min-w-0 flex-1">
+                        <span className="line-clamp-1 leading-tight font-medium">
+                          {list.name}
+                        </span>
+                        {/* Mobile stats */}
+                        <div className="mt-1.5 flex items-center gap-3 sm:hidden">
+                          <span className="text-muted-foreground text-xs tabular-nums">
+                            {list.totalVotes?.toLocaleString() ?? '—'}
+                          </span>
+                          <span className="text-muted-foreground text-xs tabular-nums">
+                            {list.votePercentage
+                              ? `${list.votePercentage}%`
+                              : '—'}
+                          </span>
+                          <span className="text-sm font-bold tabular-nums">
+                            {list.seats} {t('seats')}
+                          </span>
+                          {!list.isElected && (
+                            <Ban className="text-destructive/60 h-3.5 w-3.5" />
                           )}
                         </div>
                       </div>
-                    </div>
-                    <span className="hidden w-24 text-end text-sm sm:block">
-                      {list.totalVotes?.toLocaleString() ?? '—'}
-                    </span>
-                    <span className="hidden w-16 text-end text-sm sm:block">
-                      {list.votePercentage ? `${list.votePercentage}%` : '—'}
-                    </span>
-                    <div className="flex w-32 items-center gap-2">
-                      <Progress
-                        value={(list.seats / maxSeats) * 100}
-                        className="h-2 flex-1"
-                      />
-                      <span className="w-8 text-end text-sm font-bold">
-                        {list.seats}
+
+                      {/* Total votes — desktop */}
+                      <span className="hidden w-28 text-end text-sm tabular-nums sm:block">
+                        {list.totalVotes?.toLocaleString() ?? '—'}
                       </span>
-                    </div>
-                    {list.isElected ? (
-                      <Badge variant="default" className="w-auto shrink-0">
-                        {t('elected')}
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="w-auto shrink-0">
-                        {t('notElected')}
-                      </Badge>
-                    )}
-                  </CardContent>
-                </Card>
-              </Link>
-            </div>
-          ))}
+
+                      {/* Percentage — desktop */}
+                      <span className="hidden w-16 text-end text-sm tabular-nums sm:block">
+                        {list.votePercentage ? `${list.votePercentage}%` : '—'}
+                      </span>
+
+                      {/* Seats + progress bar — desktop */}
+                      <div className="hidden w-32 items-center gap-2 sm:flex">
+                        <Progress
+                          value={(list.seats / maxSeats) * 100}
+                          className="h-2 flex-1"
+                        />
+                        <span className="w-8 text-end text-sm font-bold tabular-nums">
+                          {list.seats}
+                        </span>
+                      </div>
+
+                      {/* Threshold icon — desktop, only for parties that didn't pass */}
+                      <div className="hidden w-8 items-center justify-center sm:flex">
+                        {!list.isElected && (
+                          <Tooltip>
+                            <TooltipTrigger
+                              render={
+                                <span className="text-destructive/60 cursor-default" />
+                              }
+                            >
+                              <Ban className="h-4 w-4" />
+                            </TooltipTrigger>
+                            <TooltipContent>{t('notElected')}</TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              </div>
+            ))}
+          </TooltipProvider>
         </div>
       ) : (
-        <p className="text-muted-foreground py-12 text-center">
-          {t('noResults')}
-        </p>
+        <div className="text-muted-foreground mt-16 flex flex-col items-center gap-3">
+          <div className="bg-muted flex h-16 w-16 items-center justify-center rounded-2xl">
+            <Vote className="h-8 w-8 opacity-40" />
+          </div>
+          <p className="text-sm">{t('noResults')}</p>
+        </div>
       )}
     </div>
   );

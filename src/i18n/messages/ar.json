@@ -477,7 +477,7 @@
     "seats": "مقاعد",
     "threshold": "نسبة الحسم",
     "elected": "تجاوز نسبة الحسم",
-    "notElected": "لم يتجاوز",
+    "notElected": "لم يتجاوز نسبة الحسم",
     "componentParties": "أحزاب في القائمة",
     "resultingFaction": "الكتلة في الكنيست",
     "knesset": "الكنيست {num}",

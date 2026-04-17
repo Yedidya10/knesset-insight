@@ -476,7 +476,7 @@
     "seats": "מנדטים",
     "threshold": "אחוז חסימה",
     "elected": "עברה את אחוז החסימה",
-    "notElected": "לא עברה",
+    "notElected": "לא עברה את אחוז החסימה",
     "componentParties": "מפלגות ברשימה",
     "resultingFaction": "סיעה בכנסת",
     "knesset": "כנסת {num}",
