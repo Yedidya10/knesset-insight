@@ -111,7 +111,18 @@
       "allStatuses": "כל הסטטוסים",
       "knesset": "כנסת {num}",
       "clearFilters": "נקה סינון",
-      "pageOf": "עמוד {current} מתוך {total}"
+      "pageOf": "עמוד {current} מתוך {total}",
+      "tabs": {
+        "policyStances": "עמדות מדיניות",
+        "votes": "הצבעות",
+        "legislation": "חקיקה",
+        "committees": "ועדות",
+        "integrity": "יושרה ואתיקה"
+      },
+      "personalDetails": "פרטים אישיים",
+      "contactInfo": "יצירת קשר",
+      "showDetails": "הצג פרטים",
+      "hideDetails": "הסתר פרטים"
     },
     "filter": {
       "allParties": "כל הסיעות",

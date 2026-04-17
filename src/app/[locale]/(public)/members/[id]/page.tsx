@@ -1,18 +1,14 @@
-import { getTranslations } from 'next-intl/server';
+import { getTranslations, getLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
 import type { Metadata } from 'next';
 import {
-  User,
-  Building2,
   ThumbsUp,
   ThumbsDown,
   Minus,
-  Mail,
-  Phone,
-  Calendar,
+  User,
   FileText,
-  Gavel,
+  Building2,
 } from 'lucide-react';
 import { eq, desc, asc } from 'drizzle-orm';
 import { db } from '@/lib/db';
@@ -31,11 +27,11 @@ import {
 } from '@/lib/db/schema';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Button } from '@/components/ui/button';
 import TranslatedText from '@/components/ui/translated-text';
-import MemberAvatar from '@/components/members/MemberAvatar';
 import MemberBillsList from '@/components/members/MemberBillsList';
+import MemberProfileHero from '@/components/members/MemberProfileHero';
+import MemberProfileDetails from '@/components/members/MemberProfileDetails';
+import MemberProfileTabs from '@/components/members/MemberProfileTabs';
 import IntegrityTab from '@/components/integrity/IntegrityTab';
 import MemberPolicyStances from '@/components/policies/MemberPolicyStances';
 
@@ -80,6 +76,7 @@ export default async function MemberProfilePage({ params }: Props) {
   const t = await getTranslations('members.profile');
   const tCommon = await getTranslations('common');
   const tVotes = await getTranslations('votes');
+  const locale = await getLocale();
 
   const memberId = Number(id);
   if (isNaN(memberId)) notFound();
@@ -220,8 +217,6 @@ export default async function MemberProfilePage({ params }: Props) {
   }
   const caseSummary = Array.from(caseSummaryMap.values());
 
-  const initials = `${member.firstName?.[0] ?? ''}${member.lastName?.[0] ?? ''}`;
-
   // Compute age (server component — Date.now() is safe here)
   // eslint-disable-next-line react-hooks/purity
   const now = Date.now();
@@ -233,197 +228,22 @@ export default async function MemberProfilePage({ params }: Props) {
     : null;
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-      <Button
-        variant="ghost"
-        size="sm"
-        className="mb-6 rounded-lg"
-        render={<Link href="/members" />}
-      >
-        {tCommon('back')}
-      </Button>
+    <div className="mx-auto max-w-5xl space-y-6 px-4 py-8 sm:px-6">
+      {/* Hero banner */}
+      <MemberProfileHero member={member} />
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Profile card — hero style */}
-        <Card className="glass-card overflow-hidden lg:col-span-1">
-          {/* Gradient header bg */}
-          <div className="from-primary/20 via-chart-2/10 to-chart-4/10 h-20 bg-gradient-to-br" />
-          <CardContent className="-mt-12 flex flex-col items-center gap-4 px-6 pb-6">
-            <div className="relative">
-              <div className="from-primary/30 to-chart-2/20 absolute -inset-1 rounded-full bg-gradient-to-br blur-sm" />
-              <MemberAvatar
-                member={member}
-                size="xl"
-                className="relative"
-                ring="ring-4 ring-card"
-              />
-            </div>
+      {/* Expandable personal details */}
+      <MemberProfileDetails
+        member={member}
+        age={age}
+        factionHistory={factionHistory}
+        locale={locale}
+      />
 
-            <div className="text-center">
-              <h1 className="text-xl font-bold">
-                {member.firstName} {member.lastName}
-              </h1>
-              {member.factionName && (
-                <Link
-                  href={`/factions/${member.factionId}`}
-                  className="text-primary text-sm hover:underline"
-                >
-                  {member.factionName}
-                </Link>
-              )}
-            </div>
-
-            <div className="flex flex-wrap justify-center gap-2">
-              {member.isCoalition !== null && (
-                <Badge variant={member.isCoalition ? 'default' : 'secondary'}>
-                  {member.isCoalition
-                    ? t('coalitionMember')
-                    : t('oppositionMember')}
-                </Badge>
-              )}
-              {member.isCurrent === false && (
-                <Badge variant="outline">{t('endDate')}</Badge>
-              )}
-            </div>
-
-            <Separator className="opacity-30" />
-
-            {/* Overview info */}
-            <div className="w-full space-y-3 text-sm">
-              {member.factionName && (
-                <div className="text-muted-foreground flex items-center gap-2">
-                  <Building2 className="h-4 w-4 shrink-0" />
-                  <span>
-                    {t('party')}: {member.factionName}
-                  </span>
-                </div>
-              )}
-              {member.gender && (
-                <div className="text-muted-foreground flex items-center gap-2">
-                  <User className="h-4 w-4 shrink-0" />
-                  <span>
-                    {t('gender')}:{' '}
-                    {member.gender === 'נקבה' || member.gender === 'female'
-                      ? t('female')
-                      : t('male')}
-                  </span>
-                </div>
-              )}
-              {member.birthDate && (
-                <div className="text-muted-foreground flex items-center gap-2">
-                  <Calendar className="h-4 w-4 shrink-0" />
-                  <span>
-                    {t('birthDate')}:{' '}
-                    {new Date(member.birthDate).toLocaleDateString('he-IL')}
-                    {age !== null && ` (${age})`}
-                  </span>
-                </div>
-              )}
-              {member.knessetNum && (
-                <div className="text-muted-foreground flex items-center gap-2">
-                  <Gavel className="h-4 w-4 shrink-0" />
-                  <span>
-                    {t('knessetNum')}: {member.knessetNum}
-                  </span>
-                </div>
-              )}
-              {member.startDate && (
-                <div className="text-muted-foreground flex items-center gap-2">
-                  <Calendar className="h-4 w-4 shrink-0" />
-                  <span>
-                    {t('startDate')}:{' '}
-                    {new Date(member.startDate).toLocaleDateString('he-IL')}
-                  </span>
-                </div>
-              )}
-              {member.endDate && (
-                <div className="text-muted-foreground flex items-center gap-2">
-                  <Calendar className="h-4 w-4 shrink-0" />
-                  <span>
-                    {t('endDate')}:{' '}
-                    {new Date(member.endDate).toLocaleDateString('he-IL')}
-                  </span>
-                </div>
-              )}
-              {member.email && (
-                <div className="text-muted-foreground flex items-center gap-2">
-                  <Mail className="h-4 w-4 shrink-0" />
-                  <a
-                    href={`mailto:${member.email}`}
-                    className="text-primary hover:underline"
-                  >
-                    {member.email}
-                  </a>
-                </div>
-              )}
-              {member.phone && (
-                <div className="text-muted-foreground flex items-center gap-2">
-                  <Phone className="h-4 w-4 shrink-0" />
-                  <a
-                    href={`tel:${member.phone}`}
-                    className="text-primary hover:underline"
-                  >
-                    {member.phone}
-                  </a>
-                </div>
-              )}
-            </div>
-
-            {/* Knesset & Faction History */}
-            {factionHistory.length > 0 && (
-              <>
-                <Separator className="opacity-30" />
-                <div className="w-full space-y-3">
-                  <h3 className="text-sm font-semibold">
-                    {t('factionHistory')}
-                  </h3>
-                  {(() => {
-                    // Group by knesset number
-                    const byKnesset = new Map<number, typeof factionHistory>();
-                    for (const h of factionHistory) {
-                      const arr = byKnesset.get(h.knessetNum) ?? [];
-                      arr.push(h);
-                      byKnesset.set(h.knessetNum, arr);
-                    }
-                    return Array.from(byKnesset.entries()).map(
-                      ([knessetNum, entries]) => (
-                        <div key={knessetNum} className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <Badge
-                              variant={
-                                knessetNum === member.knessetNum
-                                  ? 'default'
-                                  : 'outline'
-                              }
-                              className="text-xs"
-                            >
-                              {t('knessetNum')}: {knessetNum}
-                            </Badge>
-                          </div>
-                          {entries.map((entry, i) => (
-                            <p
-                              key={i}
-                              className="text-muted-foreground ps-2 text-xs"
-                            >
-                              {entry.factionName}
-                            </p>
-                          ))}
-                        </div>
-                      ),
-                    );
-                  })()}
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Details column */}
-        <div className="flex flex-col gap-6 lg:col-span-2">
-          {/* Policy stances */}
-          <MemberPolicyStances memberId={member.id} />
-
-          {/* Recent votes */}
+      {/* Tabbed content sections */}
+      <MemberProfileTabs
+        policyContent={<MemberPolicyStances memberId={member.id} />}
+        votesContent={
           <Card className="glass-card overflow-hidden">
             <CardHeader>
               <CardTitle className="text-lg">{t('recentVotes')}</CardTitle>
@@ -460,7 +280,7 @@ export default async function MemberProfilePage({ params }: Props) {
                           </p>
                           <p className="text-muted-foreground text-xs">
                             {v.voteDate
-                              ? new Date(v.voteDate).toLocaleDateString('he-IL')
+                              ? new Date(v.voteDate).toLocaleDateString(locale)
                               : ''}
                           </p>
                         </div>
@@ -483,8 +303,8 @@ export default async function MemberProfilePage({ params }: Props) {
               )}
             </CardContent>
           </Card>
-
-          {/* Bills initiated */}
+        }
+        legislationContent={
           <Card className="glass-card overflow-hidden">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
@@ -496,9 +316,9 @@ export default async function MemberProfilePage({ params }: Props) {
               <MemberBillsList bills={initiatedBills} />
             </CardContent>
           </Card>
-
-          {/* Committees chaired */}
-          {chairedCommittees.length > 0 && (
+        }
+        committeesContent={
+          chairedCommittees.length > 0 ? (
             <Card className="glass-card overflow-hidden">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-lg">
@@ -536,8 +356,9 @@ export default async function MemberProfilePage({ params }: Props) {
                 </div>
               </CardContent>
             </Card>
-          )}
-          {/* Integrity & Ethics */}
+          ) : null
+        }
+        integrityContent={
           <IntegrityTab
             cases={integrityData.map((c) => ({
               ...c,
@@ -568,8 +389,8 @@ export default async function MemberProfilePage({ params }: Props) {
             }))}
             lobbyistTotal={lobbyistConn.length}
           />
-        </div>
-      </div>
+        }
+      />
     </div>
   );
 }

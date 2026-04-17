@@ -111,7 +111,18 @@
       "allStatuses": "جميع الحالات",
       "knesset": "الكنيست {num}",
       "clearFilters": "مسح التصفية",
-      "pageOf": "صفحة {current} من {total}"
+      "pageOf": "صفحة {current} من {total}",
+      "tabs": {
+        "policyStances": "المواقف السياسية",
+        "votes": "التصويتات",
+        "legislation": "التشريعات",
+        "committees": "اللجان",
+        "integrity": "النزاهة والأخلاق"
+      },
+      "personalDetails": "التفاصيل الشخصية",
+      "contactInfo": "التواصل",
+      "showDetails": "إظهار التفاصيل",
+      "hideDetails": "إخفاء التفاصيل"
     },
     "filter": {
       "allParties": "جميع الكتل",

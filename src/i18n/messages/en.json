@@ -111,7 +111,18 @@
       "allStatuses": "All Statuses",
       "knesset": "Knesset {num}",
       "clearFilters": "Clear filters",
-      "pageOf": "Page {current} of {total}"
+      "pageOf": "Page {current} of {total}",
+      "tabs": {
+        "policyStances": "Policy Stances",
+        "votes": "Votes",
+        "legislation": "Legislation",
+        "committees": "Committees",
+        "integrity": "Integrity & Ethics"
+      },
+      "personalDetails": "Personal Details",
+      "contactInfo": "Contact",
+      "showDetails": "Show details",
+      "hideDetails": "Hide details"
     },
     "filter": {
       "allParties": "All factions",

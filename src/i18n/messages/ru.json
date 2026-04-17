@@ -111,7 +111,18 @@
       "allStatuses": "Все статусы",
       "knesset": "Кнессет {num}",
       "clearFilters": "Сбросить фильтры",
-      "pageOf": "Страница {current} из {total}"
+      "pageOf": "Страница {current} из {total}",
+      "tabs": {
+        "policyStances": "Политические позиции",
+        "votes": "Голосования",
+        "legislation": "Законодательство",
+        "committees": "Комитеты",
+        "integrity": "Честность и этика"
+      },
+      "personalDetails": "Личные данные",
+      "contactInfo": "Контакты",
+      "showDetails": "Показать подробности",
+      "hideDetails": "Скрыть подробности"
     },
     "filter": {
       "allParties": "Все фракции",
