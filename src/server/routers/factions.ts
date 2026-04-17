@@ -1,8 +1,25 @@
 import { z } from 'zod/v4';
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql, and } from 'drizzle-orm';
 import { router, publicProcedure } from '../trpc';
 import { db } from '../../lib/db';
 import { factions, members, politicalGroups } from '../../lib/db/schema';
+
+/**
+ * SQL condition that excludes superseded factions — those with a finish_date
+ * where another faction in the same knesset with the same political_group_id
+ * is still active. e.g. "הציונות הדתית" (5 days) → "הציונות הדתית בראשות בצלאל סמוטריץ'".
+ */
+const notSuperseded = sql`NOT (
+  ${factions.finishDate} IS NOT NULL
+  AND ${factions.politicalGroupId} IS NOT NULL
+  AND EXISTS (
+    SELECT 1 FROM factions f2
+    WHERE f2.political_group_id = ${factions.politicalGroupId}
+      AND f2.knesset_num = ${factions.knessetNum}
+      AND f2.id != ${factions.id}
+      AND f2.finish_date IS NULL
+  )
+)`;
 
 export const factionsRouter = router({
   list: publicProcedure.query(async () => {
@@ -29,7 +46,11 @@ export const factionsRouter = router({
         politicalGroupColor: politicalGroups.color,
       })
       .from(factions)
-      .leftJoin(politicalGroups, eq(factions.politicalGroupId, politicalGroups.id))
+      .leftJoin(
+        politicalGroups,
+        eq(factions.politicalGroupId, politicalGroups.id),
+      )
+      .where(notSuperseded)
       .orderBy(factions.name);
   }),
 

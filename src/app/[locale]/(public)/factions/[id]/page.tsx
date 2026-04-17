@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
 import { Building2 } from 'lucide-react';
 import { eq, sql, inArray, and, or } from 'drizzle-orm';
@@ -13,11 +13,11 @@ import MemberAvatar from '@/components/members/MemberAvatar';
 import FactionPolicyStances from '@/components/policies/FactionPolicyStances';
 
 interface Props {
-  params: Promise<{ id: string }>;
+  params: Promise<{ id: string; locale: string }>;
 }
 
 export default async function FactionDetailPage({ params }: Props) {
-  const { id } = await params;
+  const { id, locale } = await params;
   const t = await getTranslations('factions');
   const tCommon = await getTranslations('common');
 
@@ -31,6 +31,27 @@ export default async function FactionDetailPage({ params }: Props) {
     .limit(1);
 
   if (!faction) notFound();
+
+  // If this faction was superseded (has finishDate + same-pgId successor in same knesset),
+  // redirect to the active successor.
+  if (faction.finishDate && faction.politicalGroupId) {
+    const [successor] = await db
+      .select({ id: factions.id })
+      .from(factions)
+      .where(
+        and(
+          eq(factions.politicalGroupId, faction.politicalGroupId),
+          eq(factions.knessetNum!, faction.knessetNum!),
+          sql`${factions.id} != ${faction.id}`,
+          sql`${factions.finishDate} IS NULL`,
+        ),
+      )
+      .limit(1);
+
+    if (successor) {
+      redirect(`/${locale}/factions/${successor.id}`);
+    }
+  }
 
   // Get political group info if linked
   const politicalGroup = faction.politicalGroupId
@@ -47,11 +68,17 @@ export default async function FactionDetailPage({ params }: Props) {
       )[0] ?? null)
     : null;
 
-  // Find ALL faction rows with the same name (same faction across knessets)
-  const siblingFactions = await db
-    .select({ id: factions.id })
-    .from(factions)
-    .where(eq(factions.name, faction.name));
+  // Find ALL related faction rows: use politicalGroupId (same political entity across knessets)
+  // with fallback to exact name matching for factions without a political group.
+  const siblingFactions = faction.politicalGroupId
+    ? await db
+        .select({ id: factions.id })
+        .from(factions)
+        .where(eq(factions.politicalGroupId, faction.politicalGroupId))
+    : await db
+        .select({ id: factions.id })
+        .from(factions)
+        .where(eq(factions.name, faction.name));
   const allFactionIds = siblingFactions.map((f) => f.id);
 
   // Current members across all faction IDs with this name

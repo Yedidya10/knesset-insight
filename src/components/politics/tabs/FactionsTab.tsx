@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { Building2 } from 'lucide-react';
-import { sql, eq, desc } from 'drizzle-orm';
+import { sql, eq, desc, and } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { factions, politicalGroups } from '@/lib/db/schema';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,6 +27,9 @@ export default async function FactionsTab({ knessetParam }: Props) {
 
   const activeKnesset = knessetFilter ?? (availableKnessets[0] || 25);
 
+  // Exclude superseded factions: those with a finish_date where another faction
+  // in the same knesset with the same political_group_id is still active.
+  // Example: "הציונות הדתית" (5 days) was replaced by "הציונות הדתית בראשות בצלאל סמוטריץ'".
   const data = await db
     .select({
       id: factions.id,
@@ -47,7 +50,22 @@ export default async function FactionsTab({ knessetParam }: Props) {
       politicalGroups,
       eq(factions.politicalGroupId, politicalGroups.id),
     )
-    .where(eq(factions.knessetNum, activeKnesset))
+    .where(
+      and(
+        eq(factions.knessetNum, activeKnesset),
+        sql`NOT (
+          ${factions.finishDate} IS NOT NULL
+          AND ${factions.politicalGroupId} IS NOT NULL
+          AND EXISTS (
+            SELECT 1 FROM factions f2
+            WHERE f2.political_group_id = ${factions.politicalGroupId}
+              AND f2.knesset_num = ${factions.knessetNum}
+              AND f2.id != ${factions.id}
+              AND f2.finish_date IS NULL
+          )
+        )`,
+      ),
+    )
     .orderBy(
       desc(factions.seats),
       desc(

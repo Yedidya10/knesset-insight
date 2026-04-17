@@ -13,6 +13,7 @@ import {
 interface FactionHistoryEntry {
   knessetNum: number;
   factionName: string | null;
+  politicalGroupId?: number | null;
   startDate: string | Date | null;
   endDate: string | Date | null;
 }
@@ -28,6 +29,36 @@ interface MemberProfileDetailsProps {
   age: number | null;
   factionHistory: FactionHistoryEntry[];
   locale: string;
+}
+
+/**
+ * Merge consecutive faction history entries within the same knesset when they
+ * share the same politicalGroupId. This handles cases like "הציונות הדתית"
+ * being renamed to "הציונות הדתית בראשות בצלאל סמוטריץ'" after 5 days —
+ * we show only the latest name with the combined date range.
+ */
+function mergeFactionHistory(
+  entries: FactionHistoryEntry[],
+): FactionHistoryEntry[] {
+  if (entries.length <= 1) return entries;
+
+  const merged: FactionHistoryEntry[] = [];
+  for (const entry of entries) {
+    const prev = merged[merged.length - 1];
+    if (
+      prev &&
+      prev.knessetNum === entry.knessetNum &&
+      prev.politicalGroupId != null &&
+      prev.politicalGroupId === entry.politicalGroupId
+    ) {
+      // Merge: keep the later entry's name (the active/renamed one), extend the date range
+      prev.factionName = entry.factionName;
+      prev.endDate = entry.endDate;
+    } else {
+      merged.push({ ...entry });
+    }
+  }
+  return merged;
 }
 
 export default function MemberProfileDetails({
@@ -52,9 +83,10 @@ export default function MemberProfileDetails({
 
   if (!hasDetails) return null;
 
-  // Group faction history by knesset number
+  // Merge consecutive same-pgId entries within same knesset, then group by knesset
+  const mergedHistory = mergeFactionHistory(factionHistory);
   const byKnesset = new Map<number, FactionHistoryEntry[]>();
-  for (const h of factionHistory) {
+  for (const h of mergedHistory) {
     const arr = byKnesset.get(h.knessetNum) ?? [];
     arr.push(h);
     byKnesset.set(h.knessetNum, arr);

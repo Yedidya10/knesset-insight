@@ -163,6 +163,7 @@ export default async function MemberProfilePage({ params }: Props) {
       .select({
         knessetNum: memberFactionHistory.knessetNum,
         factionName: factions.name,
+        politicalGroupId: factions.politicalGroupId,
         startDate: memberFactionHistory.startDate,
         endDate: memberFactionHistory.endDate,
       })
