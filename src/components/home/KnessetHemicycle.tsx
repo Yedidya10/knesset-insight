@@ -47,7 +47,7 @@ function computeSeatPositions(seats: SeatData[]) {
   const centerY = 420;
   const innerRadius = 175;
   const rowSpacing = 38;
-  const gapAngle = 0.04; // radians gap at center vertical
+  const gapAngle = 0.1; // radians gap at center vertical
 
   // Angle range endpoints with a small margin from 0° and 180°
   const startAngle = Math.PI - 0.12; // ~177° (left edge)
@@ -182,24 +182,26 @@ export default function KnessetHemicycle({
           r: { duration: 0.2 },
         }}
         fill={seat.factionColor || 'hsl(var(--muted-foreground))'}
-        className="animate-seat-pulse cursor-pointer drop-shadow-sm"
+        className={`animate-seat-pulse drop-shadow-sm ${isMobile ? '' : 'cursor-pointer'}`}
         style={{ animationDelay: `${(i % 20) * 150}ms` }}
-        onMouseEnter={() => !isMobile && setHoveredId(seat.memberId)}
-        onMouseLeave={() => !isMobile && setHoveredId(null)}
-        onClick={() => handleSeatClick(seat.memberId)}
-        role="button"
-        tabIndex={0}
-        aria-label={`${seat.name} - ${seat.factionName}`}
-        onKeyDown={(e: React.KeyboardEvent) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            handleSeatClick(seat.memberId);
-          }
-        }}
+        {...(!isMobile && {
+          onMouseEnter: () => setHoveredId(seat.memberId),
+          onMouseLeave: () => setHoveredId(null),
+          onClick: () => handleSeatClick(seat.memberId),
+          role: 'button' as const,
+          tabIndex: 0,
+          'aria-label': `${seat.name} - ${seat.factionName}`,
+          onKeyDown: (e: React.KeyboardEvent) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              handleSeatClick(seat.memberId);
+            }
+          },
+        })}
       />
     );
 
-    // No tooltips on mobile
+    // Mobile: purely decorative dots, no links or tooltips
     if (isMobile) return circle;
 
     return (
