@@ -46,11 +46,13 @@ export default function MemberAvatar({
   const isPlaceholder = member.imageUrl?.includes('placeholder');
   const showImage = member.imageUrl && !isPlaceholder && !imgError;
 
-  // Wikimedia images are already pre-sized thumbnails — skip Next.js proxy
-  // to avoid 429 rate-limits from bulk server-side fetches
+  // Local images (downloaded to public/images/mks/) use Next.js optimization.
+  // External Wikimedia images (legacy/fallback) skip optimization to avoid 429s.
+  const isLocal = member.imageUrl?.startsWith('/images/');
   const isWikimedia =
-    member.imageUrl?.includes('wikimedia.org') ||
-    member.imageUrl?.includes('wikipedia.org');
+    !isLocal &&
+    (member.imageUrl?.includes('wikimedia.org') ||
+      member.imageUrl?.includes('wikipedia.org'));
 
   const attributionKey = member.imageSource as
     | 'oknesset'

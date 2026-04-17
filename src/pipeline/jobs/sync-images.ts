@@ -4,14 +4,58 @@
  * and extracts the P18 (image) property. Uses smart name matching
  * (middle-name removal, hyphenation, nicknames, abbreviations) and
  * falls back to Hebrew Wikipedia REST API. Respects Wikimedia licensing.
+ *
+ * Images are downloaded and saved locally as optimized WebP files
+ * in public/images/mks/{knessetId}.webp and served from local storage.
  */
 import { eq, and, sql } from 'drizzle-orm';
 import { db } from '../../lib/db';
 import { members } from '../../lib/db/schema';
+import fs from 'fs';
+import path from 'path';
 import { appConfig } from '../../../app.config';
 
 const WIKIDATA_SPARQL = 'https://query.wikidata.org/sparql';
 const COMMONS_THUMB = 'https://commons.wikimedia.org/wiki/Special:FilePath';
+const MKS_IMAGE_DIR = path.resolve('public/images/mks');
+const USER_AGENT =
+  'KnessetInsight/1.0 (civic-tech; https://github.com/Yedidya10/knesset-insight)';
+
+/** Download a remote image, optimize as WebP, and save locally */
+async function downloadAndSaveLocally(
+  remoteUrl: string,
+  knessetId: number,
+): Promise<string | null> {
+  try {
+    fs.mkdirSync(MKS_IMAGE_DIR, { recursive: true });
+    const outFile = path.join(MKS_IMAGE_DIR, `${knessetId}.webp`);
+
+    // Skip if already exists locally
+    if (fs.existsSync(outFile)) {
+      return `/images/mks/${knessetId}.webp`;
+    }
+
+    const res = await fetch(remoteUrl, {
+      headers: { 'User-Agent': USER_AGENT },
+      redirect: 'follow',
+    });
+    if (!res.ok) return null;
+
+    const sharp = (await import('sharp')).default;
+    const buffer = Buffer.from(await res.arrayBuffer());
+    await sharp(buffer)
+      .resize(appConfig.images.thumbWidth, null, { withoutEnlargement: true })
+      .webp({ quality: appConfig.images.quality })
+      .toFile(outFile);
+
+    return `/images/mks/${knessetId}.webp`;
+  } catch (err) {
+    console.warn(
+      `[images] Failed to download locally for ${knessetId}: ${err}`,
+    );
+    return null;
+  }
+}
 
 const SPARQL_QUERY = `
 SELECT ?person ?personLabel ?image WHERE {
@@ -62,7 +106,10 @@ function generateCandidateNames(firstName: string, lastName: string): string[] {
   // Hyphenated compound last names
   if (lastParts.length > 1) {
     const hyphenated = lastParts.join('-');
-    candidates.push(`${firstName} ${hyphenated}`, `${firstParts[0]} ${hyphenated}`);
+    candidates.push(
+      `${firstName} ${hyphenated}`,
+      `${firstParts[0]} ${hyphenated}`,
+    );
   }
 
   // Nickname variants for first name parts
@@ -71,7 +118,8 @@ function generateCandidateNames(firstName: string, lastName: string): string[] {
     if (nicks) {
       for (const nick of nicks) {
         candidates.push(`${nick} ${lastName}`);
-        if (lastParts.length > 1) candidates.push(`${nick} ${lastParts.join('-')}`);
+        if (lastParts.length > 1)
+          candidates.push(`${nick} ${lastParts.join('-')}`);
       }
     }
   }
@@ -80,7 +128,8 @@ function generateCandidateNames(firstName: string, lastName: string): string[] {
   if (firstParts.length > 1) {
     for (let i = 1; i < firstParts.length; i++) {
       candidates.push(`${firstParts[i]} ${lastName}`);
-      if (lastParts.length > 1) candidates.push(`${firstParts[i]} ${lastParts.join('-')}`);
+      if (lastParts.length > 1)
+        candidates.push(`${firstParts[i]} ${lastParts.join('-')}`);
       const middleNicks = NICKNAME_MAP[firstParts[i]];
       if (middleNicks) {
         for (const nick of middleNicks) candidates.push(`${nick} ${lastName}`);
@@ -122,7 +171,8 @@ async function fetchWikidataImages(): Promise<WikidataMK[]> {
 
   const res = await fetch(url, {
     headers: {
-      'User-Agent': 'KnessetInsight/1.0 (civic-tech; https://github.com/knesset-insight)',
+      'User-Agent':
+        'KnessetInsight/1.0 (civic-tech; https://github.com/knesset-insight)',
       Accept: 'application/sparql-results+json',
     },
   });
@@ -159,6 +209,7 @@ export async function syncMemberImages(): Promise<number> {
   const dbMembers = await db
     .select({
       id: members.id,
+      knessetId: members.knessetId,
       firstName: members.firstName,
       lastName: members.lastName,
     })
@@ -196,10 +247,12 @@ export async function syncMemberImages(): Promise<number> {
     }
 
     if (imageUrl) {
+      // Download and save locally as optimized WebP
+      const localPath = await downloadAndSaveLocally(imageUrl, m.knessetId);
       await db
         .update(members)
         .set({
-          imageUrl,
+          imageUrl: localPath ?? imageUrl,
           imageSource: 'wikidata',
           imageAttribution: appConfig.images.sources.wikidata.attribution,
           updatedAt: new Date(),
@@ -215,7 +268,9 @@ export async function syncMemberImages(): Promise<number> {
 
   // Pass 2: Wikipedia REST API fallback for remaining
   if (unmatched.length > 0) {
-    console.log(`[images] Trying Wikipedia API for ${unmatched.length} remaining...`);
+    console.log(
+      `[images] Trying Wikipedia API for ${unmatched.length} remaining...`,
+    );
 
     for (const m of unmatched) {
       const candidates = generateCandidateNames(m.firstName, m.lastName);
@@ -227,10 +282,12 @@ export async function syncMemberImages(): Promise<number> {
       }
 
       if (imageUrl) {
+        // Download and save locally as optimized WebP
+        const localPath = await downloadAndSaveLocally(imageUrl, m.knessetId);
         await db
           .update(members)
           .set({
-            imageUrl,
+            imageUrl: localPath ?? imageUrl,
             imageSource: 'wikidata',
             imageAttribution: appConfig.images.sources.wikidata.attribution,
             updatedAt: new Date(),
