@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Separator } from '@/components/ui/separator';
 
 export default function FactionDetailLoading() {
   return (
@@ -43,20 +42,23 @@ export default function FactionDetailLoading() {
           </Card>
         </div>
 
-        {/* Sidebar — Stats */}
+        {/* Sidebar — Policy Stances */}
         <div className="space-y-6 lg:col-span-1">
           <Card className="glass-card">
             <CardHeader>
               <Skeleton className="h-5 w-28" />
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i}>
-                  <div className="mb-1 flex justify-between">
-                    <Skeleton className="h-4 w-16" />
-                    <Skeleton className="h-4 w-12" />
+                <div
+                  key={i}
+                  className="flex items-start justify-between gap-2 rounded-xl border p-3"
+                >
+                  <div className="flex-1 space-y-1.5">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-3 w-20" />
                   </div>
-                  <Skeleton className="h-2 w-full rounded-full" />
+                  <Skeleton className="h-5 w-16 rounded-full" />
                 </div>
               ))}
             </CardContent>

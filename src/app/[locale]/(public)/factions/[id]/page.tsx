@@ -2,15 +2,15 @@ import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
 import { Building2 } from 'lucide-react';
-import { eq, sql, desc, inArray, and, or } from 'drizzle-orm';
+import { eq, sql, inArray, and, or } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { factions, members, memberVotes, politicalGroups } from '@/lib/db/schema';
+import { factions, members, politicalGroups } from '@/lib/db/schema';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import TranslatedText from '@/components/ui/translated-text';
 import MemberAvatar from '@/components/members/MemberAvatar';
+import FactionPolicyStances from '@/components/policies/FactionPolicyStances';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -20,7 +20,6 @@ export default async function FactionDetailPage({ params }: Props) {
   const { id } = await params;
   const t = await getTranslations('factions');
   const tCommon = await getTranslations('common');
-  const tVotes = await getTranslations('votes');
 
   const factionId = Number(id);
   if (isNaN(factionId)) notFound();
@@ -35,7 +34,7 @@ export default async function FactionDetailPage({ params }: Props) {
 
   // Get political group info if linked
   const politicalGroup = faction.politicalGroupId
-    ? (
+    ? ((
         await db
           .select({
             slug: politicalGroups.slug,
@@ -45,7 +44,7 @@ export default async function FactionDetailPage({ params }: Props) {
           .from(politicalGroups)
           .where(eq(politicalGroups.id, faction.politicalGroupId))
           .limit(1)
-      )[0] ?? null
+      )[0] ?? null)
     : null;
 
   // Find ALL faction rows with the same name (same faction across knessets)
@@ -90,41 +89,20 @@ export default async function FactionDetailPage({ params }: Props) {
     )
     .orderBy(members.lastName);
 
-  // Aggregate vote stats for this faction's current members
-  const voteStats = await db
-    .select({
-      value: memberVotes.voteValue,
-      count: sql<number>`count(*)::int`,
-    })
-    .from(memberVotes)
-    .innerJoin(members, eq(memberVotes.memberId, members.id))
-    .where(
-      and(
-        inArray(members.factionId, allFactionIds),
-        eq(members.isCurrent, true),
-      ),
-    )
-    .groupBy(memberVotes.voteValue);
-
-  const stats = { for: 0, against: 0, abstain: 0, absent: 0 };
-  for (const s of voteStats) {
-    if (s.value in stats) stats[s.value as keyof typeof stats] = s.count;
-  }
-  const totalVotes = stats.for + stats.against + stats.abstain + stats.absent;
-
   const renderMemberGrid = (
-    memberList: { id: number; firstName: string; lastName: string; imageUrl: string | null }[],
+    memberList: {
+      id: number;
+      firstName: string;
+      lastName: string;
+      imageUrl: string | null;
+    }[],
   ) => (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
       {memberList.map((m) => (
         <Link key={m.id} href={`/members/${m.id}`}>
-          <div className="flex flex-col items-center gap-2 rounded-xl p-3 transition-all hover:bg-muted/50 hover:shadow-sm">
-            <MemberAvatar
-              member={m}
-              size="md"
-              ring="ring-2 ring-border/40"
-            />
-            <span className="text-center text-sm font-medium leading-tight">
+          <div className="hover:bg-muted/50 flex flex-col items-center gap-2 rounded-xl p-3 transition-all hover:shadow-sm">
+            <MemberAvatar member={m} size="md" ring="ring-2 ring-border/40" />
+            <span className="text-center text-sm leading-tight font-medium">
               {m.firstName} {m.lastName}
             </span>
           </div>
@@ -146,11 +124,11 @@ export default async function FactionDetailPage({ params }: Props) {
 
       {/* Faction header */}
       <Card className="glass-card mb-8 overflow-hidden">
-        <div className="h-20 bg-gradient-to-br from-primary/20 via-chart-2/10 to-chart-4/10" />
+        <div className="from-primary/20 via-chart-2/10 to-chart-4/10 h-20 bg-gradient-to-br" />
         <CardContent className="-mt-10 px-6 pb-6">
           <div className="flex items-end gap-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-card ring-4 ring-card shadow-lg">
-              <Building2 className="h-8 w-8 text-primary" />
+            <div className="bg-card ring-card flex h-16 w-16 items-center justify-center rounded-2xl shadow-lg ring-4">
+              <Building2 className="text-primary h-8 w-8" />
             </div>
             <div className="pb-1">
               <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
@@ -159,7 +137,7 @@ export default async function FactionDetailPage({ params }: Props) {
               {politicalGroup && (
                 <Link
                   href={`/political-groups/${politicalGroup.slug}`}
-                  className="mt-0.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  className="text-muted-foreground hover:text-foreground mt-0.5 text-sm transition-colors"
                 >
                   {politicalGroup.canonicalName} →
                 </Link>
@@ -171,7 +149,9 @@ export default async function FactionDetailPage({ params }: Props) {
                   </Badge>
                 )}
                 {faction.isCoalition !== null && (
-                  <Badge variant={faction.isCoalition ? 'default' : 'secondary'}>
+                  <Badge
+                    variant={faction.isCoalition ? 'default' : 'secondary'}
+                  >
                     {faction.isCoalition ? t('coalition') : t('opposition')}
                   </Badge>
                 )}
@@ -187,54 +167,8 @@ export default async function FactionDetailPage({ params }: Props) {
       </Card>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        {/* Vote stats card */}
-        <Card className="glass-card overflow-hidden lg:col-span-1">
-          <CardHeader>
-            <CardTitle className="text-lg">{t('voteStats')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {totalVotes > 0 ? (
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-3 text-center">
-                  <div className="rounded-xl bg-green-50 p-3 dark:bg-green-950/30">
-                    <p className="text-xl font-bold text-green-700 dark:text-green-300">
-                      {stats.for}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {tVotes('for')}
-                    </p>
-                  </div>
-                  <div className="rounded-xl bg-red-50 p-3 dark:bg-red-950/30">
-                    <p className="text-xl font-bold text-red-700 dark:text-red-300">
-                      {stats.against}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {tVotes('against')}
-                    </p>
-                  </div>
-                  <div className="rounded-xl bg-yellow-50 p-3 dark:bg-yellow-950/30">
-                    <p className="text-xl font-bold text-yellow-700 dark:text-yellow-300">
-                      {stats.abstain}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {tVotes('abstain')}
-                    </p>
-                  </div>
-                  <div className="rounded-xl bg-muted p-3">
-                    <p className="text-xl font-bold">{stats.absent}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {tVotes('absent')}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                {tCommon('loading')}
-              </p>
-            )}
-          </CardContent>
-        </Card>
+        {/* Policy stances card */}
+        <FactionPolicyStances factionIds={allFactionIds} />
 
         {/* Members section */}
         <div className="flex flex-col gap-6 lg:col-span-2">
@@ -249,7 +183,7 @@ export default async function FactionDetailPage({ params }: Props) {
               {currentMembers.length > 0 ? (
                 renderMemberGrid(currentMembers)
               ) : (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   {t('noMembers')}
                 </p>
               )}

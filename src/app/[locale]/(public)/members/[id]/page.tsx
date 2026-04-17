@@ -14,7 +14,7 @@ import {
   FileText,
   Gavel,
 } from 'lucide-react';
-import { eq, desc, sql, asc } from 'drizzle-orm';
+import { eq, desc, asc } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import {
   members,
@@ -36,8 +36,8 @@ import { Button } from '@/components/ui/button';
 import TranslatedText from '@/components/ui/translated-text';
 import MemberAvatar from '@/components/members/MemberAvatar';
 import MemberBillsList from '@/components/members/MemberBillsList';
-import VoteDistributionBar from '@/components/members/VoteDistributionBar';
 import IntegrityTab from '@/components/integrity/IntegrityTab';
+import MemberPolicyStances from '@/components/policies/MemberPolicyStances';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -112,7 +112,6 @@ export default async function MemberProfilePage({ params }: Props) {
   // Parallel data fetching
   const [
     recentVotesData,
-    voteStats,
     initiatedBills,
     chairedCommittees,
     factionHistory,
@@ -135,16 +134,6 @@ export default async function MemberProfilePage({ params }: Props) {
       .where(eq(memberVotes.memberId, member.id))
       .orderBy(desc(votes.voteDate))
       .limit(30),
-
-    // Vote stats
-    db
-      .select({
-        value: memberVotes.voteValue,
-        count: sql<number>`count(*)::int`,
-      })
-      .from(memberVotes)
-      .where(eq(memberVotes.memberId, member.id))
-      .groupBy(memberVotes.voteValue),
 
     // Bills initiated
     db
@@ -210,15 +199,6 @@ export default async function MemberProfilePage({ params }: Props) {
       .orderBy(desc(memberLobbyistConnections.eventDate))
       .limit(20),
   ]);
-
-  const stats = { for: 0, against: 0, abstain: 0, absent: 0 };
-  for (const s of voteStats) {
-    if (s.value in stats) stats[s.value as keyof typeof stats] = s.count;
-  }
-  const totalVotes = stats.for + stats.against + stats.abstain + stats.absent;
-  const participationCount = stats.for + stats.against + stats.abstain;
-  const participationRate =
-    totalVotes > 0 ? Math.round((participationCount / totalVotes) * 100) : 0;
 
   // Compute integrity case summary (group by category+severity)
   const caseSummaryMap = new Map<
@@ -440,99 +420,15 @@ export default async function MemberProfilePage({ params }: Props) {
 
         {/* Details column */}
         <div className="flex flex-col gap-6 lg:col-span-2">
-          {/* Vote summary */}
+          {/* Policy stances */}
+          <MemberPolicyStances memberId={member.id} />
+
+          {/* Recent votes */}
           <Card className="glass-card overflow-hidden">
             <CardHeader>
-              <CardTitle className="text-lg">{t('voteHistory')}</CardTitle>
+              <CardTitle className="text-lg">{t('recentVotes')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="mb-4 grid grid-cols-4 gap-3 text-center">
-                <div className="rounded-xl bg-green-50 p-3 ring-1 ring-green-200/50 dark:bg-green-950/30 dark:ring-green-800/30">
-                  <p className="text-2xl font-bold text-green-700 dark:text-green-300">
-                    {stats.for}
-                  </p>
-                  <p className="text-muted-foreground text-xs">
-                    {tVotes('for')}
-                  </p>
-                </div>
-                <div className="rounded-xl bg-red-50 p-3 ring-1 ring-red-200/50 dark:bg-red-950/30 dark:ring-red-800/30">
-                  <p className="text-2xl font-bold text-red-700 dark:text-red-300">
-                    {stats.against}
-                  </p>
-                  <p className="text-muted-foreground text-xs">
-                    {tVotes('against')}
-                  </p>
-                </div>
-                <div className="rounded-xl bg-yellow-50 p-3 ring-1 ring-yellow-200/50 dark:bg-yellow-950/30 dark:ring-yellow-800/30">
-                  <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">
-                    {stats.abstain}
-                  </p>
-                  <p className="text-muted-foreground text-xs">
-                    {tVotes('abstain')}
-                  </p>
-                </div>
-                <div className="bg-muted ring-border/30 rounded-xl p-3 ring-1">
-                  <p className="text-2xl font-bold">{stats.absent}</p>
-                  <p className="text-muted-foreground text-xs">
-                    {tVotes('absent')}
-                  </p>
-                </div>
-              </div>
-
-              {/* Participation rate bar */}
-              {totalVotes > 0 && (
-                <div className="mb-4 space-y-1.5">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">
-                      {t('participationRate')}
-                    </span>
-                    <span className="font-semibold">{participationRate}%</span>
-                  </div>
-                  <div className="bg-muted h-2 overflow-hidden rounded-full">
-                    <div
-                      className="bg-primary h-full rounded-full transition-all"
-                      style={{ width: `${participationRate}%` }}
-                    />
-                  </div>
-                  <p className="text-muted-foreground text-xs">
-                    {t('totalVotes')}: {totalVotes}
-                  </p>
-                </div>
-              )}
-
-              {/* Vote distribution bar */}
-              {totalVotes > 0 && (
-                <VoteDistributionBar
-                  total={totalVotes}
-                  segments={[
-                    {
-                      label: tVotes('for'),
-                      count: stats.for,
-                      color: 'bg-green-500',
-                    },
-                    {
-                      label: tVotes('against'),
-                      count: stats.against,
-                      color: 'bg-red-500',
-                    },
-                    {
-                      label: tVotes('abstain'),
-                      count: stats.abstain,
-                      color: 'bg-yellow-500',
-                    },
-                    {
-                      label: tVotes('absent'),
-                      count: stats.absent,
-                      color: 'bg-muted-foreground/30',
-                    },
-                  ]}
-                />
-              )}
-
-              <Separator className="my-4" />
-
-              {/* Recent votes */}
-              <h3 className="mb-3 text-sm font-semibold">{t('recentVotes')}</h3>
               {recentVotesData.length > 0 ? (
                 <div className="space-y-2">
                   {recentVotesData.map((v) => (

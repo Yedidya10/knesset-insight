@@ -420,4 +420,130 @@ export const policiesRouter = router({
         })),
       };
     }),
+
+  /** Top policy stances for a specific faction (by faction IDs) */
+  factionStances: publicProcedure
+    .input(
+      z.object({
+        factionIds: z.array(z.number()).min(1),
+        limit: z.number().min(1).max(20).default(6),
+      }),
+    )
+    .query(async ({ input }) => {
+      const { factionIds, limit } = input;
+      const minVotes = appConfig.policyStances.minVotesForScore;
+
+      // Get all vote IDs that have stance alignments
+      const alignments = await db
+        .select({
+          voteId: voteStanceAlignment.voteId,
+          stanceId: voteStanceAlignment.stanceId,
+          alignment: voteStanceAlignment.alignment,
+        })
+        .from(voteStanceAlignment);
+
+      if (alignments.length === 0) return { stances: [] };
+
+      const voteIds = [...new Set(alignments.map((a) => a.voteId))];
+
+      // Get member votes for this faction's current members on aligned votes
+      const factionMemberVotes = await db
+        .select({
+          voteId: memberVotes.voteId,
+          voteValue: memberVotes.voteValue,
+        })
+        .from(memberVotes)
+        .innerJoin(members, eq(memberVotes.memberId, members.id))
+        .where(
+          and(
+            sql`${memberVotes.voteId} IN ${voteIds}`,
+            sql`${members.factionId} IN ${factionIds}`,
+            eq(members.isCurrent, true),
+          ),
+        );
+
+      if (factionMemberVotes.length === 0) return { stances: [] };
+
+      // Build alignment lookup: voteId -> stanceId -> alignment
+      const alignmentMap = new Map<number, Map<number, string>>();
+      for (const a of alignments) {
+        if (!alignmentMap.has(a.voteId)) alignmentMap.set(a.voteId, new Map());
+        alignmentMap.get(a.voteId)!.set(a.stanceId, a.alignment);
+      }
+
+      // Aggregate per stance
+      const stanceAgg = new Map<
+        number,
+        { matchCount: number; totalCount: number }
+      >();
+
+      for (const mv of factionMemberVotes) {
+        if (mv.voteValue === 'absent') continue;
+        const stanceMap = alignmentMap.get(mv.voteId);
+        if (!stanceMap) continue;
+
+        for (const [stanceId, alignment] of stanceMap) {
+          if (!stanceAgg.has(stanceId))
+            stanceAgg.set(stanceId, { matchCount: 0, totalCount: 0 });
+          const agg = stanceAgg.get(stanceId)!;
+          agg.totalCount++;
+
+          const votedInDirection =
+            (alignment === 'supports' && mv.voteValue === 'for') ||
+            (alignment === 'opposes' && mv.voteValue === 'against');
+          if (votedInDirection) agg.matchCount++;
+        }
+      }
+
+      // Filter by minVotes and compute scores
+      const scored: Array<{
+        stanceId: number;
+        score: number;
+        voteCount: number;
+      }> = [];
+      for (const [stanceId, agg] of stanceAgg) {
+        if (agg.totalCount < minVotes) continue;
+        scored.push({
+          stanceId,
+          score: Math.round((agg.matchCount / agg.totalCount) * 100),
+          voteCount: agg.totalCount,
+        });
+      }
+
+      // Sort by strongest signal (furthest from 50% in either direction)
+      scored.sort((a, b) => Math.abs(b.score - 50) - Math.abs(a.score - 50));
+      const topScored = scored.slice(0, limit);
+
+      if (topScored.length === 0) return { stances: [] };
+
+      // Fetch stance details
+      const stanceIds = topScored.map((s) => s.stanceId);
+      const stanceDetails = await db
+        .select({
+          id: policyStances.id,
+          label: policyStances.label,
+          domain: policyStances.domain,
+        })
+        .from(policyStances)
+        .where(sql`${policyStances.id} IN ${stanceIds}`);
+
+      const stanceMap = new Map(stanceDetails.map((s) => [s.id, s]));
+
+      return {
+        stances: topScored
+          .map((s) => {
+            const detail = stanceMap.get(s.stanceId);
+            if (!detail) return null;
+            return {
+              id: s.stanceId,
+              label: detail.label as Record<string, string>,
+              domain: detail.domain,
+              score: s.score,
+              tier: getTier(s.score),
+              voteCount: s.voteCount,
+            };
+          })
+          .filter(Boolean),
+      };
+    }),
 });
