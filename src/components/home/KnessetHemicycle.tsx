@@ -25,11 +25,10 @@ interface KnessetHemicycleProps {
 }
 
 /**
- * Compute hemicycle seat positions — 5 concentric arcs, symmetric semicircle.
- * Each half spans exactly 90°:
- *   Coalition (right):  π/2 → 0   (90° → 0°)
- *   Opposition (left):  π   → π/2 (180° → 90°)
- * A small gap separates the halves at the 90° vertical center line.
+ * Compute hemicycle seat positions — 5 concentric arcs, uniform spacing.
+ * All seats in each row are evenly distributed across the full 180° arc.
+ * Opposition fills left side, coalition fills right side — proportional to
+ * their share per row. This guarantees perfectly symmetric dot spacing.
  */
 function computeSeatPositions(seats: SeatData[]) {
   const rows = [18, 22, 24, 28, 28]; // seats per row (inner → outer)
@@ -49,7 +48,7 @@ function computeSeatPositions(seats: SeatData[]) {
   const centerY = 420;
   const innerRadius = 175;
   const rowSpacing = 38;
-  const gapAngle = 0.06; // radians — half-gap from center line (each side)
+  const edgePad = 0.08; // radians padding at 0° and 180° edges
 
   let coalitionIdx = 0;
   let oppositionIdx = 0;
@@ -58,41 +57,38 @@ function computeSeatPositions(seats: SeatData[]) {
     const seatsInRow = rows[rowIdx];
     const radius = innerRadius + rowIdx * rowSpacing;
 
-    const coalitionInRow = Math.round(
-      (coalition.length / totalSeats) * seatsInRow,
+    // How many of this row belong to opposition (left) vs coalition (right)
+    const oppositionInRow = Math.round(
+      (opposition.length / totalSeats) * seatsInRow,
     );
-    const oppositionInRow = seatsInRow - coalitionInRow;
+    const coalitionInRow = seatsInRow - oppositionInRow;
 
-    // Coalition: right half — from (π/2 - gap) to 0
-    for (
-      let i = 0;
-      i < coalitionInRow && coalitionIdx < coalition.length;
-      i++
-    ) {
-      const t = coalitionInRow > 1 ? i / (coalitionInRow - 1) : 0.5;
-      const angle = (Math.PI / 2 - gapAngle) * (1 - t); // π/2-gap → 0
-      positioned.push({
-        seat: coalition[coalitionIdx++],
-        cx: centerX + radius * Math.cos(angle),
-        cy: centerY - radius * Math.sin(angle),
-        row: rowIdx,
-      });
-    }
+    // Evenly space ALL seats from π-pad to 0+pad
+    const arcStart = Math.PI - edgePad; // left edge (~177°)
+    const arcEnd = edgePad; // right edge (~3°)
 
-    // Opposition: left half — from π to (π/2 + gap)
-    for (
-      let i = 0;
-      i < oppositionInRow && oppositionIdx < opposition.length;
-      i++
-    ) {
-      const t = oppositionInRow > 1 ? i / (oppositionInRow - 1) : 0.5;
-      const angle = Math.PI - t * (Math.PI / 2 - gapAngle); // π → π/2+gap
-      positioned.push({
-        seat: opposition[oppositionIdx++],
-        cx: centerX + radius * Math.cos(angle),
-        cy: centerY - radius * Math.sin(angle),
-        row: rowIdx,
-      });
+    for (let i = 0; i < seatsInRow; i++) {
+      const t = seatsInRow > 1 ? i / (seatsInRow - 1) : 0.5;
+      const angle = arcStart + t * (arcEnd - arcStart);
+      const cx = centerX + radius * Math.cos(angle);
+      const cy = centerY - radius * Math.sin(angle);
+
+      // First seats (low index = left side) = opposition, rest = coalition
+      if (i < oppositionInRow && oppositionIdx < opposition.length) {
+        positioned.push({
+          seat: opposition[oppositionIdx++],
+          cx,
+          cy,
+          row: rowIdx,
+        });
+      } else if (coalitionIdx < coalition.length) {
+        positioned.push({
+          seat: coalition[coalitionIdx++],
+          cx,
+          cy,
+          row: rowIdx,
+        });
+      }
     }
   }
 
