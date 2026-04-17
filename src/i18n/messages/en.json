@@ -925,6 +925,7 @@
   "policies": {
     "title": "Policy Positions",
     "subtitle": "How MKs and factions voted on key issues",
+    "betaBanner": "New feature in initial rollout — data may be inaccurate as not all votes have been analyzed yet.",
     "noResults": "No policy positions found",
     "voteCount": "{count} votes",
     "stanceType": {
