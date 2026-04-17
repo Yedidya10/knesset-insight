@@ -2,6 +2,7 @@ import { getTranslations } from 'next-intl/server';
 import { Shield, Briefcase, UserCheck } from 'lucide-react';
 import { sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
+import { cached } from '@/lib/cache';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import AnimatedSection from '@/components/ui/animated-section';
@@ -17,36 +18,38 @@ export default async function IntegrityWatch() {
   };
 
   try {
-    const [
-      [{ count: casesCount }],
-      [{ count: corpCount }],
-      [{ count: lobbyCount }],
-      severityBreakdown,
-    ] = await Promise.all([
-      db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(sql`integrity_cases`),
-      db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(sql`member_corporate_affiliations`),
-      db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(sql`member_lobbyist_connections`),
-      db
-        .select({
-          severity: sql<string>`severity`,
-          count: sql<number>`count(*)::int`,
-        })
-        .from(sql`integrity_cases`)
-        .groupBy(sql`severity`),
-    ]);
+    stats = await cached('home:integrityWatch', 300, async () => {
+      const [
+        [{ count: casesCount }],
+        [{ count: corpCount }],
+        [{ count: lobbyCount }],
+        severityBreakdown,
+      ] = await Promise.all([
+        db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(sql`integrity_cases`),
+        db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(sql`member_corporate_affiliations`),
+        db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(sql`member_lobbyist_connections`),
+        db
+          .select({
+            severity: sql<string>`severity`,
+            count: sql<number>`count(*)::int`,
+          })
+          .from(sql`integrity_cases`)
+          .groupBy(sql`severity`),
+      ]);
 
-    stats = {
-      totalCases: casesCount,
-      corporateLinks: corpCount,
-      lobbyistMeetings: lobbyCount,
-      bySeverity: severityBreakdown,
-    };
+      return {
+        totalCases: casesCount,
+        corporateLinks: corpCount,
+        lobbyistMeetings: lobbyCount,
+        bySeverity: severityBreakdown,
+      };
+    });
   } catch (e) {
     console.error('Failed to fetch integrity stats:', e);
   }

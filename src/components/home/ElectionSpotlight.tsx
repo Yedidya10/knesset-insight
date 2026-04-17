@@ -4,6 +4,7 @@ import { ArrowRight, CalendarDays } from 'lucide-react';
 import { eq, desc } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { electionCampaigns, electionCandidateLists } from '@/lib/db/schema';
+import { cached } from '@/lib/cache';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import AnimatedSection from '@/components/ui/animated-section';
@@ -23,36 +24,50 @@ export default async function ElectionSpotlight() {
   }[] = [];
 
   try {
-    const [campaign] = await db
-      .select({
-        electionDate: electionCampaigns.electionDate,
-        knessetNum: electionCampaigns.knessetNum,
-      })
-      .from(electionCampaigns)
-      .where(eq(electionCampaigns.knessetNum, 26))
-      .limit(1);
+    const electionData = await cached(
+      'home:electionSpotlight',
+      600,
+      async () => {
+        const [campaign] = await db
+          .select({
+            electionDate: electionCampaigns.electionDate,
+            knessetNum: electionCampaigns.knessetNum,
+          })
+          .from(electionCampaigns)
+          .where(eq(electionCampaigns.knessetNum, 26))
+          .limit(1);
 
-    if (!campaign || !campaign.electionDate) return null;
+        if (!campaign || !campaign.electionDate) return null;
 
-    const electionDate = new Date(campaign.electionDate);
+        const lists = await db
+          .select({
+            id: electionCandidateLists.id,
+            name: electionCandidateLists.name,
+            shortName: electionCandidateLists.shortName,
+            slug: electionCandidateLists.slug,
+            leaderName: electionCandidateLists.leaderName,
+            color: electionCandidateLists.color,
+            estimatedSeats: electionCandidateLists.estimatedSeats,
+          })
+          .from(electionCandidateLists)
+          .orderBy(desc(electionCandidateLists.estimatedSeats))
+          .limit(4);
+
+        return {
+          electionDate: campaign.electionDate.toString(),
+          lists,
+        };
+      },
+    );
+
+    if (!electionData) return null;
+
+    const electionDate = new Date(electionData.electionDate);
     const now = new Date();
     daysLeft = Math.ceil(
       (electionDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
     );
-
-    topLists = await db
-      .select({
-        id: electionCandidateLists.id,
-        name: electionCandidateLists.name,
-        shortName: electionCandidateLists.shortName,
-        slug: electionCandidateLists.slug,
-        leaderName: electionCandidateLists.leaderName,
-        color: electionCandidateLists.color,
-        estimatedSeats: electionCandidateLists.estimatedSeats,
-      })
-      .from(electionCandidateLists)
-      .orderBy(desc(electionCandidateLists.estimatedSeats))
-      .limit(4);
+    topLists = electionData.lists;
   } catch (e) {
     console.error('Failed to fetch election data:', e);
     return null;

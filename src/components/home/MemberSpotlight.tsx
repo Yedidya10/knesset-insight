@@ -4,6 +4,7 @@ import { ArrowRight, Users } from 'lucide-react';
 import { sql, eq, desc } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { members, factions, memberVotes } from '@/lib/db/schema';
+import { cached } from '@/lib/cache';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -24,35 +25,37 @@ export default async function MemberSpotlight() {
   }[] = [];
 
   try {
-    topMembers = await db
-      .select({
-        id: members.id,
-        firstName: members.firstName,
-        lastName: members.lastName,
-        imageUrl: members.imageUrl,
-        factionName: factions.name,
-        factionColor: factions.color,
-        recentVoteCount: sql<number>`count(${memberVotes.id})::int`.as(
-          'recent_vote_count',
-        ),
-      })
-      .from(members)
-      .leftJoin(factions, eq(members.factionId, factions.id))
-      .leftJoin(
-        memberVotes,
-        sql`${memberVotes.memberId} = ${members.id} AND ${memberVotes.voteValue} != 'absent'`,
-      )
-      .where(eq(members.isCurrent, true))
-      .groupBy(
-        members.id,
-        members.firstName,
-        members.lastName,
-        members.imageUrl,
-        factions.name,
-        factions.color,
-      )
-      .orderBy(desc(sql`recent_vote_count`))
-      .limit(6);
+    topMembers = await cached('home:memberSpotlight', 300, () =>
+      db
+        .select({
+          id: members.id,
+          firstName: members.firstName,
+          lastName: members.lastName,
+          imageUrl: members.imageUrl,
+          factionName: factions.name,
+          factionColor: factions.color,
+          recentVoteCount: sql<number>`count(${memberVotes.id})::int`.as(
+            'recent_vote_count',
+          ),
+        })
+        .from(members)
+        .leftJoin(factions, eq(members.factionId, factions.id))
+        .leftJoin(
+          memberVotes,
+          sql`${memberVotes.memberId} = ${members.id} AND ${memberVotes.voteValue} != 'absent'`,
+        )
+        .where(eq(members.isCurrent, true))
+        .groupBy(
+          members.id,
+          members.firstName,
+          members.lastName,
+          members.imageUrl,
+          factions.name,
+          factions.color,
+        )
+        .orderBy(desc(sql`recent_vote_count`))
+        .limit(6),
+    );
   } catch (e) {
     console.error('Failed to fetch member spotlight:', e);
   }

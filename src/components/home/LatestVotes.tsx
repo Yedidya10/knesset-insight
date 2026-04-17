@@ -4,6 +4,7 @@ import { ArrowRight, Check, X, Vote } from 'lucide-react';
 import { desc } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { votes } from '@/lib/db/schema';
+import { cached } from '@/lib/cache';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import AnimatedSection from '@/components/ui/animated-section';
@@ -14,25 +15,32 @@ export default async function LatestVotes() {
   let latestVotes: {
     id: number;
     title: string;
-    voteDate: Date | null;
+    voteDate: string | null;
     isAccepted: boolean | null;
     forCount: number | null;
     againstCount: number | null;
   }[] = [];
 
   try {
-    latestVotes = await db
-      .select({
-        id: votes.id,
-        title: votes.title,
-        voteDate: votes.voteDate,
-        isAccepted: votes.isAccepted,
-        forCount: votes.forCount,
-        againstCount: votes.againstCount,
-      })
-      .from(votes)
-      .orderBy(desc(votes.voteDate))
-      .limit(3);
+    latestVotes = await cached('home:latestVotes', 300, async () => {
+      const rows = await db
+        .select({
+          id: votes.id,
+          title: votes.title,
+          voteDate: votes.voteDate,
+          isAccepted: votes.isAccepted,
+          forCount: votes.forCount,
+          againstCount: votes.againstCount,
+        })
+        .from(votes)
+        .orderBy(desc(votes.voteDate))
+        .limit(3);
+      // Serialize dates for Redis
+      return rows.map((r) => ({
+        ...r,
+        voteDate: r.voteDate ? r.voteDate.toISOString() : null,
+      }));
+    });
   } catch (e) {
     console.error('Failed to fetch latest votes:', e);
   }

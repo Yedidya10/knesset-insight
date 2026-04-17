@@ -4,6 +4,7 @@ import { ArrowRight, Gavel } from 'lucide-react';
 import { desc, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { bills } from '@/lib/db/schema';
+import { cached } from '@/lib/cache';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -21,20 +22,22 @@ export default async function ActiveLegislation() {
   }[] = [];
 
   try {
-    activeBills = await db
-      .select({
-        id: bills.id,
-        name: bills.name,
-        status: bills.status,
-        billType: bills.billType,
-        proposedDate: bills.proposedDate,
-      })
-      .from(bills)
-      .where(
-        sql`${bills.status} IS NOT NULL AND ${bills.status} NOT IN ('stopped', 'merged', 'removed')`,
-      )
-      .orderBy(desc(bills.proposedDate))
-      .limit(4);
+    activeBills = await cached('home:activeLegislation', 300, () =>
+      db
+        .select({
+          id: bills.id,
+          name: bills.name,
+          status: bills.status,
+          billType: bills.billType,
+          proposedDate: bills.proposedDate,
+        })
+        .from(bills)
+        .where(
+          sql`${bills.status} IS NOT NULL AND ${bills.status} NOT IN ('stopped', 'merged', 'removed')`,
+        )
+        .orderBy(desc(bills.proposedDate))
+        .limit(4),
+    );
   } catch (e) {
     console.error('Failed to fetch active legislation:', e);
   }

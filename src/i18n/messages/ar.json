@@ -52,16 +52,6 @@
     "subtitle": "الديمقراطية بالأرقام",
     "coalition": "الائتلاف",
     "opposition": "المعارضة",
-    "hero": {
-      "latestVote": "آخر تصويت",
-      "approved": "مُوافَق",
-      "rejected": "مرفوض",
-      "activeBills": "مشاريع قوانين نشطة",
-      "activeBillsLabel": "تشريعات قيد التنفيذ",
-      "electionIn": "الانتخابات بعد",
-      "days": "يوم",
-      "factions": "كتل"
-    },
     "stats": {
       "totalVotes": "تصويتات الهيئة العامة",
       "billsProposed": "مشاريع قوانين",

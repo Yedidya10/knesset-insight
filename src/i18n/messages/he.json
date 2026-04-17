@@ -52,16 +52,6 @@
     "subtitle": "הדמוקרטיה במספרים",
     "coalition": "קואליציה",
     "opposition": "אופוזיציה",
-    "hero": {
-      "latestVote": "הצבעה אחרונה",
-      "approved": "אושר",
-      "rejected": "נדחה",
-      "activeBills": "הצעות חוק פעילות",
-      "activeBillsLabel": "חקיקה בתהליך",
-      "electionIn": "בחירות בעוד",
-      "days": "ימים",
-      "factions": "סיעות"
-    },
     "stats": {
       "totalVotes": "הצבעות מליאה",
       "billsProposed": "הצעות חוק",

@@ -52,16 +52,6 @@
     "subtitle": "Democracy in numbers",
     "coalition": "Coalition",
     "opposition": "Opposition",
-    "hero": {
-      "latestVote": "Latest Vote",
-      "approved": "Approved",
-      "rejected": "Rejected",
-      "activeBills": "Active Bills",
-      "activeBillsLabel": "Legislation in Progress",
-      "electionIn": "Election in",
-      "days": "days",
-      "factions": "factions"
-    },
     "stats": {
       "totalVotes": "Plenary Votes",
       "billsProposed": "Bills Proposed",

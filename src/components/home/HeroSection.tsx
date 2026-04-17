@@ -1,47 +1,22 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
 import { ArrowRight } from 'lucide-react';
-import { sql, eq, desc } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import {
-  members,
-  factions,
-  votes,
-  bills,
-  electionCampaigns,
-} from '@/lib/db/schema';
+import { members, factions } from '@/lib/db/schema';
+import { cached } from '@/lib/cache';
 import { Button } from '@/components/ui/button';
 import AnimatedSection from '@/components/ui/animated-section';
 import KnessetHemicycle, {
   type SeatData,
 } from '@/components/home/KnessetHemicycle';
-import FloatingDataCards from '@/components/home/FloatingDataCards';
 
-export default async function HeroSection() {
-  const t = await getTranslations('home');
-  const tNav = await getTranslations('nav');
+const CACHE_KEY = 'home:hero:seatData';
+const CACHE_TTL = 300; // 5 minutes
 
-  // Fetch all data in parallel
-  let seatData: SeatData[] = [];
-  let latestVote: {
-    title: string;
-    isAccepted: boolean | null;
-    forCount: number;
-    againstCount: number;
-  } | null = null;
-  let activeBillsCount = 0;
-  let electionDaysLeft: number | null = null;
-  let factionStats = { total: 0, coalitionSeats: 0, oppositionSeats: 0 };
-
-  try {
-    const [
-      currentMembers,
-      currentFactions,
-      [latestVoteRow] = [null],
-      [{ count: billCount }],
-      campaign,
-    ] = await Promise.all([
-      // Members with faction info
+async function getSeatData(): Promise<SeatData[]> {
+  return cached(CACHE_KEY, CACHE_TTL, async () => {
+    const [currentMembers, currentFactions] = await Promise.all([
       db
         .select({
           id: members.id,
@@ -51,7 +26,6 @@ export default async function HeroSection() {
         })
         .from(members)
         .where(eq(members.isCurrent, true)),
-      // Current factions
       db
         .select({
           id: factions.id,
@@ -62,37 +36,11 @@ export default async function HeroSection() {
         })
         .from(factions)
         .where(eq(factions.isCurrent, true)),
-      // Latest vote
-      db
-        .select({
-          title: votes.title,
-          isAccepted: votes.isAccepted,
-          forCount: votes.forCount,
-          againstCount: votes.againstCount,
-        })
-        .from(votes)
-        .orderBy(desc(votes.voteDate))
-        .limit(1),
-      // Active bills count
-      db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(bills)
-        .where(
-          sql`${bills.status} IS NOT NULL AND ${bills.status} NOT IN ('stopped', 'merged', 'removed')`,
-        ),
-      // Election campaign
-      db
-        .select({ electionDate: electionCampaigns.electionDate })
-        .from(electionCampaigns)
-        .where(eq(electionCampaigns.knessetNum, 26))
-        .limit(1),
     ]);
 
-    // Build faction lookup
     const factionMap = new Map(currentFactions.map((f) => [f.id, f]));
 
-    // Build seat data
-    seatData = currentMembers
+    return currentMembers
       .filter((m) => m.factionId && factionMap.has(m.factionId))
       .map((m) => {
         const f = factionMap.get(m.factionId!)!;
@@ -104,41 +52,17 @@ export default async function HeroSection() {
           isCoalition: f.isCoalition ?? false,
         };
       });
+  });
+}
 
-    // Latest vote
-    if (latestVoteRow) {
-      latestVote = {
-        title: latestVoteRow.title,
-        isAccepted: latestVoteRow.isAccepted,
-        forCount: latestVoteRow.forCount ?? 0,
-        againstCount: latestVoteRow.againstCount ?? 0,
-      };
-    }
+export default async function HeroSection() {
+  const t = await getTranslations('home');
+  const tNav = await getTranslations('nav');
 
-    activeBillsCount = billCount;
+  let seatData: SeatData[] = [];
 
-    // Faction stats
-    const coalitionSeats = currentFactions
-      .filter((f) => f.isCoalition)
-      .reduce((sum, f) => sum + (f.seats ?? 0), 0);
-    const oppositionSeats = currentFactions
-      .filter((f) => !f.isCoalition)
-      .reduce((sum, f) => sum + (f.seats ?? 0), 0);
-    factionStats = {
-      total: currentFactions.length,
-      coalitionSeats,
-      oppositionSeats,
-    };
-
-    // Election countdown
-    if (campaign?.[0]?.electionDate) {
-      const electionDate = new Date(campaign[0].electionDate);
-      const now = new Date();
-      const diff = electionDate.getTime() - now.getTime();
-      if (diff > 0) {
-        electionDaysLeft = Math.ceil(diff / (1000 * 60 * 60 * 24));
-      }
-    }
+  try {
+    seatData = await getSeatData();
   } catch (e) {
     console.error('Failed to fetch hero data:', e);
   }
@@ -161,24 +85,16 @@ export default async function HeroSection() {
       />
 
       <div className="relative mx-auto max-w-7xl px-4 pt-8 pb-0 sm:px-6 sm:pt-12 lg:pt-16">
-        {/* Hemicycle + Floating Cards wrapper */}
-        <div className="relative">
-          {seatData.length > 0 && (
-            <AnimatedSection>
-              <KnessetHemicycle
-                seats={seatData}
-                coalitionLabel={t('coalition')}
-                oppositionLabel={t('opposition')}
-              />
-            </AnimatedSection>
-          )}
-          <FloatingDataCards
-            latestVote={latestVote}
-            activeBillsCount={activeBillsCount}
-            electionDaysLeft={electionDaysLeft}
-            factionStats={factionStats}
-          />
-        </div>
+        {/* Hemicycle */}
+        {seatData.length > 0 && (
+          <AnimatedSection>
+            <KnessetHemicycle
+              seats={seatData}
+              coalitionLabel={t('coalition')}
+              oppositionLabel={t('opposition')}
+            />
+          </AnimatedSection>
+        )}
 
         {/* Title + CTAs */}
         <div className="flex flex-col items-center pb-10 text-center">

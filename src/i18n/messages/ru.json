@@ -52,16 +52,6 @@
     "subtitle": "Демократия в цифрах",
     "coalition": "Коалиция",
     "opposition": "Оппозиция",
-    "hero": {
-      "latestVote": "Последнее голосование",
-      "approved": "Одобрено",
-      "rejected": "Отклонено",
-      "activeBills": "Активные законопроекты",
-      "activeBillsLabel": "Законодательство в процессе",
-      "electionIn": "Выборы через",
-      "days": "дней",
-      "factions": "фракций"
-    },
     "stats": {
       "totalVotes": "Голосования пленума",
       "billsProposed": "Законопроекты",

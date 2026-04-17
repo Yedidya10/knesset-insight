@@ -11,6 +11,7 @@ import {
 import { sql, eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { votes, bills, committees, factions } from '@/lib/db/schema';
+import { cached } from '@/lib/cache';
 import { Card, CardContent } from '@/components/ui/card';
 import AnimatedSection from '@/components/ui/animated-section';
 import CountUp from '@/components/ui/count-up';
@@ -28,39 +29,41 @@ export default async function StatsBar() {
   };
 
   try {
-    const [
-      [{ count: voteCount }],
-      [{ count: billCount }],
-      [{ count: committeeCount }],
-      [{ count: factionCount }],
-      [{ count: sessionCount }],
-      [{ count: integrityCount }],
-    ] = await Promise.all([
-      db.select({ count: sql<number>`count(*)::int` }).from(votes),
-      db.select({ count: sql<number>`count(*)::int` }).from(bills),
-      db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(committees)
-        .where(eq(committees.isActive, true)),
-      db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(factions)
-        .where(eq(factions.isCurrent, true)),
-      db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(sql`committee_sessions`),
-      db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(sql`integrity_cases`),
-    ]);
-    stats = {
-      votes: voteCount,
-      bills: billCount,
-      committees: committeeCount,
-      factions: factionCount,
-      sessions: sessionCount,
-      integrity: integrityCount,
-    };
+    stats = await cached('home:statsBar', 300, async () => {
+      const [
+        [{ count: voteCount }],
+        [{ count: billCount }],
+        [{ count: committeeCount }],
+        [{ count: factionCount }],
+        [{ count: sessionCount }],
+        [{ count: integrityCount }],
+      ] = await Promise.all([
+        db.select({ count: sql<number>`count(*)::int` }).from(votes),
+        db.select({ count: sql<number>`count(*)::int` }).from(bills),
+        db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(committees)
+          .where(eq(committees.isActive, true)),
+        db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(factions)
+          .where(eq(factions.isCurrent, true)),
+        db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(sql`committee_sessions`),
+        db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(sql`integrity_cases`),
+      ]);
+      return {
+        votes: voteCount,
+        bills: billCount,
+        committees: committeeCount,
+        factions: factionCount,
+        sessions: sessionCount,
+        integrity: integrityCount,
+      };
+    });
   } catch (e) {
     console.error('Failed to fetch stats:', e);
   }
