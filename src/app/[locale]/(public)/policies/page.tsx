@@ -124,41 +124,45 @@ export default async function PoliciesPage({ searchParams }: Props) {
                 : null;
 
               return (
-                <Link key={stance.id} href={`/policies/${stance.id}`}>
-                  <Card className="glass-card hover-lift border-s-primary/30 overflow-hidden border-s-4">
-                    <CardContent className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="min-w-0 flex-1">
-                        <h3 className="leading-tight font-semibold">{label}</h3>
-                        {description && (
-                          <p className="text-muted-foreground mt-1 line-clamp-2 text-sm">
-                            {description}
-                          </p>
-                        )}
-                        <div className="text-muted-foreground mt-1.5 flex flex-wrap items-center gap-2 text-sm">
-                          <span>
-                            {t('voteCount', {
-                              count: stance.voteCount ?? 0,
-                            })}
-                          </span>
+                <div key={stance.id} className="group relative">
+                  <Link href={`/policies/${stance.id}`}>
+                    <Card className="glass-card hover-lift border-s-primary/30 overflow-hidden border-s-4">
+                      <CardContent className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="min-w-0 flex-1">
+                          <h3 className="leading-tight font-semibold">
+                            {label}
+                          </h3>
+                          {description && (
+                            <p className="text-muted-foreground mt-1 line-clamp-2 text-sm">
+                              {description}
+                            </p>
+                          )}
+                          <div className="text-muted-foreground mt-1.5 flex flex-wrap items-center gap-2 text-sm">
+                            <span>
+                              {t('voteCount', {
+                                count: stance.voteCount ?? 0,
+                              })}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {domainLabel && (
-                          <Badge variant="outline">{domainLabel}</Badge>
-                        )}
-                        <Badge
-                          variant={
-                            stance.stanceType === 'derived'
-                              ? 'secondary'
-                              : 'outline'
-                          }
-                        >
-                          {t(`stanceType.${stance.stanceType}`)}
-                        </Badge>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
+                        <div className="flex items-center gap-2">
+                          {domainLabel && (
+                            <Badge variant="outline">{domainLabel}</Badge>
+                          )}
+                          <Badge
+                            variant={
+                              stance.stanceType === 'derived'
+                                ? 'secondary'
+                                : 'outline'
+                            }
+                          >
+                            {t(`stanceType.${stance.stanceType}`)}
+                          </Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                </div>
               );
             })}
           </div>

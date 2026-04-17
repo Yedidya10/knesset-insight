@@ -75,37 +75,41 @@ export default async function ElectionsPage({ searchParams }: Props) {
       </div>
 
       {/* Elections 2026 banner */}
-      <Link href="/elections/2026">
-        <Card className="border-primary/30 from-primary/5 to-primary/10 hover:border-primary/50 mb-6 overflow-hidden bg-gradient-to-r transition-colors">
-          <CardContent className="flex items-center justify-between p-4">
-            <div>
-              <h2 className="text-lg font-bold">{t2026('bannerTitle')}</h2>
-              <p className="text-muted-foreground text-sm">
-                {t2026('bannerDescription')}
-              </p>
-            </div>
-            <ArrowRight className="text-primary h-5 w-5 shrink-0 rtl:rotate-180" />
-          </CardContent>
-        </Card>
-      </Link>
-
-      {/* Election map banner */}
-      <Link href="/elections/map">
-        <Card className="border-chart-1/30 from-chart-1/5 to-chart-1/10 hover:border-chart-1/50 mb-6 overflow-hidden bg-gradient-to-r transition-colors">
-          <CardContent className="flex items-center justify-between p-4">
-            <div className="flex items-center gap-3">
-              <Map className="text-chart-1 h-5 w-5 shrink-0" />
+      <div className="mb-6">
+        <Link href="/elections/2026">
+          <Card className="border-primary/30 from-primary/5 to-primary/10 hover:border-primary/50 overflow-hidden bg-gradient-to-r transition-colors">
+            <CardContent className="flex items-center justify-between p-4">
               <div>
-                <h2 className="text-lg font-bold">{tMap('title')}</h2>
+                <h2 className="text-lg font-bold">{t2026('bannerTitle')}</h2>
                 <p className="text-muted-foreground text-sm">
-                  {tMap('description')}
+                  {t2026('bannerDescription')}
                 </p>
               </div>
-            </div>
-            <ArrowRight className="text-chart-1 h-5 w-5 shrink-0 rtl:rotate-180" />
-          </CardContent>
-        </Card>
-      </Link>
+              <ArrowRight className="text-primary h-5 w-5 shrink-0 rtl:rotate-180" />
+            </CardContent>
+          </Card>
+        </Link>
+      </div>
+
+      {/* Election map banner */}
+      <div className="mb-6">
+        <Link href="/elections/map">
+          <Card className="border-chart-1/30 from-chart-1/5 to-chart-1/10 hover:border-chart-1/50 overflow-hidden bg-gradient-to-r transition-colors">
+            <CardContent className="flex items-center justify-between p-4">
+              <div className="flex items-center gap-3">
+                <Map className="text-chart-1 h-5 w-5 shrink-0" />
+                <div>
+                  <h2 className="text-lg font-bold">{tMap('title')}</h2>
+                  <p className="text-muted-foreground text-sm">
+                    {tMap('description')}
+                  </p>
+                </div>
+              </div>
+              <ArrowRight className="text-chart-1 h-5 w-5 shrink-0 rtl:rotate-180" />
+            </CardContent>
+          </Card>
+        </Link>
+      </div>
 
       {/* Knesset tabs */}
       {availableKnessets.length > 0 && (
@@ -138,61 +142,63 @@ export default async function ElectionsPage({ searchParams }: Props) {
           </div>
 
           {data.map((list) => (
-            <Link key={list.id} href={`/elections/${list.id}`}>
-              <Card
-                className={`glass-card hover-lift overflow-hidden transition-colors ${
-                  list.isElected
-                    ? 'border-s-4 border-s-green-500/50'
-                    : 'border-s-muted/30 border-s-4'
-                }`}
-              >
-                <CardContent className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:gap-4">
-                  <span className="text-primary w-16 text-center font-mono text-lg font-bold">
-                    {list.ballotLetters}
-                  </span>
-                  <div className="flex-1">
-                    <span className="font-medium">{list.name}</span>
-                    <div className="mt-1 sm:hidden">
-                      <div className="text-muted-foreground flex gap-2 text-xs">
-                        {list.totalVotes && (
-                          <span>
-                            {list.totalVotes.toLocaleString()}{' '}
-                            {t('totalVotes').toLowerCase()}
-                          </span>
-                        )}
-                        {list.votePercentage && (
-                          <span>{list.votePercentage}%</span>
-                        )}
+            <div key={list.id} className="group relative">
+              <Link href={`/elections/${list.id}`}>
+                <Card
+                  className={`glass-card hover-lift overflow-hidden transition-colors ${
+                    list.isElected
+                      ? 'border-s-4 border-s-green-500/50'
+                      : 'border-s-muted/30 border-s-4'
+                  }`}
+                >
+                  <CardContent className="flex flex-col gap-2 p-4 sm:flex-row sm:items-center sm:gap-4">
+                    <span className="text-primary w-16 text-center font-mono text-lg font-bold">
+                      {list.ballotLetters}
+                    </span>
+                    <div className="flex-1">
+                      <span className="font-medium">{list.name}</span>
+                      <div className="mt-1 sm:hidden">
+                        <div className="text-muted-foreground flex gap-2 text-xs">
+                          {list.totalVotes && (
+                            <span>
+                              {list.totalVotes.toLocaleString()}{' '}
+                              {t('totalVotes').toLowerCase()}
+                            </span>
+                          )}
+                          {list.votePercentage && (
+                            <span>{list.votePercentage}%</span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <span className="hidden w-24 text-end text-sm sm:block">
-                    {list.totalVotes?.toLocaleString() ?? '—'}
-                  </span>
-                  <span className="hidden w-16 text-end text-sm sm:block">
-                    {list.votePercentage ? `${list.votePercentage}%` : '—'}
-                  </span>
-                  <div className="flex w-32 items-center gap-2">
-                    <Progress
-                      value={(list.seats / maxSeats) * 100}
-                      className="h-2 flex-1"
-                    />
-                    <span className="w-8 text-end text-sm font-bold">
-                      {list.seats}
+                    <span className="hidden w-24 text-end text-sm sm:block">
+                      {list.totalVotes?.toLocaleString() ?? '—'}
                     </span>
-                  </div>
-                  {list.isElected ? (
-                    <Badge variant="default" className="w-auto shrink-0">
-                      {t('elected')}
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline" className="w-auto shrink-0">
-                      {t('notElected')}
-                    </Badge>
-                  )}
-                </CardContent>
-              </Card>
-            </Link>
+                    <span className="hidden w-16 text-end text-sm sm:block">
+                      {list.votePercentage ? `${list.votePercentage}%` : '—'}
+                    </span>
+                    <div className="flex w-32 items-center gap-2">
+                      <Progress
+                        value={(list.seats / maxSeats) * 100}
+                        className="h-2 flex-1"
+                      />
+                      <span className="w-8 text-end text-sm font-bold">
+                        {list.seats}
+                      </span>
+                    </div>
+                    {list.isElected ? (
+                      <Badge variant="default" className="w-auto shrink-0">
+                        {t('elected')}
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="w-auto shrink-0">
+                        {t('notElected')}
+                      </Badge>
+                    )}
+                  </CardContent>
+                </Card>
+              </Link>
+            </div>
           ))}
         </div>
       ) : (
