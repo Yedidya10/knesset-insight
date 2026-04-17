@@ -1,21 +1,41 @@
-MIT License
+                    GNU AFFERO GENERAL PUBLIC LICENSE
+                       Version 3, 19 November 2007
 
 Copyright (c) 2026 Yedidya
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+---
+
+NOTICE: Content Licensing
+
+This license applies ONLY to the source code of this project.
+
+The following content is NOT covered by this license and is subject to
+their own respective licenses:
+
+1. KNESSET DATA — Data sourced from the Knesset website (knesset.gov.il)
+   and its OData APIs is subject to the Knesset's own terms of use.
+   See: https://main.knesset.gov.il/Pages/TermsOfUse.aspx
+
+2. OPEN KNESSET DATA — Data sourced from Open Knesset (oknesset.org)
+   by The Public Knowledge Workshop (hasadna) is available under its
+   own open data terms.
+
+3. WIKIPEDIA IMAGES — Images sourced from Wikipedia/Wikimedia Commons
+   are licensed under their respective licenses (typically CC BY-SA 3.0
+   or CC BY-SA 4.0). Attribution is preserved as required.
+
+4. OTHER THIRD-PARTY CONTENT — Any other third-party content, assets,
+   or data used in this project retains its original license.

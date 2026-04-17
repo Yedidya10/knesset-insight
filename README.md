@@ -2,7 +2,7 @@
 
 > פלטפורמה להנגשת המידע הפרלמנטרי של כנסת ישראל
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 
 ## מה זה?
 
@@ -19,11 +19,11 @@
 
 ## מקורות נתונים
 
-| מקור | סוג | קישור |
-|------|------|--------|
-| ממשקי OData של הכנסת | הצעות חוק, הצבעות, מסמכים | [knesset.gov.il/Odata](https://knesset.gov.il/Odata/ParliamentInfo.svc) |
-| כנסת פתוחה (hasadna) | נתונים מעובדים — חברי כנסת, ועדות | [oknesset.org](https://oknesset.org/) |
-| מפתח התקציב | תקציב המדינה והוצאות | [next.obudget.org](https://next.obudget.org/) |
+| מקור                 | סוג                               | קישור                                                                   |
+| -------------------- | --------------------------------- | ----------------------------------------------------------------------- |
+| ממשקי OData של הכנסת | הצעות חוק, הצבעות, מסמכים         | [knesset.gov.il/Odata](https://knesset.gov.il/Odata/ParliamentInfo.svc) |
+| כנסת פתוחה (hasadna) | נתונים מעובדים — חברי כנסת, ועדות | [oknesset.org](https://oknesset.org/)                                   |
+| מפתח התקציב          | תקציב המדינה והוצאות              | [next.obudget.org](https://next.obudget.org/)                           |
 
 ## טכנולוגיות
 
@@ -78,4 +78,6 @@ pnpm dev
 
 ## רישיון
 
-[MIT](LICENSE)
+[GNU AGPLv3](LICENSE)
+
+הרישיון חל על קוד המקור בלבד. תמונות מוויקיפדיה כפופות לרישיונות שלהן (בדרך כלל CC BY-SA), ותכנים מאתר הכנסת ומכנסת פתוחה כפופים לתנאי השימוש שלהם.

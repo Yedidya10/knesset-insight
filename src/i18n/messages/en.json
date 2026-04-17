@@ -1063,7 +1063,7 @@
       "nonPartisan": "Non-Partisan",
       "nonPartisanDesc": "We are not affiliated with any political party or movement. The data speaks for itself.",
       "openSource": "Open Source",
-      "openSourceDesc": "All platform code is open on GitHub under the MIT license. Contributions are welcome!"
+      "openSourceDesc": "All platform code is open on GitHub under the GNU AGPLv3 license. Contributions are welcome!"
     },
     "techTitle": "Technology",
     "techText": "The platform is built with Next.js, React, TypeScript and Tailwind CSS. Data is stored in Supabase (PostgreSQL) with Drizzle ORM. Automatic syncing with the Knesset API and Open Knesset runs every few hours."
@@ -1072,7 +1072,7 @@
     "title": "Open Source",
     "intro": "Knesset Insight is a fully open-source project. Every line of code is available for review, forking and contribution.",
     "licenseTitle": "License",
-    "licenseText": "The project is distributed under the MIT License — you can freely use the code for any purpose, including commercial use.",
+    "licenseText": "The project source code is distributed under the GNU Affero General Public License v3 (AGPLv3). Images from Wikipedia are subject to their own licenses (typically CC BY-SA), and content from the Knesset and Open Knesset websites is subject to their respective terms of use.",
     "repoTitle": "Repository",
     "repoText": "The source code is available on GitHub:",
     "repoLink": "Yedidya10/knesset-insight",
