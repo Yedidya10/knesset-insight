@@ -1,18 +1,15 @@
 import { getTranslations } from 'next-intl/server';
-import { eq, desc, and, sql } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { Vote } from 'lucide-react';
 import { db } from '@/lib/db';
 import {
   electionCampaigns,
   electionCandidateLists,
-  electionPolls,
-  electionPollResults,
   electionTimelineEvents,
 } from '@/lib/db/schema';
 import { appConfig } from '@/../app.config';
 import { Link } from '@/i18n/navigation';
 import ElectionCountdown from '@/components/elections/ElectionCountdown';
-import SeatProjectionBar from '@/components/elections/SeatProjectionBar';
 import CandidateListCard from '@/components/elections/CandidateListCard';
 import ElectionTimeline from '@/components/elections/ElectionTimeline';
 
@@ -40,7 +37,6 @@ export default async function Elections2026Page() {
       leaderName: electionCandidateLists.leaderName,
       status: electionCandidateLists.status,
       color: electionCandidateLists.color,
-      estimatedSeats: electionCandidateLists.estimatedSeats,
       politicalPosition: electionCandidateLists.politicalPosition,
     })
     .from(electionCandidateLists)
@@ -51,50 +47,7 @@ export default async function Elections2026Page() {
         eq(electionCampaigns.knessetNum, appConfig.elections2026.knessetNum),
       ),
     )
-    .orderBy(
-      desc(electionCandidateLists.estimatedSeats),
-      electionCandidateLists.sortOrder,
-    );
-
-  // Latest poll for seat projection
-  const latestPoll = campaign[0]
-    ? await db
-        .select()
-        .from(electionPolls)
-        .where(eq(electionPolls.campaignId, campaign[0].id))
-        .orderBy(desc(electionPolls.publishDate))
-        .limit(1)
-    : [];
-
-  let seatSegments: {
-    slug: string;
-    name: string;
-    seats: number;
-    color: string;
-  }[] = [];
-  if (latestPoll[0]) {
-    const pollResults = await db
-      .select({
-        predictedSeats: electionPollResults.predictedSeats,
-        listSlug: electionCandidateLists.slug,
-        listName: electionCandidateLists.shortName,
-        listColor: electionCandidateLists.color,
-      })
-      .from(electionPollResults)
-      .innerJoin(
-        electionCandidateLists,
-        eq(electionPollResults.candidateListId, electionCandidateLists.id),
-      )
-      .where(eq(electionPollResults.pollId, latestPoll[0].id))
-      .orderBy(desc(electionPollResults.predictedSeats));
-
-    seatSegments = pollResults.map((r) => ({
-      slug: r.listSlug,
-      name: r.listName ?? '',
-      seats: r.predictedSeats,
-      color: r.listColor ?? '#888',
-    }));
-  }
+    .orderBy(electionCandidateLists.sortOrder);
 
   // Upcoming timeline events (next 3)
   const upcomingEvents = campaign[0]
@@ -166,19 +119,6 @@ export default async function Elections2026Page() {
         <ElectionCountdown electionDate={electionDate} />
       </div>
 
-      {/* Seat projection */}
-      {seatSegments.length > 0 && (
-        <div className="mb-8">
-          <h2 className="mb-3 text-lg font-semibold">{t('seatProjection')}</h2>
-          <SeatProjectionBar
-            segments={seatSegments}
-            totalSeats={appConfig.elections2026.totalSeats}
-            coalitionLabel={t('coalition')}
-            majorityLabel={t('majority')}
-          />
-        </div>
-      )}
-
       {/* Candidate lists grid */}
       <div className="mb-8">
         <div className="mb-3 flex items-center justify-between">
@@ -200,7 +140,7 @@ export default async function Elections2026Page() {
               leaderName={list.leaderName}
               status={list.status}
               color={list.color}
-              estimatedSeats={list.estimatedSeats}
+              estimatedSeats={null}
               politicalPosition={list.politicalPosition}
               statusLabels={statusLabels}
               positionLabels={positionLabels}

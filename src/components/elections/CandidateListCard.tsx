@@ -39,28 +39,23 @@ export default function CandidateListCard({
         />
         <CardContent className="p-4">
           <div className="mb-2 flex items-start justify-between gap-2">
-            <h3 className="font-semibold leading-tight">{name}</h3>
+            <h3 className="leading-tight font-semibold">{name}</h3>
             <ElectionStatusBadge status={status} labels={statusLabels} />
           </div>
 
           {leaderName && (
-            <p className="mb-2 text-sm text-muted-foreground">
+            <p className="text-muted-foreground mb-2 text-sm">
               {leaderLabel}: {leaderName}
             </p>
           )}
 
-          <div className="flex items-center justify-between">
-            {politicalPosition && (
-              <span className="text-xs text-muted-foreground">
+          {politicalPosition && (
+            <div className="flex items-center">
+              <span className="text-muted-foreground text-xs">
                 {positionLabels[politicalPosition] ?? politicalPosition}
               </span>
-            )}
-            {estimatedSeats != null && estimatedSeats > 0 && (
-              <span className="text-sm font-bold">
-                {estimatedSeats} {seatsLabel}
-              </span>
-            )}
-          </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </Link>

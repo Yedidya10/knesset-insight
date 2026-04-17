@@ -1,5 +1,5 @@
 import { getTranslations } from 'next-intl/server';
-import { eq, desc, and } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { electionCampaigns, electionCandidateLists } from '@/lib/db/schema';
 import { appConfig } from '@/../app.config';
@@ -25,7 +25,6 @@ export default async function PartiesPage({ searchParams }: Props) {
       leaderName: electionCandidateLists.leaderName,
       status: electionCandidateLists.status,
       color: electionCandidateLists.color,
-      estimatedSeats: electionCandidateLists.estimatedSeats,
       politicalPosition: electionCandidateLists.politicalPosition,
     })
     .from(electionCandidateLists)
@@ -36,10 +35,7 @@ export default async function PartiesPage({ searchParams }: Props) {
         eq(electionCampaigns.knessetNum, appConfig.elections2026.knessetNum),
       ),
     )
-    .orderBy(
-      desc(electionCandidateLists.estimatedSeats),
-      electionCandidateLists.sortOrder,
-    );
+    .orderBy(electionCandidateLists.sortOrder);
 
   // Client-side filter (simple: apply server-side)
   const filtered = lists.filter((l) => {
@@ -153,7 +149,7 @@ export default async function PartiesPage({ searchParams }: Props) {
             leaderName={list.leaderName}
             status={list.status}
             color={list.color}
-            estimatedSeats={list.estimatedSeats}
+            estimatedSeats={null}
             politicalPosition={list.politicalPosition}
             statusLabels={statusLabels}
             positionLabels={positionLabels}
