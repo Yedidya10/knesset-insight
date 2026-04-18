@@ -183,7 +183,9 @@
       "personalDetails": "Personal Details",
       "contactInfo": "Contact",
       "showDetails": "Show details",
-      "hideDetails": "Hide details"
+      "hideDetails": "Hide details",
+      "governmentRoles": "Government Roles",
+      "inGovernment": "Government {num}"
     },
     "filter": {
       "allParties": "All factions",
@@ -761,7 +763,20 @@
     "active": "Active",
     "ended": "Ended",
     "leadership": "Government Leadership",
-    "positionHolders": "{count} Position Holders"
+    "positionHolders": "{count} Position Holders",
+    "activeMinisterCount": "{count} Active Ministers",
+    "totalMinisterCount": "{count} Ministers Total",
+    "actingMinister": "Acting",
+    "ministerWithoutPortfolio": "Ministers Without Portfolio",
+    "viewByMinistry": "By Ministry",
+    "viewByPerson": "By Person",
+    "timeline": "Timeline",
+    "portfolios": "Portfolios",
+    "appointed": "Appointed",
+    "departed": "Departed",
+    "reshuffled": "Reshuffled",
+    "governmentFormed": "Government Formed",
+    "noMinistersWithoutPortfolio": "No ministers without portfolio"
   },
   "politics": {
     "title": "Politics",

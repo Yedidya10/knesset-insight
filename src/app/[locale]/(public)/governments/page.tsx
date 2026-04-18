@@ -7,6 +7,9 @@ import { governments, members, factionCoalitionPeriods } from '@/lib/db/schema';
 import { Link } from '@/i18n/navigation';
 import { Badge } from '@/components/ui/badge';
 import GovernmentCard from '@/components/governments/GovernmentCard';
+import { appConfig } from '@/../app.config';
+
+const ministerPosIds = appConfig.knesset.govPositionIds.minister;
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations('seo.governments');
@@ -55,6 +58,20 @@ export default async function GovernmentsPage({ searchParams }: Props) {
         select count(distinct gp.member_knesset_id)::int
         from government_positions gp
         where gp.government_id = ${governments.id}
+          and gp.position_id in (${sql.join(
+            ministerPosIds.map((id) => sql`${id}`),
+            sql`, `,
+          )})
+      )`,
+      activeMinisterCount: sql<number>`(
+        select count(distinct gp.member_knesset_id)::int
+        from government_positions gp
+        where gp.government_id = ${governments.id}
+          and gp.position_id in (${sql.join(
+            ministerPosIds.map((id) => sql`${id}`),
+            sql`, `,
+          )})
+          and gp.is_current = true
       )`,
       coalitionFactionCount: sql<number>`(
         select count(distinct fcp.faction_id)::int

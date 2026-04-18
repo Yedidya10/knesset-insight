@@ -10,6 +10,9 @@ import {
   factions,
   factionCoalitionPeriods,
 } from '../../lib/db/schema';
+import { appConfig } from '../../../app.config';
+
+const ministerPositionIds = appConfig.knesset.govPositionIds.minister;
 
 export const governmentsRouter = router({
   list: publicProcedure
@@ -41,6 +44,20 @@ export const governmentsRouter = router({
             select count(distinct gp.member_knesset_id)::int
             from government_positions gp
             where gp.government_id = ${governments.id}
+              and gp.position_id in (${sql.join(
+                ministerPositionIds.map((id) => sql`${id}`),
+                sql`, `,
+              )})
+          )`,
+          activeMinisterCount: sql<number>`(
+            select count(distinct gp.member_knesset_id)::int
+            from government_positions gp
+            where gp.government_id = ${governments.id}
+              and gp.position_id in (${sql.join(
+                ministerPositionIds.map((id) => sql`${id}`),
+                sql`, `,
+              )})
+              and gp.is_current = true
           )`,
           coalitionFactionCount: sql<number>`(
             select count(distinct fcp.faction_id)::int

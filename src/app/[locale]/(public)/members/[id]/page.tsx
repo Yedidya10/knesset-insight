@@ -26,6 +26,9 @@ import {
   integrityCases,
   memberCorporateAffiliations,
   memberLobbyistConnections,
+  governmentPositions,
+  governments,
+  govMinistries,
 } from '@/lib/db/schema';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -117,6 +120,7 @@ export default async function MemberProfilePage({ params }: Props) {
     integrityData,
     corporateAff,
     lobbyistConn,
+    governmentRoles,
   ] = await Promise.all([
     // Recent votes by this member
     db
@@ -198,6 +202,31 @@ export default async function MemberProfilePage({ params }: Props) {
       .where(eq(memberLobbyistConnections.memberId, member.id))
       .orderBy(desc(memberLobbyistConnections.eventDate))
       .limit(20),
+
+    // Government positions
+    db
+      .select({
+        governmentNum: governments.governmentNum,
+        positionDesc: governmentPositions.positionDesc,
+        ministryName: govMinistries.name,
+        startDate: governmentPositions.startDate,
+        endDate: governmentPositions.endDate,
+        isCurrent: governmentPositions.isCurrent,
+      })
+      .from(governmentPositions)
+      .innerJoin(
+        governments,
+        eq(governmentPositions.governmentId, governments.id),
+      )
+      .leftJoin(
+        govMinistries,
+        eq(governmentPositions.govMinistryId, govMinistries.id),
+      )
+      .where(eq(governmentPositions.memberId, member.id))
+      .orderBy(
+        desc(governments.governmentNum),
+        asc(governmentPositions.startDate),
+      ),
   ]);
 
   // Compute vote breakdown stats
@@ -264,6 +293,7 @@ export default async function MemberProfilePage({ params }: Props) {
         member={member}
         age={age}
         factionHistory={factionHistory}
+        governmentRoles={governmentRoles}
         locale={locale}
       />
 

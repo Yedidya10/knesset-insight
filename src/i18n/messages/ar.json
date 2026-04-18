@@ -183,7 +183,9 @@
       "personalDetails": "التفاصيل الشخصية",
       "contactInfo": "التواصل",
       "showDetails": "إظهار التفاصيل",
-      "hideDetails": "إخفاء التفاصيل"
+      "hideDetails": "إخفاء التفاصيل",
+      "governmentRoles": "مناصب حكومية",
+      "inGovernment": "حكومة {num}"
     },
     "filter": {
       "allParties": "جميع الكتل",
@@ -762,7 +764,20 @@
     "active": "نشط",
     "ended": "انتهى",
     "leadership": "قيادة الحكومة",
-    "positionHolders": "{count} أصحاب مناصب"
+    "positionHolders": "{count} أصحاب مناصب",
+    "activeMinisterCount": "{count} وزراء نشطون",
+    "totalMinisterCount": "{count} وزراء إجمالاً",
+    "actingMinister": "بالإنابة",
+    "ministerWithoutPortfolio": "وزراء بلا حقيبة",
+    "viewByMinistry": "حسب الوزارة",
+    "viewByPerson": "حسب الشخص",
+    "timeline": "الجدول الزمني",
+    "portfolios": "الحقائب",
+    "appointed": "تم تعيينه",
+    "departed": "غادر المنصب",
+    "reshuffled": "تم نقله",
+    "governmentFormed": "تشكيل الحكومة",
+    "noMinistersWithoutPortfolio": "لا يوجد وزراء بلا حقيبة"
   },
   "politics": {
     "title": "السياسة",

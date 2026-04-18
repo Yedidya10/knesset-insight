@@ -183,7 +183,9 @@
       "personalDetails": "Личные данные",
       "contactInfo": "Контакты",
       "showDetails": "Показать подробности",
-      "hideDetails": "Скрыть подробности"
+      "hideDetails": "Скрыть подробности",
+      "governmentRoles": "Правительственные должности",
+      "inGovernment": "Правительство {num}"
     },
     "filter": {
       "allParties": "Все фракции",
@@ -761,7 +763,20 @@
     "active": "Активный",
     "ended": "Завершено",
     "leadership": "Руководство правительства",
-    "positionHolders": "{count} должностных лиц"
+    "positionHolders": "{count} должностных лиц",
+    "activeMinisterCount": "{count} действующих министров",
+    "totalMinisterCount": "{count} министров всего",
+    "actingMinister": "И.о.",
+    "ministerWithoutPortfolio": "Министры без портфеля",
+    "viewByMinistry": "По министерству",
+    "viewByPerson": "По персоне",
+    "timeline": "Хронология",
+    "portfolios": "Портфели",
+    "appointed": "Назначен",
+    "departed": "Покинул пост",
+    "reshuffled": "Перестановка",
+    "governmentFormed": "Формирование правительства",
+    "noMinistersWithoutPortfolio": "Нет министров без портфеля"
   },
   "politics": {
     "title": "Политика",

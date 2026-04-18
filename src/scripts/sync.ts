@@ -40,6 +40,8 @@ async function main() {
     await import('../pipeline/jobs/sync-registered-parties');
   const { syncElectoralLists } =
     await import('../pipeline/jobs/sync-electoral-lists');
+  const { syncGovMinistries } =
+    await import('../pipeline/jobs/sync-gov-ministries');
   const { syncGovernments } = await import('../pipeline/jobs/sync-governments');
   const { syncPoliticalLinks } =
     await import('../pipeline/jobs/sync-political-links');
@@ -102,6 +104,7 @@ async function main() {
   }
 
   if (target === 'governments' || target === 'all') {
+    await syncGovMinistries();
     await syncGovernments();
   }
 

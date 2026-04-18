@@ -183,7 +183,9 @@
       "personalDetails": "פרטים אישיים",
       "contactInfo": "יצירת קשר",
       "showDetails": "הצג פרטים",
-      "hideDetails": "הסתר פרטים"
+      "hideDetails": "הסתר פרטים",
+      "governmentRoles": "תפקידים ממשלתיים",
+      "inGovernment": "ממשלה {num}"
     },
     "filter": {
       "allParties": "כל הסיעות",
@@ -762,7 +764,20 @@
     "active": "פעיל",
     "ended": "סיום",
     "leadership": "הנהגת הממשלה",
-    "positionHolders": "{count} בעלי תפקידים"
+    "positionHolders": "{count} בעלי תפקידים",
+    "activeMinisterCount": "{count} שרים פעילים",
+    "totalMinisterCount": "{count} שרים בסה\"כ",
+    "actingMinister": "ממלא מקום",
+    "ministerWithoutPortfolio": "שרים ללא תיק",
+    "viewByMinistry": "לפי משרד",
+    "viewByPerson": "לפי אישיות",
+    "timeline": "ציר זמן",
+    "portfolios": "תיקים",
+    "appointed": "מונה",
+    "departed": "סיים תפקיד",
+    "reshuffled": "שינוי תפקיד",
+    "governmentFormed": "הקמת ממשלה",
+    "noMinistersWithoutPortfolio": "אין שרים ללא תיק"
   },
   "politics": {
     "title": "פוליטיקה",

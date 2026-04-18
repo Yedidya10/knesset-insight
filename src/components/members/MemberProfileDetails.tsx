@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { User, Calendar, Gavel, ChevronDown } from 'lucide-react';
+import { User, Calendar, Gavel, Landmark, ChevronDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -18,6 +18,15 @@ interface FactionHistoryEntry {
   endDate: string | Date | null;
 }
 
+interface GovernmentRoleEntry {
+  governmentNum: number;
+  positionDesc: string | null;
+  ministryName: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  isCurrent: boolean | null;
+}
+
 interface MemberProfileDetailsProps {
   member: {
     gender: string | null;
@@ -28,6 +37,7 @@ interface MemberProfileDetailsProps {
   };
   age: number | null;
   factionHistory: FactionHistoryEntry[];
+  governmentRoles?: GovernmentRoleEntry[];
   locale: string;
 }
 
@@ -65,6 +75,7 @@ export default function MemberProfileDetails({
   member,
   age,
   factionHistory,
+  governmentRoles = [],
   locale,
 }: MemberProfileDetailsProps) {
   const t = useTranslations('members.profile');
@@ -79,7 +90,8 @@ export default function MemberProfileDetails({
     member.birthDate ||
     member.startDate ||
     member.endDate ||
-    factionHistory.length > 0;
+    factionHistory.length > 0 ||
+    governmentRoles.length > 0;
 
   if (!hasDetails) return null;
 
@@ -90,6 +102,14 @@ export default function MemberProfileDetails({
     const arr = byKnesset.get(h.knessetNum) ?? [];
     arr.push(h);
     byKnesset.set(h.knessetNum, arr);
+  }
+
+  // Group government roles by government number
+  const byGovNum = new Map<number, GovernmentRoleEntry[]>();
+  for (const role of governmentRoles) {
+    const arr = byGovNum.get(role.governmentNum) ?? [];
+    arr.push(role);
+    byGovNum.set(role.governmentNum, arr);
   }
 
   return (
@@ -178,6 +198,45 @@ export default function MemberProfileDetails({
                       </div>
                     ),
                   )}
+                </div>
+              </div>
+            )}
+
+            {/* Government roles */}
+            {governmentRoles.length > 0 && (
+              <div className="space-y-3 border-t pt-4">
+                <h3 className="flex items-center gap-2 text-sm font-semibold">
+                  <Landmark className="h-4 w-4" />
+                  {t('governmentRoles')}
+                </h3>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  {Array.from(byGovNum.entries()).map(([govNum, roles]) => (
+                    <div
+                      key={govNum}
+                      className="bg-muted/30 space-y-1 rounded-lg p-3"
+                    >
+                      <Badge variant="outline" className="text-xs">
+                        {t('inGovernment', { num: govNum })}
+                      </Badge>
+                      {roles.map((role, i) => {
+                        const dateRange = role.startDate
+                          ? `${role.startDate}${role.endDate ? ` — ${role.endDate}` : ''}`
+                          : '';
+                        return (
+                          <div key={i}>
+                            <p className="text-muted-foreground text-xs">
+                              {role.positionDesc ?? role.ministryName}
+                            </p>
+                            {dateRange && (
+                              <p className="text-muted-foreground text-[11px]">
+                                {dateRange}
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ))}
                 </div>
               </div>
             )}

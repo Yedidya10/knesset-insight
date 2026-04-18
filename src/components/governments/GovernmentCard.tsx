@@ -16,6 +16,7 @@ interface GovernmentCardProps {
     pmLastName: string | null;
     pmImageUrl: string | null;
     ministerCount: number;
+    activeMinisterCount: number;
     coalitionFactionCount: number;
   };
 }
@@ -77,9 +78,17 @@ export default function GovernmentCard({
 
               {/* Stats */}
               <div className="mt-3 flex flex-wrap gap-2">
-                <Badge variant="secondary" className="text-xs">
-                  {t('ministerCount', { count: gov.ministerCount })}
-                </Badge>
+                {isCurrent && gov.activeMinisterCount > 0 ? (
+                  <Badge variant="secondary" className="text-xs">
+                    {t('activeMinisterCount', {
+                      count: gov.activeMinisterCount,
+                    })}
+                  </Badge>
+                ) : (
+                  <Badge variant="secondary" className="text-xs">
+                    {t('totalMinisterCount', { count: gov.ministerCount })}
+                  </Badge>
+                )}
                 {gov.coalitionFactionCount > 0 && (
                   <Badge variant="outline" className="text-xs">
                     {gov.coalitionFactionCount} {t('coalitionFactions')}

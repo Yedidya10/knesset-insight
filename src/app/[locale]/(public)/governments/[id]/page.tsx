@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import MemberAvatar from '@/components/members/MemberAvatar';
 import GovernmentComposition from '@/components/governments/GovernmentComposition';
 import CoalitionBreakdown from '@/components/governments/CoalitionBreakdown';
+import ReshuffleTimeline from '@/components/governments/ReshuffleTimeline';
 import { appConfig } from '@/../app.config';
 
 interface Props {
@@ -233,20 +234,30 @@ export default async function GovernmentDetailPage({ params }: Props) {
 
           {/* Stats */}
           <div className="mt-3 flex flex-wrap gap-2">
-            <Badge variant="secondary">
-              {t('ministerCount', {
-                count: new Set(
-                  positions
-                    .filter((p) =>
-                      (
-                        appConfig.knesset.govPositionIds
-                          .minister as readonly number[]
-                      ).includes(p.positionId),
-                    )
-                    .map((p) => p.memberKnessetId),
-                ).size,
-              })}
-            </Badge>
+            {(() => {
+              const ministerPosIds = appConfig.knesset.govPositionIds
+                .minister as readonly number[];
+              const ministerPositions = positions.filter((p) =>
+                ministerPosIds.includes(p.positionId),
+              );
+              const totalMinisters = new Set(
+                ministerPositions.map((p) => p.memberKnessetId),
+              ).size;
+              const activeMinisters = new Set(
+                ministerPositions
+                  .filter((p) => p.isCurrent === true || !p.endDate)
+                  .map((p) => p.memberKnessetId),
+              ).size;
+              return isCurrent && activeMinisters > 0 ? (
+                <Badge variant="secondary">
+                  {t('activeMinisterCount', { count: activeMinisters })}
+                </Badge>
+              ) : (
+                <Badge variant="secondary">
+                  {t('totalMinisterCount', { count: totalMinisters })}
+                </Badge>
+              );
+            })()}
             {coalitionFactions.length > 0 && (
               <Badge variant="secondary">
                 {coalitionFactions.length} {t('coalitionFactions')}
@@ -260,6 +271,14 @@ export default async function GovernmentDetailPage({ params }: Props) {
       <section className="mb-8">
         <h2 className="mb-4 text-xl font-bold">{t('composition')}</h2>
         <GovernmentComposition positions={positions} />
+      </section>
+
+      {/* Reshuffle Timeline */}
+      <section className="mb-8">
+        <ReshuffleTimeline
+          positions={positions}
+          govStartDate={govRecord.startDate}
+        />
       </section>
 
       {/* Coalition Breakdown */}

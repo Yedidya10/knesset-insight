@@ -48,6 +48,12 @@ export default function GovernmentDetailLoading() {
           </CardContent>
         </Card>
 
+        {/* View toggle buttons skeleton */}
+        <div className="mb-6 flex gap-2">
+          <div className="bg-muted h-8 w-24 animate-pulse rounded-md" />
+          <div className="bg-muted h-8 w-24 animate-pulse rounded-md" />
+        </div>
+
         {/* Ministers grid skeleton */}
         <Card className="mb-6">
           <CardHeader className="pb-3">
@@ -68,6 +74,28 @@ export default function GovernmentDetailLoading() {
                       <div className="bg-muted h-5 w-10 animate-pulse rounded-full" />
                     </div>
                   ))}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Timeline section skeleton */}
+      <div className="mb-8">
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="bg-muted h-5 w-24 animate-pulse rounded" />
+          </CardHeader>
+          <CardContent>
+            <div className="relative space-y-4 ps-10">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex gap-3">
+                  <div className="bg-muted h-3 w-3 animate-pulse rounded-full" />
+                  <div className="flex-1 space-y-1">
+                    <div className="bg-muted h-3 w-20 animate-pulse rounded" />
+                    <div className="bg-muted h-4 w-48 animate-pulse rounded" />
+                  </div>
                 </div>
               ))}
             </div>
