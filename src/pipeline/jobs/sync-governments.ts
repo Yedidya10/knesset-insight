@@ -1,4 +1,4 @@
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { db } from '../../lib/db';
 import {
   governments,
@@ -256,7 +256,13 @@ async function syncGovernmentRecords(): Promise<number> {
     const dupeCount = positions.length - uniquePositions.length;
     const mergeCount = uniquePositions.length - mergedPositions.length;
 
-    // Upsert positions in batches
+    // Replace all positions for this government (delete + insert).
+    // This avoids issues with NULL govMinistryId in the unique constraint
+    // (Postgres treats NULL ≠ NULL) and simplifies stale-row cleanup.
+    await db
+      .delete(governmentPositions)
+      .where(eq(governmentPositions.governmentId, govDbId));
+
     for (let i = 0; i < mergedPositions.length; i += BATCH_SIZE) {
       const batch = mergedPositions.slice(i, i + BATCH_SIZE);
       const rows = batch.map((pos) => ({
@@ -274,56 +280,7 @@ async function syncGovernmentRecords(): Promise<number> {
         isCurrent: pos.IsCurrent,
       }));
 
-      await db
-        .insert(governmentPositions)
-        .values(rows)
-        .onConflictDoUpdate({
-          target: [
-            governmentPositions.governmentId,
-            governmentPositions.memberKnessetId,
-            governmentPositions.positionId,
-            governmentPositions.govMinistryId,
-            governmentPositions.startDate,
-          ],
-          set: {
-            memberId: sql`excluded.member_id`,
-            positionDesc: sql`excluded.position_desc`,
-            factionKnessetId: sql`excluded.faction_knesset_id`,
-            endDate: sql`excluded.end_date`,
-            isCurrent: sql`excluded.is_current`,
-            updatedAt: new Date(),
-          },
-        });
-    }
-
-    // Delete stale positions from previous syncs that were merged or removed.
-    // Collect the start dates of all merged positions as composite keys.
-    const mergedKeys = mergedPositions.map(
-      (p) =>
-        `${p.PersonID}|${p.PositionID}|${p.GovMinistryID ?? 0}|${p.StartDate?.split('T')[0] ?? ''}`,
-    );
-    const existingRows = await db
-      .select({
-        id: governmentPositions.id,
-        memberKnessetId: governmentPositions.memberKnessetId,
-        positionId: governmentPositions.positionId,
-        govMinistryId: governmentPositions.govMinistryId,
-        startDate: governmentPositions.startDate,
-      })
-      .from(governmentPositions)
-      .where(eq(governmentPositions.governmentId, govDbId));
-    const staleIds: number[] = [];
-    const mergedKeySet = new Set(mergedKeys);
-    for (const row of existingRows) {
-      const key = `${row.memberKnessetId}|${row.positionId}|${row.govMinistryId ?? 0}|${row.startDate ?? ''}`;
-      if (!mergedKeySet.has(key)) {
-        staleIds.push(row.id);
-      }
-    }
-    if (staleIds.length > 0) {
-      await db
-        .delete(governmentPositions)
-        .where(inArray(governmentPositions.id, staleIds));
+      await db.insert(governmentPositions).values(rows);
     }
 
     totalPositions += mergedPositions.length;
