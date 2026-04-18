@@ -1040,10 +1040,10 @@
   },
   "seo": {
     "siteName": "Knesset Insight",
-    "defaultDescription": "Israeli parliamentary data platform — MKs, votes, legislation, committees and budget",
+    "defaultDescription": "Open-source civic-tech platform for tracking the Israeli Knesset — MKs, plenary votes, legislation, committees, state budget, elections and policy positions. Parliamentary transparency for every citizen.",
     "home": {
-      "title": "Knesset Insight — Israeli Parliamentary Data",
-      "description": "Israeli parliamentary data platform — MKs, votes, legislation, committees and budget"
+      "title": "Knesset Insight — Israeli Parliamentary Transparency & Open Data",
+      "description": "Open-source civic-tech platform for tracking the Israeli Knesset — MKs, plenary votes, legislation, committees, state budget, elections and policy positions. Parliamentary transparency for every citizen."
     },
     "members": {
       "title": "Members of Knesset — Knesset Insight",

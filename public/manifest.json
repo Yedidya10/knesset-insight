@@ -1,11 +1,11 @@
 {
-  "name": "Knesset Insight",
+  "name": "Knesset Insight — כנסת אינסייט",
   "short_name": "Knesset Insight",
-  "description": "Israeli parliamentary data platform",
+  "description": "Open-source civic-tech platform for Israeli parliamentary transparency — MKs, votes, legislation, committees, budget, elections and policy positions",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#0a0a0a",
+  "theme_color": "#1d4ed8",
   "dir": "auto",
   "lang": "he",
   "icons": [
