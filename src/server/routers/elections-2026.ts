@@ -10,7 +10,6 @@ import {
   electionPollResults,
   electionTimelineEvents,
   members,
-  memberVotes,
   billInitiators,
 } from '../../lib/db/schema';
 
@@ -149,17 +148,6 @@ export const elections2026Router = router({
           .limit(1);
 
         if (member[0]) {
-          const voteStats = await db
-            .select({
-              total: sql<number>`count(*)::int`,
-              forVotes: sql<number>`count(*) filter (where ${memberVotes.voteValue} = 'for')::int`,
-              againstVotes: sql<number>`count(*) filter (where ${memberVotes.voteValue} = 'against')::int`,
-              abstainVotes: sql<number>`count(*) filter (where ${memberVotes.voteValue} = 'abstain')::int`,
-              absentVotes: sql<number>`count(*) filter (where ${memberVotes.voteValue} = 'absent')::int`,
-            })
-            .from(memberVotes)
-            .where(eq(memberVotes.memberId, c.memberId));
-
           const billCount = await db
             .select({
               count: sql<number>`count(*)::int`,
@@ -167,15 +155,9 @@ export const elections2026Router = router({
             .from(billInitiators)
             .where(eq(billInitiators.memberId, c.memberId));
 
-          const stats = voteStats[0];
-          const participated = (stats?.forVotes ?? 0) + (stats?.againstVotes ?? 0) + (stats?.abstainVotes ?? 0);
-          const total = stats?.total ?? 0;
-
           mkActivity = {
             member: member[0],
-            voteStats: stats,
             billCount: billCount[0]?.count ?? 0,
-            participationRate: total > 0 ? Math.round((participated / total) * 100) : 0,
           };
         }
       }

@@ -6,7 +6,6 @@ import {
   electionCandidates,
   electionCandidateLists,
   members,
-  memberVotes,
   billInitiators,
 } from '@/lib/db/schema';
 import { sql } from 'drizzle-orm';
@@ -60,32 +59,14 @@ export default async function CandidateProfilePage({ params }: Props) {
       .limit(1);
 
     if (member[0]) {
-      const voteStats = await db
-        .select({
-          total: sql<number>`count(*)::int`,
-          forVotes: sql<number>`count(*) filter (where ${memberVotes.voteValue} = 'for')::int`,
-          againstVotes: sql<number>`count(*) filter (where ${memberVotes.voteValue} = 'against')::int`,
-          abstainVotes: sql<number>`count(*) filter (where ${memberVotes.voteValue} = 'abstain')::int`,
-          absentVotes: sql<number>`count(*) filter (where ${memberVotes.voteValue} = 'absent')::int`,
-        })
-        .from(memberVotes)
-        .where(eq(memberVotes.memberId, c.memberId));
-
       const billCount = await db
         .select({ count: sql<number>`count(*)::int` })
         .from(billInitiators)
         .where(eq(billInitiators.memberId, c.memberId));
 
-      const stats = voteStats[0];
-      const participated =
-        (stats?.forVotes ?? 0) + (stats?.againstVotes ?? 0) + (stats?.abstainVotes ?? 0);
-      const total = stats?.total ?? 0;
-
       mkActivity = {
         member: member[0],
-        voteStats: stats ?? null,
         billCount: billCount[0]?.count ?? 0,
-        participationRate: total > 0 ? Math.round((participated / total) * 100) : 0,
       };
     }
   }
@@ -103,15 +84,7 @@ export default async function CandidateProfilePage({ params }: Props) {
 
   const mkLabels = {
     title: t('candidate.mkActivity'),
-    votes: t('candidate.votes'),
-    forVotes: t('candidate.forVotes'),
-    againstVotes: t('candidate.againstVotes'),
-    abstainVotes: t('candidate.abstainVotes'),
-    absent: t('candidate.absent'),
-    bills: t('candidate.bills'),
     billsInitiated: t('candidate.billsInitiated'),
-    participation: t('candidate.participation'),
-    participationRate: t('candidate.participationRate'),
     viewFullProfile: t('candidate.viewFullProfile'),
   };
 
@@ -129,12 +102,15 @@ export default async function CandidateProfilePage({ params }: Props) {
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
       {/* Breadcrumb */}
-      <nav className="mb-6 text-sm text-muted-foreground">
+      <nav className="text-muted-foreground mb-6 text-sm">
         <Link href="/elections/2026" className="hover:text-foreground">
           2026
         </Link>
         <span className="mx-2">›</span>
-        <Link href={`/elections/2026/parties/${partySlug}`} className="hover:text-foreground">
+        <Link
+          href={`/elections/2026/parties/${partySlug}`}
+          className="hover:text-foreground"
+        >
           {list[0]?.name ?? partySlug}
         </Link>
         <span className="mx-2">›</span>
@@ -166,7 +142,7 @@ export default async function CandidateProfilePage({ params }: Props) {
           <div className="mt-2">
             <Link
               href={`/members/${mkActivity.member.id}`}
-              className="text-sm text-primary underline underline-offset-4"
+              className="text-primary text-sm underline underline-offset-4"
             >
               {t('candidate.viewFullProfile')} →
             </Link>
