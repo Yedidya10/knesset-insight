@@ -258,6 +258,7 @@ export default function MembersFilter({
           items={{
             name: t('sortByName'),
             mostBills: t('sortByMostBills'),
+            mostAbsent: t('sortByMostAbsent'),
             seniority: t('sortBySeniority'),
             age: t('sortByAge'),
           }}
@@ -268,6 +269,7 @@ export default function MembersFilter({
           <SelectContent>
             <SelectItem value="name">{t('sortByName')}</SelectItem>
             <SelectItem value="mostBills">{t('sortByMostBills')}</SelectItem>
+            <SelectItem value="mostAbsent">{t('sortByMostAbsent')}</SelectItem>
             <SelectItem value="seniority">{t('sortBySeniority')}</SelectItem>
             <SelectItem value="age">{t('sortByAge')}</SelectItem>
           </SelectContent>

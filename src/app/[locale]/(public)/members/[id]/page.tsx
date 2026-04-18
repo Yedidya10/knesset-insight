@@ -7,10 +7,12 @@ import {
   ThumbsDown,
   Minus,
   User,
+  UserCheck,
+  Vote,
   FileText,
   Building2,
 } from 'lucide-react';
-import { eq, desc, asc } from 'drizzle-orm';
+import { eq, desc, asc, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import {
   members,
@@ -198,6 +200,30 @@ export default async function MemberProfilePage({ params }: Props) {
       .limit(20),
   ]);
 
+  // Compute vote breakdown stats
+  const voteStatsRows = await db
+    .select({
+      voteValue: memberVotes.voteValue,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(memberVotes)
+    .where(eq(memberVotes.memberId, member.id))
+    .groupBy(memberVotes.voteValue);
+
+  const voteStats = {
+    for: 0,
+    against: 0,
+    abstain: 0,
+    absent: 0,
+    present: 0,
+    voted: 0,
+  };
+  for (const row of voteStatsRows) {
+    const key = row.voteValue as keyof typeof voteStats;
+    if (key in voteStats) voteStats[key] = row.count;
+  }
+  const totalVoteRecords = Object.values(voteStats).reduce((a, b) => a + b, 0);
+
   // Compute integrity case summary (group by category+severity)
   const caseSummaryMap = new Map<
     string,
@@ -250,6 +276,59 @@ export default async function MemberProfilePage({ params }: Props) {
               <CardTitle className="text-lg">{t('recentVotes')}</CardTitle>
             </CardHeader>
             <CardContent>
+              {/* Vote breakdown summary */}
+              {totalVoteRecords > 0 && (
+                <div className="mb-4 grid grid-cols-3 gap-3 sm:grid-cols-6">
+                  <div className="rounded-lg bg-green-50 p-2 text-center dark:bg-green-950/30">
+                    <p className="text-lg font-bold text-green-600 tabular-nums">
+                      {voteStats.for}
+                    </p>
+                    <p className="text-muted-foreground text-xs">
+                      {t('votedFor')}
+                    </p>
+                  </div>
+                  <div className="rounded-lg bg-red-50 p-2 text-center dark:bg-red-950/30">
+                    <p className="text-lg font-bold text-red-600 tabular-nums">
+                      {voteStats.against}
+                    </p>
+                    <p className="text-muted-foreground text-xs">
+                      {t('votedAgainst')}
+                    </p>
+                  </div>
+                  <div className="rounded-lg bg-yellow-50 p-2 text-center dark:bg-yellow-950/30">
+                    <p className="text-lg font-bold text-yellow-600 tabular-nums">
+                      {voteStats.abstain}
+                    </p>
+                    <p className="text-muted-foreground text-xs">
+                      {t('votedAbstain')}
+                    </p>
+                  </div>
+                  <div className="bg-muted/50 rounded-lg p-2 text-center">
+                    <p className="text-muted-foreground text-lg font-bold tabular-nums">
+                      {voteStats.absent}
+                    </p>
+                    <p className="text-muted-foreground text-xs">
+                      {t('wasAbsent')}
+                    </p>
+                  </div>
+                  <div className="rounded-lg bg-blue-50 p-2 text-center dark:bg-blue-950/30">
+                    <p className="text-lg font-bold text-blue-600 tabular-nums">
+                      {voteStats.present}
+                    </p>
+                    <p className="text-muted-foreground text-xs">
+                      {t('wasPresent')}
+                    </p>
+                  </div>
+                  <div className="rounded-lg bg-purple-50 p-2 text-center dark:bg-purple-950/30">
+                    <p className="text-lg font-bold text-purple-600 tabular-nums">
+                      {voteStats.voted}
+                    </p>
+                    <p className="text-muted-foreground text-xs">
+                      {t('secretBallot')}
+                    </p>
+                  </div>
+                </div>
+              )}
               {recentVotesData.length > 0 ? (
                 <div className="space-y-2">
                   {recentVotesData.map((v) => (
@@ -274,6 +353,12 @@ export default async function MemberProfilePage({ params }: Props) {
                         )}
                         {v.voteValue === 'absent' && (
                           <User className="text-muted-foreground h-4 w-4 shrink-0" />
+                        )}
+                        {v.voteValue === 'present' && (
+                          <UserCheck className="h-4 w-4 shrink-0 text-blue-600" />
+                        )}
+                        {v.voteValue === 'voted' && (
+                          <Vote className="h-4 w-4 shrink-0 text-purple-600" />
                         )}
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-sm font-medium">

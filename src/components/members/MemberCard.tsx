@@ -3,7 +3,7 @@ import { Link } from '@/i18n/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import MemberAvatar from '@/components/members/MemberAvatar';
-import { FileText } from 'lucide-react';
+import { FileText, UserX } from 'lucide-react';
 
 interface MemberCardProps {
   member: {
@@ -17,6 +17,7 @@ interface MemberCardProps {
     isCurrent: boolean | null;
     isCoalition: boolean | null;
     billCount?: number;
+    absentCount?: number;
   };
   showDetails?: boolean;
   priority?: boolean;
@@ -74,18 +75,31 @@ export default function MemberCard({
           )}
 
           {/* Extended details (toggled via showDetails) */}
-          {showDetails && (member.billCount ?? 0) > 0 && (
-            <div className="border-border/40 w-full space-y-2 border-t pt-2">
-              {/* Bill count */}
-              <div className="text-muted-foreground flex items-center gap-1.5 text-xs">
-                <FileText className="h-3 w-3 shrink-0" />
-                <span>{t('billCount')}</span>
-                <span className="text-foreground ms-auto font-medium tabular-nums">
-                  {member.billCount}
-                </span>
+          {showDetails &&
+            ((member.billCount ?? 0) > 0 || (member.absentCount ?? 0) > 0) && (
+              <div className="border-border/40 w-full space-y-2 border-t pt-2">
+                {/* Bill count */}
+                {(member.billCount ?? 0) > 0 && (
+                  <div className="text-muted-foreground flex items-center gap-1.5 text-xs">
+                    <FileText className="h-3 w-3 shrink-0" />
+                    <span>{t('billCount')}</span>
+                    <span className="text-foreground ms-auto font-medium tabular-nums">
+                      {member.billCount}
+                    </span>
+                  </div>
+                )}
+                {/* Absent count */}
+                {(member.absentCount ?? 0) > 0 && (
+                  <div className="text-muted-foreground flex items-center gap-1.5 text-xs">
+                    <UserX className="h-3 w-3 shrink-0" />
+                    <span>{t('absentCount')}</span>
+                    <span className="text-foreground ms-auto font-medium tabular-nums">
+                      {member.absentCount}
+                    </span>
+                  </div>
+                )}
               </div>
-            </div>
-          )}
+            )}
 
           {member.isCurrent === false && (
             <Badge variant="outline" className="text-xs">

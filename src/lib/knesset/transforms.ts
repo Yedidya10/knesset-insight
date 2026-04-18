@@ -7,18 +7,22 @@ import type {
 
 /**
  * Map OData v4 PlenumVoteResult ResultCode to English enum value.
- * v4 codes: 7=for, 8=against, 9=abstain
+ * v4 codes: 6=present (didn't vote), 7=for, 8=against, 9=abstain, 11=voted (secret ballot)
  */
 export function mapV4ResultCode(
   resultCode: number,
-): 'for' | 'against' | 'abstain' | 'absent' {
+): 'for' | 'against' | 'abstain' | 'absent' | 'present' | 'voted' {
   switch (resultCode) {
+    case 6:
+      return 'present';
     case 7:
       return 'for';
     case 8:
       return 'against';
     case 9:
       return 'abstain';
+    case 11:
+      return 'voted';
     default:
       return 'absent';
   }
@@ -47,9 +51,15 @@ export function mapVoteValue(
  */
 /** Generic vote titles that should be enriched with the session item description */
 const GENERIC_VOTE_TITLES = new Set([
-  'הסתייגות', 'להעביר את הצעת החוק לוועדה', 'קריאה שנייה',
-  'אישור החוק', 'הצעת ועדה', 'הצעת ועדת הכנסת',
-  'להעביר את הנושא לוועדה', 'הצבעה', 'שם החוק',
+  'הסתייגות',
+  'להעביר את הצעת החוק לוועדה',
+  'קריאה שנייה',
+  'אישור החוק',
+  'הצעת ועדה',
+  'הצעת ועדת הכנסת',
+  'להעביר את הנושא לוועדה',
+  'הצבעה',
+  'שם החוק',
   'להעביר את הצעת החוק לוועדה שתקבע ועדת הכנסת',
   'העברת הנושא לוועדה שתקבע ועדת הכנסת',
   'להחיל דין רציפות',
@@ -58,7 +68,10 @@ const GENERIC_VOTE_TITLES = new Set([
 export function transformVoteHeader(raw: ODataVoteHeader) {
   // Build enriched title: prepend sess_item_dscr when vote_item_dscr is generic
   let title = raw.vote_item_dscr;
-  if (raw.sess_item_dscr?.trim() && GENERIC_VOTE_TITLES.has(raw.vote_item_dscr.trim())) {
+  if (
+    raw.sess_item_dscr?.trim() &&
+    GENERIC_VOTE_TITLES.has(raw.vote_item_dscr.trim())
+  ) {
     title = `${raw.sess_item_dscr.trim()} — ${raw.vote_item_dscr.trim()}`;
   }
   return {
@@ -102,9 +115,7 @@ export function transformOKnessetMember(raw: OKnessetMember) {
     birthDate: raw.mk_individual_date_of_birth || null,
     imageUrl: hasRealPhoto ? photo : null,
     imageSource: hasRealPhoto ? ('oknesset' as const) : null,
-    imageAttribution: hasRealPhoto
-      ? 'כנסת פתוחה — הסדנא לידע ציבורי'
-      : null,
+    imageAttribution: hasRealPhoto ? 'כנסת פתוחה — הסדנא לידע ציבורי' : null,
     email: raw.mk_individual_email || null,
     knessetNum: raw.knesset_num,
   };

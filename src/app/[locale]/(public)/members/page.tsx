@@ -10,6 +10,8 @@ import {
   billInitiators,
   memberFactionHistory,
   factionCoalitionPeriods,
+  memberVotes,
+  votes,
 } from '@/lib/db/schema';
 import MemberCard from '@/components/members/MemberCard';
 import MembersFilter from '@/components/members/MembersFilter';
@@ -312,6 +314,30 @@ export default async function MembersPage({ searchParams }: Props) {
     }
   }
 
+  // Query 3: Absence counts per member (voteValue = 'absent')
+  const absentCountMap = new Map<number, number>();
+  if (memberIds.length > 0) {
+    const absentRows = await db
+      .select({
+        memberId: memberVotes.memberId,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(memberVotes)
+      .innerJoin(votes, eq(memberVotes.voteId, votes.id))
+      .where(
+        and(
+          inArray(memberVotes.memberId, memberIds),
+          eq(memberVotes.voteValue, 'absent'),
+          eq(votes.knessetNum, selectedKnesset),
+        ),
+      )
+      .groupBy(memberVotes.memberId);
+
+    for (const row of absentRows) {
+      absentCountMap.set(row.memberId, row.count);
+    }
+  }
+
   // Merge all data — for past knessets, override faction data with history
   const data = memberRows.map((m) => {
     const historyInfo = historyFactionMap?.get(m.id);
@@ -331,6 +357,7 @@ export default async function MembersPage({ searchParams }: Props) {
           }
         : { ...m, isCoalition }),
       billCount: billCountMap.get(m.id) ?? 0,
+      absentCount: absentCountMap.get(m.id) ?? 0,
     };
   });
 
@@ -340,6 +367,8 @@ export default async function MembersPage({ searchParams }: Props) {
       switch (sortBy) {
         case 'mostBills':
           return b.billCount - a.billCount;
+        case 'mostAbsent':
+          return b.absentCount - a.absentCount;
         case 'seniority': {
           // Earliest startDate first; nulls last
           if (!a.startDate && !b.startDate) return 0;

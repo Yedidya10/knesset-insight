@@ -25,6 +25,7 @@ import { generateBillEmbeddings } from './jobs/generate-bill-embeddings';
 import { aiClusterBills } from './jobs/ai-cluster-bills';
 import { generateBillSummaries } from './jobs/generate-bill-summaries';
 import { classifyVoteStances } from './jobs/classify-vote-stances';
+import { syncPresence } from './jobs/sync-presence';
 
 export const syncJobs = {
   members: syncMembers,
@@ -48,6 +49,7 @@ export const syncJobs = {
   integrityKnesset: syncIntegrityKnesset,
   integrityLobbyists: syncIntegrityLobbyists,
   billDocuments: syncBillDocuments,
+  presence: syncPresence,
   // Bill clustering pipeline (run after sync jobs)
   linkVotesToBills: linkVotesToBills,
   computeBillClusters: computeBillClusters,
@@ -85,6 +87,8 @@ export const syncJobs = {
     await syncIntegrityLobbyists();
     // Bill documents must run after bills
     await syncBillDocuments();
+    // Presence data from Open Knesset (needs members)
+    await syncPresence();
     // Bill clustering pipeline (must run after bills + votes synced)
     await linkVotesToBills();
     await computeBillClusters();

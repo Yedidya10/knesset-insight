@@ -373,7 +373,7 @@ export const memberVotes = pgTable(
     memberId: integer('member_id')
       .references(() => members.id)
       .notNull(),
-    voteValue: text('vote_value').notNull(), // 'for', 'against', 'abstain', 'absent'
+    voteValue: text('vote_value').notNull(), // 'for', 'against', 'abstain', 'absent', 'present', 'voted'
   },
   (t) => [unique().on(t.voteId, t.memberId)],
 );
@@ -391,6 +391,23 @@ export const billInitiators = pgTable(
     isPrimary: boolean('is_primary').default(false),
   },
   (t) => [unique().on(t.billId, t.memberId)],
+);
+
+// ──────────────────────────────────────
+// Member Presence (daily attendance hours from Open Knesset)
+// ──────────────────────────────────────
+
+export const memberPresence = pgTable(
+  'member_presence',
+  {
+    id: serial('id').primaryKey(),
+    memberId: integer('member_id')
+      .references(() => members.id)
+      .notNull(),
+    date: date('date').notNull(),
+    totalAttendedHours: integer('total_attended_hours').notNull(),
+  },
+  (t) => [unique().on(t.memberId, t.date)],
 );
 
 export const billHistoryInitiators = pgTable('bill_history_initiators', {
