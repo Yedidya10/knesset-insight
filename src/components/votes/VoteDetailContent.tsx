@@ -71,6 +71,7 @@ interface FactionData {
   against: number;
   abstain: number;
   absent: number;
+  voted: number;
 }
 
 interface DetailData {
@@ -106,6 +107,21 @@ export function VoteDetailContent({ vote }: { vote: VoteData }) {
   if (!fetched && !loading) {
     void fetchDetail();
   }
+
+  // Compute live tallies from actual member votes when detail is loaded
+  const liveForCount = detail
+    ? detail.factions.reduce((s, f) => s + f.for, 0)
+    : null;
+  const liveAgainstCount = detail
+    ? detail.factions.reduce((s, f) => s + f.against, 0)
+    : null;
+  const liveAbstainCount = detail
+    ? detail.factions.reduce((s, f) => s + f.abstain, 0)
+    : null;
+
+  const displayForCount = liveForCount ?? vote.forCount ?? 0;
+  const displayAgainstCount = liveAgainstCount ?? vote.againstCount ?? 0;
+  const displayAbstainCount = liveAbstainCount ?? vote.abstainCount ?? 0;
 
   const knessetVoteUrl = `https://main.knesset.gov.il/Activity/plenum/Votes/Pages/vote.aspx?voteId=${vote.knessetId}`;
   const formattedDate = vote.voteDate
@@ -237,9 +253,9 @@ export function VoteDetailContent({ vote }: { vote: VoteData }) {
 
           {/* Vote tallies bar */}
           <VoteTalliesBar
-            forCount={vote.forCount ?? 0}
-            againstCount={vote.againstCount ?? 0}
-            abstainCount={vote.abstainCount ?? 0}
+            forCount={displayForCount}
+            againstCount={displayAgainstCount}
+            abstainCount={displayAbstainCount}
             isAccepted={vote.isAccepted}
           />
 
@@ -321,10 +337,9 @@ export function VoteDetailContent({ vote }: { vote: VoteData }) {
                   >
                     <Users className="h-3.5 w-3.5" />
                     {t('voterList')} (
-                    {
-                      detail.voters.filter((v) => v.voteValue !== 'absent')
-                        .length
-                    }
+                    {displayForCount +
+                      displayAgainstCount +
+                      displayAbstainCount}
                     )
                   </SheetTrigger>
                   <SheetContent

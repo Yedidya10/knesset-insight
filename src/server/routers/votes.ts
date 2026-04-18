@@ -258,6 +258,7 @@ export const votesRouter = router({
           against: number;
           abstain: number;
           absent: number;
+          voted: number;
         }
       >();
 
@@ -272,12 +273,14 @@ export const votesRouter = router({
             against: 0,
             abstain: 0,
             absent: 0,
+            voted: 0,
           });
         }
         const f = factionMap.get(key)!;
         if (r.voteValue === 'for') f.for++;
         else if (r.voteValue === 'against') f.against++;
         else if (r.voteValue === 'abstain') f.abstain++;
+        else if (r.voteValue === 'voted') f.voted++;
         else f.absent++;
       }
 

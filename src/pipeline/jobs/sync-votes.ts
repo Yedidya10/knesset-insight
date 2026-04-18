@@ -9,15 +9,28 @@ import {
   fetchV4VoteResults,
   fetchV4VoteResultsMinimal,
 } from '../../lib/knesset/knesset-api-client';
-import type { WebsiteApiVoteHeader, V4VoteResultMinimal } from '../../lib/knesset/knesset-api-client';
+import type {
+  WebsiteApiVoteHeader,
+  V4VoteResultMinimal,
+} from '../../lib/knesset/knesset-api-client';
 import type {
   ODataVoteHeader,
   ODataMemberVote,
   ODataV4PlenumVote,
   ODataV4PlenumVoteResult,
 } from '../../lib/knesset/types';
-import { transformVoteHeader, mapVoteValue, mapV4ResultCode } from '../../lib/knesset/transforms';
-import { getLastSyncTime, runSyncJob, getCheckpoint, setCheckpoint, type SyncCheckpoint } from '../utils';
+import {
+  transformVoteHeader,
+  mapVoteValue,
+  mapV4ResultCode,
+} from '../../lib/knesset/transforms';
+import {
+  getLastSyncTime,
+  runSyncJob,
+  getCheckpoint,
+  setCheckpoint,
+  type SyncCheckpoint,
+} from '../utils';
 import { appConfig } from '../../../app.config';
 
 const BATCH_SIZE = 500;
@@ -42,7 +55,9 @@ async function fetchWithRetry<T>(
     } catch (err) {
       if (attempt === maxRetries) throw err;
       const delay = attempt * 2000;
-      console.warn(`  [retry] Attempt ${attempt} failed, retrying in ${delay}ms...`);
+      console.warn(
+        `  [retry] Attempt ${attempt} failed, retrying in ${delay}ms...`,
+      );
       await new Promise((r) => setTimeout(r, delay));
     }
   }
@@ -69,7 +84,9 @@ async function fetchAllPaginated<T>(
     });
     results.push(...page);
     if (label) {
-      console.log(`  [${label}] page ${skip / PAGE_SIZE + 1}: +${page.length} (total: ${results.length})`);
+      console.log(
+        `  [${label}] page ${skip / PAGE_SIZE + 1}: +${page.length} (total: ${results.length})`,
+      );
     }
     if (page.length < PAGE_SIZE) break;
     skip += PAGE_SIZE;
@@ -81,28 +98,36 @@ async function fetchAllPaginated<T>(
  * Fetch vote headers from OData v4 KNS_PlenumVote (headers only, no tallies).
  * Tallies are computed later in the single-pass pipeline.
  */
-async function fetchVoteHeadersFromV4(knessetNum: number): Promise<ODataVoteHeader[]> {
-  console.log(`  [v4] Fetching PlenumVote headers for Knesset ${knessetNum}...`);
+async function fetchVoteHeadersFromV4(
+  knessetNum: number,
+): Promise<ODataVoteHeader[]> {
+  console.log(
+    `  [v4] Fetching PlenumVote headers for Knesset ${knessetNum}...`,
+  );
   const plenumVotes = await fetchV4PlenumVotes(knessetNum);
-  console.log(`  [v4] Got ${plenumVotes.length} vote headers for Knesset ${knessetNum}`);
+  console.log(
+    `  [v4] Got ${plenumVotes.length} vote headers for Knesset ${knessetNum}`,
+  );
 
-  return plenumVotes.map((v): ODataVoteHeader => ({
-    vote_id: v.Id,
-    vote_date: v.VoteDateTime,
-    vote_time: '',
-    vote_item_dscr: [v.VoteTitle, v.VoteSubject].filter(Boolean).join(' — '),
-    sess_item_nbr: v.Ordinal ?? 0,
-    sess_item_id: v.ItemID ?? 0,
-    total_for: 0,
-    total_against: 0,
-    total_abstain: 0,
-    is_accepted: 0,
-    vote_type: v.VoteMethodID ?? 1,
-    is_elctrnc_vote: 0,
-    knesset_num: knessetNum,
-    session_id: String(v.SessionID ?? ''),
-    session_num: 0,
-  }));
+  return plenumVotes.map(
+    (v): ODataVoteHeader => ({
+      vote_id: v.Id,
+      vote_date: v.VoteDateTime,
+      vote_time: '',
+      vote_item_dscr: [v.VoteTitle, v.VoteSubject].filter(Boolean).join(' — '),
+      sess_item_nbr: v.Ordinal ?? 0,
+      sess_item_id: v.ItemID ?? 0,
+      total_for: 0,
+      total_against: 0,
+      total_abstain: 0,
+      is_accepted: 0,
+      vote_type: v.VoteMethodID ?? 1,
+      is_elctrnc_vote: 0,
+      knesset_num: knessetNum,
+      session_id: String(v.SessionID ?? ''),
+      session_num: 0,
+    }),
+  );
 }
 
 /**
@@ -110,7 +135,9 @@ async function fetchVoteHeadersFromV4(knessetNum: number): Promise<ODataVoteHead
  * Knessets in WEBSITE_API_ONLY use the WebSiteApi, all others use OData.
  * Returns count + checkpoint with the max vote ID synced.
  */
-async function syncVoteHeaders(prevCheckpoint: SyncCheckpoint | null): Promise<{ count: number; checkpoint: SyncCheckpoint }> {
+async function syncVoteHeaders(
+  prevCheckpoint: SyncCheckpoint | null,
+): Promise<{ count: number; checkpoint: SyncCheckpoint }> {
   const lastSync = await getLastSyncTime('votes');
 
   let rawVotes: ODataVoteHeader[];
@@ -138,7 +165,9 @@ async function syncVoteHeaders(prevCheckpoint: SyncCheckpoint | null): Promise<{
     for (const kn of v4Knessets) {
       const v4Votes = await fetchVoteHeadersFromV4(kn);
       rawVotes.push(...v4Votes);
-      console.log(`  [votes] OData v4 Knesset ${kn}: ${v4Votes.length} votes (running total: ${rawVotes.length})`);
+      console.log(
+        `  [votes] OData v4 Knesset ${kn}: ${v4Votes.length} votes (running total: ${rawVotes.length})`,
+      );
     }
 
     // Fetch from OData
@@ -150,7 +179,9 @@ async function syncVoteHeaders(prevCheckpoint: SyncCheckpoint | null): Promise<{
         `votes-knesset${kn}`,
       );
       rawVotes.push(...knVotes);
-      console.log(`  [votes] Knesset ${kn}: ${knVotes.length} votes (running total: ${rawVotes.length})`);
+      console.log(
+        `  [votes] Knesset ${kn}: ${knVotes.length} votes (running total: ${rawVotes.length})`,
+      );
     }
   }
 
@@ -163,7 +194,9 @@ async function syncVoteHeaders(prevCheckpoint: SyncCheckpoint | null): Promise<{
     return true;
   });
   if (rows.length !== allRows.length) {
-    console.log(`  [dedup] Removed ${allRows.length - rows.length} duplicate vote IDs`);
+    console.log(
+      `  [dedup] Removed ${allRows.length - rows.length} duplicate vote IDs`,
+    );
   }
   for (let i = 0; i < rows.length; i += BATCH_SIZE) {
     const batch = rows.slice(i, i + BATCH_SIZE);
@@ -208,30 +241,44 @@ async function syncVoteHeaders(prevCheckpoint: SyncCheckpoint | null): Promise<{
  * is interrupted, previously-completed knessets are already persisted.
  * Returns count + checkpoint with the last processed state.
  */
-async function syncMemberVoteRecords(prevCheckpoint: SyncCheckpoint | null): Promise<{ count: number; checkpoint: SyncCheckpoint }> {
+async function syncMemberVoteRecords(
+  prevCheckpoint: SyncCheckpoint | null,
+): Promise<{ count: number; checkpoint: SyncCheckpoint }> {
   const lastSync = await getLastSyncTime('member_votes');
 
   const odataKnessets = SYNC_KNESSETS.filter((k) => !WEBSITE_API_ONLY.has(k));
   const v4Knessets = SYNC_KNESSETS.filter((k) => WEBSITE_API_ONLY.has(k));
 
   // Pre-load vote and member maps for FK resolution (shared by legacy + v4)
-  const allVotesForFk = await db.select({ id: votes.id, knessetId: votes.knessetId }).from(votes);
+  const allVotesForFk = await db
+    .select({ id: votes.id, knessetId: votes.knessetId })
+    .from(votes);
   const voteMapForFk = new Map(allVotesForFk.map((v) => [v.knessetId, v.id]));
-  const allMembersForFk = await db.select({ id: members.id, vipId: members.vipId, legacyVipId: members.legacyVipId }).from(members);
+  const allMembersForFk = await db
+    .select({
+      id: members.id,
+      vipId: members.vipId,
+      legacyVipId: members.legacyVipId,
+    })
+    .from(members);
   // Build FK map with both v4 MkId (vipId) and legacy vip_id (legacyVipId)
   // for members where the two IDs differ. This ensures correct matching for
   // both legacy K1-K24 OData (uses legacy vip_id) and v4 K25+ (uses v4 MkId).
   const memberMapForFk = new Map<number, number>();
   for (const m of allMembersForFk) {
     if (m.vipId) memberMapForFk.set(m.vipId, m.id);
-    if (m.legacyVipId && m.legacyVipId !== m.vipId) memberMapForFk.set(m.legacyVipId, m.id);
+    if (m.legacyVipId && m.legacyVipId !== m.vipId)
+      memberMapForFk.set(m.legacyVipId, m.id);
   }
 
   let totalInserted = 0;
   let totalUnmapped = 0;
 
   /** Resolve FKs and insert a batch of legacy OData member votes immediately. */
-  async function resolveAndInsertLegacy(rawVotes: ODataMemberVote[], label: string): Promise<number> {
+  async function resolveAndInsertLegacy(
+    rawVotes: ODataMemberVote[],
+    label: string,
+  ): Promise<number> {
     let unmapped = 0;
     const rows = rawVotes
       .map((raw) => {
@@ -246,7 +293,9 @@ async function syncMemberVoteRecords(prevCheckpoint: SyncCheckpoint | null): Pro
       .filter((r): r is NonNullable<typeof r> => r !== null);
 
     if (unmapped > 0) {
-      console.warn(`  [${label}] ${unmapped} vote records skipped: member vipId not found`);
+      console.warn(
+        `  [${label}] ${unmapped} vote records skipped: member vipId not found`,
+      );
       totalUnmapped += unmapped;
     }
 
@@ -256,7 +305,9 @@ async function syncMemberVoteRecords(prevCheckpoint: SyncCheckpoint | null): Pro
       await db.insert(memberVotes).values(batch).onConflictDoNothing();
       inserted += batch.length;
       if (inserted % 5000 < BATCH_SIZE) {
-        console.log(`  [${label}] DB insert progress: ${inserted}/${rows.length}`);
+        console.log(
+          `  [${label}] DB insert progress: ${inserted}/${rows.length}`,
+        );
       }
     }
     console.log(`  [${label}] Inserted ${rows.length} member vote records`);
@@ -281,7 +332,10 @@ async function syncMemberVoteRecords(prevCheckpoint: SyncCheckpoint | null): Pro
       );
       rawMemberVotes.push(...mvs);
     }
-    totalInserted += await resolveAndInsertLegacy(rawMemberVotes, 'incremental');
+    totalInserted += await resolveAndInsertLegacy(
+      rawMemberVotes,
+      'incremental',
+    );
   } else {
     // Full sync — process and INSERT each knesset immediately (crash-resilient)
     for (const kn of odataKnessets) {
@@ -291,7 +345,9 @@ async function syncMemberVoteRecords(prevCheckpoint: SyncCheckpoint | null): Pro
         'vote_id desc',
         `member_votes-knesset${kn}`,
       );
-      console.log(`  [member_votes] Knesset ${kn}: ${knVotes.length} records fetched`);
+      console.log(
+        `  [member_votes] Knesset ${kn}: ${knVotes.length} records fetched`,
+      );
       totalInserted += await resolveAndInsertLegacy(knVotes, `knesset${kn}`);
     }
   }
@@ -300,13 +356,17 @@ async function syncMemberVoteRecords(prevCheckpoint: SyncCheckpoint | null): Pro
   const v4VoteIdsForTally: number[] = [];
   if (v4Knessets.length > 0) {
     for (const kn of v4Knessets) {
-      console.log(`  [member_votes] Fetching v4 vote results for Knesset ${kn}...`);
+      console.log(
+        `  [member_votes] Fetching v4 vote results for Knesset ${kn}...`,
+      );
       const knVoteRows = await db
         .select({ knessetId: votes.knessetId })
         .from(votes)
         .where(sql`${votes.knessetNum} = ${kn}`);
       const voteIds = knVoteRows.map((v) => v.knessetId);
-      console.log(`  [member_votes] Knesset ${kn}: ${voteIds.length} votes in DB`);
+      console.log(
+        `  [member_votes] Knesset ${kn}: ${voteIds.length} votes in DB`,
+      );
 
       const sorted = [...voteIds].sort((a, b) => a - b);
       const voteIdSet = new Set(voteIds);
@@ -317,24 +377,41 @@ async function syncMemberVoteRecords(prevCheckpoint: SyncCheckpoint | null): Pro
         const maxId = chunkIds[chunkIds.length - 1];
         const chunkNum = Math.floor(i / CHUNK) + 1;
         const totalChunks = Math.ceil(sorted.length / CHUNK);
-        console.log(`  [member_votes] Chunk ${chunkNum}/${totalChunks}: VoteID ${minId}–${maxId}`);
+        console.log(
+          `  [member_votes] Chunk ${chunkNum}/${totalChunks}: VoteID ${minId}–${maxId}`,
+        );
 
-        const v4Results = await fetchV4VoteResults(minId, maxId, voteIdSet, `v4-mv-chunk-${chunkNum}`);
+        const v4Results = await fetchV4VoteResults(
+          minId,
+          maxId,
+          voteIdSet,
+          `v4-mv-chunk-${chunkNum}`,
+        );
 
         let chunkUnmapped = 0;
-        const chunkRows: { voteId: number; memberId: number; voteValue: string }[] = [];
+        const chunkRows: {
+          voteId: number;
+          memberId: number;
+          voteValue: string;
+        }[] = [];
         for (const r of v4Results) {
           const vId = voteMapForFk.get(r.VoteID);
           const mId = memberMapForFk.get(r.MkId);
           if (vId && mId) {
-            chunkRows.push({ voteId: vId, memberId: mId, voteValue: mapV4ResultCode(r.ResultCode) });
+            chunkRows.push({
+              voteId: vId,
+              memberId: mId,
+              voteValue: mapV4ResultCode(r.ResultCode),
+            });
             v4VoteIdsForTally.push(vId);
           } else if (vId && !mId) {
             chunkUnmapped++;
           }
         }
         if (chunkUnmapped > 0) {
-          console.warn(`  [member_votes] Chunk ${chunkNum}: ${chunkUnmapped} v4 vote records skipped: member vipId not found`);
+          console.warn(
+            `  [member_votes] Chunk ${chunkNum}: ${chunkUnmapped} v4 vote records skipped: member vipId not found`,
+          );
           totalUnmapped += chunkUnmapped;
         }
         // Insert chunk immediately
@@ -349,14 +426,18 @@ async function syncMemberVoteRecords(prevCheckpoint: SyncCheckpoint | null): Pro
   }
 
   if (totalUnmapped > 0) {
-    console.warn(`  [member_votes] Total: ${totalUnmapped} vote records skipped (member vipId not found)`);
+    console.warn(
+      `  [member_votes] Total: ${totalUnmapped} vote records skipped (member vipId not found)`,
+    );
   }
 
   // Recompute tallies for v4 votes from actual member_votes rows
   // (v4 headers are inserted with 0 tallies, so we must always recompute)
   if (v4VoteIdsForTally.length > 0) {
     const uniqueV4VoteIds = [...new Set(v4VoteIdsForTally)];
-    console.log(`  [tally-recompute] Recomputing tallies for ${uniqueV4VoteIds.length} v4 votes from member_votes...`);
+    console.log(
+      `  [tally-recompute] Recomputing tallies for ${uniqueV4VoteIds.length} v4 votes from member_votes...`,
+    );
     for (let i = 0; i < uniqueV4VoteIds.length; i += BATCH_SIZE) {
       const batch = uniqueV4VoteIds.slice(i, i + BATCH_SIZE);
       const tallies = await db
@@ -366,29 +447,43 @@ async function syncMemberVoteRecords(prevCheckpoint: SyncCheckpoint | null): Pro
           count: sql<number>`cast(count(*) as integer)`,
         })
         .from(memberVotes)
-        .where(sql`${memberVotes.voteId} IN (${sql.join(batch.map((id) => sql`${id}`), sql`, `)})`)
+        .where(
+          sql`${memberVotes.voteId} IN (${sql.join(
+            batch.map((id) => sql`${id}`),
+            sql`, `,
+          )})`,
+        )
         .groupBy(memberVotes.voteId, memberVotes.voteValue);
 
-      const tallyMap = new Map<number, { for: number; against: number; abstain: number }>();
+      const tallyMap = new Map<
+        number,
+        { for: number; against: number; abstain: number }
+      >();
       for (const row of tallies) {
         let t = tallyMap.get(row.voteId);
-        if (!t) { t = { for: 0, against: 0, abstain: 0 }; tallyMap.set(row.voteId, t); }
+        if (!t) {
+          t = { for: 0, against: 0, abstain: 0 };
+          tallyMap.set(row.voteId, t);
+        }
         if (row.voteValue === 'for') t.for = row.count;
         else if (row.voteValue === 'against') t.against = row.count;
         else if (row.voteValue === 'abstain') t.abstain = row.count;
       }
 
-      await Promise.all([...tallyMap.entries()].map(([vId, tally]) =>
-        db.update(votes)
-          .set({
-            forCount: tally.for,
-            againstCount: tally.against,
-            abstainCount: tally.abstain,
-            isAccepted: tally.for > tally.against,
-            updatedAt: new Date(),
-          })
-          .where(eq(votes.id, vId))
-      ));
+      await Promise.all(
+        [...tallyMap.entries()].map(([vId, tally]) =>
+          db
+            .update(votes)
+            .set({
+              forCount: tally.for,
+              againstCount: tally.against,
+              abstainCount: tally.abstain,
+              isAccepted: tally.for > tally.against,
+              updatedAt: new Date(),
+            })
+            .where(eq(votes.id, vId)),
+        ),
+      );
     }
     console.log(`  [tally-recompute] Done.`);
   }
@@ -479,7 +574,9 @@ function csvHeaderToOData(row: CSVVoteHeader): ODataVoteHeader {
 /**
  * Fetch vote headers from Open Knesset CSV for specified knesset numbers.
  */
-async function fetchVoteHeadersFromCSV(knessetNums: number[]): Promise<ODataVoteHeader[]> {
+async function fetchVoteHeadersFromCSV(
+  knessetNums: number[],
+): Promise<ODataVoteHeader[]> {
   const knessetSet = new Set(knessetNums);
   console.log(`  [CSV] Fetching vote headers from Open Knesset CSV...`);
 
@@ -493,16 +590,22 @@ async function fetchVoteHeadersFromCSV(knessetNums: number[]): Promise<ODataVote
     .filter((row) => knessetSet.has(parseInt(row.knesset_num, 10)))
     .map(csvHeaderToOData);
 
-  console.log(`  [CSV] Filtered to knessets [${knessetNums.join(',')}]: ${filtered.length} vote headers`);
+  console.log(
+    `  [CSV] Filtered to knessets [${knessetNums.join(',')}]: ${filtered.length} vote headers`,
+  );
   return filtered;
 }
 
 /**
  * Fetch member votes from Open Knesset CSV for specified knesset numbers.
  */
-async function fetchMemberVotesFromCSV(knessetNums: number[]): Promise<ODataMemberVote[]> {
+async function fetchMemberVotesFromCSV(
+  knessetNums: number[],
+): Promise<ODataMemberVote[]> {
   const knessetSet = new Set(knessetNums);
-  console.log(`  [CSV] Fetching member votes from Open Knesset CSV (~99MB, this may take a while)...`);
+  console.log(
+    `  [CSV] Fetching member votes from Open Knesset CSV (~99MB, this may take a while)...`,
+  );
 
   const csvRows = await fetchOKnessetCSV<CSVMemberVote>(
     'votes/vote_rslts_kmmbr_shadow_extra/vote_rslts_kmmbr_shadow.csv',
@@ -512,17 +615,21 @@ async function fetchMemberVotesFromCSV(knessetNums: number[]): Promise<ODataMemb
 
   const filtered = csvRows
     .filter((row) => knessetSet.has(parseInt(row.knesset_num, 10)))
-    .map((row): ODataMemberVote => ({
-      vote_id: parseInt(row.vote_id, 10),
-      kmmbr_id: row.kmmbr_id,
-      kmmbr_name: row.kmmbr_name,
-      vote_result: parseInt(row.vote_result, 10),
-      knesset_num: parseInt(row.knesset_num, 10),
-      faction_id: parseInt(row.faction_id, 10) || 0,
-      faction_name: row.faction_name || '',
-    }));
+    .map(
+      (row): ODataMemberVote => ({
+        vote_id: parseInt(row.vote_id, 10),
+        kmmbr_id: row.kmmbr_id,
+        kmmbr_name: row.kmmbr_name,
+        vote_result: parseInt(row.vote_result, 10),
+        knesset_num: parseInt(row.knesset_num, 10),
+        faction_id: parseInt(row.faction_id, 10) || 0,
+        faction_name: row.faction_name || '',
+      }),
+    );
 
-  console.log(`  [CSV] Filtered to knessets [${knessetNums.join(',')}]: ${filtered.length} member votes`);
+  console.log(
+    `  [CSV] Filtered to knessets [${knessetNums.join(',')}]: ${filtered.length} member votes`,
+  );
   return filtered;
 }
 
@@ -543,7 +650,9 @@ async function fetchMemberVotesFromCSV(knessetNums: number[]): Promise<ODataMemb
  *   - Save checkpoint after each chunk
  *   - On restart: skip completed chunks
  */
-export async function syncVotesForKnessets(knessetNums: number[]): Promise<void> {
+export async function syncVotesForKnessets(
+  knessetNums: number[],
+): Promise<void> {
   const v4Knessets = knessetNums.filter((k) => WEBSITE_API_ONLY.has(k));
   const odataKnessets = knessetNums.filter((k) => !WEBSITE_API_ONLY.has(k));
 
@@ -554,7 +663,9 @@ export async function syncVotesForKnessets(knessetNums: number[]): Promise<void>
   for (const kn of v4Knessets) {
     const v4Votes = await fetchVoteHeadersFromV4(kn);
     allRawVotes.push(...v4Votes);
-    console.log(`  [v4] Knesset ${kn}: ${v4Votes.length} votes (headers only, tallies computed in Phase 2)`);
+    console.log(
+      `  [v4] Knesset ${kn}: ${v4Votes.length} votes (headers only, tallies computed in Phase 2)`,
+    );
   }
 
   for (const kn of odataKnessets) {
@@ -577,40 +688,56 @@ export async function syncVotesForKnessets(knessetNums: number[]): Promise<void>
     return true;
   });
   if (headerRows.length !== allHeaderRows.length) {
-    console.log(`  [dedup] Removed ${allHeaderRows.length - headerRows.length} duplicate vote IDs`);
+    console.log(
+      `  [dedup] Removed ${allHeaderRows.length - headerRows.length} duplicate vote IDs`,
+    );
   }
 
   for (let i = 0; i < headerRows.length; i += HEADER_BATCH_SIZE) {
     const batch = headerRows.slice(i, i + HEADER_BATCH_SIZE);
-    await db.insert(votes).values(batch).onConflictDoUpdate({
-      target: votes.knessetId,
-      set: {
-        title: sql`excluded.title`,
-        voteDate: sql`excluded.vote_date`,
-        voteType: sql`excluded.vote_type`,
-        knessetNum: sql`excluded.knesset_num`,
-        sessionId: sql`excluded.session_id`,
-        sessItemId: sql`excluded.sess_item_id`,
-        updatedAt: new Date(),
-      },
-    });
+    await db
+      .insert(votes)
+      .values(batch)
+      .onConflictDoUpdate({
+        target: votes.knessetId,
+        set: {
+          title: sql`excluded.title`,
+          voteDate: sql`excluded.vote_date`,
+          voteType: sql`excluded.vote_type`,
+          knessetNum: sql`excluded.knesset_num`,
+          sessionId: sql`excluded.session_id`,
+          sessItemId: sql`excluded.sess_item_id`,
+          updatedAt: new Date(),
+        },
+      });
     const done = Math.min(i + HEADER_BATCH_SIZE, headerRows.length);
     console.log(`  [DB] Upserted ${done}/${headerRows.length} vote headers`);
   }
   console.log(`  Phase 1 done: ${headerRows.length} vote headers upserted\n`);
 
   // ── Phase 2: Single-pass tallies + member votes (resumable) ──
-  console.log(`=== Phase 2: Tallies + Member Votes (single pass, resumable) ===`);
+  console.log(
+    `=== Phase 2: Tallies + Member Votes (single pass, resumable) ===`,
+  );
 
   // Pre-load FK maps
-  const allVotesDb = await db.select({ id: votes.id, knessetId: votes.knessetId }).from(votes);
+  const allVotesDb = await db
+    .select({ id: votes.id, knessetId: votes.knessetId })
+    .from(votes);
   const voteMap = new Map(allVotesDb.map((v) => [v.knessetId, v.id]));
-  const allMembersDb = await db.select({ id: members.id, vipId: members.vipId, legacyVipId: members.legacyVipId }).from(members);
+  const allMembersDb = await db
+    .select({
+      id: members.id,
+      vipId: members.vipId,
+      legacyVipId: members.legacyVipId,
+    })
+    .from(members);
   // Map both vipId (v4 MkId) and legacyVipId for FK resolution
   const memberMap = new Map<number, number>();
   for (const m of allMembersDb) {
     if (m.vipId) memberMap.set(m.vipId, m.id);
-    if (m.legacyVipId && m.legacyVipId !== m.vipId) memberMap.set(m.legacyVipId, m.id);
+    if (m.legacyVipId && m.legacyVipId !== m.vipId)
+      memberMap.set(m.legacyVipId, m.id);
   }
 
   for (const kn of v4Knessets) {
@@ -618,7 +745,9 @@ export async function syncVotesForKnessets(knessetNums: number[]): Promise<void>
     const prevChkpt = await getCheckpoint(checkpointKey);
     const resumeFromId = (prevChkpt?.lastItemId as number) ?? null;
     if (resumeFromId) {
-      console.log(`  [checkpoint] Resuming Knesset ${kn} from VoteID > ${resumeFromId}`);
+      console.log(
+        `  [checkpoint] Resuming Knesset ${kn} from VoteID > ${resumeFromId}`,
+      );
     }
 
     // Get sorted vote IDs for this knesset
@@ -647,78 +776,126 @@ export async function syncVotesForKnessets(knessetNums: number[]): Promise<void>
         continue;
       }
 
-      console.log(`  [chunk ${chunkNum}/${totalChunks}] VoteID ${minId}–${maxId} (${chunkIds.length} votes)`);
+      console.log(
+        `  [chunk ${chunkNum}/${totalChunks}] VoteID ${minId}–${maxId} (${chunkIds.length} votes)`,
+      );
 
       // Fetch minimal results ($select=VoteID,MkId,ResultCode)
       const results = await fetchV4VoteResultsMinimal(
-        minId, maxId, voteIdSet,
+        minId,
+        maxId,
+        voteIdSet,
         `chunk-${chunkNum}`,
       );
       processedResults += results.length;
 
       // Resolve FKs first — only resolved rows count toward tallies
-      const mvRows: { voteId: number; memberId: number; voteValue: string; voteKnessetId: number }[] = [];
+      const mvRows: {
+        voteId: number;
+        memberId: number;
+        voteValue: string;
+        voteKnessetId: number;
+      }[] = [];
       let unresolvedCount = 0;
       for (const r of results) {
         const vId = voteMap.get(r.VoteID);
         const mId = memberMap.get(r.MkId);
         if (vId && mId) {
-          mvRows.push({ voteId: vId, memberId: mId, voteValue: mapV4ResultCode(r.ResultCode), voteKnessetId: r.VoteID });
+          mvRows.push({
+            voteId: vId,
+            memberId: mId,
+            voteValue: mapV4ResultCode(r.ResultCode),
+            voteKnessetId: r.VoteID,
+          });
         } else {
           unresolvedCount++;
         }
       }
       if (unresolvedCount > 0) {
-        console.warn(`  [chunk ${chunkNum}/${totalChunks}] ⚠ ${unresolvedCount} results skipped (unresolved MkId/VoteID)`);
+        console.warn(
+          `  [chunk ${chunkNum}/${totalChunks}] ⚠ ${unresolvedCount} results skipped (unresolved MkId/VoteID)`,
+        );
       }
 
-      // Compute tallies from resolved member votes only
-      const tallyMap = new Map<number, { for: number; against: number; abstain: number }>();
-      for (const mv of mvRows) {
-        let tally = tallyMap.get(mv.voteKnessetId);
-        if (!tally) {
-          tally = { for: 0, against: 0, abstain: 0 };
-          tallyMap.set(mv.voteKnessetId, tally);
-        }
-        if (mv.voteValue === 'for') tally.for++;
-        else if (mv.voteValue === 'against') tally.against++;
-        else if (mv.voteValue === 'abstain') tally.abstain++;
-      }
-
-      // UPDATE vote headers with tallies (batched via Promise.all)
-      const tallyUpdates = [...tallyMap.entries()];
-      for (let t = 0; t < tallyUpdates.length; t += 20) {
-        const batch = tallyUpdates.slice(t, t + 20);
-        await Promise.all(batch.map(([voteKnessetId, tally]) =>
-          db.update(votes)
-            .set({
-              forCount: tally.for,
-              againstCount: tally.against,
-              abstainCount: tally.abstain,
-              isAccepted: tally.for > tally.against,
-              updatedAt: new Date(),
-            })
-            .where(eq(votes.knessetId, voteKnessetId))
-        ));
-      }
-
-      // INSERT member votes
-      const mvInsertRows = mvRows.map(({ voteId, memberId, voteValue }) => ({ voteId, memberId, voteValue }));
+      // INSERT member votes first (so DB reflects all data before tally)
+      const mvInsertRows = mvRows.map(({ voteId, memberId, voteValue }) => ({
+        voteId,
+        memberId,
+        voteValue,
+      }));
       for (let j = 0; j < mvInsertRows.length; j += BATCH_SIZE) {
         const batch = mvInsertRows.slice(j, j + BATCH_SIZE);
         await db.insert(memberVotes).values(batch).onConflictDoNothing();
       }
       processedMemberVotes += mvInsertRows.length;
 
+      // Recompute tallies from DB (not in-memory) to ensure accuracy
+      const affectedVoteIds = [...new Set(mvRows.map((r) => r.voteId))];
+      if (affectedVoteIds.length > 0) {
+        const dbTallies = await db
+          .select({
+            voteId: memberVotes.voteId,
+            voteValue: memberVotes.voteValue,
+            count: sql<number>`cast(count(*) as integer)`,
+          })
+          .from(memberVotes)
+          .where(
+            sql`${memberVotes.voteId} IN (${sql.join(
+              affectedVoteIds.map((id) => sql`${id}`),
+              sql`, `,
+            )})`,
+          )
+          .groupBy(memberVotes.voteId, memberVotes.voteValue);
+
+        const tallyMap = new Map<
+          number,
+          { for: number; against: number; abstain: number }
+        >();
+        for (const row of dbTallies) {
+          let t = tallyMap.get(row.voteId);
+          if (!t) {
+            t = { for: 0, against: 0, abstain: 0 };
+            tallyMap.set(row.voteId, t);
+          }
+          if (row.voteValue === 'for') t.for = row.count;
+          else if (row.voteValue === 'against') t.against = row.count;
+          else if (row.voteValue === 'abstain') t.abstain = row.count;
+        }
+
+        // UPDATE vote headers with tallies (batched via Promise.all)
+        const tallyUpdates = [...tallyMap.entries()];
+        for (let t = 0; t < tallyUpdates.length; t += 20) {
+          const batch = tallyUpdates.slice(t, t + 20);
+          await Promise.all(
+            batch.map(([vId, tally]) =>
+              db
+                .update(votes)
+                .set({
+                  forCount: tally.for,
+                  againstCount: tally.against,
+                  abstainCount: tally.abstain,
+                  isAccepted: tally.for > tally.against,
+                  updatedAt: new Date(),
+                })
+                .where(eq(votes.id, vId)),
+            ),
+          );
+        }
+      }
+
       // Save checkpoint
       await setCheckpoint(checkpointKey, { lastItemId: maxId });
-      console.log(`  [chunk ${chunkNum}/${totalChunks}] ✓ ${results.length} results → ${tallyMap.size} tallies, ${mvInsertRows.length} member votes`);
+      console.log(
+        `  [chunk ${chunkNum}/${totalChunks}] ✓ ${results.length} results → ${affectedVoteIds.length} tallies, ${mvInsertRows.length} member votes`,
+      );
     }
 
     if (skipped > 0) {
       console.log(`  [checkpoint] Skipped ${skipped} already-processed chunks`);
     }
-    console.log(`  Knesset ${kn} done: ${processedResults} results, ${processedMemberVotes} member votes`);
+    console.log(
+      `  Knesset ${kn} done: ${processedResults} results, ${processedMemberVotes} member votes`,
+    );
     // Clear checkpoint after successful completion
     await setCheckpoint(checkpointKey, {});
   }
@@ -735,7 +912,9 @@ export async function syncVotesForKnessets(knessetNums: number[]): Promise<void>
         `member_votes-knesset${kn}`,
       );
       allRawMemberVotes.push(...knMemberVotes);
-      console.log(`  [OData] Knesset ${kn} member votes: ${knMemberVotes.length}`);
+      console.log(
+        `  [OData] Knesset ${kn} member votes: ${knMemberVotes.length}`,
+      );
     }
 
     const memberVoteRows = allRawMemberVotes
@@ -743,7 +922,11 @@ export async function syncVotesForKnessets(knessetNums: number[]): Promise<void>
         const vId = voteMap.get(raw.vote_id);
         const mId = memberMap.get(parseInt(String(raw.kmmbr_id), 10));
         if (!vId || !mId) return null;
-        return { voteId: vId, memberId: mId, voteValue: mapVoteValue(raw.vote_result) };
+        return {
+          voteId: vId,
+          memberId: mId,
+          voteValue: mapVoteValue(raw.vote_result),
+        };
       })
       .filter((r): r is NonNullable<typeof r> => r !== null);
 
