@@ -110,7 +110,9 @@ export default function MembersFilter({
     (isCurrentKnesset && currentStatus !== 'current') ||
     Number(currentKnesset) !== currentKnessetNumber;
   const activeFilterCount =
-    [currentFaction, currentSearch, currentCoalition, currentGender].filter(Boolean).length +
+    [currentFaction, currentSearch, currentCoalition, currentGender].filter(
+      Boolean,
+    ).length +
     (isCurrentKnesset && currentStatus !== 'current' ? 1 : 0) +
     (Number(currentKnesset) !== currentKnessetNumber ? 1 : 0);
 
@@ -123,12 +125,18 @@ export default function MembersFilter({
             value={currentKnesset || String(currentKnessetNumber)}
             onValueChange={(val) => {
               updateParams({
-                knesset: val === String(currentKnessetNumber) ? '' : String(val),
+                knesset:
+                  val === String(currentKnessetNumber) ? '' : String(val),
                 party: '',
                 status: '',
               });
             }}
-            items={Object.fromEntries(knessetNumbers.map((num) => [String(num), `${t('knessetNum')} ${num}`]))}
+            items={Object.fromEntries(
+              knessetNumbers.map((num) => [
+                String(num),
+                `${t('knessetNum')} ${num}`,
+              ]),
+            )}
           >
             <SelectTrigger className="font-medium">
               <SelectValue />
@@ -145,11 +153,13 @@ export default function MembersFilter({
 
         {/* Status tabs — only shown for current knesset */}
         {isCurrentKnesset && (
-          <div className="flex gap-1.5 rounded-xl bg-muted/60 p-1.5 backdrop-blur-sm">
+          <div className="bg-muted/60 flex gap-1.5 rounded-xl p-1.5 backdrop-blur-sm">
             {(['current', 'past'] as const).map((status) => (
               <button
                 key={status}
-                onClick={() => updateParam('status', status === 'current' ? '' : status)}
+                onClick={() =>
+                  updateParam('status', status === 'current' ? '' : status)
+                }
                 className={`rounded-lg px-4 py-2 text-sm font-medium transition-all ${
                   currentStatus === status
                     ? 'bg-background text-foreground shadow-sm'
@@ -165,7 +175,7 @@ export default function MembersFilter({
 
       {/* Row 2: Search bar */}
       <div className="relative">
-        <Search className="absolute inset-s-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Search className="text-muted-foreground absolute inset-s-3 top-1/2 h-4 w-4 -translate-y-1/2" />
         <Input
           type="text"
           value={searchValue}
@@ -179,8 +189,13 @@ export default function MembersFilter({
       <div className="flex flex-wrap items-center gap-2">
         <Select
           value={currentFaction || '_all'}
-          onValueChange={(val) => updateParam('party', val === '_all' ? '' : String(val))}
-          items={{ _all: t('allFactions'), ...Object.fromEntries(factions.map((f) => [String(f.id), f.name])) }}
+          onValueChange={(val) =>
+            updateParam('party', val === '_all' ? '' : String(val))
+          }
+          items={{
+            _all: t('allFactions'),
+            ...Object.fromEntries(factions.map((f) => [String(f.id), f.name])),
+          }}
         >
           <SelectTrigger>
             <SelectValue />
@@ -197,8 +212,14 @@ export default function MembersFilter({
 
         <Select
           value={currentCoalition || '_all'}
-          onValueChange={(val) => updateParam('coalition', val === '_all' ? '' : String(val))}
-          items={{ _all: t('coalitionAll'), coalition: t('coalition'), opposition: t('opposition') }}
+          onValueChange={(val) =>
+            updateParam('coalition', val === '_all' ? '' : String(val))
+          }
+          items={{
+            _all: t('coalitionAll'),
+            coalition: t('coalition'),
+            opposition: t('opposition'),
+          }}
         >
           <SelectTrigger>
             <SelectValue />
@@ -212,8 +233,14 @@ export default function MembersFilter({
 
         <Select
           value={currentGender || '_all'}
-          onValueChange={(val) => updateParam('gender', val === '_all' ? '' : String(val))}
-          items={{ _all: t('genderAll'), male: t('genderMale'), female: t('genderFemale') }}
+          onValueChange={(val) =>
+            updateParam('gender', val === '_all' ? '' : String(val))
+          }
+          items={{
+            _all: t('genderAll'),
+            male: t('genderMale'),
+            female: t('genderFemale'),
+          }}
         >
           <SelectTrigger>
             <SelectValue />
@@ -228,7 +255,12 @@ export default function MembersFilter({
         <Select
           value={currentSort || 'name'}
           onValueChange={(val) => updateParam('sort', String(val))}
-          items={{ name: t('sortByName'), mostVotes: t('sortByMostVotes'), mostAbsent: t('sortByMostAbsent'), mostBills: t('sortByMostBills'), seniority: t('sortBySeniority'), age: t('sortByAge') }}
+          items={{
+            name: t('sortByName'),
+            mostBills: t('sortByMostBills'),
+            seniority: t('sortBySeniority'),
+            age: t('sortByAge'),
+          }}
         >
           <SelectTrigger>
             <SelectValue />
@@ -263,12 +295,15 @@ export default function MembersFilter({
             variant="ghost"
             size="sm"
             onClick={clearAllFilters}
-            className="h-9 gap-1.5 rounded-xl text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground h-9 gap-1.5 rounded-xl"
           >
             <X className="h-3.5 w-3.5" />
             {t('clearFilters')}
             {activeFilterCount > 0 && (
-              <Badge variant="secondary" className="ms-1 h-5 min-w-5 px-1 text-xs">
+              <Badge
+                variant="secondary"
+                className="ms-1 h-5 min-w-5 px-1 text-xs"
+              >
                 {activeFilterCount}
               </Badge>
             )}

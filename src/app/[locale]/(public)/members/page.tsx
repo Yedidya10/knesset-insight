@@ -7,7 +7,6 @@ import { db } from '@/lib/db';
 import {
   members,
   factions,
-  memberVotes,
   billInitiators,
   memberFactionHistory,
   factionCoalitionPeriods,
@@ -292,48 +291,7 @@ export default async function MembersPage({ searchParams }: Props) {
 
   const memberIds = memberRows.map((m) => m.id);
 
-  // Query 2: Aggregated vote stats for the fetched members (single fast query)
-  const voteStatsMap = new Map<
-    number,
-    {
-      forCount: number;
-      againstCount: number;
-      abstainCount: number;
-      absentCount: number;
-      totalVotes: number;
-    }
-  >();
-  if (memberIds.length > 0) {
-    const statsRows = await db
-      .select({
-        memberId: memberVotes.memberId,
-        value: memberVotes.voteValue,
-        count: sql<number>`count(*)::int`,
-      })
-      .from(memberVotes)
-      .where(inArray(memberVotes.memberId, memberIds))
-      .groupBy(memberVotes.memberId, memberVotes.voteValue);
-
-    for (const row of statsRows) {
-      if (!voteStatsMap.has(row.memberId)) {
-        voteStatsMap.set(row.memberId, {
-          forCount: 0,
-          againstCount: 0,
-          abstainCount: 0,
-          absentCount: 0,
-          totalVotes: 0,
-        });
-      }
-      const entry = voteStatsMap.get(row.memberId)!;
-      entry.totalVotes += row.count;
-      if (row.value === 'for') entry.forCount = row.count;
-      else if (row.value === 'against') entry.againstCount = row.count;
-      else if (row.value === 'abstain') entry.abstainCount = row.count;
-      else if (row.value === 'absent') entry.absentCount = row.count;
-    }
-  }
-
-  // Query 3: Bill initiator counts per member
+  // Query 2: Bill initiator counts per member
   const billCountMap = new Map<number, number>();
   if (memberIds.length > 0) {
     const billRows = await db
@@ -368,13 +326,6 @@ export default async function MembersPage({ searchParams }: Props) {
             isCoalition,
           }
         : { ...m, isCoalition }),
-      ...(voteStatsMap.get(m.id) ?? {
-        forCount: 0,
-        againstCount: 0,
-        abstainCount: 0,
-        absentCount: 0,
-        totalVotes: 0,
-      }),
       billCount: billCountMap.get(m.id) ?? 0,
     };
   });
@@ -383,10 +334,6 @@ export default async function MembersPage({ searchParams }: Props) {
   if (sortBy !== 'name') {
     data.sort((a, b) => {
       switch (sortBy) {
-        case 'mostVotes':
-          return b.totalVotes - a.totalVotes;
-        case 'mostAbsent':
-          return b.absentCount - a.absentCount;
         case 'mostBills':
           return b.billCount - a.billCount;
         case 'seniority': {
