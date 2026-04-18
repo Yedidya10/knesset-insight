@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { Users, ArrowRight } from 'lucide-react';
-import { eq, sql, desc } from 'drizzle-orm';
+import { eq, sql, desc, and } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import {
   politicalGroups,
@@ -51,11 +51,25 @@ export default async function PoliticalGroupDetailPage({ params }: Props) {
       isCurrent: factions.isCurrent,
       memberCount: sql<number>`(
         select count(*)::int from members
-        where members.faction_id = ${factions.id} and members.is_current = true
+        where members.faction_id = ${factions.id}
       )`,
     })
     .from(factions)
-    .where(eq(factions.politicalGroupId, group.id))
+    .where(
+      and(
+        eq(factions.politicalGroupId, group.id),
+        sql`NOT (
+          ${factions.finishDate} IS NOT NULL
+          AND EXISTS (
+            SELECT 1 FROM factions f2
+            WHERE f2.political_group_id = ${factions.politicalGroupId}
+              AND f2.knesset_num = ${factions.knessetNum}
+              AND f2.id != ${factions.id}
+              AND f2.start_date > ${factions.startDate}
+          )
+        )`,
+      ),
+    )
     .orderBy(desc(factions.knessetNum));
 
   // Lineage — outgoing (this group → others)

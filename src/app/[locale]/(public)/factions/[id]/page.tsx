@@ -32,8 +32,8 @@ export default async function FactionDetailPage({ params }: Props) {
 
   if (!faction) notFound();
 
-  // If this faction was superseded (has finishDate + same-pgId successor in same knesset),
-  // redirect to the active successor.
+  // If this faction was superseded (same pgId, same knesset, a later-starting successor exists),
+  // redirect to the successor.
   if (faction.finishDate && faction.politicalGroupId) {
     const [successor] = await db
       .select({ id: factions.id })
@@ -43,7 +43,7 @@ export default async function FactionDetailPage({ params }: Props) {
           eq(factions.politicalGroupId, faction.politicalGroupId),
           eq(factions.knessetNum!, faction.knessetNum!),
           sql`${factions.id} != ${faction.id}`,
-          sql`${factions.finishDate} IS NULL`,
+          sql`${factions.startDate} > ${faction.startDate}`,
         ),
       )
       .limit(1);

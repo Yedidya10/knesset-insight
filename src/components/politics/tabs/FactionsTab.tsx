@@ -61,7 +61,7 @@ export default async function FactionsTab({ knessetParam }: Props) {
             WHERE f2.political_group_id = ${factions.politicalGroupId}
               AND f2.knesset_num = ${factions.knessetNum}
               AND f2.id != ${factions.id}
-              AND f2.finish_date IS NULL
+              AND f2.start_date > ${factions.startDate}
           )
         )`,
       ),
