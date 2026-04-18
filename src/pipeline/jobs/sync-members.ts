@@ -1,6 +1,11 @@
 import { and, eq, sql, inArray } from 'drizzle-orm';
 import { db } from '../../lib/db';
-import { members, factions, memberFactionHistory, factionCoalitionPeriods } from '../../lib/db/schema';
+import {
+  members,
+  factions,
+  memberFactionHistory,
+  factionCoalitionPeriods,
+} from '../../lib/db/schema';
 import { fetchOKnessetCSV } from '../../lib/knesset/oknesset-client';
 import { fetchAllOData, fetchOData } from '../../lib/knesset/odata-client';
 import { fetchV4MkIdMapping } from '../../lib/knesset/knesset-api-client';
@@ -41,7 +46,9 @@ interface ODataFaction {
  * Enriched with StartDate, FinishDate, IsCurrent from OData.
  * Falls back to Open Knesset CSV for any factions not in OData.
  */
-async function syncFactions(_prevCheckpoint: SyncCheckpoint | null): Promise<number> {
+async function syncFactions(
+  _prevCheckpoint: SyncCheckpoint | null,
+): Promise<number> {
   // Primary: Fetch from OData (has date range + isCurrent)
   const odataFactions = await fetchAllOData<ODataFaction>(
     'ParliamentInfo',
@@ -81,7 +88,12 @@ async function syncFactions(_prevCheckpoint: SyncCheckpoint | null): Promise<num
   for (const f of csvFactions) {
     const id = Number(f.id);
     if (!id || odataIds.has(id)) continue;
-    const knessets = f.knessets?.replace(/[\[\]]/g, '').split(',').map(Number).filter(Boolean) ?? [];
+    const knessets =
+      f.knessets
+        ?.replace(/[\[\]]/g, '')
+        .split(',')
+        .map(Number)
+        .filter(Boolean) ?? [];
     rows.push({
       knessetId: id,
       name: f.name.trim(),
@@ -118,7 +130,9 @@ async function syncFactions(_prevCheckpoint: SyncCheckpoint | null): Promise<num
  * Uses mk_individual.csv for member data and KNS_PersonToPosition OData
  * to determine which 120 members are truly active in the current Knesset.
  */
-async function syncMemberRecords(_prevCheckpoint: SyncCheckpoint | null): Promise<number> {
+async function syncMemberRecords(
+  _prevCheckpoint: SyncCheckpoint | null,
+): Promise<number> {
   // Fetch member data from CSV
   const membersData = await fetchOKnessetCSV<Record<string, string>>(
     'members/mk_individual/mk_individual.csv',
@@ -143,7 +157,9 @@ async function syncMemberRecords(_prevCheckpoint: SyncCheckpoint | null): Promis
     if (page.length < PAGE_SIZE) break;
     skip += PAGE_SIZE;
   }
-  console.log(`  [members] Found ${currentPositions.length} active MK positions in Knesset 25`);
+  console.log(
+    `  [members] Found ${currentPositions.length} active MK positions in Knesset 25`,
+  );
 
   // Build set of truly current PersonIDs and their current faction
   const currentPersonIds = new Set<number>();
@@ -214,7 +230,9 @@ async function syncMemberRecords(_prevCheckpoint: SyncCheckpoint | null): Promis
       nameToLegacyVipIds.set(key, existing);
     }
   }
-  console.log(`  [members] Loaded ${nameToLegacyVipIds.size} names from legacy Vote API`);
+  console.log(
+    `  [members] Loaded ${nameToLegacyVipIds.size} names from legacy Vote API`,
+  );
 
   // Source 2: v4 OData — KNS_PlenumVoteResult, latest results with (MkId, FirstName, LastName)
   // This is the authoritative source for K25 members' vote ID.
@@ -226,12 +244,19 @@ async function syncMemberRecords(_prevCheckpoint: SyncCheckpoint | null): Promis
         v4MkIdByName.set(`${entry.firstName} ${entry.lastName}`, entry.mkId);
       }
     }
-    console.log(`  [members] Loaded ${v4MkIdByName.size} v4 MkId mappings from PlenumVoteResult`);
+    console.log(
+      `  [members] Loaded ${v4MkIdByName.size} v4 MkId mappings from PlenumVoteResult`,
+    );
   } catch (err) {
-    console.warn(`  [members] Failed to fetch v4 MkId mapping, falling back to legacy only:`, err);
+    console.warn(
+      `  [members] Failed to fetch v4 MkId mapping, falling back to legacy only:`,
+      err,
+    );
   }
 
-  console.log(`  [members] Loaded ${nameToLegacyVipIds.size} name → vip_id mappings from Vote API`);
+  console.log(
+    `  [members] Loaded ${nameToLegacyVipIds.size} name → vip_id mappings from Vote API`,
+  );
 
   // Prepare member rows
   const rows = membersData
@@ -239,14 +264,17 @@ async function syncMemberRecords(_prevCheckpoint: SyncCheckpoint | null): Promis
     .map((raw) => {
       const knessetId = Number(raw.PersonID);
       // Use OData faction for current members, CSV for historical
-      const factionKnessetId = personFaction.get(knessetId) ?? personToFaction.get(knessetId);
-      const factionId = factionKnessetId ? (factionMap.get(factionKnessetId) ?? null) : null;
+      const factionKnessetId =
+        personFaction.get(knessetId) ?? personToFaction.get(knessetId);
+      const factionId = factionKnessetId
+        ? (factionMap.get(factionKnessetId) ?? null)
+        : null;
 
       // Resolve vipId via two-source cross-reference:
       // Priority: v4 MkId (authoritative for K25) > legacy vip_id (fallback)
       const firstName = (raw.mk_individual_first_name || '').trim();
       const lastName = (raw.mk_individual_name || '').trim();
-      const fullName = (firstName && lastName) ? `${firstName} ${lastName}` : '';
+      const fullName = firstName && lastName ? `${firstName} ${lastName}` : '';
 
       let vipId: number | null = null;
       let legacyVipId: number | null = null;
@@ -275,7 +303,9 @@ async function syncMemberRecords(_prevCheckpoint: SyncCheckpoint | null): Promis
           vipId = legacyIds[0];
         } else if (legacyIds.length > 1) {
           // Name collision with no v4 data — log warning, pick first
-          console.warn(`  [members] Name collision for "${fullName}": ${legacyIds.length} legacy IDs [${legacyIds.join(',')}], no v4 data`);
+          console.warn(
+            `  [members] Name collision for "${fullName}": ${legacyIds.length} legacy IDs [${legacyIds.join(',')}], no v4 data`,
+          );
           vipId = legacyIds[0];
         }
       }
@@ -294,8 +324,10 @@ async function syncMemberRecords(_prevCheckpoint: SyncCheckpoint | null): Promis
       };
     });
 
-  const currentCount = rows.filter(r => r.isCurrent).length;
-  console.log(`  [members] Syncing ${rows.length} members (${currentCount} current)`);
+  const currentCount = rows.filter((r) => r.isCurrent).length;
+  console.log(
+    `  [members] Syncing ${rows.length} members (${currentCount} current)`,
+  );
 
   for (let i = 0; i < rows.length; i += BATCH_SIZE) {
     const batch = rows.slice(i, i + BATCH_SIZE);
@@ -345,7 +377,9 @@ interface GovPosition {
  * 4. Upsert into faction_coalition_periods table
  * 5. Update factions.isCoalition based on the latest government (backward compat)
  */
-async function syncCoalitionStatus(_prevCheckpoint: SyncCheckpoint | null): Promise<number> {
+async function syncCoalitionStatus(
+  _prevCheckpoint: SyncCheckpoint | null,
+): Promise<number> {
   const { mkPositionId } = appConfig.knesset;
   let updated = 0;
 
@@ -356,7 +390,9 @@ async function syncCoalitionStatus(_prevCheckpoint: SyncCheckpoint | null): Prom
     const mkPositions = await fetchAllOData<PersonToPosition>(
       'ParliamentInfo',
       'KNS_PersonToPosition',
-      { $filter: `KnessetNum eq ${knessetNum} and PositionID eq ${mkPositionId}` },
+      {
+        $filter: `KnessetNum eq ${knessetNum} and PositionID eq ${mkPositionId}`,
+      },
       100,
     );
 
@@ -393,7 +429,9 @@ async function syncCoalitionStatus(_prevCheckpoint: SyncCheckpoint | null): Prom
 
     if (knessetFactions.length === 0) continue;
 
-    const factionKnessetIdToDbId = new Map(knessetFactions.map((f) => [f.knessetId, f.id]));
+    const factionKnessetIdToDbId = new Map(
+      knessetFactions.map((f) => [f.knessetId, f.id]),
+    );
 
     // For each government, derive coalition factions and their date ranges
     let latestGovNum = 0;
@@ -402,9 +440,13 @@ async function syncCoalitionStatus(_prevCheckpoint: SyncCheckpoint | null): Prom
     for (const [govNum, positions] of govGroups) {
       // Check for a static coalition override first
       const overrideKey = `${knessetNum}-${govNum}`;
-      const staticFactionKnessetIds = appConfig.knesset.coalitionFactions[overrideKey];
+      const staticFactionKnessetIds =
+        appConfig.knesset.coalitionFactions[overrideKey];
 
-      let factionDates: Map<number, { start: string | null; end: string | null }>;
+      let factionDates: Map<
+        number,
+        { start: string | null; end: string | null }
+      >;
 
       if (staticFactionKnessetIds) {
         // Use the verified static mapping — only include these factions
@@ -448,7 +490,8 @@ async function syncCoalitionStatus(_prevCheckpoint: SyncCheckpoint | null): Prom
         factionDates = new Map();
 
         for (const pos of positions) {
-          const factionKnessetId = pos.FactionID || personToFactionId.get(pos.PersonID);
+          const factionKnessetId =
+            pos.FactionID || personToFactionId.get(pos.PersonID);
           if (!factionKnessetId) continue;
 
           const dbId = factionKnessetIdToDbId.get(factionKnessetId);
@@ -516,7 +559,8 @@ async function syncCoalitionStatus(_prevCheckpoint: SyncCheckpoint | null): Prom
     // for factions that are no longer in the coalition for this government.
     for (const [govNum] of govGroups) {
       const overrideKey = `${knessetNum}-${govNum}`;
-      const staticFactionKnessetIds = appConfig.knesset.coalitionFactions[overrideKey];
+      const staticFactionKnessetIds =
+        appConfig.knesset.coalitionFactions[overrideKey];
       if (!staticFactionKnessetIds) continue;
 
       const validDbIds = new Set<number>();
@@ -527,7 +571,10 @@ async function syncCoalitionStatus(_prevCheckpoint: SyncCheckpoint | null): Prom
 
       // Delete rows for this knesset+gov that are NOT in the static mapping
       const existingRows = await db
-        .select({ id: factionCoalitionPeriods.id, factionId: factionCoalitionPeriods.factionId })
+        .select({
+          id: factionCoalitionPeriods.id,
+          factionId: factionCoalitionPeriods.factionId,
+        })
         .from(factionCoalitionPeriods)
         .where(
           and(
@@ -564,6 +611,43 @@ async function syncCoalitionStatus(_prevCheckpoint: SyncCheckpoint | null): Prom
         .where(inArray(factions.id, [...latestCoalitionFactionIds]));
     }
 
+    // Propagate coalition status to successor factions:
+    // When a faction is renamed mid-knesset (same pgId, same knesset, later start),
+    // the successor inherits the predecessor's coalition status.
+    await db.execute(sql`
+      UPDATE factions f_succ
+      SET is_coalition = true, updated_at = now()
+      WHERE f_succ.knesset_num = ${knessetNum}
+        AND f_succ.is_coalition = false
+        AND f_succ.political_group_id IS NOT NULL
+        AND EXISTS (
+          SELECT 1 FROM factions f_pred
+          WHERE f_pred.political_group_id = f_succ.political_group_id
+            AND f_pred.knesset_num = f_succ.knesset_num
+            AND f_pred.start_date < f_succ.start_date
+            AND f_pred.is_coalition = true
+        )
+    `);
+
+    // Also propagate the reverse: if predecessor was in coalition but successor
+    // left (e.g. "כחול לבן" joined coalition mid-knesset), the original non-coalition
+    // predecessor should NOT be flipped. The successor's status is authoritative
+    // only when it inherits FROM a coalition predecessor.
+
+    // Also fix factions that have coalition periods but is_coalition=false.
+    // This happens when the government position maps to the old faction knessetId
+    // but the renamed successor doesn't get flagged.
+    await db.execute(sql`
+      UPDATE factions f
+      SET is_coalition = true, updated_at = now()
+      WHERE f.knesset_num = ${knessetNum}
+        AND f.is_coalition = false
+        AND EXISTS (
+          SELECT 1 FROM faction_coalition_periods fcp
+          WHERE fcp.faction_id = f.id
+        )
+    `);
+
     console.log(
       `  [coalition] Knesset ${knessetNum}: ${govGroups.size} government(s), latest gov ${latestGovNum} has ${latestCoalitionFactionIds.size} coalition factions`,
     );
@@ -578,7 +662,9 @@ async function syncCoalitionStatus(_prevCheckpoint: SyncCheckpoint | null): Prom
  * Sync member faction history from Open Knesset mk_individual_factions.csv.
  * Provides temporal tracking of which MK was in which faction and when.
  */
-async function syncFactionHistory(_prevCheckpoint: SyncCheckpoint | null): Promise<number> {
+async function syncFactionHistory(
+  _prevCheckpoint: SyncCheckpoint | null,
+): Promise<number> {
   const historyRows = await fetchOKnessetCSV<Record<string, string>>(
     'members/mk_individual/mk_individual_factions.csv',
   );
