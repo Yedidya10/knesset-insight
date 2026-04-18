@@ -11,6 +11,11 @@ export function MemberCardSkeleton() {
           <Skeleton className="h-3 w-20" />
         </div>
         <Skeleton className="h-5 w-16 rounded-full" />
+        {/* Stats placeholders (bill count + absent count) */}
+        <div className="border-border/40 w-full space-y-2 border-t pt-2">
+          <Skeleton className="h-3 w-full" />
+          <Skeleton className="h-3 w-full" />
+        </div>
       </CardContent>
     </Card>
   );

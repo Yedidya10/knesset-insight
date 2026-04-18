@@ -53,6 +53,18 @@ export default function MemberProfileLoading() {
           <div className="bg-muted h-6 w-40 animate-pulse rounded" />
         </CardHeader>
         <CardContent>
+          {/* Vote breakdown grid skeleton */}
+          <div className="mb-4 grid grid-cols-3 gap-3 sm:grid-cols-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="bg-muted/50 flex flex-col items-center gap-1 rounded-lg p-2"
+              >
+                <div className="bg-muted h-6 w-10 animate-pulse rounded" />
+                <div className="bg-muted h-3 w-12 animate-pulse rounded" />
+              </div>
+            ))}
+          </div>
           <div className="space-y-3">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="flex items-center gap-3 rounded-lg p-3">

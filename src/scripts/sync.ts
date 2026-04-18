@@ -21,6 +21,7 @@ const job = process.argv[2] as
   | 'committeeSessions'
   | 'linkVotes'
   | 'enrichTitles'
+  | 'presence'
   | 'all'
   | undefined;
 
@@ -50,6 +51,7 @@ async function main() {
     await import('../pipeline/jobs/link-votes-to-bills');
   const { enrichVoteTitles } =
     await import('../pipeline/jobs/enrich-vote-titles');
+  const { syncPresence } = await import('../pipeline/jobs/sync-presence');
 
   const target = job ?? 'all';
   console.log(`Starting sync: ${target}`);
@@ -113,6 +115,10 @@ async function main() {
 
   if (target === 'enrichTitles') {
     await enrichVoteTitles();
+  }
+
+  if (target === 'presence' || target === 'all') {
+    await syncPresence();
   }
 
   console.log(`Sync complete in ${((Date.now() - start) / 1000).toFixed(1)}s`);
