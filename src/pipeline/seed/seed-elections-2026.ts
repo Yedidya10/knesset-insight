@@ -56,7 +56,7 @@ async function seed() {
     .from(politicalGroups);
   const groupBySlug = new Map(allGroups.map((g) => [g.slug, g.id]));
 
-  // Leader lookup by name (best-effort — matches current MKs)
+  // Leader lookup by name (best-effort — matches any MK, preferring current)
   const allMembers = await db
     .select({
       id: members.id,
@@ -66,15 +66,18 @@ async function seed() {
     })
     .from(members);
 
-  function findMember(leaderName: string): number | null {
-    const parts = leaderName.split(' ');
+  function findMember(name: string): number | null {
+    const parts = name.split(' ');
     if (parts.length < 2) return null;
     const first = parts[0];
     const last = parts.slice(1).join(' ');
-    const match = allMembers.find(
-      (m) => m.firstName === first && m.lastName === last && m.isCurrent,
+    const matches = allMembers.filter(
+      (m) => m.firstName === first && m.lastName === last,
     );
-    return match?.id ?? null;
+    if (matches.length === 0) return null;
+    // Prefer current MK, fall back to any match
+    const current = matches.find((m) => m.isCurrent);
+    return (current ?? matches[0]).id;
   }
 
   // 3. Upsert candidate lists

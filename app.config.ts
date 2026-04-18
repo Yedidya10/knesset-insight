@@ -173,6 +173,8 @@ export const appConfig = {
     totalSeats: 120,
     /** Minimum seats to pass electoral threshold */
     thresholdPercent: 3.25,
+    /** Cron for AI candidate monitoring (daily at 7 AM Israel time) */
+    candidateSyncCron: process.env.ELECTION_CANDIDATE_SYNC_CRON ?? '0 7 * * *',
   },
 
   // Election voter map (historical results by city)
