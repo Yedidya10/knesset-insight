@@ -2,7 +2,7 @@ import { getTranslations } from 'next-intl/server';
 import { notFound, redirect } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
 import { Building2 } from 'lucide-react';
-import { eq, sql, inArray, and, or } from 'drizzle-orm';
+import { eq, sql, inArray, and } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { factions, members, politicalGroups } from '@/lib/db/schema';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -68,53 +68,44 @@ export default async function FactionDetailPage({ params }: Props) {
       )[0] ?? null)
     : null;
 
-  // Find ALL related faction rows: use politicalGroupId (same political entity across knessets)
-  // with fallback to exact name matching for factions without a political group.
+  // Find related faction rows WITHIN THE SAME KNESSET only (superseded factions).
+  // Don't aggregate across knessets — each knesset's faction stands on its own.
   const siblingFactions = faction.politicalGroupId
     ? await db
         .select({ id: factions.id })
         .from(factions)
-        .where(eq(factions.politicalGroupId, faction.politicalGroupId))
-    : await db
-        .select({ id: factions.id })
-        .from(factions)
-        .where(eq(factions.name, faction.name));
+        .where(
+          and(
+            eq(factions.politicalGroupId, faction.politicalGroupId),
+            eq(factions.knessetNum!, faction.knessetNum!),
+          ),
+        )
+    : [{ id: faction.id }];
   const allFactionIds = siblingFactions.map((f) => f.id);
 
-  // Current members across all faction IDs with this name
-  const currentMembers = await db
+  // For historical factions (finished), isCurrent is always false.
+  // Only split active/past for current-knesset factions.
+  const isHistorical = !!faction.finishDate;
+
+  const allMembers = await db
     .select({
       id: members.id,
       firstName: members.firstName,
       lastName: members.lastName,
       imageUrl: members.imageUrl,
       isCoalition: members.isCoalition,
+      isCurrent: members.isCurrent,
     })
     .from(members)
-    .where(
-      and(
-        inArray(members.factionId, allFactionIds),
-        eq(members.isCurrent, true),
-      ),
-    )
+    .where(inArray(members.factionId, allFactionIds))
     .orderBy(members.lastName);
 
-  // Past members across all faction IDs with this name
-  const pastMembers = await db
-    .select({
-      id: members.id,
-      firstName: members.firstName,
-      lastName: members.lastName,
-      imageUrl: members.imageUrl,
-    })
-    .from(members)
-    .where(
-      and(
-        inArray(members.factionId, allFactionIds),
-        or(eq(members.isCurrent, false), sql`${members.isCurrent} IS NULL`),
-      ),
-    )
-    .orderBy(members.lastName);
+  const currentMembers = isHistorical
+    ? allMembers
+    : allMembers.filter((m) => m.isCurrent);
+  const pastMembers = isHistorical
+    ? []
+    : allMembers.filter((m) => !m.isCurrent);
 
   const renderMemberGrid = (
     memberList: {
@@ -199,11 +190,12 @@ export default async function FactionDetailPage({ params }: Props) {
 
         {/* Members section */}
         <div className="flex flex-col gap-6 lg:col-span-2">
-          {/* Current members */}
+          {/* Current members (or all members for historical factions) */}
           <Card className="glass-card overflow-hidden">
             <CardHeader>
               <CardTitle className="text-lg">
-                {t('currentMembers')} ({currentMembers.length})
+                {isHistorical ? t('members') : t('currentMembers')} (
+                {currentMembers.length})
               </CardTitle>
             </CardHeader>
             <CardContent>

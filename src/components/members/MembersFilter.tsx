@@ -267,8 +267,6 @@ export default function MembersFilter({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="name">{t('sortByName')}</SelectItem>
-            <SelectItem value="mostVotes">{t('sortByMostVotes')}</SelectItem>
-            <SelectItem value="mostAbsent">{t('sortByMostAbsent')}</SelectItem>
             <SelectItem value="mostBills">{t('sortByMostBills')}</SelectItem>
             <SelectItem value="seniority">{t('sortBySeniority')}</SelectItem>
             <SelectItem value="age">{t('sortByAge')}</SelectItem>
