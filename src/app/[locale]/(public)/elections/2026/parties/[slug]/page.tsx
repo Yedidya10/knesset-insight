@@ -1,13 +1,8 @@
 import { getTranslations } from 'next-intl/server';
-import { eq, desc } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
-import {
-  electionCandidateLists,
-  electionCandidates,
-  electionPollResults,
-  electionPolls,
-} from '@/lib/db/schema';
+import { electionCandidateLists, electionCandidates } from '@/lib/db/schema';
 import { Link } from '@/i18n/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import ElectionStatusBadge from '@/components/elections/ElectionStatusBadge';
@@ -48,18 +43,6 @@ export default async function PartyDetailPage({ params }: Props) {
     .where(eq(electionCandidates.candidateListId, party.id))
     .orderBy(electionCandidates.position, electionCandidates.lastName);
 
-  // Poll history
-  const pollHistory = await db
-    .select({
-      predictedSeats: electionPollResults.predictedSeats,
-      pollsterName: electionPolls.pollsterName,
-      publishDate: electionPolls.publishDate,
-    })
-    .from(electionPollResults)
-    .innerJoin(electionPolls, eq(electionPollResults.pollId, electionPolls.id))
-    .where(eq(electionPollResults.candidateListId, party.id))
-    .orderBy(desc(electionPolls.publishDate));
-
   const statusLabels = {
     potential: t('status.potential'),
     confirmed: t('status.confirmed'),
@@ -71,7 +54,7 @@ export default async function PartyDetailPage({ params }: Props) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       {/* Breadcrumb */}
-      <nav className="mb-4 text-sm text-muted-foreground">
+      <nav className="text-muted-foreground mb-4 text-sm">
         <Link href="/elections" className="hover:text-foreground">
           {t('backToElections')}
         </Link>
@@ -99,16 +82,14 @@ export default async function PartyDetailPage({ params }: Props) {
               <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
                 {party.name}
               </h1>
-              <ElectionStatusBadge status={party.status} labels={statusLabels} />
+              <ElectionStatusBadge
+                status={party.status}
+                labels={statusLabels}
+              />
             </div>
             {party.leaderName && (
-              <p className="mt-1 text-muted-foreground">
+              <p className="text-muted-foreground mt-1">
                 {t('parties.leader')}: {party.leaderName}
-              </p>
-            )}
-            {party.estimatedSeats != null && party.estimatedSeats > 0 && (
-              <p className="mt-1 text-sm font-medium">
-                {party.estimatedSeats} {t('seats')} ({t('parties.estimatedSeats')})
               </p>
             )}
           </div>
@@ -122,7 +103,7 @@ export default async function PartyDetailPage({ params }: Props) {
             <CardTitle className="text-base">{t('parties.platform')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="whitespace-pre-line text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm whitespace-pre-line">
               {party.platformSummary}
             </p>
             {party.platformUrl && (
@@ -130,7 +111,7 @@ export default async function PartyDetailPage({ params }: Props) {
                 href={party.platformUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-2 inline-block text-sm text-primary underline"
+                className="text-primary mt-2 inline-block text-sm underline"
               >
                 {t('parties.viewPlatform')} ↗
               </a>
@@ -141,7 +122,9 @@ export default async function PartyDetailPage({ params }: Props) {
 
       {/* Candidates */}
       <div className="mb-6">
-        <h2 className="mb-3 text-lg font-semibold">{t('parties.candidates')}</h2>
+        <h2 className="mb-3 text-lg font-semibold">
+          {t('parties.candidates')}
+        </h2>
         {candidates.length > 0 ? (
           <div className="grid gap-2 sm:grid-cols-2">
             {candidates.map((c) => (
@@ -164,30 +147,11 @@ export default async function PartyDetailPage({ params }: Props) {
             ))}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">{t('parties.noCandidates')}</p>
+          <p className="text-muted-foreground text-sm">
+            {t('parties.noCandidates')}
+          </p>
         )}
       </div>
-
-      {/* Poll history */}
-      {pollHistory.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">{t('polls.trends')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {pollHistory.map((p, i) => (
-                <div key={i} className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">
-                    {p.pollsterName} — {new Date(p.publishDate).toLocaleDateString()}
-                  </span>
-                  <span className="font-bold">{p.predictedSeats} {t('seats')}</span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }
