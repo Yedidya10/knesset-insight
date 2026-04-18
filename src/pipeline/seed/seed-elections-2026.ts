@@ -33,7 +33,9 @@ async function seed() {
   let campaignId: number;
   if (existing[0]) {
     campaignId = existing[0].id;
-    console.log(`  Campaign K${seedData.campaign.knessetNum} already exists (id=${campaignId})`);
+    console.log(
+      `  Campaign K${seedData.campaign.knessetNum} already exists (id=${campaignId})`,
+    );
   } else {
     const [inserted] = await db
       .insert(electionCampaigns)
@@ -43,7 +45,9 @@ async function seed() {
       })
       .returning({ id: electionCampaigns.id });
     campaignId = inserted.id;
-    console.log(`  Created campaign K${seedData.campaign.knessetNum} (id=${campaignId})`);
+    console.log(
+      `  Created campaign K${seedData.campaign.knessetNum} (id=${campaignId})`,
+    );
   }
 
   // 2. Build lookup maps
@@ -68,8 +72,7 @@ async function seed() {
     const first = parts[0];
     const last = parts.slice(1).join(' ');
     const match = allMembers.find(
-      (m) =>
-        m.firstName === first && m.lastName === last && m.isCurrent,
+      (m) => m.firstName === first && m.lastName === last && m.isCurrent,
     );
     return match?.id ?? null;
   }
@@ -85,11 +88,9 @@ async function seed() {
       .limit(1);
 
     const politicalGroupId = list.politicalGroupSlug
-      ? groupBySlug.get(list.politicalGroupSlug) ?? null
+      ? (groupBySlug.get(list.politicalGroupSlug) ?? null)
       : null;
-    const leaderMemberId = list.leaderName
-      ? findMember(list.leaderName)
-      : null;
+    const leaderMemberId = list.leaderName ? findMember(list.leaderName) : null;
 
     if (existingList[0]) {
       await db
@@ -163,44 +164,61 @@ async function seed() {
     });
     eventsCreated++;
   }
-  console.log(`  Timeline events: ${eventsCreated} created, ${eventsUpdated} updated`);
+  console.log(
+    `  Timeline events: ${eventsCreated} created, ${eventsUpdated} updated`,
+  );
 
   // 5. Upsert candidates
   // Build candidateList slug → id map
   const allLists = await db
-    .select({ id: electionCandidateLists.id, slug: electionCandidateLists.slug })
+    .select({
+      id: electionCandidateLists.id,
+      slug: electionCandidateLists.slug,
+    })
     .from(electionCandidateLists);
   const listBySlug = new Map(allLists.map((l) => [l.slug, l.id]));
 
   let candidatesCreated = 0;
   let candidatesUpdated = 0;
   const candidatesData = (seedData as Record<string, unknown>).candidates as
-    | Record<string, Array<{
-        firstName: string;
-        lastName: string;
-        slug: string;
-        position: number | null;
-        isLeader: boolean;
-        profession?: string;
-      }>>
+    | Record<
+        string,
+        Array<{
+          firstName: string;
+          lastName: string;
+          slug: string;
+          position: number | null;
+          isLeader: boolean;
+          profession?: string;
+          status?: string;
+        }>
+      >
     | undefined;
 
   if (candidatesData) {
     for (const [listSlug, candidates] of Object.entries(candidatesData)) {
       const listId = listBySlug.get(listSlug);
       if (!listId) {
-        console.warn(`  ⚠ No candidate list found for slug "${listSlug}", skipping`);
+        console.warn(
+          `  ⚠ No candidate list found for slug "${listSlug}", skipping`,
+        );
         continue;
       }
 
       for (const candidate of candidates) {
-        const memberId = findMember(`${candidate.firstName} ${candidate.lastName}`);
+        const memberId = findMember(
+          `${candidate.firstName} ${candidate.lastName}`,
+        );
 
         const existingCandidate = await db
           .select({ id: electionCandidates.id })
           .from(electionCandidates)
           .where(eq(electionCandidates.slug, candidate.slug))
           .limit(1);
+
+        const candidateStatus = (
+          candidate.status === 'confirmed' ? 'confirmed' : 'potential'
+        ) as 'potential' | 'confirmed' | 'removed';
 
         if (existingCandidate[0]) {
           await db
@@ -213,7 +231,7 @@ async function seed() {
               isLeader: candidate.isLeader,
               profession: candidate.profession ?? null,
               memberId,
-              status: 'potential',
+              status: candidateStatus,
             })
             .where(eq(electionCandidates.slug, candidate.slug));
           candidatesUpdated++;
@@ -227,14 +245,46 @@ async function seed() {
             isLeader: candidate.isLeader,
             profession: candidate.profession ?? null,
             memberId,
-            status: 'potential',
+            status: candidateStatus,
           });
           candidatesCreated++;
         }
       }
     }
   }
-  console.log(`  Candidates: ${candidatesCreated} created, ${candidatesUpdated} updated`);
+  console.log(
+    `  Candidates: ${candidatesCreated} created, ${candidatesUpdated} updated`,
+  );
+
+  // 6. Remove candidates no longer in seed data
+  if (candidatesData) {
+    const validSlugs = new Set(
+      Object.values(candidatesData)
+        .flat()
+        .map((c) => c.slug),
+    );
+    const allCandidates = await db
+      .select({
+        id: electionCandidates.id,
+        slug: electionCandidates.slug,
+        candidateListId: electionCandidates.candidateListId,
+      })
+      .from(electionCandidates);
+
+    const campaignListIds = new Set(listBySlug.values());
+    let removed = 0;
+    for (const c of allCandidates) {
+      if (campaignListIds.has(c.candidateListId) && !validSlugs.has(c.slug)) {
+        await db
+          .delete(electionCandidates)
+          .where(eq(electionCandidates.id, c.id));
+        removed++;
+      }
+    }
+    if (removed > 0) {
+      console.log(`  Removed ${removed} candidates no longer in seed data`);
+    }
+  }
 
   console.log('Done!');
   process.exit(0);

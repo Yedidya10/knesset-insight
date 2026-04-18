@@ -271,125 +271,214 @@
   ],
   "candidates": {
     "likud": [
-      { "firstName": "בנימין", "lastName": "נתניהו", "slug": "benjamin-netanyahu", "position": 1, "isLeader": true, "profession": "ראש ממשלה" },
-      { "firstName": "ירין", "lastName": "לוין", "slug": "yariv-levin", "position": 2, "isLeader": false, "profession": "משפטן ופוליטיקאי" },
-      { "firstName": "ישראל", "lastName": "כץ", "slug": "israel-katz", "position": 3, "isLeader": false, "profession": "פוליטיקאי" },
-      { "firstName": "יולי", "lastName": "אדלשטיין", "slug": "yuli-edelstein", "position": 4, "isLeader": false, "profession": "פוליטיקאי" },
-      { "firstName": "ניר", "lastName": "ברקת", "slug": "nir-barkat", "position": 5, "isLeader": false, "profession": "איש עסקים ופוליטיקאי" },
-      { "firstName": "מיקי", "lastName": "זוהר", "slug": "miki-zohar", "position": 6, "isLeader": false, "profession": "פוליטיקאי" },
-      { "firstName": "אמיר", "lastName": "אוחנה", "slug": "amir-ohana", "position": 7, "isLeader": false, "profession": "עורך דין" },
-      { "firstName": "דני", "lastName": "דנון", "slug": "danny-danon", "position": 8, "isLeader": false, "profession": "דיפלומט ופוליטיקאי" },
-      { "firstName": "עמיחי", "lastName": "שיקלי", "slug": "amichai-shikli", "position": 9, "isLeader": false, "profession": "פוליטיקאי" },
-      { "firstName": "גלית", "lastName": "דיסטל-אטבריאן", "slug": "galit-distel-atbaryan", "position": 10, "isLeader": false, "profession": "עיתונאית" },
-      { "firstName": "מאי", "lastName": "גולן", "slug": "may-golan", "position": 11, "isLeader": false, "profession": "פעילה חברתית" },
-      { "firstName": "בועז", "lastName": "ביסמוט", "slug": "boaz-bismuth", "position": 12, "isLeader": false, "profession": "עיתונאי" },
-      { "firstName": "שלמה", "lastName": "קרעי", "slug": "shlomo-karhi", "position": 13, "isLeader": false, "profession": "פוליטיקאי" },
-      { "firstName": "אופיר", "lastName": "כץ", "slug": "ofir-katz", "position": 14, "isLeader": false, "profession": "פוליטיקאי" },
-      { "firstName": "דוד", "lastName": "ביטן", "slug": "david-bitan", "position": 15, "isLeader": false, "profession": "פוליטיקאי" }
+      {
+        "firstName": "בנימין",
+        "lastName": "נתניהו",
+        "slug": "benjamin-netanyahu",
+        "position": 1,
+        "isLeader": true,
+        "profession": "ראש ממשלה",
+        "status": "confirmed",
+        "_note": "נבחר ליו\"ר ולמועמד לראשות הממשלה בהיעדר מתמודדים נוספים (אוקטובר 2025). רשימת המועמדים תיקבע בפריימריז שטרם נקבעו"
+      }
     ],
     "yesh-atid": [
-      { "firstName": "יאיר", "lastName": "לפיד", "slug": "yair-lapid", "position": 1, "isLeader": true, "profession": "עיתונאי ופוליטיקאי" },
-      { "firstName": "מיקי", "lastName": "לוי", "slug": "mickey-levy", "position": 2, "isLeader": false, "profession": "קצין משטרה בדימוס" },
-      { "firstName": "קרן", "lastName": "אלהרר", "slug": "karin-elharar", "position": 3, "isLeader": false, "profession": "עורכת דין" },
-      { "firstName": "מאיר", "lastName": "כהן", "slug": "meir-cohen-ya", "position": 4, "isLeader": false, "profession": "מחנך" },
-      { "firstName": "אלעזר", "lastName": "שטרן", "slug": "elazar-stern", "position": 5, "isLeader": false, "profession": "אלוף במילואים" },
-      { "firstName": "רם", "lastName": "בן ברק", "slug": "ram-ben-barak", "position": 6, "isLeader": false, "profession": "סגן ראש המוסד לשעבר" },
-      { "firstName": "אורנה", "lastName": "ברביבאי", "slug": "orna-barbivai", "position": 7, "isLeader": false, "profession": "אלופה במילואים" },
-      { "firstName": "רון", "lastName": "כץ", "slug": "ron-katz", "position": 8, "isLeader": false, "profession": "עורך דין" },
-      { "firstName": "מתי", "lastName": "צרפתי-חרקבי", "slug": "mati-tsarfati-harkabi", "position": 9, "isLeader": false, "profession": "פוליטיקאית" },
-      { "firstName": "משה", "lastName": "טור-פז", "slug": "moshe-tur-paz", "position": 10, "isLeader": false, "profession": "רב ומחנך" },
-      { "firstName": "ולדימיר", "lastName": "בליאק", "slug": "vladimir-beliak", "position": 11, "isLeader": false, "profession": "פוליטיקאי" },
-      { "firstName": "סימון", "lastName": "דוידסון", "slug": "simon-davidson", "position": 12, "isLeader": false, "profession": "רואה חשבון" }
+      {
+        "firstName": "יאיר",
+        "lastName": "לפיד",
+        "slug": "yair-lapid",
+        "position": 1,
+        "isLeader": true,
+        "profession": "עיתונאי ופוליטיקאי",
+        "status": "confirmed",
+        "_note": "נבחר ליו\"ר בפריימריז מרץ 2024 בהפרש של 29 קולות. רשימת המועמדים תיקבע בפריימריז שטרם נקבעו"
+      }
     ],
     "hamachaneh-hamamlachti": [
-      { "firstName": "בני", "lastName": "גנץ", "slug": "benny-gantz", "position": 1, "isLeader": true, "profession": "רמטכ\"ל לשעבר" },
-      { "firstName": "גדעון", "lastName": "סער", "slug": "gideon-saar", "position": 2, "isLeader": false, "profession": "עורך דין ופוליטיקאי" },
-      { "firstName": "פנינה", "lastName": "טמנו-שטה", "slug": "pnina-tamano-shata", "position": 3, "isLeader": false, "profession": "פוליטיקאית" },
-      { "firstName": "אורית", "lastName": "פרקש-הכהן", "slug": "orit-farkash-hacohen", "position": 4, "isLeader": false, "profession": "עורכת דין" },
-      { "firstName": "חילי", "lastName": "טרופר", "slug": "chili-tropper", "position": 5, "isLeader": false, "profession": "מהנדס" },
-      { "firstName": "שירלי", "lastName": "פינטו", "slug": "shirley-pinto", "position": 6, "isLeader": false, "profession": "פעילה חברתית" }
+      {
+        "firstName": "בני",
+        "lastName": "גנץ",
+        "slug": "benny-gantz",
+        "position": 1,
+        "isLeader": true,
+        "profession": "רמטכ\"ל לשעבר",
+        "status": "confirmed",
+        "_note": "גדעון סער התמזג עם הליכוד (מרץ 2024). הרכב הרשימה טרם נקבע"
+      }
     ],
     "shas": [
-      { "firstName": "אריה", "lastName": "דרעי", "slug": "aryeh-deri", "position": 1, "isLeader": true, "profession": "פוליטיקאי" },
-      { "firstName": "יואב", "lastName": "בן צור", "slug": "yoav-ben-tzur", "position": 2, "isLeader": false, "profession": "פוליטיקאי" },
-      { "firstName": "יעקב", "lastName": "מרגי", "slug": "yaakov-margi", "position": 3, "isLeader": false, "profession": "פוליטיקאי" },
-      { "firstName": "משה", "lastName": "אבוטבול", "slug": "moshe-abutbul", "position": 4, "isLeader": false, "profession": "ראש עיר לשעבר" },
-      { "firstName": "מיכאל", "lastName": "מליחי", "slug": "michael-malihi", "position": 5, "isLeader": false, "profession": "פוליטיקאי" },
-      { "firstName": "חיים", "lastName": "ביטון", "slug": "haim-biton", "position": 6, "isLeader": false, "profession": "פוליטיקאי" },
-      { "firstName": "יונתן", "lastName": "מישרקי", "slug": "yonatan-mishraki", "position": 7, "isLeader": false, "profession": "פוליטיקאי" },
-      { "firstName": "משה", "lastName": "ארבל", "slug": "moshe-arbel", "position": 8, "isLeader": false, "profession": "עורך דין" },
-      { "firstName": "אוריאל", "lastName": "בוסו", "slug": "uriel-busso", "position": 9, "isLeader": false, "profession": "פוליטיקאי" },
-      { "firstName": "יוסי", "lastName": "טייב", "slug": "yossi-tayeb", "position": 10, "isLeader": false, "profession": "פוליטיקאי" }
+      {
+        "firstName": "אריה",
+        "lastName": "דרעי",
+        "slug": "aryeh-deri",
+        "position": 1,
+        "isLeader": true,
+        "profession": "פוליטיקאי",
+        "status": "confirmed",
+        "_note": "יו\"ר המפלגה. הרשימה נקבעת על ידי מועצת חכמי התורה, טרם פורסמה לכנסת 26"
+      }
     ],
     "yahadut-hatorah": [
-      { "firstName": "יצחק", "lastName": "גולדקנופף", "slug": "yitzchak-goldknopf", "position": 1, "isLeader": true, "profession": "פוליטיקאי" },
-      { "firstName": "משה", "lastName": "גפני", "slug": "moshe-gafni", "position": 2, "isLeader": false, "profession": "פוליטיקאי" },
-      { "firstName": "יעקב", "lastName": "אשר", "slug": "yaakov-asher", "position": 3, "isLeader": false, "profession": "פוליטיקאי" },
-      { "firstName": "מאיר", "lastName": "פרוש", "slug": "meir-porush", "position": 4, "isLeader": false, "profession": "פוליטיקאי" },
-      { "firstName": "אורי", "lastName": "מקלב", "slug": "uri-maklev", "position": 5, "isLeader": false, "profession": "פוליטיקאי" },
-      { "firstName": "ישראל", "lastName": "אייכלר", "slug": "yisrael-eichler", "position": 6, "isLeader": false, "profession": "עיתונאי ופוליטיקאי" },
-      { "firstName": "יעקב", "lastName": "טסלר", "slug": "yaakov-tesler", "position": 7, "isLeader": false, "profession": "פוליטיקאי" }
+      {
+        "firstName": "יצחק",
+        "lastName": "גולדקנופף",
+        "slug": "yitzchak-goldknopf",
+        "position": 1,
+        "isLeader": true,
+        "profession": "פוליטיקאי",
+        "status": "confirmed",
+        "_note": "יו\"ר המפלגה. הרשימה נקבעת על ידי מועצת גדולי התורה, טרם פורסמה לכנסת 26"
+      }
     ],
     "yisrael-beytenu": [
-      { "firstName": "אביגדור", "lastName": "ליברמן", "slug": "avigdor-lieberman", "position": 1, "isLeader": true, "profession": "פוליטיקאי" },
-      { "firstName": "עודד", "lastName": "פורר", "slug": "oded-forer", "position": 2, "isLeader": false, "profession": "פוליטיקאי" },
-      { "firstName": "יבגני", "lastName": "סובה", "slug": "evgeny-sova", "position": 3, "isLeader": false, "profession": "פוליטיקאי" },
-      { "firstName": "יוליה", "lastName": "מלינובסקי", "slug": "yulia-malinovsky", "position": 4, "isLeader": false, "profession": "רופאה" },
-      { "firstName": "חמד", "lastName": "עמאר", "slug": "hamad-amar", "position": 5, "isLeader": false, "profession": "פוליטיקאי" },
-      { "firstName": "שרון", "lastName": "ניר", "slug": "sharon-nir", "position": 6, "isLeader": false, "profession": "פוליטיקאית" }
+      {
+        "firstName": "אביגדור",
+        "lastName": "ליברמן",
+        "slug": "avigdor-lieberman",
+        "position": 1,
+        "isLeader": true,
+        "profession": "פוליטיקאי",
+        "status": "confirmed",
+        "_note": "יו\"ר המפלגה. הרשימה נקבעת על ידי היו\"ר, טרם פורסמה לכנסת 26"
+      }
     ],
     "hatzionut-hadatit": [
-      { "firstName": "בצלאל", "lastName": "סמוטריץ'", "slug": "bezalel-smotrich", "position": 1, "isLeader": true, "profession": "עורך דין ופוליטיקאי" },
-      { "firstName": "שמחה", "lastName": "רוטמן", "slug": "simcha-rothman", "position": 2, "isLeader": false, "profession": "עורך דין" },
-      { "firstName": "אורית", "lastName": "סטרוק", "slug": "orit-struck", "position": 3, "isLeader": false, "profession": "פוליטיקאית" },
-      { "firstName": "אהד", "lastName": "טל", "slug": "ohad-tal", "position": 4, "isLeader": false, "profession": "פוליטיקאי" },
-      { "firstName": "אופיר", "lastName": "סופר", "slug": "ofir-sofer", "position": 5, "isLeader": false, "profession": "פוליטיקאי" },
-      { "firstName": "צביקה", "lastName": "סוכות", "slug": "tzvika-sukkot", "position": 6, "isLeader": false, "profession": "פוליטיקאי" },
-      { "firstName": "משה", "lastName": "שלמה", "slug": "moshe-solomon", "position": 7, "isLeader": false, "profession": "פוליטיקאי" }
+      {
+        "firstName": "בצלאל",
+        "lastName": "סמוטריץ'",
+        "slug": "bezalel-smotrich",
+        "position": 1,
+        "isLeader": true,
+        "profession": "עורך דין ופוליטיקאי",
+        "status": "confirmed",
+        "_note": "יו\"ר המפלגה. הרשימה טרם נקבעה לכנסת 26"
+      }
     ],
     "otzma-yehudit": [
-      { "firstName": "איתמר", "lastName": "בן גביר", "slug": "itamar-ben-gvir", "position": 1, "isLeader": true, "profession": "עורך דין" },
-      { "firstName": "יצחק", "lastName": "וסרלאוף", "slug": "yitzhak-wasserlauf", "position": 2, "isLeader": false, "profession": "פוליטיקאי" },
-      { "firstName": "אלמוג", "lastName": "כהן", "slug": "almog-cohen", "position": 3, "isLeader": false, "profession": "פוליטיקאי" },
-      { "firstName": "לימור", "lastName": "סון הר-מלך", "slug": "limor-son-har-melech", "position": 4, "isLeader": false, "profession": "פוליטיקאית" },
-      { "firstName": "צביקה", "lastName": "פוגל", "slug": "tzvika-fogel", "position": 5, "isLeader": false, "profession": "תת-אלוף במילואים" }
+      {
+        "firstName": "איתמר",
+        "lastName": "בן גביר",
+        "slug": "itamar-ben-gvir",
+        "position": 1,
+        "isLeader": true,
+        "profession": "עורך דין",
+        "status": "confirmed",
+        "_note": "יו\"ר המפלגה. הרשימה טרם נקבעה לכנסת 26"
+      }
     ],
     "raam": [
-      { "firstName": "מנסור", "lastName": "עבאס", "slug": "mansour-abbas", "position": 1, "isLeader": true, "profession": "פוליטיקאי" },
-      { "firstName": "וליד", "lastName": "טאהא", "slug": "walid-taha", "position": 2, "isLeader": false, "profession": "פוליטיקאי" },
-      { "firstName": "אימאן", "lastName": "ח'טיב-יאסין", "slug": "iman-khatib-yasin", "position": 3, "isLeader": false, "profession": "פוליטיקאית" },
-      { "firstName": "יאסר", "lastName": "חוג'יראת", "slug": "yaser-hujirat", "position": 4, "isLeader": false, "profession": "פוליטיקאי" }
+      {
+        "firstName": "מנסור",
+        "lastName": "עבאס",
+        "slug": "mansour-abbas",
+        "position": 1,
+        "isLeader": true,
+        "profession": "פוליטיקאי",
+        "status": "confirmed",
+        "_note": "יו\"ר המפלגה. הרשימה טרם נקבעה לכנסת 26"
+      }
     ],
     "hademocratiim": [
-      { "firstName": "יאיר", "lastName": "גולן", "slug": "yair-golan", "position": 1, "isLeader": true, "profession": "אלוף במילואים" },
-      { "firstName": "מרב", "lastName": "מיכאלי", "slug": "merav-michaeli", "position": 2, "isLeader": false, "profession": "עיתונאית ופוליטיקאית" },
-      { "firstName": "גלעד", "lastName": "קריב", "slug": "gilad-kariv", "position": 3, "isLeader": false, "profession": "רב רפורמי" },
-      { "firstName": "אפרת", "lastName": "רייטן", "slug": "efrat-rayten", "position": 4, "isLeader": false, "profession": "פוליטיקאית" },
-      { "firstName": "מוסי", "lastName": "רז", "slug": "mosi-raz", "position": 5, "isLeader": false, "profession": "פעיל שלום" },
-      { "firstName": "מיכל", "lastName": "רוזין", "slug": "michal-rozin", "position": 6, "isLeader": false, "profession": "פוליטיקאית" }
+      {
+        "firstName": "יאיר",
+        "lastName": "גולן",
+        "slug": "yair-golan",
+        "position": 1,
+        "isLeader": true,
+        "profession": "אלוף במילואים",
+        "status": "confirmed",
+        "_note": "נבחר ליו\"ר בפריימריז מאי 2024. הפריימריז לרשימה טרם נקבעו. מספר מועמדים הודיעו על התמודדות"
+      }
     ],
     "hadash-taal": [
-      { "firstName": "אחמד", "lastName": "טיבי", "slug": "ahmad-tibi", "position": 1, "isLeader": true, "profession": "רופא ופוליטיקאי" },
-      { "firstName": "איימן", "lastName": "עודה", "slug": "ayman-odeh", "position": 2, "isLeader": false, "profession": "עורך דין" },
-      { "firstName": "עאידה", "lastName": "תומא-סלימאן", "slug": "aida-touma-sliman", "position": 3, "isLeader": false, "profession": "פוליטיקאית" },
-      { "firstName": "עופר", "lastName": "כסיף", "slug": "ofer-cassif", "position": 4, "isLeader": false, "profession": "מרצה" },
-      { "firstName": "יוסף", "lastName": "עטאונה", "slug": "yousef-atauna", "position": 5, "isLeader": false, "profession": "פוליטיקאי" }
+      {
+        "firstName": "אחמד",
+        "lastName": "טיבי",
+        "slug": "ahmad-tibi",
+        "position": 1,
+        "isLeader": true,
+        "profession": "רופא ופוליטיקאי",
+        "status": "confirmed",
+        "_note": "הרשימה טרם נקבעה לכנסת 26"
+      }
     ],
     "balad": [
-      { "firstName": "סאמי", "lastName": "אבו שחאדה", "slug": "sami-abu-shehadeh", "position": 1, "isLeader": true, "profession": "פוליטיקאי" }
+      {
+        "firstName": "סאמי",
+        "lastName": "אבו שחאדה",
+        "slug": "sami-abu-shehadeh",
+        "position": 1,
+        "isLeader": true,
+        "profession": "פוליטיקאי",
+        "status": "confirmed"
+      }
     ],
     "bennett-2026": [
-      { "firstName": "נפתלי", "lastName": "בנט", "slug": "naftali-bennett", "position": 1, "isLeader": true, "profession": "ראש ממשלה לשעבר" }
+      {
+        "firstName": "נפתלי",
+        "lastName": "בנט",
+        "slug": "naftali-bennett",
+        "position": 1,
+        "isLeader": true,
+        "profession": "ראש ממשלה לשעבר",
+        "status": "confirmed",
+        "_note": "הקים את המפלגה באפריל 2025"
+      },
+      {
+        "firstName": "קרן",
+        "lastName": "טרנר",
+        "slug": "keren-turner",
+        "position": 2,
+        "isLeader": false,
+        "profession": "יזמית חברתית",
+        "status": "confirmed",
+        "_note": "הצטרפות הוכרזה באפריל 2026"
+      },
+      {
+        "firstName": "לירן",
+        "lastName": "אבישר בן חורין",
+        "slug": "liran-avishar-ben-horin",
+        "position": 3,
+        "isLeader": false,
+        "profession": "פעיל חברתי",
+        "status": "confirmed",
+        "_note": "הצטרפות הוכרזה באפריל 2026"
+      }
     ],
     "yashar": [
-      { "firstName": "גדי", "lastName": "איזנקוט", "slug": "gadi-eisenkot", "position": 1, "isLeader": true, "profession": "רמטכ\"ל לשעבר" },
-      { "firstName": "מתן", "lastName": "כהנא", "slug": "matan-kahana", "position": 2, "isLeader": false, "profession": "פוליטיקאי" }
+      {
+        "firstName": "גדי",
+        "lastName": "איזנקוט",
+        "slug": "gadi-eisenkot",
+        "position": 1,
+        "isLeader": true,
+        "profession": "רמטכ\"ל לשעבר",
+        "status": "confirmed",
+        "_note": "הקים את המפלגה בספטמבר 2025. הרשימה טרם נקבעה"
+      }
     ],
     "hamiluimnikim": [
-      { "firstName": "יועז", "lastName": "הנדל", "slug": "yoaz-hendel", "position": 1, "isLeader": true, "profession": "עיתונאי ופוליטיקאי" }
+      {
+        "firstName": "יועז",
+        "lastName": "הנדל",
+        "slug": "yoaz-hendel",
+        "position": 1,
+        "isLeader": true,
+        "profession": "עיתונאי ופוליטיקאי",
+        "status": "confirmed",
+        "_note": "הנהגת המפלגה נבחרה אך רשימת המועמדים לכנסת טרם נקבעה"
+      }
     ],
     "noam": [
-      { "firstName": "אבי", "lastName": "מעוז", "slug": "avi-maoz", "position": 1, "isLeader": true, "profession": "פוליטיקאי" }
+      {
+        "firstName": "אבי",
+        "lastName": "מעוז",
+        "slug": "avi-maoz",
+        "position": 1,
+        "isLeader": true,
+        "profession": "פוליטיקאי",
+        "status": "confirmed"
+      }
     ]
   }
 }
