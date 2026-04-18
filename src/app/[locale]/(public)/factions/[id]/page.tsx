@@ -4,7 +4,12 @@ import { Link } from '@/i18n/navigation';
 import { Building2 } from 'lucide-react';
 import { eq, sql, inArray, and } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { factions, members, politicalGroups } from '@/lib/db/schema';
+import {
+  factions,
+  members,
+  memberFactionHistory,
+  politicalGroups,
+} from '@/lib/db/schema';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -87,18 +92,34 @@ export default async function FactionDetailPage({ params }: Props) {
   // Only split active/past for current-knesset factions.
   const isHistorical = !!faction.finishDate;
 
-  const allMembers = await db
-    .select({
-      id: members.id,
-      firstName: members.firstName,
-      lastName: members.lastName,
-      imageUrl: members.imageUrl,
-      isCoalition: members.isCoalition,
-      isCurrent: members.isCurrent,
-    })
-    .from(members)
-    .where(inArray(members.factionId, allFactionIds))
-    .orderBy(members.lastName);
+  // For historical factions, members.factionId only stores the *current* faction,
+  // so we must query memberFactionHistory instead.
+  const allMembers = isHistorical
+    ? await db
+        .selectDistinct({
+          id: members.id,
+          firstName: members.firstName,
+          lastName: members.lastName,
+          imageUrl: members.imageUrl,
+          isCoalition: members.isCoalition,
+          isCurrent: members.isCurrent,
+        })
+        .from(memberFactionHistory)
+        .innerJoin(members, eq(memberFactionHistory.memberId, members.id))
+        .where(inArray(memberFactionHistory.factionId, allFactionIds))
+        .orderBy(members.lastName)
+    : await db
+        .select({
+          id: members.id,
+          firstName: members.firstName,
+          lastName: members.lastName,
+          imageUrl: members.imageUrl,
+          isCoalition: members.isCoalition,
+          isCurrent: members.isCurrent,
+        })
+        .from(members)
+        .where(inArray(members.factionId, allFactionIds))
+        .orderBy(members.lastName);
 
   const currentMembers = isHistorical
     ? allMembers

@@ -629,25 +629,6 @@ async function syncCoalitionStatus(
         )
     `);
 
-    // Also propagate the reverse: if predecessor was in coalition but successor
-    // left (e.g. "כחול לבן" joined coalition mid-knesset), the original non-coalition
-    // predecessor should NOT be flipped. The successor's status is authoritative
-    // only when it inherits FROM a coalition predecessor.
-
-    // Also fix factions that have coalition periods but is_coalition=false.
-    // This happens when the government position maps to the old faction knessetId
-    // but the renamed successor doesn't get flagged.
-    await db.execute(sql`
-      UPDATE factions f
-      SET is_coalition = true, updated_at = now()
-      WHERE f.knesset_num = ${knessetNum}
-        AND f.is_coalition = false
-        AND EXISTS (
-          SELECT 1 FROM faction_coalition_periods fcp
-          WHERE fcp.faction_id = f.id
-        )
-    `);
-
     console.log(
       `  [coalition] Knesset ${knessetNum}: ${govGroups.size} government(s), latest gov ${latestGovNum} has ${latestCoalitionFactionIds.size} coalition factions`,
     );

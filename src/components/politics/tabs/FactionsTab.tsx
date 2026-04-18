@@ -38,8 +38,10 @@ export default async function FactionsTab({ knessetParam }: Props) {
       isCoalition: factions.isCoalition,
       seats: factions.seats,
       memberCount: sql<number>`(
-        select count(*)::int from members
-        where members.faction_id = ${factions.id} and members.is_current = true
+        CASE WHEN ${factions.isCurrent}
+          THEN (select count(*)::int from members where members.faction_id = ${factions.id} and members.is_current = true)
+          ELSE (select count(distinct mfh.member_id)::int from member_faction_history mfh where mfh.faction_id = ${factions.id})
+        END
       )`,
       politicalGroupSlug: politicalGroups.slug,
       politicalGroupName: politicalGroups.canonicalName,
@@ -69,7 +71,10 @@ export default async function FactionsTab({ knessetParam }: Props) {
     .orderBy(
       desc(factions.seats),
       desc(
-        sql`(select count(*) from members where members.faction_id = ${factions.id} and members.is_current = true)`,
+        sql`(CASE WHEN ${factions.isCurrent}
+          THEN (select count(*) from members where members.faction_id = ${factions.id} and members.is_current = true)
+          ELSE (select count(distinct mfh.member_id) from member_faction_history mfh where mfh.faction_id = ${factions.id})
+        END)`,
       ),
     );
 

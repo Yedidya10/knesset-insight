@@ -37,8 +37,10 @@ export const factionsRouter = router({
         finishDate: factions.finishDate,
         isCurrent: factions.isCurrent,
         memberCount: sql<number>`(
-          select count(*)::int from members
-          where members.faction_id = ${factions.id} and members.is_current = true
+          CASE WHEN ${factions.isCurrent}
+            THEN (select count(*)::int from members where members.faction_id = ${factions.id} and members.is_current = true)
+            ELSE (select count(distinct mfh.member_id)::int from member_faction_history mfh where mfh.faction_id = ${factions.id})
+          END
         )`,
         politicalGroupId: factions.politicalGroupId,
         politicalGroupSlug: politicalGroups.slug,
