@@ -107,7 +107,7 @@ export function VoteDetailContent({ vote }: { vote: VoteData }) {
     void fetchDetail();
   }
 
-  const knessetVoteUrl = `https://main.knesset.gov.il/Activity/Legislation/Pages/VoteDetails.aspx?VoteID=${vote.knessetId}`;
+  const knessetVoteUrl = `https://main.knesset.gov.il/Activity/plenum/Votes/Pages/vote.aspx?voteId=${vote.knessetId}`;
   const formattedDate = vote.voteDate
     ? new Date(vote.voteDate).toLocaleDateString()
     : null;
