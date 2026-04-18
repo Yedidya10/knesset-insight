@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { ChevronDown, Pencil } from 'lucide-react';
+import { Link } from '@/i18n/navigation';
+import { ChevronDown, Pencil, ExternalLink } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -45,6 +46,7 @@ export function MiniVoteCard({
   billId,
 }: MiniVoteCardProps) {
   const t = useTranslations('legislation');
+  const tVotes = useTranslations('votes.detail');
   const tAdmin = useTranslations('admin.inline');
   const [open, setOpen] = useState(false);
   const { isAdmin } = useAdminEdit();
@@ -88,16 +90,29 @@ export function MiniVoteCard({
         <CollapsibleContent>
           <div className="border-t px-3 pb-3">
             <InlineVoteDetail voteId={id} />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mt-2 w-full gap-1.5 text-xs"
+              render={<Link href={`/votes/${id}`} />}
+            >
+              <ExternalLink className="h-3 w-3" />
+              {tVotes('viewFullVote')}
+            </Button>
           </div>
         </CollapsibleContent>
 
         {/* Admin actions */}
         {isAdmin && (
-          <div className="border-t px-3 py-2 flex gap-2">
+          <div className="flex gap-2 border-t px-3 py-2">
             <Popover>
               <PopoverTrigger
                 render={
-                  <Button variant="outline" size="sm" className="gap-1 text-[11px] h-7">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 gap-1 text-[11px]"
+                  >
                     <Pencil className="h-3 w-3" />
                     {tAdmin('relinkVote')}
                   </Button>
@@ -110,14 +125,21 @@ export function MiniVoteCard({
             <Popover>
               <PopoverTrigger
                 render={
-                  <Button variant="outline" size="sm" className="gap-1 text-[11px] h-7">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 gap-1 text-[11px]"
+                  >
                     <Pencil className="h-3 w-3" />
                     {tAdmin('reassignVoteStage')}
                   </Button>
                 }
               />
               <PopoverContent side="bottom" className="w-72">
-                <VoteStageReassign voteId={id} currentStage={billStage ?? null} />
+                <VoteStageReassign
+                  voteId={id}
+                  currentStage={billStage ?? null}
+                />
               </PopoverContent>
             </Popover>
           </div>

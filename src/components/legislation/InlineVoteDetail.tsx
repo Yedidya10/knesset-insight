@@ -2,7 +2,8 @@
 
 import { useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { Loader2, Users } from 'lucide-react';
+import { Link } from '@/i18n/navigation';
+import { Loader2, Users, ExternalLink } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import {
@@ -45,6 +46,7 @@ interface DetailData {
 
 export function InlineVoteDetail({ voteId }: { voteId: number }) {
   const t = useTranslations('votes');
+  const tDetail = useTranslations('votes.detail');
   const [data, setData] = useState<DetailData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
@@ -176,6 +178,15 @@ export function InlineVoteDetail({ voteId }: { voteId: number }) {
         oppositionFactions={oppositionFactions}
         voters={votersByFaction}
       />
+
+      {/* View full vote page link */}
+      <Link
+        href={`/votes/${voteId}`}
+        className="text-primary hover:text-primary/80 inline-flex items-center gap-1 text-xs font-medium"
+      >
+        <ExternalLink className="h-3 w-3" />
+        {tDetail('viewFullVote')}
+      </Link>
 
       {/* Voter list trigger */}
       <Sheet>

@@ -1,7 +1,13 @@
 import type { MetadataRoute } from 'next';
 import { sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { members, bills, governments, committees } from '@/lib/db/schema';
+import {
+  members,
+  bills,
+  governments,
+  committees,
+  votes,
+} from '@/lib/db/schema';
 import { routing } from '@/i18n/routing';
 import { appConfig } from '../../app.config';
 
@@ -21,6 +27,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/elections',
     '/governments',
     '/budget',
+    '/votes',
   ];
 
   for (const page of staticPages) {
@@ -68,6 +75,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           url: `${baseUrl}/${locale}/legislation/${b.id}`,
           changeFrequency: 'monthly',
           priority: 0.6,
+        });
+      }
+    }
+  } catch {
+    // DB not available during build
+  }
+
+  // Dynamic pages: votes (last 500 most recent)
+  try {
+    const voteIds = await db
+      .select({ id: votes.id })
+      .from(votes)
+      .orderBy(sql`${votes.id} desc`)
+      .limit(500);
+
+    for (const v of voteIds) {
+      for (const locale of locales) {
+        entries.push({
+          url: `${baseUrl}/${locale}/votes/${v.id}`,
+          changeFrequency: 'monthly',
+          priority: 0.5,
         });
       }
     }

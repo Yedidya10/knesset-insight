@@ -249,6 +249,12 @@
       "dateAsc": "Date (oldest first)",
       "mostVotes": "Most voters",
       "mostControversial": "Most controversial"
+    },
+    "detail": {
+      "viewFullVote": "View full vote page",
+      "knessetLink": "View on Knesset website",
+      "voteDetails": "Vote Details",
+      "date": "Date"
     }
   },
   "legislation": {
@@ -1038,6 +1044,14 @@
       "detail": {
         "title": "{name} — MK Profile",
         "description": "{name}, {faction} — votes, legislative initiatives, committee memberships and parliamentary activity"
+      }
+    },
+    "votes": {
+      "title": "Votes — Knesset Insight",
+      "description": "Knesset plenary votes — faction breakdown, coalition and opposition",
+      "detail": {
+        "title": "{name} — Vote",
+        "description": "{name} — vote details, faction breakdown and voter list"
       }
     },
     "legislation": {
