@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server';
 import { Search } from 'lucide-react';
-import { sql, eq, like, and } from 'drizzle-orm';
+import { sql, eq, ilike, and } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { politicalParties } from '@/lib/db/schema';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,7 +20,7 @@ export default async function PartiesTab({ searchParam, typeParam }: Props) {
 
   const conditions = [];
   if (searchQuery) {
-    conditions.push(like(politicalParties.name, `%${searchQuery}%`));
+    conditions.push(ilike(politicalParties.name, `%${searchQuery}%`));
   }
   if (typeFilter === 'party' || typeFilter === 'movement') {
     conditions.push(eq(politicalParties.type, typeFilter));
@@ -50,7 +50,7 @@ export default async function PartiesTab({ searchParam, typeParam }: Props) {
       {/* Search and filters */}
       <div className="mb-6 flex flex-wrap gap-3">
         <form className="relative flex-1" action="" method="GET">
-          <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="text-muted-foreground absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2" />
           <Input
             name="search"
             defaultValue={searchQuery}
@@ -60,11 +60,13 @@ export default async function PartiesTab({ searchParam, typeParam }: Props) {
           {typeFilter && <input type="hidden" name="type" value={typeFilter} />}
           <input type="hidden" name="tab" value="parties" />
         </form>
-        <div className="flex gap-1.5 rounded-xl bg-muted/60 p-1.5">
+        <div className="bg-muted/60 flex gap-1.5 rounded-xl p-1.5">
           <Link
             href="/politics?tab=parties"
             className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-              !typeFilter ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'
+              !typeFilter
+                ? 'bg-background shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             {t('filterAll')}
@@ -72,7 +74,9 @@ export default async function PartiesTab({ searchParam, typeParam }: Props) {
           <Link
             href={`/politics?tab=parties&type=party${searchQuery ? `&search=${searchQuery}` : ''}`}
             className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-              typeFilter === 'party' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'
+              typeFilter === 'party'
+                ? 'bg-background shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             {t('filterParties')}
@@ -80,7 +84,9 @@ export default async function PartiesTab({ searchParam, typeParam }: Props) {
           <Link
             href={`/politics?tab=parties&type=movement${searchQuery ? `&search=${searchQuery}` : ''}`}
             className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-              typeFilter === 'movement' ? 'bg-background shadow-sm' : 'text-muted-foreground hover:text-foreground'
+              typeFilter === 'movement'
+                ? 'bg-background shadow-sm'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             {t('filterMovements')}
@@ -89,7 +95,7 @@ export default async function PartiesTab({ searchParam, typeParam }: Props) {
       </div>
 
       {data.length > 0 ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 stagger-children">
+        <div className="stagger-children grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {data.map((party) => (
             <Link key={party.id} href={`/parties/${party.id}`}>
               <Card className="glass-card hover-lift h-full overflow-hidden">
@@ -97,8 +103,12 @@ export default async function PartiesTab({ searchParam, typeParam }: Props) {
                   <CardTitle className="text-lg">{party.name}</CardTitle>
                 </CardHeader>
                 <CardContent className="flex flex-wrap items-center gap-2">
-                  <Badge variant={party.type === 'party' ? 'default' : 'secondary'}>
-                    {party.type === 'party' ? t('typeParty') : t('typeMovement')}
+                  <Badge
+                    variant={party.type === 'party' ? 'default' : 'secondary'}
+                  >
+                    {party.type === 'party'
+                      ? t('typeParty')
+                      : t('typeMovement')}
                   </Badge>
                   {party.isActive !== null && (
                     <Badge variant={party.isActive ? 'default' : 'outline'}>
@@ -121,7 +131,9 @@ export default async function PartiesTab({ searchParam, typeParam }: Props) {
           ))}
         </div>
       ) : (
-        <p className="py-12 text-center text-muted-foreground">{t('noResults')}</p>
+        <p className="text-muted-foreground py-12 text-center">
+          {t('noResults')}
+        </p>
       )}
     </div>
   );

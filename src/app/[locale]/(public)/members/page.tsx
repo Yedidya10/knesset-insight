@@ -251,6 +251,10 @@ export default async function MembersPage({ searchParams }: Props) {
       or(
         ilike(members.firstName, `%${searchQuery}%`),
         ilike(members.lastName, `%${searchQuery}%`),
+        ilike(
+          sql`${members.firstName} || ' ' || ${members.lastName}`,
+          `%${searchQuery}%`,
+        ),
       ),
     );
   }

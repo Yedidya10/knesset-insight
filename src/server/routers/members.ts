@@ -43,6 +43,10 @@ export const membersRouter = router({
           or(
             ilike(members.firstName, `%${search}%`),
             ilike(members.lastName, `%${search}%`),
+            ilike(
+              sql`${members.firstName} || ' ' || ${members.lastName}`,
+              `%${search}%`,
+            ),
           ),
         );
       }
@@ -61,9 +65,7 @@ export const membersRouter = router({
 
       const [data, countResult] = await Promise.all([
         query.orderBy(members.lastName).limit(pageSize).offset(offset),
-        db
-          .select({ count: sql<number>`count(*)::int` })
-          .from(members),
+        db.select({ count: sql<number>`count(*)::int` }).from(members),
       ]);
 
       return {
