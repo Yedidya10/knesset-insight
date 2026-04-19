@@ -1054,6 +1054,8 @@
     "viewBill": "View bill",
     "progress": {
       "title": "Stance Analysis Progress",
+      "totalVotes": "Total votes",
+      "eligibleVotes": "Eligible for analysis (bill + AI summary)",
       "classifiedVotes": "Classified votes",
       "knesset": "Knesset {num}",
       "reservationsDeferred": "{count} reservations — deferred to next phase",

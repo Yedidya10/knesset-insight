@@ -1055,6 +1055,8 @@
     "viewBill": "צפייה בהצעת החוק",
     "progress": {
       "title": "התקדמות ניתוח עמדות",
+      "totalVotes": "סה\"כ הצבעות",
+      "eligibleVotes": "כשירות לניתוח (חוק + סיכום AI)",
       "classifiedVotes": "הצבעות שנותחו",
       "knesset": "כנסת {num}",
       "reservationsDeferred": "{count} הסתייגויות — יועברו לניתוח בשלב הבא",

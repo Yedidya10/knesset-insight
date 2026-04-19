@@ -13,6 +13,7 @@ import { db } from '@/lib/db';
 
 type ProgressRow = {
   knesset_num: number;
+  total_votes: number;
   total_eligible: number;
   classified: number;
   reservation_count: number;
@@ -26,6 +27,7 @@ export default async function StanceProgressBanner() {
   const progressRows = await db.execute<ProgressRow>(sql`
     SELECT
       v.knesset_num,
+      (SELECT COUNT(*)::int FROM votes tv WHERE tv.knesset_num = v.knesset_num) AS total_votes,
       COUNT(DISTINCT v.id)::int AS total_eligible,
       COUNT(DISTINCT vsa.vote_id)::int AS classified,
       (SELECT COUNT(*)::int FROM votes rv WHERE rv.knesset_num = v.knesset_num AND rv.is_reservation = true) AS reservation_count,
@@ -44,11 +46,12 @@ export default async function StanceProgressBanner() {
   // Aggregate totals
   const totals = progressRows.reduce(
     (acc, row) => ({
+      totalVotes: acc.totalVotes + row.total_votes,
       eligible: acc.eligible + row.total_eligible,
       classified: acc.classified + row.classified,
       reservations: acc.reservations + row.reservation_count,
     }),
-    { eligible: 0, classified: 0, reservations: 0 },
+    { totalVotes: 0, eligible: 0, classified: 0, reservations: 0 },
   );
 
   const coveragePercent =
@@ -65,6 +68,26 @@ export default async function StanceProgressBanner() {
             <h3 className="text-sm font-semibold text-blue-800 dark:text-blue-200">
               {t('title')}
             </h3>
+          </div>
+
+          {/* Total votes context */}
+          <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-blue-700 dark:text-blue-300">
+            <span>
+              {t('totalVotes')}:{' '}
+              <span className="font-medium text-blue-800 dark:text-blue-200">
+                {totals.totalVotes.toLocaleString(
+                  locale === 'he' ? 'he-IL' : locale,
+                )}
+              </span>
+            </span>
+            <span>
+              {t('eligibleVotes')}:{' '}
+              <span className="font-medium text-blue-800 dark:text-blue-200">
+                {totals.eligible.toLocaleString(
+                  locale === 'he' ? 'he-IL' : locale,
+                )}
+              </span>
+            </span>
           </div>
 
           {/* Overall progress bar */}

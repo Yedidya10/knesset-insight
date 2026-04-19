@@ -1055,6 +1055,8 @@
     "viewBill": "عرض مشروع القانون",
     "progress": {
       "title": "تقدم تحليل المواقف",
+      "totalVotes": "إجمالي التصويتات",
+      "eligibleVotes": "مؤهلة للتحليل (قانون + ملخص AI)",
       "classifiedVotes": "تصويتات تم تحليلها",
       "knesset": "الكنيست {num}",
       "reservationsDeferred": "{count} تحفظات — مؤجلة للمرحلة التالية",

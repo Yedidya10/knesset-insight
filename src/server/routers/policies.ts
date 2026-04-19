@@ -144,8 +144,12 @@ export const policiesRouter = router({
             ? and(
                 eq(voteStanceAlignment.stanceId, stanceId),
                 eq(votes.knessetNum, knessetNum),
+                eq(votes.isReservation, false),
               )
-            : eq(voteStanceAlignment.stanceId, stanceId),
+            : and(
+                eq(voteStanceAlignment.stanceId, stanceId),
+                eq(votes.isReservation, false),
+              ),
         )
         .orderBy(desc(votes.voteDate));
 
@@ -560,6 +564,7 @@ export const policiesRouter = router({
 
       const progressRows = await db.execute<{
         knesset_num: number;
+        total_votes: number;
         total_eligible: number;
         classified: number;
         reservation_count: number;
@@ -568,6 +573,7 @@ export const policiesRouter = router({
       }>(sql`
         SELECT
           v.knesset_num,
+          (SELECT COUNT(*)::int FROM votes tv WHERE tv.knesset_num = v.knesset_num) AS total_votes,
           COUNT(DISTINCT v.id)::int AS total_eligible,
           COUNT(DISTINCT vsa.vote_id)::int AS classified,
           (SELECT COUNT(*)::int FROM votes rv WHERE rv.knesset_num = v.knesset_num AND rv.is_reservation = true) AS reservation_count,
@@ -584,6 +590,7 @@ export const policiesRouter = router({
 
       return progressRows.map((row) => ({
         knessetNum: row.knesset_num,
+        totalVotes: row.total_votes,
         totalEligible: row.total_eligible,
         classified: row.classified,
         coveragePercent:

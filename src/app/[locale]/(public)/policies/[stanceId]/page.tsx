@@ -88,7 +88,9 @@ export default async function PolicyDetailPage({ params }: Props) {
     })
     .from(voteStanceAlignment)
     .innerJoin(votes, eq(voteStanceAlignment.voteId, votes.id))
-    .where(eq(voteStanceAlignment.stanceId, id))
+    .where(
+      and(eq(voteStanceAlignment.stanceId, id), eq(votes.isReservation, false)),
+    )
     .orderBy(desc(votes.voteDate));
 
   const voteIds = relevantVotes.map((v) => v.voteId);
