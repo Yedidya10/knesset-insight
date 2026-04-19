@@ -272,7 +272,7 @@ export default async function MembersPage({ searchParams }: Props) {
   const totalCount = countResult?.count ?? 0;
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
-  // Query 1: Fetch members with extra fields for new sorts
+  // Query 1: Fetch ALL matching members (no pagination — sort globally then slice)
   const memberRows = await db
     .select({
       id: members.id,
@@ -291,22 +291,20 @@ export default async function MembersPage({ searchParams }: Props) {
     .from(members)
     .leftJoin(factions, eq(members.factionId, factions.id))
     .where(whereClause)
-    .orderBy(asc(members.lastName))
-    .limit(PAGE_SIZE)
-    .offset(offset);
+    .orderBy(asc(members.lastName));
 
-  const memberIds = memberRows.map((m) => m.id);
+  const allMemberIds = memberRows.map((m) => m.id);
 
-  // Query 2: Bill initiator counts per member
+  // Query 2: Bill initiator counts per member (all matching members)
   const billCountMap = new Map<number, number>();
-  if (memberIds.length > 0) {
+  if (allMemberIds.length > 0) {
     const billRows = await db
       .select({
         memberId: billInitiators.memberId,
         count: sql<number>`count(*)::int`,
       })
       .from(billInitiators)
-      .where(inArray(billInitiators.memberId, memberIds))
+      .where(inArray(billInitiators.memberId, allMemberIds))
       .groupBy(billInitiators.memberId);
 
     for (const row of billRows) {
@@ -316,7 +314,7 @@ export default async function MembersPage({ searchParams }: Props) {
 
   // Query 3: Absence counts per member (voteValue = 'absent')
   const absentCountMap = new Map<number, number>();
-  if (memberIds.length > 0) {
+  if (allMemberIds.length > 0) {
     const absentRows = await db
       .select({
         memberId: memberVotes.memberId,
@@ -326,7 +324,7 @@ export default async function MembersPage({ searchParams }: Props) {
       .innerJoin(votes, eq(memberVotes.voteId, votes.id))
       .where(
         and(
-          inArray(memberVotes.memberId, memberIds),
+          inArray(memberVotes.memberId, allMemberIds),
           eq(memberVotes.voteValue, 'absent'),
           eq(votes.knessetNum, selectedKnesset),
         ),
@@ -339,7 +337,7 @@ export default async function MembersPage({ searchParams }: Props) {
   }
 
   // Merge all data — for past knessets, override faction data with history
-  const data = memberRows.map((m) => {
+  const allData = memberRows.map((m) => {
     const historyInfo = historyFactionMap?.get(m.id);
     const isCoalition = historyInfo
       ? historyInfo.isCoalition
@@ -361,9 +359,9 @@ export default async function MembersPage({ searchParams }: Props) {
     };
   });
 
-  // Apply sorting in JS (member query already sorted by name)
+  // Apply global sorting before pagination
   if (sortBy !== 'name') {
-    data.sort((a, b) => {
+    allData.sort((a, b) => {
       switch (sortBy) {
         case 'mostBills':
           return b.billCount - a.billCount;
@@ -388,6 +386,9 @@ export default async function MembersPage({ searchParams }: Props) {
       }
     });
   }
+
+  // Apply pagination after sorting
+  const data = allData.slice(offset, offset + PAGE_SIZE);
 
   const subtitleKey = !isCurrentKnesset
     ? 'allMembers'

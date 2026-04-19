@@ -161,6 +161,33 @@ async function syncMemberRecords(
     `  [members] Found ${currentPositions.length} active MK positions in Knesset 25`,
   );
 
+  // Fetch ALL MK positions across synced knessets for start date / seniority
+  const knFilter = appConfig.knesset.syncKnessets
+    .map((k) => `KnessetNum eq ${k}`)
+    .join(' or ');
+  const allMkPositions = await fetchAllOData<PersonToPosition>(
+    'ParliamentInfo',
+    'KNS_PersonToPosition',
+    {
+      $filter: `PositionID eq ${appConfig.knesset.mkPositionId} and (${knFilter})`,
+    },
+    100,
+  );
+  // Build PersonID → earliest MK start date (for seniority)
+  const personStartDate = new Map<string, string>();
+  for (const pos of allMkPositions) {
+    const sd = pos.StartDate?.split('T')[0];
+    if (!sd) continue;
+    const key = String(pos.PersonID);
+    const existing = personStartDate.get(key);
+    if (!existing || sd < existing) {
+      personStartDate.set(key, sd);
+    }
+  }
+  console.log(
+    `  [members] Built start-date map for ${personStartDate.size} members from ${allMkPositions.length} MK positions`,
+  );
+
   // Build set of truly current PersonIDs and their current faction
   const currentPersonIds = new Set<number>();
   const personFaction = new Map<number, number>();
@@ -310,6 +337,13 @@ async function syncMemberRecords(
         }
       }
 
+      // Extract birth date from CSV (mk_individual_date_of_birth)
+      const rawBirthDate = raw.mk_individual_date_of_birth || null;
+      const birthDate = rawBirthDate ? rawBirthDate.split('T')[0] : null;
+
+      // Use earliest MK position start date for seniority
+      const startDate = personStartDate.get(String(knessetId)) ?? null;
+
       return {
         knessetId,
         vipId,
@@ -319,6 +353,8 @@ async function syncMemberRecords(
         factionId,
         isCurrent: currentPersonIds.has(knessetId),
         gender: raw.GenderDesc || null,
+        birthDate,
+        startDate,
         imageUrl: raw.mk_individual_photo || null,
         email: raw.mk_individual_email || raw.Email || null,
       };
@@ -342,6 +378,8 @@ async function syncMemberRecords(
           factionId: sql`excluded.faction_id`,
           isCurrent: sql`excluded.is_current`,
           gender: sql`excluded.gender`,
+          birthDate: sql`COALESCE(excluded.birth_date, ${members.birthDate})`,
+          startDate: sql`COALESCE(excluded.start_date, ${members.startDate})`,
           imageUrl: sql`excluded.image_url`,
           email: sql`excluded.email`,
           vipId: sql`COALESCE(excluded.vip_id, ${members.vipId})`,
