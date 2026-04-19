@@ -121,12 +121,7 @@ export default async function VotesPage({ searchParams }: Props) {
 
       {/* Filters */}
       <div className="mb-6">
-        <VotesFilter
-          currentSearch={searchQuery}
-          currentKnessetNum={params.knesset ?? ''}
-          currentResult={resultFilter}
-          currentSort={sortBy}
-        />
+        <VotesFilter />
       </div>
 
       {/* Results */}

@@ -17,14 +17,7 @@ import type { FilterFieldConfig, SortOption } from '@/components/filters';
 
 interface MembersFilterProps {
   factions: Array<{ id: number; name: string }>;
-  currentFaction: string;
-  currentSort: string;
-  currentStatus: string;
-  currentSearch: string;
   knessetNumbers: number[];
-  currentKnesset: string;
-  currentCoalition: string;
-  currentGender: string;
   currentKnessetNumber: number;
   showDetails: boolean;
 }
@@ -122,8 +115,7 @@ export default function MembersFilter({
           value={currentKnesset}
           onValueChange={(val) => {
             updateFilters({
-              knesset:
-                val === String(currentKnessetNumber) ? '' : String(val),
+              knesset: val === String(currentKnessetNumber) ? '' : String(val),
               party: '',
               status: '',
             });

@@ -165,11 +165,6 @@ export default async function LegislationPage({ searchParams }: Props) {
       {/* Filters */}
       <div className="mb-6">
         <LegislationFilter
-          currentSearch={searchQuery}
-          currentKnessetNum={knessetNum ? String(knessetNum) : ''}
-          currentBillType={billType}
-          currentStatus={statusFilter}
-          currentSort={sortBy}
           billTypes={[...BILL_TYPE_SLUGS]}
           statusOptions={statusOptions}
         />

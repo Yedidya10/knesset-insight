@@ -416,14 +416,7 @@ export default async function MembersPage({ searchParams }: Props) {
         <Suspense>
           <MembersFilter
             factions={factionList}
-            currentFaction={partyFilter}
-            currentSort={sortBy}
-            currentStatus={statusFilter}
-            currentSearch={searchQuery}
             knessetNumbers={availableKnessets}
-            currentKnesset={knessetFilter || String(currentKnesset)}
-            currentCoalition={coalitionFilter}
-            currentGender={genderFilter}
             currentKnessetNumber={currentKnesset}
             showDetails={showDetails}
           />

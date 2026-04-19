@@ -11,15 +11,10 @@ import {
 } from '@/lib/knesset/policy-domains';
 
 interface PoliciesFilterProps {
-  currentSearch: string;
-  currentDomain: string;
-  currentType: string;
   locale: 'he' | 'en' | 'ar' | 'ru';
 }
 
-export default function PoliciesFilter({
-  locale,
-}: PoliciesFilterProps) {
+export default function PoliciesFilter({ locale }: PoliciesFilterProps) {
   const t = useTranslations('policies');
 
   const fields: FilterFieldConfig[] = useMemo(

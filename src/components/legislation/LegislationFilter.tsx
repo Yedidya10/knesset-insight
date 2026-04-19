@@ -12,11 +12,6 @@ interface StatusOption {
 }
 
 interface LegislationFilterProps {
-  currentSearch: string;
-  currentKnessetNum: string;
-  currentBillType: string;
-  currentStatus: string;
-  currentSort: string;
   billTypes: string[];
   statusOptions: StatusOption[];
 }

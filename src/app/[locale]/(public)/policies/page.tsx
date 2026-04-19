@@ -112,12 +112,7 @@ export default async function PoliciesPage({ searchParams }: Props) {
 
       {/* Filters */}
       <div className="mb-6">
-        <PoliciesFilter
-          currentSearch={searchQuery}
-          currentDomain={domainFilter}
-          currentType={typeFilter}
-          locale={locale}
-        />
+        <PoliciesFilter locale={locale} />
       </div>
 
       {data.length > 0 ? (

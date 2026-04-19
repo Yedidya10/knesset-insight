@@ -6,16 +6,9 @@ import { FilterBar } from '@/components/filters';
 import { useFilterParams } from '@/hooks/use-filter-params';
 import type { FilterFieldConfig, SortOption } from '@/components/filters';
 
-interface VotesFilterProps {
-  currentSearch: string;
-  currentKnessetNum: string;
-  currentResult: string;
-  currentSort: string;
-}
-
 const KNESSET_NUMBERS = [25, 24, 23, 22, 21, 20];
 
-export default function VotesFilter(_props: VotesFilterProps) {
+export default function VotesFilter() {
   const t = useTranslations('votes');
 
   const fields: FilterFieldConfig[] = useMemo(
