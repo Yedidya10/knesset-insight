@@ -1308,5 +1308,15 @@
     "errorImageTooLarge": "Image is too large (max 2MB)",
     "errorTooManyImages": "You can attach up to {max} images",
     "errorRateLimit": "Too many reports submitted. Please try again later."
+  },
+  "filters": {
+    "openPanel": "Advanced filters",
+    "title": "Advanced filters",
+    "clearAll": "Clear all",
+    "activeCount": "{count, plural, one {1 active filter} other {# active filters}}",
+    "noActiveFilters": "No active filters",
+    "search": "Search...",
+    "from": "From",
+    "to": "To"
   }
 }

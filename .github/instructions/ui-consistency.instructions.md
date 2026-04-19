@@ -23,24 +23,79 @@ Always use the project's shadcn/ui components from `@/components/ui/` — **neve
 
 Every page that has filters (search, dropdowns) must extract them into a dedicated **client component** (e.g., `PoliciesFilter.tsx`, `LegislationFilter.tsx`, `MembersFilter.tsx`). Never inline filters directly in a server page component.
 
-### Required filter pattern
+### Required filter pattern — FilterBar + useFilterParams
 
-Follow the established pattern from `LegislationFilter.tsx`:
+Use the unified filter system in `src/components/filters/` and `src/hooks/use-filter-params.ts`. **Do not** build ad-hoc filter logic with `useSearchParams` + `useRouter` + manual debounce refs.
 
-1. **Imports**: `useSearchParams` from `next/navigation`, `useRouter` + `usePathname` from `@/i18n/navigation`, `useTranslations` from `next-intl`.
-2. **Debounced search**: Use `useState` + `useRef<setTimeout>` with 400ms debounce. No form submission — filtering happens on-type.
-3. **Layout**: `space-y-3` wrapper → Row 1: search `<Input>` with `Search` icon + `X` clear → Row 2: `flex flex-wrap items-center gap-2` with `<Select>` dropdowns + clear filters `<Button>`.
-4. **Clear filters button**: Ghost variant `<Button>` with `X` icon + translated label + `<Badge>` showing active filter count. Only visible when filters are active.
-5. **`updateParam` helper**: Builds `URLSearchParams` from current params, sets/deletes the key, removes `page` param, pushes to router.
-6. **Select component**: Always pass `items` prop to `<Select>` root for accessibility. Use `_all` as the sentinel value for "show all".
-
-### Server page integration
+#### 1. Define a field schema
 
 ```tsx
-<div className="mb-6">
-  <MyFilter currentSearch={search} currentX={x} ... />
-</div>
+import type { FilterFieldConfig, SortOption } from '@/components/filters';
+
+const fields: FilterFieldConfig[] = [
+  { key: 'search', type: 'search', label: t('searchPlaceholder'), placeholder: t('searchPlaceholder'), debounceMs: 400 },
+  { key: 'knesset', type: 'select', label: t('allKnessets'), primary: true, options: [{ value: '_all', label: t('allKnessets') }, ...] },
+  { key: 'result', type: 'select', label: t('allResults'), primary: true, options: [...] },
+];
+
+const sortOptions: SortOption[] = [
+  { value: 'dateDesc', label: t('sort.dateDesc') },
+  { value: 'dateAsc', label: t('sort.dateAsc') },
+];
 ```
+
+- `primary: true` → rendered inline in the toolbar. Non-primary fields go into the FilterSheet side panel.
+- `group` → groups non-primary fields inside the FilterSheet.
+- Field types: `search`, `select`, `multi-select`, `range`, `toggle`.
+
+#### 2. Use the hook
+
+```tsx
+const { filters, updateFilter, updateFilters, clearFilter, clearAll, activeCount, hasActiveFilters, activeFilters, searchValue, setSearchValue, commitSearch } = useFilterParams({ fields });
+```
+
+The hook manages URL search params, debounced search, batch updates, and page param reset.
+
+#### 3. Render FilterBar
+
+```tsx
+<FilterBar
+  fields={fields}
+  filters={filters}
+  searchValue={searchValue}
+  onSearchChange={setSearchValue}
+  onSearchCommit={commitSearch}
+  onUpdateFilter={updateFilter}
+  onClearFilter={clearFilter}
+  onClearAll={clearAll}
+  activeCount={activeCount}
+  hasActiveFilters={hasActiveFilters}
+  activeFilters={activeFilters}
+  sortOptions={sortOptions}
+  sortValue={filters.sort ?? 'dateDesc'}
+  sortDefault="dateDesc"
+  onSortChange={(val) => updateFilter('sort', val)}
+/>
+```
+
+#### Slots for custom elements
+
+- `beforeFilters` — e.g., knesset term selector, status tabs (see `MembersFilter.tsx`)
+- `afterFilters` — e.g., details toggle button (see `MembersFilter.tsx`)
+
+#### Available filter primitives
+
+| Component           | Usage                                    |
+| ------------------- | ---------------------------------------- |
+| `FilterSelect`      | Single-value dropdown (wraps shadcn Select) |
+| `FilterMultiSelect` | Chip-based toggle multi-select           |
+| `FilterRange`       | From/to number or date inputs            |
+| `FilterToggle`      | Boolean toggle button                    |
+| `SortSelect`        | Sort dropdown with ArrowUpDown icon      |
+| `FilterChips`       | Active filter dismissible pills          |
+| `FilterSheet`       | Side panel for non-primary filters       |
+
+All primitives are exported from `@/components/filters`.
 
 ## Card pattern
 

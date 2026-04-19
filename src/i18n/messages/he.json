@@ -1309,5 +1309,15 @@
     "errorImageTooLarge": "התמונה גדולה מדי (מקסימום 2MB)",
     "errorTooManyImages": "ניתן לצרף עד {max} תמונות",
     "errorRateLimit": "שלחתם יותר מדי דיווחים. נסו שוב מאוחר יותר."
+  },
+  "filters": {
+    "openPanel": "סינון מתקדם",
+    "title": "סינון מתקדם",
+    "clearAll": "נקה הכל",
+    "activeCount": "{count, plural, one {סינון פעיל אחד} other {# סינונים פעילים}}",
+    "noActiveFilters": "אין סינונים פעילים",
+    "search": "חיפוש...",
+    "from": "מ-",
+    "to": "עד"
   }
 }

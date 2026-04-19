@@ -1309,5 +1309,15 @@
     "errorImageTooLarge": "الصورة كبيرة جداً (الحد الأقصى 2 ميغابايت)",
     "errorTooManyImages": "يمكنك إرفاق حتى {max} صور",
     "errorRateLimit": "تم إرسال عدد كبير جداً من البلاغات. يرجى المحاولة لاحقاً."
+  },
+  "filters": {
+    "openPanel": "تصفية متقدمة",
+    "title": "تصفية متقدمة",
+    "clearAll": "مسح الكل",
+    "activeCount": "{count, plural, one {فلتر نشط واحد} other {# فلاتر نشطة}}",
+    "noActiveFilters": "لا توجد فلاتر نشطة",
+    "search": "بحث...",
+    "from": "من",
+    "to": "إلى"
   }
 }
