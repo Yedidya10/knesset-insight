@@ -219,6 +219,7 @@ async function syncVoteHeaders(
           againstCount: sql`CASE WHEN excluded.against_count > 0 THEN excluded.against_count ELSE ${votes.againstCount} END`,
           abstainCount: sql`CASE WHEN excluded.abstain_count > 0 THEN excluded.abstain_count ELSE ${votes.abstainCount} END`,
           isAccepted: sql`CASE WHEN excluded.for_count > 0 OR excluded.against_count > 0 THEN excluded.is_accepted ELSE ${votes.isAccepted} END`,
+          isReservation: sql`excluded.is_reservation`,
           updatedAt: new Date(),
         },
       });
@@ -707,6 +708,7 @@ export async function syncVotesForKnessets(
           knessetNum: sql`excluded.knesset_num`,
           sessionId: sql`excluded.session_id`,
           sessItemId: sql`excluded.sess_item_id`,
+          isReservation: sql`excluded.is_reservation`,
           updatedAt: new Date(),
         },
       });

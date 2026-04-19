@@ -9,6 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import PaginationNav from '@/components/ui/pagination-nav';
 import PoliciesFilter from '@/components/policies/PoliciesFilter';
+import StanceProgressBanner from '@/components/policies/StanceProgressBanner';
 import {
   POLICY_DOMAINS,
   type PolicyDomain,
@@ -105,6 +106,9 @@ export default async function PoliciesPage({ searchParams }: Props) {
           {t('betaBanner')}
         </span>
       </div>
+
+      {/* Analysis progress */}
+      <StanceProgressBanner />
 
       {/* Filters */}
       <div className="mb-6">

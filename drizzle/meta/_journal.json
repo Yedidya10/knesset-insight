@@ -99,6 +99,13 @@
       "when": 1777400000000,
       "tag": "0016_policy_stances",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1777600000000,
+      "tag": "0018_policy_stances_v2",
+      "breakpoints": true
     }
   ]
 }

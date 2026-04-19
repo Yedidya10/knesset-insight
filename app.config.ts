@@ -299,8 +299,10 @@ export const appConfig = {
     derivedReviewThreshold: Number(
       process.env.STANCE_DERIVED_REVIEW_THRESHOLD ?? 0.85,
     ),
-    /** Max votes per batch (for multi-vote bills) */
-    batchSize: Number(process.env.STANCE_BATCH_SIZE ?? 15),
+    /** Max votes per classification batch */
+    batchSize: Number(process.env.STANCE_BATCH_SIZE ?? 100),
+    /** Daily token budget safety cap */
+    dailyTokenBudget: Number(process.env.STANCE_DAILY_TOKEN_BUDGET ?? 500_000),
     /** Minimum votes needed to display MK/faction score on a stance */
     minVotesForScore: Number(process.env.STANCE_MIN_VOTES ?? 2),
     incrementalBackfill: {

@@ -1051,7 +1051,14 @@
     "clearFilters": "Clear filters",
     "score": "{score}% for",
     "viewVote": "View vote",
-    "viewBill": "View bill"
+    "viewBill": "View bill",
+    "progress": {
+      "title": "Stance Analysis Progress",
+      "classifiedVotes": "Classified votes",
+      "knesset": "Knesset {num}",
+      "reservationsDeferred": "{count} reservations — deferred to next phase",
+      "disclaimer": "Analysis is gradual, starting from the most recent Knesset. Stances and results may change as more votes are analyzed."
+    }
   },
   "seo": {
     "siteName": "Knesset Insight",

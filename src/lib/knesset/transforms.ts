@@ -86,6 +86,7 @@ export function transformVoteHeader(raw: ODataVoteHeader) {
     againstCount: raw.total_against,
     abstainCount: raw.total_abstain,
     isAccepted: raw.is_accepted === 1,
+    isReservation: /הסתייגו/.test(title),
   };
 }
 

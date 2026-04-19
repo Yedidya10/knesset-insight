@@ -52,12 +52,15 @@ interface StanceClassificationCheckpoint {
  * 4. Store results in vote_stance_alignment
  * 5. Create new policy stances if AI suggests them with high confidence
  * 6. Update vote_count on affected stances
+ *
+ * Phase 1: Only classifies non-reservation votes (is_reservation = false).
+ * Phase 2 (future): Will handle reservation votes with differential weighting.
+ * Priority: Knesset 25 > 24 > 23... (descending)
  */
 export async function classifyVoteStances(): Promise<void> {
   await runSyncJob('classify-vote-stances', async (prevCheckpoint) => {
     const checkpoint = (prevCheckpoint as StanceClassificationCheckpoint) ?? {};
-    const { batchSize, directReviewThreshold } = appConfig.policyStances;
-    const dailyTokenBudget = 500_000; // ~$1.50/day safety cap
+    const { batchSize, directReviewThreshold, dailyTokenBudget } = appConfig.policyStances;
 
     let tokensUsedToday = checkpoint.tokensUsedToday ?? 0;
     let totalClassified = checkpoint.totalClassified ?? 0;
@@ -117,6 +120,8 @@ export async function classifyVoteStances(): Promise<void> {
       // Find votes that need classification:
       // - Linked to a bill with AI summary
       // - Not yet classified (no entry in vote_stance_alignment)
+      // - NOT a reservation vote (Phase 1 — reservations handled in Phase 2)
+      // - Ordered by knesset descending (K25 > K24 > K23...)
       const alreadyClassified = db
         .select({ voteId: voteStanceAlignment.voteId })
         .from(voteStanceAlignment);
@@ -130,6 +135,7 @@ export async function classifyVoteStances(): Promise<void> {
           againstCount: votes.againstCount,
           isAccepted: votes.isAccepted,
           billId: votes.billId,
+          knessetNum: votes.knessetNum,
           billName: bills.name,
           billSummary: bills.aiSummary,
           billTopics: bills.aiTopics,
@@ -140,9 +146,10 @@ export async function classifyVoteStances(): Promise<void> {
           and(
             isNotNull(bills.aiSummary),
             notInArray(votes.id, alreadyClassified),
+            eq(votes.isReservation, false),
           ),
         )
-        .orderBy(sql`${votes.voteDate} DESC`)
+        .orderBy(sql`${votes.knessetNum} DESC NULLS LAST, ${votes.voteDate} DESC`)
         .limit(batchSize);
 
       if (candidates.length === 0) {
@@ -165,7 +172,7 @@ export async function classifyVoteStances(): Promise<void> {
       }
 
       console.log(
-        `[classify-vote-stances] Processing ${candidates.length} votes (${existingStances.length} existing stances)`,
+        `[classify-vote-stances] Processing ${candidates.length} votes (${existingStances.length} existing stances, knesset range: ${candidates[candidates.length - 1]?.knessetNum ?? '?'}–${candidates[0]?.knessetNum ?? '?'})`,
       );
 
       let processed = 0;
@@ -281,6 +288,7 @@ export async function classifyVoteStances(): Promise<void> {
                 alignment: match.alignment,
                 proPosition: result.proPosition,
                 confidence: match.confidence,
+                voteWeight: 1.0, // Phase 1: all non-reservation votes get weight 1.0
                 needsReview,
               })
               .onConflictDoNothing();

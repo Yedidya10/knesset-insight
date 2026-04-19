@@ -359,6 +359,7 @@ export const votes = pgTable('votes', {
   summary: text('summary'),
   metadata: jsonb('metadata'),
   billStage: integer('bill_stage'),
+  isReservation: boolean('is_reservation').default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
@@ -1500,6 +1501,7 @@ export const voteStanceAlignment = pgTable(
     alignment: text('alignment').notNull(), // 'supports' | 'opposes'
     proPosition: jsonb('pro_position').notNull(), // {he, en, ar, ru}
     confidence: real('confidence').notNull(),
+    voteWeight: real('vote_weight').default(1.0),
     needsReview: boolean('needs_review').default(false),
     reviewedBy: text('reviewed_by'),
     reviewedAt: timestamp('reviewed_at', { withTimezone: true }),

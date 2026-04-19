@@ -546,4 +546,53 @@ export const policiesRouter = router({
           .filter(Boolean),
       };
     }),
+
+  /** Analysis progress stats per knesset — how much has been classified */
+  stanceProgress: publicProcedure
+    .input(z.object({ knessetNum: z.number().optional() }))
+    .query(async ({ input }) => {
+      const { knessetNum } = input;
+
+      // Count total eligible votes (linked to bills with AI summaries, excluding reservations)
+      const eligibleFilter = knessetNum
+        ? sql`WHERE b.ai_summary IS NOT NULL AND v.is_reservation = false AND v.knesset_num = ${knessetNum}`
+        : sql`WHERE b.ai_summary IS NOT NULL AND v.is_reservation = false`;
+
+      const progressRows = await db.execute<{
+        knesset_num: number;
+        total_eligible: number;
+        classified: number;
+        reservation_count: number;
+        direct_stances: number;
+        derived_stances: number;
+      }>(sql`
+        SELECT
+          v.knesset_num,
+          COUNT(DISTINCT v.id)::int AS total_eligible,
+          COUNT(DISTINCT vsa.vote_id)::int AS classified,
+          (SELECT COUNT(*)::int FROM votes rv WHERE rv.knesset_num = v.knesset_num AND rv.is_reservation = true) AS reservation_count,
+          COUNT(DISTINCT ps.id) FILTER (WHERE ps.stance_type = 'direct')::int AS direct_stances,
+          COUNT(DISTINCT ps.id) FILTER (WHERE ps.stance_type = 'derived')::int AS derived_stances
+        FROM votes v
+        INNER JOIN bills b ON b.id = v.bill_id
+        LEFT JOIN vote_stance_alignment vsa ON vsa.vote_id = v.id
+        LEFT JOIN policy_stances ps ON ps.id = vsa.stance_id
+        ${eligibleFilter}
+        GROUP BY v.knesset_num
+        ORDER BY v.knesset_num DESC
+      `);
+
+      return progressRows.map((row) => ({
+        knessetNum: row.knesset_num,
+        totalEligible: row.total_eligible,
+        classified: row.classified,
+        coveragePercent:
+          row.total_eligible > 0
+            ? Math.round((row.classified / row.total_eligible) * 100)
+            : 0,
+        reservationCount: row.reservation_count,
+        directStances: row.direct_stances,
+        derivedStances: row.derived_stances,
+      }));
+    }),
 });
