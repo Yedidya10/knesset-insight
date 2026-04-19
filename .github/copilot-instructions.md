@@ -102,5 +102,6 @@ For domain-specific rules, see the files in `.github/instructions/` — each is 
 
 ## Workflow
 
+- **Visual E2E verification** — after any UI fix or visual change (layout, styling, positioning, responsiveness), verify the result by navigating to the affected page in the browser and taking screenshots (before/after scroll, mobile viewport, etc.). Do not consider a UI task complete until you have visually confirmed it via screenshot inspection.
 - **After completing a fix or feature, always create a commit** with a clear conventional-commit message (`feat:`, `fix:`, `style:`, `refactor:`, `chore:`, `i18n:`, `docs:`). Group related changes into a single commit; unrelated changes go into separate commits.
 - **Every commit must pass TypeScript type-checking** — the pre-commit hook runs `pnpm type-check` (`tsc --noEmit`). Fix all type errors before committing.
