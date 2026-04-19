@@ -83,18 +83,20 @@ export default async function AdminOverviewPage() {
       <h1 className="text-2xl font-bold">{t('overview.title')}</h1>
 
       {/* Stat Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         {statCards.map(({ key, value, icon: Icon }) => (
           <Card key={key}>
             <CardContent className="flex items-center gap-4 p-4">
-              <div className="rounded-lg bg-primary/10 p-2">
-                <Icon className="h-5 w-5 text-primary" />
+              <div className="bg-primary/10 rounded-lg p-2">
+                <Icon className="text-primary h-5 w-5" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   {t(`overview.${key}`)}
                 </p>
-                <p className="text-2xl font-bold">{Number(value).toLocaleString()}</p>
+                <p className="text-2xl font-bold">
+                  {Number(value).toLocaleString()}
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -111,14 +113,18 @@ export default async function AdminOverviewPage() {
         </CardHeader>
         <CardContent>
           {syncEntries.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t('overview.noSyncData')}</p>
+            <p className="text-muted-foreground text-sm">
+              {t('overview.noSyncData')}
+            </p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b text-start">
                     <th className="p-2 font-medium">{t('overview.entity')}</th>
-                    <th className="p-2 font-medium">{t('overview.lastSync')}</th>
+                    <th className="p-2 font-medium">
+                      {t('overview.lastSync')}
+                    </th>
                     <th className="p-2 font-medium">{t('overview.records')}</th>
                     <th className="p-2 font-medium">{t('overview.status')}</th>
                   </tr>
@@ -127,12 +133,20 @@ export default async function AdminOverviewPage() {
                   {syncEntries.map((entry) => (
                     <tr key={entry.id} className="border-b">
                       <td className="p-2 font-mono text-xs">{entry.entity}</td>
-                      <td className="p-2 text-muted-foreground">
+                      <td className="text-muted-foreground p-2">
                         {new Date(entry.lastSyncAt).toLocaleString()}
                       </td>
-                      <td className="p-2">{entry.recordCount?.toLocaleString() ?? '—'}</td>
                       <td className="p-2">
-                        <Badge variant={entry.status === 'success' ? 'default' : 'destructive'}>
+                        {entry.recordCount?.toLocaleString() ?? '—'}
+                      </td>
+                      <td className="p-2">
+                        <Badge
+                          variant={
+                            entry.status === 'success'
+                              ? 'default'
+                              : 'destructive'
+                          }
+                        >
                           {entry.status}
                         </Badge>
                       </td>
@@ -155,7 +169,9 @@ export default async function AdminOverviewPage() {
         </CardHeader>
         <CardContent>
           {recentActivity.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t('overview.noActivity')}</p>
+            <p className="text-muted-foreground text-sm">
+              {t('overview.noActivity')}
+            </p>
           ) : (
             <div className="space-y-2">
               {recentActivity.map((item) => (
@@ -165,11 +181,11 @@ export default async function AdminOverviewPage() {
                 >
                   <div>
                     <p className="text-sm font-medium">{item.action}</p>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-muted-foreground text-xs">
                       {item.entityType} #{item.entityId}
                     </p>
                   </div>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-muted-foreground text-xs">
                     {item.createdAt
                       ? new Date(item.createdAt).toLocaleString()
                       : '—'}

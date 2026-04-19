@@ -18,7 +18,7 @@ export default function PoliciesLoading() {
           <div className="bg-muted h-4 w-48 animate-pulse rounded" />
         </div>
         <div className="bg-muted mb-3 h-2 w-full animate-pulse rounded-full" />
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="bg-muted h-8 animate-pulse rounded-lg" />
           ))}

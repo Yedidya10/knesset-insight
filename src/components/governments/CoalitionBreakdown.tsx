@@ -23,7 +23,10 @@ export default function CoalitionBreakdown({
 
   if (factions.length === 0) return null;
 
-  const totalSeats = factions.reduce((sum, f) => sum + (f.factionSeats ?? 0), 0);
+  const totalSeats = factions.reduce(
+    (sum, f) => sum + (f.factionSeats ?? 0),
+    0,
+  );
 
   return (
     <Card>
@@ -38,7 +41,7 @@ export default function CoalitionBreakdown({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {factions.map((f) => (
             <div
               key={f.factionId}
@@ -52,15 +55,15 @@ export default function CoalitionBreakdown({
                 }}
               />
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium truncate">{f.factionName}</p>
-                <div className="flex items-center gap-2 mt-0.5">
+                <p className="truncate text-sm font-medium">{f.factionName}</p>
+                <div className="mt-0.5 flex items-center gap-2">
                   {f.factionSeats != null && f.factionSeats > 0 && (
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-muted-foreground text-xs">
                       {f.factionSeats} {t('seats')}
                     </span>
                   )}
                   {f.periodStart && (
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-muted-foreground text-xs">
                       {f.periodStart}
                       {f.periodEnd ? ` — ${f.periodEnd}` : ''}
                     </span>

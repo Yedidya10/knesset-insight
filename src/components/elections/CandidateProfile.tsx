@@ -48,10 +48,7 @@ export default function CandidateProfile({
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-        <MemberAvatar
-          member={{ firstName, lastName, imageUrl }}
-          size="xl"
-        />
+        <MemberAvatar member={{ firstName, lastName, imageUrl }} size="xl" />
         <div>
           <h1 className="text-2xl font-bold">{fullName}</h1>
           <div className="mt-1 flex flex-wrap items-center gap-2">
@@ -62,13 +59,11 @@ export default function CandidateProfile({
               {listName}
             </Badge>
             {position != null && (
-              <span className="text-sm text-muted-foreground">
+              <span className="text-muted-foreground text-sm">
                 {labels.position} #{position}
               </span>
             )}
-            {isLeader && (
-              <Badge variant="outline">★ {labels.leader}</Badge>
-            )}
+            {isLeader && <Badge variant="outline">★ {labels.leader}</Badge>}
           </div>
         </div>
       </div>
@@ -80,7 +75,7 @@ export default function CandidateProfile({
             <CardTitle className="text-base">{labels.bio}</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
+            <p className="text-muted-foreground text-sm leading-relaxed whitespace-pre-line">
               {bio}
             </p>
           </CardContent>
@@ -94,28 +89,36 @@ export default function CandidateProfile({
             <CardTitle className="text-base">{labels.personalInfo}</CardTitle>
           </CardHeader>
           <CardContent>
-            <dl className="grid gap-3 sm:grid-cols-2">
+            <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {profession && (
                 <div>
-                  <dt className="text-xs font-medium text-muted-foreground">{labels.profession}</dt>
+                  <dt className="text-muted-foreground text-xs font-medium">
+                    {labels.profession}
+                  </dt>
                   <dd className="text-sm">{profession}</dd>
                 </div>
               )}
               {education && (
                 <div>
-                  <dt className="text-xs font-medium text-muted-foreground">{labels.education}</dt>
+                  <dt className="text-muted-foreground text-xs font-medium">
+                    {labels.education}
+                  </dt>
                   <dd className="text-sm">{education}</dd>
                 </div>
               )}
               {residence && (
                 <div>
-                  <dt className="text-xs font-medium text-muted-foreground">{labels.residence}</dt>
+                  <dt className="text-muted-foreground text-xs font-medium">
+                    {labels.residence}
+                  </dt>
                   <dd className="text-sm">{residence}</dd>
                 </div>
               )}
               {birthYear && (
                 <div>
-                  <dt className="text-xs font-medium text-muted-foreground">{labels.birthYear}</dt>
+                  <dt className="text-muted-foreground text-xs font-medium">
+                    {labels.birthYear}
+                  </dt>
                   <dd className="text-sm">{birthYear}</dd>
                 </div>
               )}

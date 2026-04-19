@@ -76,7 +76,7 @@ export default async function AboutPage() {
       {/* Values */}
       <section className="mb-10">
         <h2 className="mb-4 text-xl font-semibold">{t('valuesTitle')}</h2>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {values.map(({ key, icon: Icon }) => (
             <div key={key} className="bg-card rounded-lg border p-4 shadow-sm">
               <div className="mb-2 flex items-center gap-2">

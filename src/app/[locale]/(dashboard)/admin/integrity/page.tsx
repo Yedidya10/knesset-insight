@@ -52,7 +52,7 @@ export default async function AdminIntegrityPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Shield className="h-7 w-7 text-primary" />
+        <Shield className="text-primary h-7 w-7" />
         <div>
           <h1 className="text-2xl font-bold">{t('title')}</h1>
           <p className="text-muted-foreground">
@@ -62,12 +62,12 @@ export default async function AdminIntegrityPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
             <AlertTriangle className="h-5 w-5 text-amber-500" />
             <div>
-              <p className="text-sm text-muted-foreground">{t('total')}</p>
+              <p className="text-muted-foreground text-sm">{t('total')}</p>
               <p className="text-xl font-bold">{total}</p>
             </div>
           </CardContent>
@@ -76,7 +76,7 @@ export default async function AdminIntegrityPage() {
           <CardContent className="flex items-center gap-3 p-4">
             <CheckCircle2 className="h-5 w-5 text-green-500" />
             <div>
-              <p className="text-sm text-muted-foreground">{t('verified')}</p>
+              <p className="text-muted-foreground text-sm">{t('verified')}</p>
               <p className="text-xl font-bold">{verified}</p>
             </div>
           </CardContent>
@@ -85,7 +85,7 @@ export default async function AdminIntegrityPage() {
           <CardContent className="flex items-center gap-3 p-4">
             <XCircle className="h-5 w-5 text-orange-500" />
             <div>
-              <p className="text-sm text-muted-foreground">{t('pending')}</p>
+              <p className="text-muted-foreground text-sm">{t('pending')}</p>
               <p className="text-xl font-bold">{pending}</p>
             </div>
           </CardContent>
@@ -95,7 +95,7 @@ export default async function AdminIntegrityPage() {
       {/* Pending Cases */}
       {pendingCases.length === 0 ? (
         <Card>
-          <CardContent className="p-8 text-center text-muted-foreground">
+          <CardContent className="text-muted-foreground p-8 text-center">
             {t('noPendingCases')}
           </CardContent>
         </Card>
@@ -105,8 +105,8 @@ export default async function AdminIntegrityPage() {
             <Card key={caseItem.id}>
               <CardContent className="p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0 space-y-1">
-                    <div className="flex items-center gap-2 flex-wrap">
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span className="font-semibold">{caseItem.title}</span>
                       <Badge
                         variant="outline"
@@ -118,16 +118,17 @@ export default async function AdminIntegrityPage() {
                         {caseItem.category}
                       </Badge>
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      {caseItem.memberFirstName} {caseItem.memberLastName} · {caseItem.eventDate}
+                    <p className="text-muted-foreground text-sm">
+                      {caseItem.memberFirstName} {caseItem.memberLastName} ·{' '}
+                      {caseItem.eventDate}
                     </p>
                     {caseItem.aiSummary && (
-                      <p className="text-sm text-muted-foreground line-clamp-2">
+                      <p className="text-muted-foreground line-clamp-2 text-sm">
                         {caseItem.aiSummary}
                       </p>
                     )}
                     {caseItem.aiConfidence != null && (
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-muted-foreground text-xs">
                         AI: {Math.round(caseItem.aiConfidence * 100)}%
                       </p>
                     )}

@@ -60,7 +60,7 @@ export default async function StanceProgressBanner() {
     <TooltipProvider>
       <Card className="mb-6 border-blue-200 bg-blue-50/50 dark:border-blue-900 dark:bg-blue-950/20">
         <CardContent className="p-4 sm:p-5">
-          <div className="flex items-center gap-2 mb-4">
+          <div className="mb-4 flex items-center gap-2">
             <BarChart3 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             <h3 className="text-sm font-semibold text-blue-800 dark:text-blue-200">
               {t('title')}
@@ -69,24 +69,32 @@ export default async function StanceProgressBanner() {
 
           {/* Overall progress bar */}
           <div className="mb-4">
-            <div className="flex items-center justify-between mb-1.5">
+            <div className="mb-1.5 flex items-center justify-between">
               <span className="text-xs text-blue-700 dark:text-blue-300">
                 {t('classifiedVotes')}
               </span>
               <span className="text-xs font-medium text-blue-800 dark:text-blue-200">
-                {coveragePercent}% ({totals.classified.toLocaleString(locale === 'he' ? 'he-IL' : locale)} / {totals.eligible.toLocaleString(locale === 'he' ? 'he-IL' : locale)})
+                {coveragePercent}% (
+                {totals.classified.toLocaleString(
+                  locale === 'he' ? 'he-IL' : locale,
+                )}{' '}
+                /{' '}
+                {totals.eligible.toLocaleString(
+                  locale === 'he' ? 'he-IL' : locale,
+                )}
+                )
               </span>
             </div>
             <div className="h-2 w-full overflow-hidden rounded-full bg-blue-200 dark:bg-blue-900">
               <div
-                className="h-full rounded-full bg-blue-600 dark:bg-blue-400 transition-all"
+                className="h-full rounded-full bg-blue-600 transition-all dark:bg-blue-400"
                 style={{ width: `${coveragePercent}%` }}
               />
             </div>
           </div>
 
           {/* Per-knesset breakdown */}
-          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {progressRows.map((row) => {
               const pct =
                 row.total_eligible > 0
@@ -108,7 +116,7 @@ export default async function StanceProgressBanner() {
                       />
                     </div>
                   </div>
-                  <span className="text-xs tabular-nums font-medium text-blue-800 dark:text-blue-200">
+                  <span className="text-xs font-medium text-blue-800 tabular-nums dark:text-blue-200">
                     {pct}%
                   </span>
                   {row.reservation_count > 0 && (
@@ -117,7 +125,9 @@ export default async function StanceProgressBanner() {
                         <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
                       </TooltipTrigger>
                       <TooltipContent>
-                        {t('reservationsDeferred', { count: row.reservation_count })}
+                        {t('reservationsDeferred', {
+                          count: row.reservation_count,
+                        })}
                       </TooltipContent>
                     </Tooltip>
                   )}

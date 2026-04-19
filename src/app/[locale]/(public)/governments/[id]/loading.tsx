@@ -60,7 +60,7 @@ export default function GovernmentDetailLoading() {
             <div className="bg-muted h-5 w-20 animate-pulse rounded" />
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {Array.from({ length: 9 }).map((_, i) => (
                 <div key={i} className="space-y-2 rounded-lg border p-3">
                   <div className="bg-muted h-4 w-32 animate-pulse rounded" />
@@ -110,7 +110,7 @@ export default function GovernmentDetailLoading() {
             <div className="bg-muted h-5 w-36 animate-pulse rounded" />
           </CardHeader>
           <CardContent>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {Array.from({ length: 6 }).map((_, i) => (
                 <div
                   key={i}

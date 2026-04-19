@@ -18,7 +18,10 @@ export default async function AIReviewPage() {
       .where(
         and(
           eq(billClusters.aiProcessed, true),
-          lt(billClusters.aiConfidence, appConfig.billClusters.aiConfidenceThreshold),
+          lt(
+            billClusters.aiConfidence,
+            appConfig.billClusters.aiConfidenceThreshold,
+          ),
         ),
       ),
     db
@@ -45,29 +48,27 @@ export default async function AIReviewPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Brain className="h-7 w-7 text-primary" />
+        <Brain className="text-primary h-7 w-7" />
         <h1 className="text-2xl font-bold">{t('title')}</h1>
       </div>
 
       <p className="text-muted-foreground">{t('description')}</p>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {reviewSections.map(({ key, href, icon: Icon, pending }) => (
           <Link key={key} href={href}>
-            <Card className="transition-colors hover:border-primary/50">
+            <Card className="hover:border-primary/50 transition-colors">
               <CardContent className="flex items-center gap-4 p-6">
-                <div className="rounded-lg bg-primary/10 p-3">
-                  <Icon className="h-6 w-6 text-primary" />
+                <div className="bg-primary/10 rounded-lg p-3">
+                  <Icon className="text-primary h-6 w-6" />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold">{t(`sections.${key}`)}</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-muted-foreground text-sm">
                     {t(`sections.${key}Description`)}
                   </p>
                 </div>
-                {pending > 0 && (
-                  <Badge variant="destructive">{pending}</Badge>
-                )}
+                {pending > 0 && <Badge variant="destructive">{pending}</Badge>}
               </CardContent>
             </Card>
           </Link>

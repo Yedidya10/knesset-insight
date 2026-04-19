@@ -105,7 +105,7 @@ export default function PolicyDetailClient({
     : null;
 
   return (
-    <div className="mx-auto max-w-7xl overflow-hidden px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       {/* Header */}
       <div className="mb-8 flex items-center gap-3">
         <div className="bg-primary/10 ring-primary/20 flex h-14 w-14 items-center justify-center rounded-2xl ring-1">
@@ -165,7 +165,7 @@ export default function PolicyDetailClient({
                 <h2 className="text-muted-foreground mb-3 text-sm font-semibold tracking-wider uppercase">
                   {t(`tier.${tier.level}`)}
                 </h2>
-                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                   {tier.items.map((mk) => (
                     <Link key={mk.memberId} href={`/members/${mk.memberId}`}>
                       <Card className="hover-lift">
@@ -234,7 +234,7 @@ export default function PolicyDetailClient({
                 <h2 className="text-muted-foreground mb-3 text-sm font-semibold tracking-wider uppercase">
                   {t(`tier.${tier.level}`)}
                 </h2>
-                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                   {tier.items.map((faction) => (
                     <Card key={faction.factionId} className="hover-lift">
                       <CardContent className="space-y-2.5 p-4">

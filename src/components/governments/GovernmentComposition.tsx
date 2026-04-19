@@ -372,7 +372,7 @@ export default function GovernmentComposition({
                 <CardTitle className="text-base">{t('ministers')}</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {sortedMinistries.map(([ministryName, holders]) => (
                     <div
                       key={ministryName}
@@ -422,7 +422,7 @@ export default function GovernmentComposition({
             <CardTitle className="text-base">{t('ministers')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {sortedPersons.map((person) => (
                 <PersonCard
                   key={person.memberId ?? person.name}

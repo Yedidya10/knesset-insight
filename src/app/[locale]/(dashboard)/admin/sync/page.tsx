@@ -9,7 +9,10 @@ import { Badge } from '@/components/ui/badge';
 export default async function AdminSyncPage() {
   const t = await getTranslations('admin.sync');
 
-  const entries = await db.select().from(syncLog).orderBy(desc(syncLog.lastSyncAt));
+  const entries = await db
+    .select()
+    .from(syncLog)
+    .orderBy(desc(syncLog.lastSyncAt));
 
   const successCount = entries.filter((e) => e.status === 'success').length;
   const failedCount = entries.filter((e) => e.status === 'failed').length;
@@ -17,16 +20,18 @@ export default async function AdminSyncPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <Database className="h-7 w-7 text-primary" />
+        <Database className="text-primary h-7 w-7" />
         <h1 className="text-2xl font-bold">{t('title')}</h1>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card>
           <CardContent className="flex items-center gap-3 p-4">
             <Database className="h-5 w-5 text-blue-500" />
             <div>
-              <p className="text-sm text-muted-foreground">{t('totalEntities')}</p>
+              <p className="text-muted-foreground text-sm">
+                {t('totalEntities')}
+              </p>
               <p className="text-xl font-bold">{entries.length}</p>
             </div>
           </CardContent>
@@ -35,7 +40,7 @@ export default async function AdminSyncPage() {
           <CardContent className="flex items-center gap-3 p-4">
             <CheckCircle2 className="h-5 w-5 text-green-500" />
             <div>
-              <p className="text-sm text-muted-foreground">{t('successful')}</p>
+              <p className="text-muted-foreground text-sm">{t('successful')}</p>
               <p className="text-xl font-bold">{successCount}</p>
             </div>
           </CardContent>
@@ -44,7 +49,7 @@ export default async function AdminSyncPage() {
           <CardContent className="flex items-center gap-3 p-4">
             <XCircle className="h-5 w-5 text-red-500" />
             <div>
-              <p className="text-sm text-muted-foreground">{t('failed')}</p>
+              <p className="text-muted-foreground text-sm">{t('failed')}</p>
               <p className="text-xl font-bold">{failedCount}</p>
             </div>
           </CardContent>
@@ -57,7 +62,7 @@ export default async function AdminSyncPage() {
         </CardHeader>
         <CardContent>
           {entries.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t('noData')}</p>
+            <p className="text-muted-foreground text-sm">{t('noData')}</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -74,7 +79,7 @@ export default async function AdminSyncPage() {
                   {entries.map((entry) => (
                     <tr key={entry.id} className="border-b">
                       <td className="p-2 font-mono text-xs">{entry.entity}</td>
-                      <td className="p-2 text-muted-foreground">
+                      <td className="text-muted-foreground p-2">
                         {new Date(entry.lastSyncAt).toLocaleString()}
                       </td>
                       <td className="p-2">
@@ -83,13 +88,15 @@ export default async function AdminSyncPage() {
                       <td className="p-2">
                         <Badge
                           variant={
-                            entry.status === 'success' ? 'default' : 'destructive'
+                            entry.status === 'success'
+                              ? 'default'
+                              : 'destructive'
                           }
                         >
                           {entry.status}
                         </Badge>
                       </td>
-                      <td className="p-2 max-w-xs truncate text-xs text-muted-foreground">
+                      <td className="text-muted-foreground max-w-xs truncate p-2 text-xs">
                         {entry.errorMessage ?? '—'}
                       </td>
                     </tr>
