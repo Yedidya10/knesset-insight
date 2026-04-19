@@ -138,3 +138,17 @@ This extends beyond form elements. Always prefer the project's UI components:
 | `<dialog>` / custom modals     | `<Dialog>` from `@/components/ui/dialog`                                             |
 
 **Exception**: The small inline `<button>` used to clear a search input's X icon is acceptable (see `LegislationFilter.tsx`).
+
+## Mobile-first responsive checklist
+
+Every component and page must pass this checklist before being considered complete:
+
+1. **Flex containers**: Text-bearing children have `min-w-0`; fixed-width children have `shrink-0`.
+2. **Dynamic text**: Has `truncate` or `line-clamp-N` — especially in `flex` / `grid` cells. Hebrew and Arabic text is often 20-40% longer than English.
+3. **Tables**: Wrapped in `<div className="overflow-x-auto">`.
+4. **Grids**: Start at 1 column on mobile (`grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`).
+5. **Horizontal pipelines/steppers**: Wrapped in `overflow-x-auto` if using inline `minWidth` or `style` widths.
+6. **`justify-between` rows**: Start element has `min-w-0 flex-1 truncate`; end element has `shrink-0`.
+7. **Images/avatars**: Use `shrink-0` and explicit `h-*` / `w-*`.
+8. **No bare inline `style={{ width }}` or `style={{ minWidth }}`** without an `overflow-x-auto` ancestor.
+9. **Test at 320px, 375px, 412px** widths — not only desktop.

@@ -68,6 +68,7 @@ For domain-specific rules, see the files in `.github/instructions/` — each is 
 - Ensure WCAG 2.1 AA accessibility
 - **When adding or changing content in a page/component, always update its corresponding `loading.tsx` skeleton** to match the new structure. The skeleton must reflect the real layout so users see a coherent loading state.
 - **No duplicate UI elements** — never render the same visual component (e.g. a stage pipeline / stepper) twice on a page in different sections. If a component needs both display and interaction (e.g. stage stepper + vote drill-down), use a single interactive component that serves both purposes. Related data (e.g. votes) should be listed separately without duplicating the parent navigation.
+- **Mobile-first responsive** — all layouts must work from 320px. Use `min-w-0` on text flex children, `shrink-0` on fixed elements, `truncate`/`line-clamp-N` on dynamic text, `overflow-x-auto` on tables and horizontal steppers. See `ui-consistency.instructions.md` for the full checklist.
 
 ## When Writing API Endpoints
 

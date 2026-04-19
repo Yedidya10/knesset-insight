@@ -68,6 +68,7 @@ Read: `components.instructions.md` + `ui-consistency.instructions.md` + `styling
 - Ensure WCAG 2.1 AA accessibility
 - **When adding or changing content in a page/component, always update its corresponding `loading.tsx` skeleton** to match the new structure
 - **No duplicate UI elements** — never render the same visual component twice on a page in different sections
+- **Mobile-first responsive** — all layouts must work from 320px. Use `min-w-0` on text flex children, `shrink-0` on fixed elements, `truncate`/`line-clamp-N` on dynamic text, `overflow-x-auto` on tables and horizontal steppers
 
 ## When Writing API Endpoints
 
