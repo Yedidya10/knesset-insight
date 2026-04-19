@@ -67,7 +67,10 @@ export default async function PartyDetailPage({ params }: Props) {
       seats: electoralLists.seats,
     })
     .from(electoralListParties)
-    .innerJoin(electoralLists, eq(electoralListParties.electoralListId, electoralLists.id))
+    .innerJoin(
+      electoralLists,
+      eq(electoralListParties.electoralListId, electoralLists.id),
+    )
     .where(eq(electoralListParties.partyId, partyId));
 
   return (
@@ -83,7 +86,9 @@ export default async function PartyDetailPage({ params }: Props) {
       {/* Header */}
       <div className="mb-8">
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{p.name}</h1>
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+            {p.name}
+          </h1>
           <Badge variant={p.type === 'party' ? 'default' : 'secondary'}>
             {p.type === 'party' ? t('typeParty') : t('typeMovement')}
           </Badge>
@@ -93,9 +98,10 @@ export default async function PartyDetailPage({ params }: Props) {
             </Badge>
           )}
         </div>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="text-muted-foreground mt-1 text-sm">
           {t('registrarNumber')}: {p.registrarNumber}
-          {p.registrationYear && ` · ${t('registrationYear')}: ${p.registrationYear}`}
+          {p.registrationYear &&
+            ` · ${t('registrationYear')}: ${p.registrationYear}`}
         </p>
       </div>
 
@@ -109,7 +115,9 @@ export default async function PartyDetailPage({ params }: Props) {
                 <CardTitle>{t('goals')}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="whitespace-pre-wrap text-sm leading-relaxed">{p.goals}</p>
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                  {p.goals}
+                </p>
               </CardContent>
             </Card>
           )}
@@ -128,17 +136,17 @@ export default async function PartyDetailPage({ params }: Props) {
                       href={report.pdfUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50"
+                      className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-3 transition-colors"
                     >
                       <div>
                         <span className="font-medium">{report.year}</span>
-                        <span className="ms-2 text-sm text-muted-foreground">
+                        <span className="text-muted-foreground ms-2 text-sm">
                           {report.reportType === 'financial'
                             ? t('reportTypeFinancial')
                             : t('reportTypeAssets')}
                         </span>
                       </div>
-                      <Download className="h-4 w-4 text-muted-foreground" />
+                      <Download className="text-muted-foreground h-4 w-4" />
                     </a>
                   ))}
                 </div>
@@ -161,13 +169,14 @@ export default async function PartyDetailPage({ params }: Props) {
                     <Link
                       key={faction.id}
                       href={`/factions/${faction.id}`}
-                      className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50"
+                      className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-3 transition-colors"
                     >
                       <span className="font-medium">{faction.name}</span>
                       <div className="flex items-center gap-2">
                         {faction.knessetNum && (
                           <Badge variant="outline">
-                            {t('registrationYear').split(' ')[0]} {faction.knessetNum}
+                            {t('registrationYear').split(' ')[0]}{' '}
+                            {faction.knessetNum}
                           </Badge>
                         )}
                         {faction.isCurrent && <Badge>Active</Badge>}
@@ -194,11 +203,11 @@ export default async function PartyDetailPage({ params }: Props) {
                     <Link
                       key={list.id}
                       href={`/elections/${list.id}`}
-                      className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50"
+                      className="hover:bg-muted/50 flex items-center justify-between rounded-lg border p-3 transition-colors"
                     >
                       <div>
                         <span className="font-medium">{list.name}</span>
-                        <span className="ms-2 text-sm text-muted-foreground">
+                        <span className="text-muted-foreground ms-2 text-sm">
                           ({list.ballotLetters})
                         </span>
                       </div>
@@ -223,25 +232,31 @@ export default async function PartyDetailPage({ params }: Props) {
               <CardContent className="space-y-3">
                 {p.phone && (
                   <div className="flex items-center gap-2 text-sm">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
-                    <a href={`tel:${p.phone}`} className="hover:underline">{p.phone}</a>
+                    <Phone className="text-muted-foreground h-4 w-4" />
+                    <a href={`tel:${p.phone}`} className="hover:underline">
+                      {p.phone}
+                    </a>
                   </div>
                 )}
                 {p.fax && (
                   <div className="flex items-center gap-2 text-sm">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
-                    <span>{t('fax')}: {p.fax}</span>
+                    <Phone className="text-muted-foreground h-4 w-4" />
+                    <span>
+                      {t('fax')}: {p.fax}
+                    </span>
                   </div>
                 )}
                 {p.email && (
                   <div className="flex items-center gap-2 text-sm">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <a href={`mailto:${p.email}`} className="hover:underline">{p.email}</a>
+                    <Mail className="text-muted-foreground h-4 w-4" />
+                    <a href={`mailto:${p.email}`} className="hover:underline">
+                      {p.email}
+                    </a>
                   </div>
                 )}
                 {p.address && (
                   <div className="flex items-start gap-2 text-sm">
-                    <MapPin className="mt-0.5 h-4 w-4 text-muted-foreground" />
+                    <MapPin className="text-muted-foreground mt-0.5 h-4 w-4" />
                     <span>{p.address}</span>
                   </div>
                 )}

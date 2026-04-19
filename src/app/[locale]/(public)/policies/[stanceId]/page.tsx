@@ -52,7 +52,7 @@ export default async function PolicyDetailPage({ params }: Props) {
   const id = Number(stanceId);
   if (isNaN(id)) notFound();
 
-  const locale = await getLocale() as 'he' | 'en' | 'ar' | 'ru';
+  const locale = (await getLocale()) as 'he' | 'en' | 'ar' | 'ru';
   const tNav = await getTranslations('nav');
   const minVotes = appConfig.policyStances.minVotesForScore;
 
@@ -389,7 +389,7 @@ export default async function PolicyDetailPage({ params }: Props) {
 
   return (
     <>
-      <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6">
+      <div className="mx-auto max-w-7xl px-4 pt-8 pb-0 sm:px-6">
         <AppBreadcrumb
           items={[
             { label: tNav('home'), href: '/' },
@@ -399,29 +399,29 @@ export default async function PolicyDetailPage({ params }: Props) {
         />
       </div>
       <PolicyDetailClient
-      stance={{
-        id: stance.id,
-        label: stance.label as Record<string, string>,
-        description: stance.description as Record<string, string> | null,
-        domain: stance.domain,
-        stanceType: stance.stanceType,
-        voteCount: stance.voteCount,
-      }}
-      memberTiers={memberTiers}
-      factionTiers={factionTiers}
-      relevantVotes={relevantVotes.map((v) => ({
-        voteId: v.voteId,
-        title: v.title,
-        voteDate: v.voteDate?.toISOString() ?? null,
-        isAccepted: v.isAccepted,
-        forCount: v.forCount,
-        againstCount: v.againstCount,
-        alignment: v.alignment,
-        proPosition: v.proPosition as Record<string, string> | null,
-        billId: v.billId,
-      }))}
-      initialView="members"
-    />
+        stance={{
+          id: stance.id,
+          label: stance.label as Record<string, string>,
+          description: stance.description as Record<string, string> | null,
+          domain: stance.domain,
+          stanceType: stance.stanceType,
+          voteCount: stance.voteCount,
+        }}
+        memberTiers={memberTiers}
+        factionTiers={factionTiers}
+        relevantVotes={relevantVotes.map((v) => ({
+          voteId: v.voteId,
+          title: v.title,
+          voteDate: v.voteDate?.toISOString() ?? null,
+          isAccepted: v.isAccepted,
+          forCount: v.forCount,
+          againstCount: v.againstCount,
+          alignment: v.alignment,
+          proPosition: v.proPosition as Record<string, string> | null,
+          billId: v.billId,
+        }))}
+        initialView="members"
+      />
     </>
   );
 }

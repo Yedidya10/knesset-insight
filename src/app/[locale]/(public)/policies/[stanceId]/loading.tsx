@@ -2,7 +2,7 @@ export default function PolicyDetailLoading() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       {/* Breadcrumb */}
-      <div className="mb-6 h-5 w-48 animate-pulse rounded bg-muted" />
+      <div className="bg-muted mb-6 h-5 w-48 animate-pulse rounded" />
 
       <div className="mb-8 flex items-center gap-3">
         <div className="bg-muted h-14 w-14 shrink-0 animate-pulse rounded-2xl" />

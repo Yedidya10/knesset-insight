@@ -94,6 +94,14 @@ export default async function Elections2026Page() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+      <AppBreadcrumb
+        items={[
+          { label: tNav('home'), href: '/' },
+          { label: tNav('elections'), href: '/elections' },
+          { label: '2026' },
+        ]}
+      />
+
       {/* Header */}
       <div className="mb-8 flex items-center gap-3">
         <div className="bg-primary/10 ring-primary/20 flex h-14 w-14 items-center justify-center rounded-2xl ring-1">
@@ -106,14 +114,6 @@ export default async function Elections2026Page() {
           <p className="text-muted-foreground text-sm">{t('description')}</p>
         </div>
       </div>
-
-      <AppBreadcrumb
-        items={[
-          { label: tNav('home'), href: '/' },
-          { label: tNav('elections'), href: '/elections' },
-          { label: '2026' },
-        ]}
-      />
 
       {/* Countdown */}
       <div className="mb-8">

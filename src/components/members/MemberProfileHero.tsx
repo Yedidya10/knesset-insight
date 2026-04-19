@@ -1,8 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { Link } from '@/i18n/navigation';
-import { Building2, Mail, Phone, ArrowRight } from 'lucide-react';
+import { Building2, Mail, Phone } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import MemberAvatar from '@/components/members/MemberAvatar';
 
 interface MemberProfileHeroProps {
@@ -25,7 +24,6 @@ export default async function MemberProfileHero({
   member,
 }: MemberProfileHeroProps) {
   const t = await getTranslations('members.profile');
-  const tCommon = await getTranslations('common');
 
   return (
     <section className="relative overflow-hidden rounded-2xl">
@@ -33,18 +31,7 @@ export default async function MemberProfileHero({
       <div className="from-primary/20 via-chart-2/10 to-chart-4/10 absolute inset-0 bg-gradient-to-br" />
       <div className="from-background/80 to-background/40 absolute inset-0 bg-gradient-to-t" />
 
-      <div className="relative px-6 pt-4 pb-6">
-        {/* Back button */}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="mb-4 gap-1.5 rounded-lg"
-          render={<Link href="/members" />}
-        >
-          <ArrowRight className="h-4 w-4 rtl:rotate-180" />
-          {tCommon('back')}
-        </Button>
-
+      <div className="relative px-6 pt-6 pb-6">
         {/* Hero content */}
         <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-end sm:gap-6">
           {/* Avatar with glow */}
