@@ -8,7 +8,15 @@ import type { FilterFieldConfig, SortOption } from '@/components/filters';
 
 const KNESSET_NUMBERS = [25, 24, 23, 22, 21, 20];
 
-export default function VotesFilter() {
+interface VotesFilterProps {
+  factions: Array<{ id: number; name: string }>;
+  currentMembers: Array<{ id: number; name: string }>;
+}
+
+export default function VotesFilter({
+  factions,
+  currentMembers,
+}: VotesFilterProps) {
   const t = useTranslations('votes');
 
   const fields: FilterFieldConfig[] = useMemo(
@@ -46,15 +54,17 @@ export default function VotesFilter() {
       },
       // ── Advanced filters (shown in FilterSheet) ──
       {
-        key: 'date',
-        type: 'range' as const,
-        label: t('filter.dateRange'),
-        inputType: 'date' as const,
-        fromKey: 'dateFrom',
-        toKey: 'dateTo',
-        fromPlaceholder: t('filter.dateFrom'),
-        toPlaceholder: t('filter.dateTo'),
+        key: 'activityType',
+        type: 'select' as const,
+        label: t('filter.activityType'),
         group: t('filter.advancedGroup'),
+        options: [
+          { value: '_all', label: t('filter.allActivities') },
+          { value: 'bill', label: t('filter.activityBill') },
+          { value: 'noConfidence', label: t('filter.activityNoConfidence') },
+          { value: 'agenda', label: t('filter.activityAgenda') },
+          { value: 'plenary', label: t('filter.activityPlenary') },
+        ],
       },
       {
         key: 'voteType',
@@ -64,9 +74,60 @@ export default function VotesFilter() {
         options: [
           { value: '_all', label: t('filter.allMethods') },
           { value: '1', label: t('filter.methodElectronic') },
-          { value: '2', label: t('filter.methodHandRaise') },
-          { value: '3', label: t('filter.methodRollCall') },
+          { value: '2', label: t('filter.methodByName') },
+          { value: '3', label: t('filter.methodSecret') },
+          { value: '4', label: t('filter.methodHandRaise') },
         ],
+      },
+      {
+        key: 'factionId',
+        type: 'select' as const,
+        label: t('filter.faction'),
+        group: t('filter.advancedGroup'),
+        options: [
+          { value: '_all', label: t('filter.allFactions') },
+          ...factions.map((f) => ({
+            value: String(f.id),
+            label: f.name,
+          })),
+        ],
+      },
+      {
+        key: 'memberId',
+        type: 'select' as const,
+        label: t('filter.votingMember'),
+        group: t('filter.advancedGroup'),
+        options: [
+          { value: '_all', label: t('filter.allMembers') },
+          ...currentMembers.map((m) => ({
+            value: String(m.id),
+            label: m.name,
+          })),
+        ],
+      },
+      {
+        key: 'voteDirection',
+        type: 'select' as const,
+        label: t('filter.voteDirection'),
+        group: t('filter.advancedGroup'),
+        options: [
+          { value: '_all', label: t('filter.allDirections') },
+          { value: 'for', label: t('filter.directionFor') },
+          { value: 'against', label: t('filter.directionAgainst') },
+          { value: 'present', label: t('filter.directionPresent') },
+          { value: 'abstain', label: t('filter.directionAbstain') },
+        ],
+      },
+      {
+        key: 'date',
+        type: 'range' as const,
+        label: t('filter.dateRange'),
+        inputType: 'date' as const,
+        fromKey: 'dateFrom',
+        toKey: 'dateTo',
+        fromPlaceholder: t('filter.dateFrom'),
+        toPlaceholder: t('filter.dateTo'),
+        group: t('filter.advancedGroup'),
       },
       {
         key: 'stage',
@@ -89,7 +150,7 @@ export default function VotesFilter() {
         group: t('filter.advancedGroup'),
       },
     ],
-    [t],
+    [t, factions, currentMembers],
   );
 
   const sortOptions: SortOption[] = useMemo(

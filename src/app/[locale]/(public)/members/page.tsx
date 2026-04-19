@@ -12,6 +12,8 @@ import {
   factionCoalitionPeriods,
   memberVotes,
   votes,
+  committees,
+  committeeMembers,
 } from '@/lib/db/schema';
 import MemberCard from '@/components/members/MemberCard';
 import MembersFilter from '@/components/members/MembersFilter';
@@ -41,6 +43,7 @@ interface Props {
     gender?: string;
     details?: string;
     page?: string;
+    committee?: string;
   }>;
 }
 
@@ -58,6 +61,7 @@ export default async function MembersPage({ searchParams }: Props) {
   const coalitionFilter = params.coalition ?? '';
   const genderFilter = params.gender ?? '';
   const showDetails = params.details === 'true';
+  const committeeFilter = params.committee ?? '';
 
   // Get available knesset numbers from faction history (complete) + factions (current)
   const knessetNums = await db
@@ -165,6 +169,13 @@ export default async function MembersPage({ searchParams }: Props) {
       .map((f) => ({ id: f.id, name: f.name }));
   }
 
+  // Fetch committees for the advanced filter
+  const committeeList = await db
+    .select({ id: committees.id, name: committees.name })
+    .from(committees)
+    .where(eq(committees.isActive, true))
+    .orderBy(committees.name);
+
   // Build member conditions
   const conditions = [];
 
@@ -258,6 +269,13 @@ export default async function MembersPage({ searchParams }: Props) {
           `%${searchQuery}%`,
         ),
       ),
+    );
+  }
+
+  // Committee membership filter
+  if (committeeFilter) {
+    conditions.push(
+      sql`EXISTS (SELECT 1 FROM committee_members cm WHERE cm.member_id = ${members.id} AND cm.committee_id = ${Number(committeeFilter)})`,
     );
   }
 
@@ -419,6 +437,7 @@ export default async function MembersPage({ searchParams }: Props) {
             knessetNumbers={availableKnessets}
             currentKnessetNumber={currentKnesset}
             showDetails={showDetails}
+            committees={committeeList}
           />
         </Suspense>
       </div>

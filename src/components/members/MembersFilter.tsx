@@ -20,6 +20,7 @@ interface MembersFilterProps {
   knessetNumbers: number[];
   currentKnessetNumber: number;
   showDetails: boolean;
+  committees: Array<{ id: number; name: string }>;
 }
 
 export default function MembersFilter({
@@ -27,6 +28,7 @@ export default function MembersFilter({
   knessetNumbers,
   currentKnessetNumber,
   showDetails,
+  committees,
 }: MembersFilterProps) {
   const t = useTranslations('members.filter');
 
@@ -74,8 +76,22 @@ export default function MembersFilter({
           { value: 'female', label: t('genderFemale') },
         ],
       },
+      // ── Advanced filters (shown in FilterSheet) ──
+      {
+        key: 'committee',
+        type: 'select' as const,
+        label: t('committee'),
+        group: t('advancedGroup'),
+        options: [
+          { value: '_all', label: t('allCommittees') },
+          ...committees.map((c) => ({
+            value: String(c.id),
+            label: c.name,
+          })),
+        ],
+      },
     ],
-    [t, factions],
+    [t, factions, committees],
   );
 
   const sortOptions: SortOption[] = useMemo(

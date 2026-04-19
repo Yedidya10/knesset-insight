@@ -1,10 +1,22 @@
 import { getTranslations } from 'next-intl/server';
 import type { Metadata } from 'next';
 import { Vote, Check, X } from 'lucide-react';
-import { desc, asc, eq, sql, ilike, and, gte, lte } from 'drizzle-orm';
+import {
+  desc,
+  asc,
+  eq,
+  sql,
+  ilike,
+  and,
+  gte,
+  lte,
+  isNull,
+  isNotNull,
+  not,
+} from 'drizzle-orm';
 import { Link } from '@/i18n/navigation';
 import { db } from '@/lib/db';
-import { votes } from '@/lib/db/schema';
+import { votes, members, memberVotes, factions } from '@/lib/db/schema';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import PaginationNav from '@/components/ui/pagination-nav';
@@ -31,6 +43,10 @@ interface Props {
     voteType?: string;
     stage?: string;
     reservation?: string;
+    activityType?: string;
+    factionId?: string;
+    memberId?: string;
+    voteDirection?: string;
   }>;
 }
 
@@ -52,7 +68,29 @@ export default async function VotesPage({ searchParams }: Props) {
   const voteType = params.voteType ?? '';
   const stage = params.stage ?? '';
   const reservation = params.reservation ?? '';
+  const activityType = params.activityType ?? '';
+  const factionId = params.factionId ?? '';
+  const memberId = params.memberId ?? '';
+  const voteDirection = params.voteDirection ?? '';
 
+  // ── Fetch filter option data ──
+  const [factionList, memberList] = await Promise.all([
+    db
+      .select({ id: factions.id, name: factions.name })
+      .from(factions)
+      .where(eq(factions.isCurrent, true))
+      .orderBy(factions.name),
+    db
+      .select({
+        id: members.id,
+        name: sql<string>`${members.firstName} || ' ' || ${members.lastName}`,
+      })
+      .from(members)
+      .where(eq(members.isCurrent, true))
+      .orderBy(members.lastName, members.firstName),
+  ]);
+
+  // ── Build WHERE conditions ──
   const conditions = [];
   if (searchQuery) {
     conditions.push(ilike(votes.title, `%${searchQuery}%`));
@@ -79,6 +117,41 @@ export default async function VotesPage({ searchParams }: Props) {
   }
   if (reservation === 'true') {
     conditions.push(eq(votes.isReservation, true));
+  }
+  // Parliamentary activity type (derived from existing data)
+  if (activityType === 'bill') {
+    conditions.push(isNotNull(votes.billId));
+  } else if (activityType === 'noConfidence') {
+    conditions.push(ilike(votes.title, '%אי אמון%'));
+  } else if (activityType === 'agenda') {
+    conditions.push(ilike(votes.title, '%סדר היום%'));
+  } else if (activityType === 'plenary') {
+    conditions.push(isNull(votes.billId));
+    conditions.push(not(ilike(votes.title, '%אי אמון%')));
+    conditions.push(not(ilike(votes.title, '%סדר היום%')));
+  }
+  // Member-level filters (faction / member / vote direction)
+  if (memberId || voteDirection || factionId) {
+    const subParts = [sql`mv.vote_id = ${votes.id}`];
+    if (memberId) {
+      subParts.push(sql`mv.member_id = ${Number(memberId)}`);
+    }
+    if (voteDirection) {
+      subParts.push(sql`mv.vote_value = ${voteDirection}`);
+    }
+    if (factionId) {
+      subParts.push(sql`m.faction_id = ${Number(factionId)}`);
+    }
+    const subWhere = sql.join(subParts, sql` AND `);
+    if (factionId) {
+      conditions.push(
+        sql`EXISTS (SELECT 1 FROM member_votes mv JOIN members m ON mv.member_id = m.id WHERE ${subWhere})`,
+      );
+    } else {
+      conditions.push(
+        sql`EXISTS (SELECT 1 FROM member_votes mv WHERE ${subWhere})`,
+      );
+    }
   }
 
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
@@ -146,7 +219,7 @@ export default async function VotesPage({ searchParams }: Props) {
 
       {/* Filters */}
       <div className="mb-6">
-        <VotesFilter />
+        <VotesFilter factions={factionList} currentMembers={memberList} />
       </div>
 
       {/* Results */}
