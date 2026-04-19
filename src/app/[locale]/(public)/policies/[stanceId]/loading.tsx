@@ -1,12 +1,12 @@
 export default function PolicyDetailLoading() {
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-7xl overflow-hidden px-4 py-8 sm:px-6">
       <div className="mb-8 flex items-center gap-3">
-        <div className="bg-muted h-14 w-14 animate-pulse rounded-2xl" />
-        <div className="space-y-2">
-          <div className="bg-muted h-7 w-64 animate-pulse rounded" />
-          <div className="bg-muted h-4 w-40 animate-pulse rounded" />
-          <div className="bg-muted h-4 w-96 animate-pulse rounded" />
+        <div className="bg-muted h-14 w-14 shrink-0 animate-pulse rounded-2xl" />
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="bg-muted h-7 w-64 max-w-full animate-pulse rounded" />
+          <div className="bg-muted h-4 w-40 max-w-full animate-pulse rounded" />
+          <div className="bg-muted h-4 w-96 max-w-full animate-pulse rounded" />
         </div>
       </div>
       <div className="mb-6 flex gap-2">

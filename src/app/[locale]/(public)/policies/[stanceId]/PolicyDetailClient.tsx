@@ -105,13 +105,13 @@ export default function PolicyDetailClient({
     : null;
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+    <div className="mx-auto max-w-7xl overflow-hidden px-4 py-8 sm:px-6">
       {/* Header */}
       <div className="mb-8 flex items-center gap-3">
         <div className="bg-primary/10 ring-primary/20 flex h-14 w-14 items-center justify-center rounded-2xl ring-1">
           <Target className="text-primary h-7 w-7" />
         </div>
-        <div>
+        <div className="min-w-0 flex-1">
           <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
             {label}
           </h1>
