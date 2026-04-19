@@ -3,6 +3,9 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 export default function MemberProfileLoading() {
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-4 py-8 sm:px-6">
+      {/* Breadcrumb skeleton */}
+      <div className="bg-muted mb-4 h-4 w-48 animate-pulse rounded" />
+
       {/* Hero banner skeleton */}
       <section className="relative overflow-hidden rounded-2xl">
         <div className="bg-muted/50 h-48 animate-pulse" />

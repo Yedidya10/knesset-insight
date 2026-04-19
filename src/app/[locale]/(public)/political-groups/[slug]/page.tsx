@@ -8,9 +8,9 @@ import {
   politicalGroupLineage,
   factions,
 } from '@/lib/db/schema';
+import AppBreadcrumb from '@/components/layout/AppBreadcrumb';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Link } from '@/i18n/navigation';
 import TranslatedText from '@/components/ui/translated-text';
 
@@ -29,6 +29,7 @@ export default async function PoliticalGroupDetailPage({ params }: Props) {
   const { slug } = await params;
   const t = await getTranslations('politicalGroups');
   const tCommon = await getTranslations('common');
+  const tNav = await getTranslations('nav');
 
   const [group] = await db
     .select()
@@ -104,14 +105,13 @@ export default async function PoliticalGroupDetailPage({ params }: Props) {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-      <Button
-        variant="ghost"
-        size="sm"
-        className="mb-6"
-        render={<Link href="/politics?tab=groups" />}
-      >
-        {t('backToList')}
-      </Button>
+      <AppBreadcrumb
+        items={[
+          { label: tNav('home'), href: '/' },
+          { label: tNav('politics'), href: '/politics?tab=groups' },
+          { label: group.canonicalName },
+        ]}
+      />
 
       {/* Group header */}
       <Card className="glass-card mb-8 overflow-hidden">

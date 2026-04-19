@@ -4,6 +4,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 export default function CommitteeDetailLoading() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+      {/* Breadcrumb skeleton */}
+      <Skeleton className="mb-4 h-4 w-48" />
+
       {/* Header */}
       <div className="mb-8 flex items-start gap-4">
         <Skeleton className="h-14 w-14 shrink-0 rounded-2xl" />

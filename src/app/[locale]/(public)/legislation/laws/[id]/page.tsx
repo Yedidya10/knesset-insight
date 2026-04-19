@@ -14,17 +14,9 @@ import { computeBillStage } from '@/lib/knesset/bill-stages';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Button } from '@/components/ui/button';
 import { Link } from '@/i18n/navigation';
-import {
-  Layers,
-  Vote,
-  Users,
-  Calendar,
-  ArrowLeft,
-  Bot,
-  GitBranch,
-} from 'lucide-react';
+import { Layers, Vote, Users, Calendar, Bot, GitBranch } from 'lucide-react';
+import AppBreadcrumb from '@/components/layout/AppBreadcrumb';
 import { AIConfidenceBadge } from '@/components/legislation/AIConfidenceBadge';
 import { CrossTermTimeline } from '@/components/legislation/CrossTermTimeline';
 import { InteractiveStagePipeline } from '@/components/legislation/InteractiveStagePipeline';
@@ -40,6 +32,7 @@ export default async function ClusterDetailPage({ params }: Props) {
   const { id } = await params;
   const t = await getTranslations('legislation');
   const tCommon = await getTranslations('common');
+  const tNav = await getTranslations('nav');
 
   const clusterId = Number(id);
   if (isNaN(clusterId)) notFound();
@@ -110,7 +103,20 @@ export default async function ClusterDetailPage({ params }: Props) {
           .from(votes)
           .where(sql`${votes.billId} IN ${billIds}`)
           .orderBy(desc(votes.voteDate))
-      : Promise.resolve([] as { id: number; knessetId: number; title: string; voteDate: Date; billId: number | null; knessetNum: number | null; forCount: number | null; againstCount: number | null; abstainCount: number | null; isAccepted: boolean | null }[]),
+      : Promise.resolve(
+          [] as {
+            id: number;
+            knessetId: number;
+            title: string;
+            voteDate: Date;
+            billId: number | null;
+            knessetNum: number | null;
+            forCount: number | null;
+            againstCount: number | null;
+            abstainCount: number | null;
+            isAccepted: boolean | null;
+          }[],
+        ),
     billIds.length > 0
       ? db
           .select({
@@ -123,7 +129,15 @@ export default async function ClusterDetailPage({ params }: Props) {
           .from(billInitiators)
           .leftJoin(members, eq(billInitiators.memberId, members.id))
           .where(sql`${billInitiators.billId} IN ${billIds}`)
-      : Promise.resolve([] as { billId: number; memberId: number; firstName: string | null; lastName: string | null; isPrimary: boolean | null }[]),
+      : Promise.resolve(
+          [] as {
+            billId: number;
+            memberId: number;
+            firstName: string | null;
+            lastName: string | null;
+            isPrimary: boolean | null;
+          }[],
+        ),
   ]);
 
   // Build votes-by-bill lookup
@@ -143,8 +157,11 @@ export default async function ClusterDetailPage({ params }: Props) {
   }
 
   // Primary bill for interactive stage pipeline
-  const primaryBill = memberBills.find((b) => b.membership.isPrimary) ?? memberBills[0];
-  const primaryBillVotes = primaryBill ? (votesByBill.get(primaryBill.id) ?? []) : [];
+  const primaryBill =
+    memberBills.find((b) => b.membership.isPrimary) ?? memberBills[0];
+  const primaryBillVotes = primaryBill
+    ? (votesByBill.get(primaryBill.id) ?? [])
+    : [];
 
   // Cross-term timeline data
   const billsByKnesset = new Map<number, typeof memberBills>();
@@ -154,9 +171,10 @@ export default async function ClusterDetailPage({ params }: Props) {
     billsByKnesset.get(k)!.push(bill);
   }
   const knessetNums = [...billsByKnesset.keys()].filter((k) => k > 0).sort();
-  const knessetRange: [number, number] = knessetNums.length > 0
-    ? [knessetNums[0], knessetNums[knessetNums.length - 1]]
-    : [25, 25];
+  const knessetRange: [number, number] =
+    knessetNums.length > 0
+      ? [knessetNums[0], knessetNums[knessetNums.length - 1]]
+      : [25, 25];
 
   const timelineEntries = knessetNums.map((kNum) => ({
     knessetNum: kNum,
@@ -183,12 +201,19 @@ export default async function ClusterDetailPage({ params }: Props) {
     .map((b) => ({
       from: primaryBill?.id ?? memberBills[0]?.id ?? 0,
       to: b.id,
-      type: b.membership.relationshipType as 'union' | 'split' | 'name-similarity' | 'ai',
+      type: b.membership.relationshipType as
+        | 'union'
+        | 'split'
+        | 'name-similarity'
+        | 'ai',
       confidence: b.membership.confidence,
     }));
 
   // Aggregated initiators across all bills
-  const allInitiators = new Map<number, { firstName: string | null; lastName: string | null; bills: number[] }>();
+  const allInitiators = new Map<
+    number,
+    { firstName: string | null; lastName: string | null; bills: number[] }
+  >();
   for (const init of clusterInitiators) {
     if (!allInitiators.has(init.memberId)) {
       allInitiators.set(init.memberId, {
@@ -199,8 +224,9 @@ export default async function ClusterDetailPage({ params }: Props) {
     }
     allInitiators.get(init.memberId)!.bills.push(init.billId);
   }
-  const aggregatedInitiators = [...allInitiators.entries()]
-    .sort((a, b) => b[1].bills.length - a[1].bills.length);
+  const aggregatedInitiators = [...allInitiators.entries()].sort(
+    (a, b) => b[1].bills.length - a[1].bills.length,
+  );
 
   // Vote timeline data
   const timelineVotes = clusterVotes.map((v) => {
@@ -218,18 +244,21 @@ export default async function ClusterDetailPage({ params }: Props) {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-      <Button variant="ghost" size="sm" className="mb-6" render={<Link href="/legislation" />}>
-        <ArrowLeft className="me-1 h-4 w-4" />
-        {tCommon('back')}
-      </Button>
+      <AppBreadcrumb
+        items={[
+          { label: tNav('home'), href: '/' },
+          { label: tNav('legislation'), href: '/legislation' },
+          { label: cluster.name },
+        ]}
+      />
 
       {/* Section 1: Header */}
       <Card className="glass-card mb-6 overflow-hidden">
-        <div className="h-2 bg-gradient-to-r from-primary/40 via-chart-2/30 to-chart-4/30" />
+        <div className="from-primary/40 via-chart-2/30 to-chart-4/30 h-2 bg-gradient-to-r" />
         <CardContent className="p-6">
           <h1 className="text-xl font-bold sm:text-2xl">{cluster.name}</h1>
           {cluster.description && (
-            <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+            <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
               {cluster.description}
             </p>
           )}
@@ -244,9 +273,15 @@ export default async function ClusterDetailPage({ params }: Props) {
               <Badge variant="secondary">{cluster.billType}</Badge>
             )}
             {cluster.hasCrossTermBills && (
-              <Badge variant="outline" className="border-amber-300 text-amber-700 dark:border-amber-700 dark:text-amber-400">
+              <Badge
+                variant="outline"
+                className="border-amber-300 text-amber-700 dark:border-amber-700 dark:text-amber-400"
+              >
                 <Calendar className="me-1 h-3 w-3" />
-                {t('clusters.knessetRange', { from: knessetRange[0], to: knessetRange[1] })}
+                {t('clusters.knessetRange', {
+                  from: knessetRange[0],
+                  to: knessetRange[1],
+                })}
               </Badge>
             )}
             {cluster.aiProcessed && cluster.aiConfidence && (
@@ -259,24 +294,32 @@ export default async function ClusterDetailPage({ params }: Props) {
           {/* Quick stats */}
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             <div className="text-center">
-              <Layers className="mx-auto mb-1 h-5 w-5 text-primary" />
+              <Layers className="text-primary mx-auto mb-1 h-5 w-5" />
               <p className="text-lg font-bold">{cluster.billCount}</p>
-              <p className="text-xs text-muted-foreground">{t('clusters.billCount', { count: cluster.billCount ?? 0 })}</p>
+              <p className="text-muted-foreground text-xs">
+                {t('clusters.billCount', { count: cluster.billCount ?? 0 })}
+              </p>
             </div>
             <div className="text-center">
-              <Vote className="mx-auto mb-1 h-5 w-5 text-primary" />
+              <Vote className="text-primary mx-auto mb-1 h-5 w-5" />
               <p className="text-lg font-bold">{clusterVotes.length}</p>
-              <p className="text-xs text-muted-foreground">{t('clusters.voteCount', { count: clusterVotes.length })}</p>
+              <p className="text-muted-foreground text-xs">
+                {t('clusters.voteCount', { count: clusterVotes.length })}
+              </p>
             </div>
             <div className="text-center">
-              <Users className="mx-auto mb-1 h-5 w-5 text-primary" />
+              <Users className="text-primary mx-auto mb-1 h-5 w-5" />
               <p className="text-lg font-bold">{allInitiators.size}</p>
-              <p className="text-xs text-muted-foreground">{t('clusters.initiatorCount', { count: allInitiators.size })}</p>
+              <p className="text-muted-foreground text-xs">
+                {t('clusters.initiatorCount', { count: allInitiators.size })}
+              </p>
             </div>
             <div className="text-center">
-              <Calendar className="mx-auto mb-1 h-5 w-5 text-primary" />
+              <Calendar className="text-primary mx-auto mb-1 h-5 w-5" />
               <p className="text-lg font-bold">{knessetNums.length}</p>
-              <p className="text-xs text-muted-foreground">{t('clusters.crossTerm')}</p>
+              <p className="text-muted-foreground text-xs">
+                {t('clusters.crossTerm')}
+              </p>
             </div>
           </div>
         </CardContent>
@@ -287,7 +330,7 @@ export default async function ClusterDetailPage({ params }: Props) {
         <Card className="glass-card mb-6 overflow-hidden">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
-              <Calendar className="h-5 w-5 text-primary" />
+              <Calendar className="text-primary h-5 w-5" />
               {t('clusters.crossTerm')}
             </CardTitle>
           </CardHeader>
@@ -305,7 +348,7 @@ export default async function ClusterDetailPage({ params }: Props) {
         <Card className="glass-card mb-6 overflow-hidden">
           <CardHeader>
             <CardTitle className="text-lg">{primaryBill.name}</CardTitle>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               {t('clusters.lawJourney')}
             </p>
           </CardHeader>
@@ -330,7 +373,7 @@ export default async function ClusterDetailPage({ params }: Props) {
         <Card className="glass-card mb-6 overflow-hidden">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
-              <GitBranch className="h-5 w-5 text-primary" />
+              <GitBranch className="text-primary h-5 w-5" />
               {t('clusters.relatedBills')}
             </CardTitle>
           </CardHeader>
@@ -344,7 +387,7 @@ export default async function ClusterDetailPage({ params }: Props) {
       <Card className="glass-card mb-6 overflow-hidden">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
-            <Layers className="h-5 w-5 text-primary" />
+            <Layers className="text-primary h-5 w-5" />
             {t('clusters.relatedBillsAcrossTerms')}
           </CardTitle>
         </CardHeader>
@@ -386,7 +429,7 @@ export default async function ClusterDetailPage({ params }: Props) {
         <Card className="glass-card mb-6 overflow-hidden">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
-              <Users className="h-5 w-5 text-primary" />
+              <Users className="text-primary h-5 w-5" />
               {t('clusters.initiatorCount', { count: allInitiators.size })}
             </CardTitle>
           </CardHeader>
@@ -396,7 +439,7 @@ export default async function ClusterDetailPage({ params }: Props) {
                 <Link
                   key={memberId}
                   href={`/members/${memberId}`}
-                  className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/30"
+                  className="hover:bg-muted/30 flex items-center justify-between rounded-lg border p-3 transition-colors"
                 >
                   <span className="text-sm font-medium">
                     {init.firstName} {init.lastName}
@@ -416,7 +459,7 @@ export default async function ClusterDetailPage({ params }: Props) {
         <Card className="glass-card overflow-hidden">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
-              <Vote className="h-5 w-5 text-primary" />
+              <Vote className="text-primary h-5 w-5" />
               {t('votes.voteTimeline')}
             </CardTitle>
           </CardHeader>

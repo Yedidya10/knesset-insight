@@ -10,6 +10,7 @@ import {
 } from '@/lib/db/schema';
 import { sql } from 'drizzle-orm';
 import { Link } from '@/i18n/navigation';
+import AppBreadcrumb from '@/components/layout/AppBreadcrumb';
 import CandidateProfile from '@/components/elections/CandidateProfile';
 import CandidateMkActivity from '@/components/elections/CandidateMkActivity';
 import CandidateCivicRecord from '@/components/elections/CandidateCivicRecord';
@@ -21,6 +22,7 @@ interface Props {
 export default async function CandidateProfilePage({ params }: Props) {
   const { slug: partySlug, candidateSlug } = await params;
   const t = await getTranslations('elections2026');
+  const tNav = await getTranslations('nav');
 
   const candidate = await db
     .select()
@@ -102,22 +104,18 @@ export default async function CandidateProfilePage({ params }: Props) {
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
       {/* Breadcrumb */}
-      <nav className="text-muted-foreground mb-6 text-sm">
-        <Link href="/elections/2026" className="hover:text-foreground">
-          2026
-        </Link>
-        <span className="mx-2">›</span>
-        <Link
-          href={`/elections/2026/parties/${partySlug}`}
-          className="hover:text-foreground"
-        >
-          {list[0]?.name ?? partySlug}
-        </Link>
-        <span className="mx-2">›</span>
-        <span className="text-foreground">
-          {c.firstName} {c.lastName}
-        </span>
-      </nav>
+      <AppBreadcrumb
+        items={[
+          { label: tNav('home'), href: '/' },
+          { label: tNav('elections'), href: '/elections' },
+          { label: '2026', href: '/elections/2026' },
+          {
+            label: list[0]?.name ?? partySlug,
+            href: `/elections/2026/parties/${partySlug}`,
+          },
+          { label: `${c.firstName} ${c.lastName}` },
+        ]}
+      />
 
       <CandidateProfile
         firstName={c.firstName}

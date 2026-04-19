@@ -5,6 +5,7 @@ import { desc } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { electionCityResults } from '@/lib/db/schema';
 import { Link } from '@/i18n/navigation';
+import AppBreadcrumb from '@/components/layout/AppBreadcrumb';
 import ElectionMapClient from '@/components/elections/map/ElectionMapClient';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -18,6 +19,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function ElectionMapPage() {
   const t = await getTranslations('electionMap');
+  const tNav = await getTranslations('nav');
 
   // Get available knesset numbers from the database
   const rows = await db
@@ -43,13 +45,13 @@ export default async function ElectionMapPage() {
       </div>
 
       {/* Breadcrumb */}
-      <nav className="text-muted-foreground mb-6 text-sm">
-        <Link href="/elections" className="hover:text-foreground">
-          {t('selectKnesset')}
-        </Link>
-        <span className="mx-2">›</span>
-        <span className="text-foreground">{t('title')}</span>
-      </nav>
+      <AppBreadcrumb
+        items={[
+          { label: tNav('home'), href: '/' },
+          { label: tNav('elections'), href: '/elections' },
+          { label: t('title') },
+        ]}
+      />
 
       {/* Map client component */}
       <ElectionMapClient availableKnessets={availableKnessets} />

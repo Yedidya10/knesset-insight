@@ -4,6 +4,7 @@ import { db } from '@/lib/db';
 import { electionCampaigns, electionCandidateLists } from '@/lib/db/schema';
 import { appConfig } from '@/../app.config';
 import { Link } from '@/i18n/navigation';
+import AppBreadcrumb from '@/components/layout/AppBreadcrumb';
 import CandidateListCard from '@/components/elections/CandidateListCard';
 
 interface Props {
@@ -14,6 +15,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function PartiesPage({ searchParams }: Props) {
   const t = await getTranslations('elections2026');
+  const tNav = await getTranslations('nav');
   const params = await searchParams;
 
   const lists = await db
@@ -83,17 +85,14 @@ export default async function PartiesPage({ searchParams }: Props) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       {/* Header */}
-      <nav className="text-muted-foreground mb-4 text-sm">
-        <Link href="/elections" className="hover:text-foreground">
-          {t('backToElections')}
-        </Link>
-        <span className="mx-2">›</span>
-        <Link href="/elections/2026" className="hover:text-foreground">
-          2026
-        </Link>
-        <span className="mx-2">›</span>
-        <span className="text-foreground">{t('parties.title')}</span>
-      </nav>
+      <AppBreadcrumb
+        items={[
+          { label: tNav('home'), href: '/' },
+          { label: tNav('elections'), href: '/elections' },
+          { label: '2026', href: '/elections/2026' },
+          { label: t('parties.title') },
+        ]}
+      />
 
       <h1 className="mb-2 text-2xl font-bold tracking-tight">
         {t('parties.title')}

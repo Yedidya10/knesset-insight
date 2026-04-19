@@ -4,6 +4,9 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 export default function VoteDetailLoading() {
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-8 sm:px-6">
+      {/* Breadcrumb skeleton */}
+      <Skeleton className="mb-4 h-4 w-48" />
+
       {/* Header */}
       <div className="mb-8 flex items-center gap-3">
         <Skeleton className="h-14 w-14 rounded-2xl" />

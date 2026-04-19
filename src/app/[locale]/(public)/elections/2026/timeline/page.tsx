@@ -4,10 +4,12 @@ import { db } from '@/lib/db';
 import { electionCampaigns, electionTimelineEvents } from '@/lib/db/schema';
 import { appConfig } from '@/../app.config';
 import { Link } from '@/i18n/navigation';
+import AppBreadcrumb from '@/components/layout/AppBreadcrumb';
 import ElectionTimeline from '@/components/elections/ElectionTimeline';
 
 export default async function TimelinePage() {
   const t = await getTranslations('elections2026');
+  const tNav = await getTranslations('nav');
 
   const campaign = await db
     .select({ id: electionCampaigns.id })
@@ -34,25 +36,30 @@ export default async function TimelinePage() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
       {/* Breadcrumb */}
-      <nav className="mb-4 text-sm text-muted-foreground">
-        <Link href="/elections" className="hover:text-foreground">
-          {t('backToElections')}
-        </Link>
-        <span className="mx-2">›</span>
-        <Link href="/elections/2026" className="hover:text-foreground">
-          2026
-        </Link>
-        <span className="mx-2">›</span>
-        <span className="text-foreground">{t('timeline.title')}</span>
-      </nav>
+      <AppBreadcrumb
+        items={[
+          { label: tNav('home'), href: '/' },
+          { label: tNav('elections'), href: '/elections' },
+          { label: '2026', href: '/elections/2026' },
+          { label: t('timeline.title') },
+        ]}
+      />
 
-      <h1 className="mb-2 text-2xl font-bold tracking-tight">{t('timeline.title')}</h1>
-      <p className="mb-8 text-muted-foreground">{t('timeline.description')}</p>
+      <h1 className="mb-2 text-2xl font-bold tracking-tight">
+        {t('timeline.title')}
+      </h1>
+      <p className="text-muted-foreground mb-8">{t('timeline.description')}</p>
 
       {events.length > 0 ? (
-        <ElectionTimeline events={events} typeLabels={eventTypeLabels} estimatedDateNote={t('estimatedDateNote')} />
+        <ElectionTimeline
+          events={events}
+          typeLabels={eventTypeLabels}
+          estimatedDateNote={t('estimatedDateNote')}
+        />
       ) : (
-        <p className="py-12 text-center text-muted-foreground">{t('timeline.noEvents')}</p>
+        <p className="text-muted-foreground py-12 text-center">
+          {t('timeline.noEvents')}
+        </p>
       )}
     </div>
   );

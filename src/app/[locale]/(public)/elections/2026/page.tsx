@@ -9,12 +9,14 @@ import {
 } from '@/lib/db/schema';
 import { appConfig } from '@/../app.config';
 import { Link } from '@/i18n/navigation';
+import AppBreadcrumb from '@/components/layout/AppBreadcrumb';
 import ElectionCountdown from '@/components/elections/ElectionCountdown';
 import CandidateListCard from '@/components/elections/CandidateListCard';
 import ElectionTimeline from '@/components/elections/ElectionTimeline';
 
 export default async function Elections2026Page() {
   const t = await getTranslations('elections2026');
+  const tNav = await getTranslations('nav');
   const tMap = await getTranslations('electionMap');
 
   // Campaign
@@ -105,14 +107,13 @@ export default async function Elections2026Page() {
         </div>
       </div>
 
-      {/* Breadcrumb */}
-      <nav className="text-muted-foreground mb-6 text-sm">
-        <Link href="/elections" className="hover:text-foreground">
-          {t('backToElections')}
-        </Link>
-        <span className="mx-2">›</span>
-        <span className="text-foreground">2026</span>
-      </nav>
+      <AppBreadcrumb
+        items={[
+          { label: tNav('home'), href: '/' },
+          { label: tNav('elections'), href: '/elections' },
+          { label: '2026' },
+        ]}
+      />
 
       {/* Countdown */}
       <div className="mb-8">

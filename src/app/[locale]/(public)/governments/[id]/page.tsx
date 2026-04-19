@@ -1,7 +1,8 @@
 import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import { ArrowRight, Landmark } from 'lucide-react';
+import { Landmark } from 'lucide-react';
+import AppBreadcrumb from '@/components/layout/AppBreadcrumb';
 import { eq, and } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import {
@@ -50,6 +51,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function GovernmentDetailPage({ params }: Props) {
   const t = await getTranslations('governments');
+  const tNav = await getTranslations('nav');
   const { id } = await params;
   const governmentNum = Number(id);
 
@@ -158,14 +160,14 @@ export default async function GovernmentDetailPage({ params }: Props) {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
-      {/* Back link */}
-      <Link
-        href="/governments"
-        className="text-muted-foreground hover:text-foreground mb-6 inline-flex items-center gap-1.5 text-sm transition-colors"
-      >
-        <ArrowRight className="h-4 w-4 rtl:rotate-180" />
-        {t('backToList')}
-      </Link>
+      {/* Breadcrumb */}
+      <AppBreadcrumb
+        items={[
+          { label: tNav('home'), href: '/' },
+          { label: tNav('governments'), href: '/governments' },
+          { label: govRecord.name },
+        ]}
+      />
 
       {/* Header */}
       <div className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-start">

@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { db } from '@/lib/db';
 import { electionCandidateLists, electionCandidates } from '@/lib/db/schema';
 import { Link } from '@/i18n/navigation';
+import AppBreadcrumb from '@/components/layout/AppBreadcrumb';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import ElectionStatusBadge from '@/components/elections/ElectionStatusBadge';
 import CandidateCard from '@/components/elections/CandidateCard';
@@ -15,6 +16,7 @@ interface Props {
 export default async function PartyDetailPage({ params }: Props) {
   const { slug } = await params;
   const t = await getTranslations('elections2026');
+  const tNav = await getTranslations('nav');
 
   const list = await db
     .select()
@@ -54,21 +56,15 @@ export default async function PartyDetailPage({ params }: Props) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       {/* Breadcrumb */}
-      <nav className="text-muted-foreground mb-4 text-sm">
-        <Link href="/elections" className="hover:text-foreground">
-          {t('backToElections')}
-        </Link>
-        <span className="mx-2">›</span>
-        <Link href="/elections/2026" className="hover:text-foreground">
-          2026
-        </Link>
-        <span className="mx-2">›</span>
-        <Link href="/elections/2026/parties" className="hover:text-foreground">
-          {t('parties.title')}
-        </Link>
-        <span className="mx-2">›</span>
-        <span className="text-foreground">{party.name}</span>
-      </nav>
+      <AppBreadcrumb
+        items={[
+          { label: tNav('home'), href: '/' },
+          { label: tNav('elections'), href: '/elections' },
+          { label: '2026', href: '/elections/2026' },
+          { label: t('parties.title'), href: '/elections/2026/parties' },
+          { label: party.name },
+        ]}
+      />
 
       {/* Party header */}
       <div className="mb-8">

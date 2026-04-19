@@ -1,6 +1,7 @@
 import { getTranslations, getLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { Link } from '@/i18n/navigation';
+import AppBreadcrumb from '@/components/layout/AppBreadcrumb';
 import type { Metadata } from 'next';
 import {
   ThumbsUp,
@@ -81,6 +82,7 @@ export default async function MemberProfilePage({ params }: Props) {
   const t = await getTranslations('members.profile');
   const tCommon = await getTranslations('common');
   const tVotes = await getTranslations('votes');
+  const tNav = await getTranslations('nav');
   const locale = await getLocale();
 
   const memberId = Number(id);
@@ -285,6 +287,15 @@ export default async function MemberProfilePage({ params }: Props) {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-4 py-8 sm:px-6">
+      {/* Breadcrumb */}
+      <AppBreadcrumb
+        items={[
+          { label: tNav('home'), href: '/' },
+          { label: tNav('members'), href: '/members' },
+          { label: `${member.firstName} ${member.lastName}` },
+        ]}
+      />
+
       {/* Hero banner */}
       <MemberProfileHero member={member} />
 

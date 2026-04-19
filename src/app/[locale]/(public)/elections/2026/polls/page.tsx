@@ -9,11 +9,13 @@ import {
 } from '@/lib/db/schema';
 import { appConfig } from '@/../app.config';
 import { Link } from '@/i18n/navigation';
+import AppBreadcrumb from '@/components/layout/AppBreadcrumb';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PollTrendChart from '@/components/elections/PollTrendChart';
 
 export default async function PollsPage() {
   const t = await getTranslations('elections2026');
+  const tNav = await getTranslations('nav');
 
   const campaign = await db
     .select({ id: electionCampaigns.id })
@@ -68,7 +70,8 @@ export default async function PollsPage() {
     );
 
   const sortedPolls = [...polls].sort(
-    (a, b) => new Date(a.publishDate).getTime() - new Date(b.publishDate).getTime(),
+    (a, b) =>
+      new Date(a.publishDate).getTime() - new Date(b.publishDate).getTime(),
   );
 
   const dates = sortedPolls.map((p) => p.publishDate);
@@ -77,7 +80,9 @@ export default async function PollsPage() {
     color: list.color ?? '#888',
     slug: list.slug,
     data: sortedPolls.map((poll) => {
-      const r = results.find((r) => r.pollId === poll.id && r.candidateListId === list.id);
+      const r = results.find(
+        (r) => r.pollId === poll.id && r.candidateListId === list.id,
+      );
       return r?.predictedSeats ?? null;
     }),
   }));
@@ -92,20 +97,19 @@ export default async function PollsPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
       {/* Breadcrumb */}
-      <nav className="mb-4 text-sm text-muted-foreground">
-        <Link href="/elections" className="hover:text-foreground">
-          {t('backToElections')}
-        </Link>
-        <span className="mx-2">›</span>
-        <Link href="/elections/2026" className="hover:text-foreground">
-          2026
-        </Link>
-        <span className="mx-2">›</span>
-        <span className="text-foreground">{t('polls.title')}</span>
-      </nav>
+      <AppBreadcrumb
+        items={[
+          { label: tNav('home'), href: '/' },
+          { label: tNav('elections'), href: '/elections' },
+          { label: '2026', href: '/elections/2026' },
+          { label: t('polls.title') },
+        ]}
+      />
 
-      <h1 className="mb-2 text-2xl font-bold tracking-tight">{t('polls.title')}</h1>
-      <p className="mb-6 text-muted-foreground">{t('polls.description')}</p>
+      <h1 className="mb-2 text-2xl font-bold tracking-tight">
+        {t('polls.title')}
+      </h1>
+      <p className="text-muted-foreground mb-6">{t('polls.description')}</p>
 
       {/* Trend chart */}
       <div className="mb-8">
@@ -120,12 +124,14 @@ export default async function PollsPage() {
             <Card key={poll.id}>
               <CardHeader>
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <CardTitle className="text-base">{poll.pollsterName}</CardTitle>
-                  <span className="text-sm text-muted-foreground">
+                  <CardTitle className="text-base">
+                    {poll.pollsterName}
+                  </CardTitle>
+                  <span className="text-muted-foreground text-sm">
                     {new Date(poll.publishDate).toLocaleDateString()}
                   </span>
                 </div>
-                <div className="flex gap-4 text-xs text-muted-foreground">
+                <div className="text-muted-foreground flex gap-4 text-xs">
                   {poll.sampleSize && (
                     <span>
                       {t('polls.sampleSize')}: {poll.sampleSize}
@@ -143,7 +149,7 @@ export default async function PollsPage() {
                   {poll.results.map((r) => (
                     <div
                       key={r.listSlug}
-                      className="flex items-center gap-1.5 rounded-lg bg-muted/50 px-2.5 py-1"
+                      className="bg-muted/50 flex items-center gap-1.5 rounded-lg px-2.5 py-1"
                     >
                       <span
                         className="h-2.5 w-2.5 rounded-sm"
@@ -159,7 +165,7 @@ export default async function PollsPage() {
                     href={poll.sourceUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="mt-3 inline-block text-xs text-primary underline"
+                    className="text-primary mt-3 inline-block text-xs underline"
                   >
                     {t('polls.source')} ↗
                   </a>
@@ -169,7 +175,9 @@ export default async function PollsPage() {
           ))}
         </div>
       ) : (
-        <p className="py-12 text-center text-muted-foreground">{t('polls.noPolls')}</p>
+        <p className="text-muted-foreground py-12 text-center">
+          {t('polls.noPolls')}
+        </p>
       )}
     </div>
   );

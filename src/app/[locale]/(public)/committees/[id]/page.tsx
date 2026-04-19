@@ -19,6 +19,7 @@ import {
   factions,
 } from '@/lib/db/schema';
 import { Link } from '@/i18n/navigation';
+import AppBreadcrumb from '@/components/layout/AppBreadcrumb';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -70,6 +71,7 @@ export default async function CommitteeDetailPage({ params }: Props) {
 
   const t = await getTranslations('committees');
   const tDetail = await getTranslations('committees.detail');
+  const tNav = await getTranslations('nav');
 
   // Fetch committee with chairman
   const [committee] = await db
@@ -218,6 +220,15 @@ export default async function CommitteeDetailPage({ params }: Props) {
 
   return (
     <div className="mx-auto max-w-7xl overflow-x-hidden px-4 py-8 sm:px-6">
+      {/* Breadcrumb */}
+      <AppBreadcrumb
+        items={[
+          { label: tNav('home'), href: '/' },
+          { label: tNav('committees'), href: '/committees' },
+          { label: committee.name },
+        ]}
+      />
+
       {/* Header */}
       <div className="mb-8 flex items-start gap-4">
         <div className="bg-primary/10 ring-primary/20 flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl ring-1">

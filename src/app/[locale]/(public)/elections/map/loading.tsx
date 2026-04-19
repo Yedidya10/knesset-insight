@@ -10,6 +10,9 @@ export default function Loading() {
         </div>
       </div>
 
+      {/* Breadcrumb skeleton */}
+      <div className="bg-muted mb-4 h-4 w-48 animate-pulse rounded" />
+
       {/* Controls skeleton */}
       <div className="mb-4 flex gap-3">
         <div className="bg-muted h-10 w-40 animate-pulse rounded-md" />
