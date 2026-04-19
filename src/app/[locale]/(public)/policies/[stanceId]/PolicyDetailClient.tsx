@@ -202,11 +202,11 @@ export default function PolicyDetailClient({
                               </p>
                             )}
                           </div>
-                          <div className="text-end">
+                          <div className="shrink-0 text-end">
                             <span className="text-sm font-bold">
                               {t('score', { score: mk.score })}
                             </span>
-                            <p className="text-muted-foreground text-xs">
+                            <p className="text-muted-foreground text-xs whitespace-nowrap">
                               {t('voteCount', { count: mk.voteCount })}
                             </p>
                           </div>

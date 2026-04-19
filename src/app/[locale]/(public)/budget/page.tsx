@@ -172,42 +172,44 @@ export default async function BudgetPage() {
             <CardTitle>{t('byMinistry')}</CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>{t('ministry')}</TableHead>
-                  <TableHead className="text-end">{t('allocated')}</TableHead>
-                  <TableHead className="text-end">{t('used')}</TableHead>
-                  <TableHead className="text-end">
-                    {t('utilizationRate')}
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {ministriesWithData.map((row) => {
-                  const alloc = Number(row.allocated);
-                  const used = Number(row.used);
-                  const rate =
-                    alloc > 0 ? ((used / alloc) * 100).toFixed(1) : '—';
-                  return (
-                    <TableRow key={row.ministry}>
-                      <TableCell className="font-medium">
-                        {row.ministry}
-                      </TableCell>
-                      <TableCell className="text-end">
-                        {formatAmount(alloc)}
-                      </TableCell>
-                      <TableCell className="text-end">
-                        {used > 0 ? formatAmount(used) : '—'}
-                      </TableCell>
-                      <TableCell className="text-end">
-                        {rate !== '—' ? `${rate}%` : '—'}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>{t('ministry')}</TableHead>
+                    <TableHead className="text-end">{t('allocated')}</TableHead>
+                    <TableHead className="text-end">{t('used')}</TableHead>
+                    <TableHead className="text-end">
+                      {t('utilizationRate')}
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {ministriesWithData.map((row) => {
+                    const alloc = Number(row.allocated);
+                    const used = Number(row.used);
+                    const rate =
+                      alloc > 0 ? ((used / alloc) * 100).toFixed(1) : '—';
+                    return (
+                      <TableRow key={row.ministry}>
+                        <TableCell className="font-medium">
+                          {row.ministry}
+                        </TableCell>
+                        <TableCell className="text-end">
+                          {formatAmount(alloc)}
+                        </TableCell>
+                        <TableCell className="text-end">
+                          {used > 0 ? formatAmount(used) : '—'}
+                        </TableCell>
+                        <TableCell className="text-end">
+                          {rate !== '—' ? `${rate}%` : '—'}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       )}

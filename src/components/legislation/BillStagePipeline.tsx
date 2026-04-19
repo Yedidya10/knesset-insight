@@ -40,7 +40,7 @@ export function BillStagePipeline({
       className="w-full overflow-x-auto"
     >
       {/* Desktop: horizontal stepper */}
-      <div className="hidden md:block">
+      <div className="hidden overflow-x-auto md:block">
         <div
           className="flex items-start"
           style={{ minWidth: stages.length * 120 }}

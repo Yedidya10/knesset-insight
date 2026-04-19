@@ -215,7 +215,7 @@ export function InteractiveStagePipeline({
       )}
 
       {/* Desktop: horizontal stepper */}
-      <div className="hidden md:block">
+      <div className="hidden overflow-x-auto md:block">
         <div
           className="flex items-start"
           style={{ minWidth: stages.length * 130 }}

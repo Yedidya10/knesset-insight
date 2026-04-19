@@ -447,12 +447,12 @@ export default async function MemberProfilePage({ params }: Props) {
                   {chairedCommittees.map((c) => (
                     <div
                       key={c.id}
-                      className="flex items-center justify-between rounded-lg p-2"
+                      className="flex items-center justify-between gap-2 rounded-lg p-2"
                     >
-                      <span className="text-sm font-medium">
+                      <span className="min-w-0 flex-1 truncate text-sm font-medium">
                         <TranslatedText text={c.name} />
                       </span>
-                      <div className="flex gap-2">
+                      <div className="flex shrink-0 gap-2">
                         {c.committeeType && (
                           <Badge variant="outline" className="text-xs">
                             {c.committeeType}
