@@ -54,6 +54,8 @@ public/sw.js.map
 
 # Playwright MCP
 .playwright-mcp/
+test-results/
+playwright-report/
 public/workbox-*.js
 public/workbox-*.js.map
 public/swe-worker-*.js
