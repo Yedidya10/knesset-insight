@@ -202,7 +202,7 @@ export default function PolicyDetailClient({
                               </p>
                             )}
                           </div>
-                          <div className="shrink-0 text-end">
+                          <div className="shrink-0 text-end" dir="ltr">
                             <span className="text-sm font-bold">
                               {t('score', { score: mk.score })}
                             </span>
@@ -254,7 +254,10 @@ export default function PolicyDetailClient({
                               {faction.participatingMembers} {t('tabs.members')}
                             </p>
                           </div>
-                          <span className="text-lg font-bold tabular-nums">
+                          <span
+                            className="text-lg font-bold tabular-nums"
+                            dir="ltr"
+                          >
                             {faction.score}%
                           </span>
                         </div>
@@ -281,7 +284,8 @@ export default function PolicyDetailClient({
                                 <span className="bg-muted inline-flex cursor-help items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] tabular-nums" />
                               }
                             >
-                              {t('cohesion')} {faction.cohesion}%
+                              {t('cohesion')}{' '}
+                              <span dir="ltr">{faction.cohesion}%</span>
                               <Info className="h-3 w-3 opacity-40" />
                             </TooltipTrigger>
                             <TooltipContent side="bottom" className="max-w-xs">

@@ -170,14 +170,13 @@ export default async function PolicyDetailPage({ params }: Props) {
     }
 
     const SCORE_TIERS = [
-      { level: 'very_strongly_for', min: 95 },
-      { level: 'strongly_for', min: 80 },
-      { level: 'moderately_for', min: 60 },
-      { level: 'slightly_for', min: 40 },
-      { level: 'slightly_against', min: 25 },
-      { level: 'moderately_against', min: 15 },
-      { level: 'strongly_against', min: 5 },
-      { level: 'very_strongly_against', min: 0 },
+      { level: 'consistently_for', min: 95 },
+      { level: 'almost_always_for', min: 85 },
+      { level: 'generally_for', min: 60 },
+      { level: 'mixture', min: 40 },
+      { level: 'generally_against', min: 16 },
+      { level: 'almost_always_against', min: 6 },
+      { level: 'consistently_against', min: 0 },
     ] as const;
 
     const tiered = new Map<
@@ -196,7 +195,7 @@ export default async function PolicyDetailPage({ params }: Props) {
     for (const mk of mkScores.values()) {
       if (mk.totalCount < minVotes) continue;
       const score = Math.round((mk.matchCount / mk.totalCount) * 100);
-      let tier = 'very_strongly_against';
+      let tier = 'consistently_against';
       for (const t of SCORE_TIERS) {
         if (score >= t.min) {
           tier = t.level;
@@ -315,14 +314,13 @@ export default async function PolicyDetailPage({ params }: Props) {
 
     // Calculate faction-level stats
     const SCORE_TIERS_FACTION = [
-      { level: 'very_strongly_for', min: 95 },
-      { level: 'strongly_for', min: 80 },
-      { level: 'moderately_for', min: 60 },
-      { level: 'slightly_for', min: 40 },
-      { level: 'slightly_against', min: 25 },
-      { level: 'moderately_against', min: 15 },
-      { level: 'strongly_against', min: 5 },
-      { level: 'very_strongly_against', min: 0 },
+      { level: 'consistently_for', min: 95 },
+      { level: 'almost_always_for', min: 85 },
+      { level: 'generally_for', min: 60 },
+      { level: 'mixture', min: 40 },
+      { level: 'generally_against', min: 16 },
+      { level: 'almost_always_against', min: 6 },
+      { level: 'consistently_against', min: 0 },
     ] as const;
 
     const factionTiered = new Map<string, FactionItem[]>();
@@ -354,7 +352,7 @@ export default async function PolicyDetailPage({ params }: Props) {
         memberScores.length;
       const cohesion = Math.round(100 - Math.sqrt(variance) * 100);
 
-      let tier = 'very_strongly_against';
+      let tier = 'consistently_against';
       for (const t of SCORE_TIERS_FACTION) {
         if (avgScore >= t.min) {
           tier = t.level;

@@ -51,6 +51,37 @@ The `dir` attribute is set automatically per locale. Use Tailwind **logical prop
   <ChevronRight className="rtl:rotate-180" />
   ```
 
+### Percentages & Numbers in RTL
+
+Numbers and percentage signs get scrambled in RTL contexts (e.g. `(80%-60)` instead of `(60–80%)`). Apply these rules:
+
+1. **Inline percentage values in JSX** — wrap in `dir="ltr"`:
+
+   ```tsx
+   <span className="font-bold tabular-nums" dir="ltr">
+     {score}%
+   </span>
+   ```
+
+2. **Percentage badges / score containers** — add `dir="ltr"` to the parent element:
+
+   ```tsx
+   <Badge variant="outline" dir="ltr">
+     {t('score', { score: 80 })}
+   </Badge>
+   ```
+
+3. **i18n strings with embedded percentages** — use Unicode LRI/PDI bidi isolation characters (`\u2066` / `\u2069`) around the numeric part in Hebrew and Arabic locale files:
+
+   ```json
+   "tier_label": "הצביעו בדרך כלל בעד \u2066(60–84%)\u2069"
+   "score": "\u2066{score}%\u2069 בעד"
+   ```
+
+   English and Russian (LTR) locale files do **not** need bidi marks.
+
+4. **Progress bars with percentage width** — the CSS `width` property is not affected by direction, but label text next to bars must follow rule 1.
+
 ## Dark Mode
 
 - Always provide `dark:` variants for background and text colors

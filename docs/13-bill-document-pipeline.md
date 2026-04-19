@@ -414,16 +414,16 @@ Following TheyVoteForYou's proven methodology, each MK's position on a
 policy stance is calculated from their voting record and displayed on
 an ordinal scale:
 
-| Score Range | Hebrew Label          | English Label                      |
-| ----------- | --------------------- | ---------------------------------- |
-| > 95%       | הצביע באופן עקבי בעד  | Voted very strongly for            |
-| 80–95%      | הצביע ברוב המקרים בעד | Voted strongly for                 |
-| 60–80%      | הצביע לרוב בעד        | Voted moderately for               |
-| 40–60%      | הצביע באופן מעורב     | Voted a mixture of for and against |
-| 20–40%      | הצביע לרוב נגד        | Voted moderately against           |
-| 5–20%       | הצביע ברוב המקרים נגד | Voted strongly against             |
-| < 5%        | הצביע באופן עקבי נגד  | Voted very strongly against        |
-| —           | לא הצביע בנושא זה     | Never voted on this                |
+| Score Range | Hebrew Label              | English Label                      |
+| ----------- | ------------------------- | ---------------------------------- |
+| ≥ 95%       | הצביע בעקביות בעד         | Voted consistently for             |
+| 85–94%      | הצביע כמעט תמיד בעד       | Voted almost always for            |
+| 60–84%      | הצביע בדרך כלל בעד        | Voted generally for                |
+| 40–59%      | הצביע בתערובת של בעד ונגד | Voted a mixture of for and against |
+| 16–39%      | הצביע בדרך כלל נגד        | Voted generally against            |
+| 6–15%       | הצביע כמעט תמיד נגד       | Voted almost always against        |
+| ≤ 5%        | הצביע בעקביות נגד         | Voted consistently against         |
+| —           | לא הצביע בנושא זה         | Never voted on this                |
 
 ### Score Calculation
 
@@ -484,19 +484,19 @@ WHERE m.faction_id = {faction_id}
   AND vsa.needs_review = false;
 ```
 
-**Faction score uses the same 8-level scale as MK scores.** The labels
+**Faction score uses the same 7-level scale as MK scores.** The labels
 adjust naturally:
 
-| Score Range | Hebrew Label (faction)       | English Label (faction)                    |
-| ----------- | ---------------------------- | ------------------------------------------ |
-| > 95%       | הסיעה הצביעה באופן עקבי בעד  | Faction voted very strongly for            |
-| 80–95%      | הסיעה הצביעה ברוב המקרים בעד | Faction voted strongly for                 |
-| 60–80%      | הסיעה הצביעה לרוב בעד        | Faction voted moderately for               |
-| 40–60%      | הסיעה הצביעה באופן מעורב     | Faction voted a mixture of for and against |
-| 20–40%      | הסיעה הצביעה לרוב נגד        | Faction voted moderately against           |
-| 5–20%       | הסיעה הצביעה ברוב המקרים נגד | Faction voted strongly against             |
-| < 5%        | הסיעה הצביעה באופן עקבי נגד  | Faction voted very strongly against        |
-| —           | הסיעה לא הצביעה בנושא זה     | Faction never voted on this                |
+| Score Range | Hebrew Label (faction)           | English Label (faction)                    |
+| ----------- | -------------------------------- | ------------------------------------------ |
+| ≥ 95%       | הסיעה הצביעה בעקביות בעד         | Faction voted consistently for             |
+| 85–94%      | הסיעה הצביעה כמעט תמיד בעד       | Faction voted almost always for            |
+| 60–84%      | הסיעה הצביעה בדרך כלל בעד        | Faction voted generally for                |
+| 40–59%      | הסיעה הצביעה בתערובת של בעד ונגד | Faction voted a mixture of for and against |
+| 16–39%      | הסיעה הצביעה בדרך כלל נגד        | Faction voted generally against            |
+| 6–15%       | הסיעה הצביעה כמעט תמיד נגד       | Faction voted almost always against        |
+| ≤ 5%        | הסיעה הצביעה בעקביות נגד         | Faction voted consistently against         |
+| —           | הסיעה לא הצביעה בנושא זה         | Faction never voted on this                |
 
 **Faction discipline indicator:** When displaying a faction score, also show
 the **internal cohesion** — what percentage of the faction's members voted
@@ -648,7 +648,7 @@ Inspired by TheyVoteForYou's policy detail page. Two views: **MKs** and
 Shows the MK's stance scores as cards, filterable by domain. Each stance card
 includes:
 
-- Score label (8-level scale) + visual bar
+- Score label (7-level scale) + visual bar
 - Link to policy detail page
 - **אסמכתאות (קישורי הוכחה)**: לחיצה על כרטיס מדיניות מרחיבה את
   רשימת ההצבעות הרלוונטיות — כל הצבעה מקושרת לדף ההצבעה ולדף החוק.
@@ -681,7 +681,7 @@ policies.detail({
 })
 → {
   stance: PolicyStance,
-  // Grouped by the 8-level scale:
+  // Grouped by the 7-level scale:
   tiers: Array<{
     level: string,           // 'very_strongly_for' | 'strongly_for' | ...
     label: Record<Locale, string>,
@@ -1264,7 +1264,7 @@ Steps 12–13 can begin in parallel with steps 5–6 above.
 
 20. **tRPC endpoints** — `policies.list` + `policies.detail`:
     - `policies.list`: all stances grouped by domain, filterable by stance_type
-    - `policies.detail`: MK scores + faction scores on the 8-level scale +
+    - `policies.detail`: MK scores + faction scores on the 7-level scale +
       **evidence links**: each vote linked to bill page + vote page
     - `members.stanceProfile`: MK position aggregation for MK profile page +
       per-stance list of relevant votes as evidence
@@ -1276,7 +1276,7 @@ Steps 12–13 can begin in parallel with steps 5–6 above.
     - Show vote_count per stance
 22. **Policy detail page** — `/[locale]/policies/[stanceId]`:
     - Tabs: חברי כנסת / סיעות
-    - MK tab: member cards grouped by 8-level scale (like TheyVoteForYou)
+    - MK tab: member cards grouped by 7-level scale (like TheyVoteForYou)
     - Faction tab: faction rows with score + cohesion indicator
     - Bottom: **אסמכתאות** — relevant votes with:
       - Date, title, result

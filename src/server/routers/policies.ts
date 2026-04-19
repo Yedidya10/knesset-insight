@@ -15,25 +15,24 @@ import { POLICY_DOMAIN_LIST } from '../../lib/knesset/policy-domains';
 import { appConfig } from '../../../app.config';
 
 /**
- * 8-level score scale (TheyVoteForYou-inspired).
+ * 7-level score scale (TheyVoteForYou-inspired).
  * Score = percentage of votes where the MK voted with the stance direction.
  */
 const SCORE_TIERS = [
-  { level: 'very_strongly_for', min: 95 },
-  { level: 'strongly_for', min: 80 },
-  { level: 'moderately_for', min: 60 },
-  { level: 'slightly_for', min: 40 },
-  { level: 'slightly_against', min: 25 },
-  { level: 'moderately_against', min: 15 },
-  { level: 'strongly_against', min: 5 },
-  { level: 'very_strongly_against', min: 0 },
+  { level: 'consistently_for', min: 95 },
+  { level: 'almost_always_for', min: 85 },
+  { level: 'generally_for', min: 60 },
+  { level: 'mixture', min: 40 },
+  { level: 'generally_against', min: 16 },
+  { level: 'almost_always_against', min: 6 },
+  { level: 'consistently_against', min: 0 },
 ] as const;
 
 function getTier(score: number): string {
   for (const tier of SCORE_TIERS) {
     if (score >= tier.min) return tier.level;
   }
-  return 'very_strongly_against';
+  return 'consistently_against';
 }
 
 export const policiesRouter = router({
