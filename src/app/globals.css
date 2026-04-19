@@ -143,8 +143,8 @@
   }
 }
 
-/* ── Modern UI utilities ── */
-@layer utilities {
+/* ── Modern UI component classes ── */
+@layer components {
   .glass {
     @apply bg-background/60 border-border/40 border backdrop-blur-xl;
   }
@@ -152,7 +152,9 @@
     @apply bg-card/80 border-border/30 border shadow-sm backdrop-blur-lg;
   }
   .gradient-border {
-    @apply relative;
+    /* position: relative is NOT set here — the element must supply its own
+       positioning context (e.g. sticky or relative). Setting relative here
+       would override sticky and break scroll-pinning. */
     &::after {
       content: '';
       @apply absolute inset-x-0 bottom-0 h-px;
