@@ -222,10 +222,14 @@ export default function MemberProfileDetails({
                         const dateRange = role.startDate
                           ? `${role.startDate}${role.endDate ? ` — ${role.endDate}` : ''}`
                           : '';
+                        const label =
+                          role.positionDesc && role.ministryName
+                            ? `${role.positionDesc}, ${role.ministryName}`
+                            : (role.positionDesc ?? role.ministryName);
                         return (
                           <div key={i}>
                             <p className="text-muted-foreground text-xs">
-                              {role.positionDesc ?? role.ministryName}
+                              {label}
                             </p>
                             {dateRange && (
                               <p className="text-muted-foreground text-[11px]">
