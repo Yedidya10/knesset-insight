@@ -4,8 +4,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 export default function FactionDetailLoading() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-      {/* Back link */}
-      <Skeleton className="mb-6 h-5 w-24" />
+      {/* Breadcrumb */}
+      <Skeleton className="mb-6 h-5 w-48" />
 
       {/* Header */}
       <div className="mb-6 flex items-start gap-4">

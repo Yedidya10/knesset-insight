@@ -12,7 +12,7 @@ import {
 } from '@/lib/db/schema';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import AppBreadcrumb from '@/components/layout/AppBreadcrumb';
 import TranslatedText from '@/components/ui/translated-text';
 import MemberAvatar from '@/components/members/MemberAvatar';
 import FactionPolicyStances from '@/components/policies/FactionPolicyStances';
@@ -25,6 +25,7 @@ export default async function FactionDetailPage({ params }: Props) {
   const { id, locale } = await params;
   const t = await getTranslations('factions');
   const tCommon = await getTranslations('common');
+  const tNav = await getTranslations('nav');
 
   const factionId = Number(id);
   if (isNaN(factionId)) notFound();
@@ -152,14 +153,13 @@ export default async function FactionDetailPage({ params }: Props) {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-      <Button
-        variant="ghost"
-        size="sm"
-        className="mb-6"
-        render={<Link href="/politics" />}
-      >
-        {tCommon('back')}
-      </Button>
+      <AppBreadcrumb
+        items={[
+          { label: tNav('home'), href: '/' },
+          { label: tNav('factions'), href: '/politics' },
+          { label: faction.name },
+        ]}
+      />
 
       {/* Faction header */}
       <Card className="glass-card mb-8 overflow-hidden">

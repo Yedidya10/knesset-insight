@@ -5,8 +5,8 @@ import { Separator } from '@/components/ui/separator';
 export default function PartyDetailLoading() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
-      {/* Back link */}
-      <Skeleton className="mb-6 h-5 w-20" />
+      {/* Breadcrumb */}
+      <Skeleton className="mb-6 h-5 w-48" />
 
       {/* Header */}
       <div className="mb-6 space-y-3">

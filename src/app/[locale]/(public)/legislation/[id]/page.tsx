@@ -22,7 +22,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Button } from '@/components/ui/button';
+import AppBreadcrumb from '@/components/layout/AppBreadcrumb';
 import MemberAvatar from '@/components/members/MemberAvatar';
 import { InteractiveStagePipeline } from '@/components/legislation/InteractiveStagePipeline';
 import type { RelationshipEvent } from '@/components/legislation/InteractiveStagePipeline';
@@ -68,6 +68,7 @@ export default async function BillDetailPage({ params }: Props) {
 
   const t = await getTranslations('legislation');
   const tCommon = await getTranslations('common');
+  const tNav = await getTranslations('nav');
   const locale = await getLocale();
 
   const result = await db
@@ -456,14 +457,13 @@ export default async function BillDetailPage({ params }: Props) {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
-      <Button
-        variant="ghost"
-        size="sm"
-        className="mb-6"
-        render={<Link href="/legislation" />}
-      >
-        {tCommon('back')}
-      </Button>
+      <AppBreadcrumb
+        items={[
+          { label: tNav('home'), href: '/' },
+          { label: tNav('legislation'), href: '/legislation' },
+          { label: bill.name },
+        ]}
+      />
 
       {/* Main card */}
       <Card className="glass-card mb-6 overflow-hidden">

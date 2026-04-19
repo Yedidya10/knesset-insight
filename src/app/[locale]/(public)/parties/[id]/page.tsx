@@ -14,7 +14,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Link } from '@/i18n/navigation';
-import { ArrowLeft, Download, Building2, Vote, Phone, Mail, MapPin } from 'lucide-react';
+import AppBreadcrumb from '@/components/layout/AppBreadcrumb';
+import { Download, Building2, Vote, Phone, Mail, MapPin } from 'lucide-react';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -22,6 +23,7 @@ interface Props {
 
 export default async function PartyDetailPage({ params }: Props) {
   const t = await getTranslations('registeredParties');
+  const tNav = await getTranslations('nav');
   const { id } = await params;
   const partyId = Number(id);
   if (isNaN(partyId)) notFound();
@@ -70,13 +72,13 @@ export default async function PartyDetailPage({ params }: Props) {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
-      <Link
-        href="/politics?tab=parties"
-        className="mb-6 inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        {t('title')}
-      </Link>
+      <AppBreadcrumb
+        items={[
+          { label: tNav('home'), href: '/' },
+          { label: tNav('politics'), href: '/politics?tab=parties' },
+          { label: p.name },
+        ]}
+      />
 
       {/* Header */}
       <div className="mb-8">

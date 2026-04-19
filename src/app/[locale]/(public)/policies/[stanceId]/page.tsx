@@ -12,6 +12,7 @@ import {
   factions,
 } from '@/lib/db/schema';
 import { appConfig } from '../../../../../../app.config';
+import AppBreadcrumb from '@/components/layout/AppBreadcrumb';
 import PolicyDetailClient from './PolicyDetailClient';
 
 interface Props {
@@ -51,6 +52,8 @@ export default async function PolicyDetailPage({ params }: Props) {
   const id = Number(stanceId);
   if (isNaN(id)) notFound();
 
+  const locale = await getLocale() as 'he' | 'en' | 'ar' | 'ru';
+  const tNav = await getTranslations('nav');
   const minVotes = appConfig.policyStances.minVotesForScore;
 
   // Fetch stance
@@ -379,8 +382,23 @@ export default async function PolicyDetailPage({ params }: Props) {
     }));
   }
 
+  const stanceLabel =
+    (stance.label as Record<string, string>)?.[locale] ??
+    (stance.label as Record<string, string>)?.he ??
+    '';
+
   return (
-    <PolicyDetailClient
+    <>
+      <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6">
+        <AppBreadcrumb
+          items={[
+            { label: tNav('home'), href: '/' },
+            { label: tNav('policies'), href: '/policies' },
+            { label: stanceLabel },
+          ]}
+        />
+      </div>
+      <PolicyDetailClient
       stance={{
         id: stance.id,
         label: stance.label as Record<string, string>,
@@ -404,5 +422,6 @@ export default async function PolicyDetailPage({ params }: Props) {
       }))}
       initialView="members"
     />
+    </>
   );
 }
