@@ -64,7 +64,7 @@ applyTo: 'src/components/**'
    - **Flex rows**: Always add `min-w-0` on flex children that contain text to prevent overflow. Add `shrink-0` on fixed-width elements (avatars, icons, badges).
    - **Text overflow**: Use `truncate` or `line-clamp-N` on dynamic text inside flex/grid cells. Especially important for Hebrew/Arabic text which can be longer than expected.
    - **Tables**: Always wrap `<Table>` in `<div className="overflow-x-auto">` — tables will overflow on mobile otherwise.
-   - **Grids**: Use mobile-first breakpoints: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`. Never start with multi-column grids without a single-column mobile fallback.
+   - **Grids**: **Always** include `grid-cols-1` explicitly: `grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3`. Without `grid-cols-1`, CSS Grid uses auto-sized implicit columns that overflow the container — in RTL mode this clips card content off the left edge. Never use `overflow-hidden` as a band-aid for grid overflow.
    - **Horizontal steppers/pipelines**: Wrap in `overflow-x-auto` if using inline `minWidth` styles.
    - **Cards with horizontal layout**: Use `flex-col sm:flex-row` pattern when card content includes multiple sections side-by-side.
    - **`justify-between` rows**: Always pair with `gap-2` and ensure the start element has `min-w-0 flex-1 truncate` and the end element has `shrink-0`.

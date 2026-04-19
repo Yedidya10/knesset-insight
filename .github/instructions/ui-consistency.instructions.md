@@ -51,7 +51,19 @@ const sortOptions: SortOption[] = [
 #### 2. Use the hook
 
 ```tsx
-const { filters, updateFilter, updateFilters, clearFilter, clearAll, activeCount, hasActiveFilters, activeFilters, searchValue, setSearchValue, commitSearch } = useFilterParams({ fields });
+const {
+  filters,
+  updateFilter,
+  updateFilters,
+  clearFilter,
+  clearAll,
+  activeCount,
+  hasActiveFilters,
+  activeFilters,
+  searchValue,
+  setSearchValue,
+  commitSearch,
+} = useFilterParams({ fields });
 ```
 
 The hook manages URL search params, debounced search, batch updates, and page param reset.
@@ -85,15 +97,15 @@ The hook manages URL search params, debounced search, batch updates, and page pa
 
 #### Available filter primitives
 
-| Component           | Usage                                    |
-| ------------------- | ---------------------------------------- |
+| Component           | Usage                                       |
+| ------------------- | ------------------------------------------- |
 | `FilterSelect`      | Single-value dropdown (wraps shadcn Select) |
-| `FilterMultiSelect` | Chip-based toggle multi-select           |
-| `FilterRange`       | From/to number or date inputs            |
-| `FilterToggle`      | Boolean toggle button                    |
-| `SortSelect`        | Sort dropdown with ArrowUpDown icon      |
-| `FilterChips`       | Active filter dismissible pills          |
-| `FilterSheet`       | Side panel for non-primary filters       |
+| `FilterMultiSelect` | Chip-based toggle multi-select              |
+| `FilterRange`       | From/to number or date inputs               |
+| `FilterToggle`      | Boolean toggle button                       |
+| `SortSelect`        | Sort dropdown with ArrowUpDown icon         |
+| `FilterChips`       | Active filter dismissible pills             |
+| `FilterSheet`       | Side panel for non-primary filters          |
 
 All primitives are exported from `@/components/filters`.
 
@@ -201,7 +213,10 @@ Every component and page must pass this checklist before being considered comple
 1. **Flex containers**: Text-bearing children have `min-w-0`; fixed-width children have `shrink-0`.
 2. **Dynamic text**: Has `truncate` or `line-clamp-N` — especially in `flex` / `grid` cells. Hebrew and Arabic text is often 20-40% longer than English.
 3. **Tables**: Wrapped in `<div className="overflow-x-auto">`.
-4. **Grids**: Start at 1 column on mobile (`grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`).
+4. **Grids**: **Always** include explicit `grid-cols-1` for mobile. Without it, CSS Grid creates auto-sized implicit columns that don't constrain items to the container width — causing horizontal overflow that is invisible in LTR but clips content in RTL (items extend past the left edge).
+   - ✅ `grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3`
+   - ❌ `grid gap-2 sm:grid-cols-2 lg:grid-cols-3` (missing `grid-cols-1`)
+   - **Never** use `overflow-hidden` on a container to fix grid overflow — it hides the real problem and clips card content (scores, percentages, buttons).
 5. **Horizontal pipelines/steppers**: Wrapped in `overflow-x-auto` if using inline `minWidth` or `style` widths.
 6. **`justify-between` rows**: Start element has `min-w-0 flex-1 truncate`; end element has `shrink-0`.
 7. **Images/avatars**: Use `shrink-0` and explicit `h-*` / `w-*`.
