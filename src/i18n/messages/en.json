@@ -245,12 +245,27 @@
     "noResults": "No votes found",
     "filter": {
       "knessetNum": "Knesset number",
+      "allKnessets": "All Knessets",
       "dateFrom": "From date",
       "dateTo": "To date",
+      "dateRange": "Date range",
       "result": "Result",
       "allResults": "All results",
       "searchPlaceholder": "Search by title...",
-      "clearFilters": "Clear filters"
+      "clearFilters": "Clear filters",
+      "advancedGroup": "Advanced filters",
+      "voteMethod": "Vote method",
+      "allMethods": "All methods",
+      "methodElectronic": "Electronic vote",
+      "methodHandRaise": "Hand raising",
+      "methodRollCall": "Roll call",
+      "billStage": "Bill stage",
+      "allStages": "All stages",
+      "stageFirst": "First reading",
+      "stageSecondThird": "Second/third reading",
+      "stageReservation": "Reservation vote",
+      "stageOther": "Other",
+      "reservationsOnly": "Reservations only"
     },
     "sort": {
       "title": "Sort",
@@ -1053,8 +1068,7 @@
     "viewBill": "View bill",
     "progress": {
       "title": "Stance Analysis Progress",
-      "totalVotes": "Total votes",
-      "eligibleVotes": "Eligible for analysis (bill + AI summary)",
+      "beta": "Initial rollout",
       "classifiedVotes": "Classified votes",
       "knesset": "Knesset {num}",
       "reservationsDeferred": "{count} reservations — deferred to next phase",

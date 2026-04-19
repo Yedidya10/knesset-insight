@@ -245,12 +245,27 @@
     "noResults": "لم يتم العثور على تصويتات",
     "filter": {
       "knessetNum": "رقم الكنيست",
+      "allKnessets": "جميع الكنيست",
       "dateFrom": "من تاريخ",
       "dateTo": "إلى تاريخ",
+      "dateRange": "نطاق التاريخ",
       "result": "النتيجة",
       "allResults": "جميع النتائج",
       "searchPlaceholder": "البحث عن عنوان...",
-      "clearFilters": "مسح التصفية"
+      "clearFilters": "مسح التصفية",
+      "advancedGroup": "تصفية متقدمة",
+      "voteMethod": "طريقة التصويت",
+      "allMethods": "جميع الطرق",
+      "methodElectronic": "تصويت إلكتروني",
+      "methodHandRaise": "رفع اليد",
+      "methodRollCall": "نداء بالأسماء",
+      "billStage": "مرحلة القانون",
+      "allStages": "جميع المراحل",
+      "stageFirst": "القراءة الأولى",
+      "stageSecondThird": "القراءة الثانية/الثالثة",
+      "stageReservation": "تصويت على التحفظات",
+      "stageOther": "أخرى",
+      "reservationsOnly": "التحفظات فقط"
     },
     "sort": {
       "title": "ترتيب",
@@ -1054,8 +1069,7 @@
     "viewBill": "عرض مشروع القانون",
     "progress": {
       "title": "تقدم تحليل المواقف",
-      "totalVotes": "إجمالي التصويتات",
-      "eligibleVotes": "مؤهلة للتحليل (قانون + ملخص AI)",
+      "beta": "التشغيل الأولي",
       "classifiedVotes": "تصويتات تم تحليلها",
       "knesset": "الكنيست {num}",
       "reservationsDeferred": "{count} تحفظات — مؤجلة للمرحلة التالية",

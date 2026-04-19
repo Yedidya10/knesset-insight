@@ -245,12 +245,27 @@
     "noResults": "Голосования не найдены",
     "filter": {
       "knessetNum": "Номер Кнессета",
+      "allKnessets": "Все Кнессеты",
       "dateFrom": "С даты",
       "dateTo": "По дату",
+      "dateRange": "Диапазон дат",
       "result": "Результат",
       "allResults": "Все результаты",
       "searchPlaceholder": "Поиск по названию...",
-      "clearFilters": "Очистить фильтры"
+      "clearFilters": "Очистить фильтры",
+      "advancedGroup": "Расширенные фильтры",
+      "voteMethod": "Способ голосования",
+      "allMethods": "Все способы",
+      "methodElectronic": "Электронное голосование",
+      "methodHandRaise": "Поднятие рук",
+      "methodRollCall": "Поименное голосование",
+      "billStage": "Стадия закона",
+      "allStages": "Все стадии",
+      "stageFirst": "Первое чтение",
+      "stageSecondThird": "Второе/третье чтение",
+      "stageReservation": "Голосование по оговоркам",
+      "stageOther": "Другое",
+      "reservationsOnly": "Только оговорки"
     },
     "sort": {
       "title": "Сортировка",
@@ -1053,8 +1068,7 @@
     "viewBill": "Просмотр законопроекта",
     "progress": {
       "title": "Прогресс анализа позиций",
-      "totalVotes": "Всего голосований",
-      "eligibleVotes": "Доступны для анализа (закон + AI-резюме)",
+      "beta": "Начальный запуск",
       "classifiedVotes": "Проанализированные голосования",
       "knesset": "Кнессет {num}",
       "reservationsDeferred": "{count} оговорок — отложены на следующий этап",

@@ -436,14 +436,16 @@ export const policiesRouter = router({
       const { factionIds, limit } = input;
       const minVotes = appConfig.policyStances.minVotesForScore;
 
-      // Get all vote IDs that have stance alignments
+      // Get all vote IDs that have stance alignments (exclude reservation votes)
       const alignments = await db
         .select({
           voteId: voteStanceAlignment.voteId,
           stanceId: voteStanceAlignment.stanceId,
           alignment: voteStanceAlignment.alignment,
         })
-        .from(voteStanceAlignment);
+        .from(voteStanceAlignment)
+        .innerJoin(votes, eq(voteStanceAlignment.voteId, votes.id))
+        .where(eq(votes.isReservation, false));
 
       if (alignments.length === 0) return { stances: [] };
 
