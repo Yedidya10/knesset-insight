@@ -1,6 +1,6 @@
 import { getTranslations, getLocale } from 'next-intl/server';
 import type { Metadata } from 'next';
-import { Target, FlaskConical } from 'lucide-react';
+import { Target } from 'lucide-react';
 import { desc, eq, sql, ilike, and } from 'drizzle-orm';
 import { Link } from '@/i18n/navigation';
 import { db } from '@/lib/db';
@@ -99,15 +99,7 @@ export default async function PoliciesPage({ searchParams }: Props) {
         </div>
       </div>
 
-      {/* Beta banner */}
-      <div className="mb-6 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm dark:border-amber-800 dark:bg-amber-950/30">
-        <FlaskConical className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
-        <span className="text-amber-800 dark:text-amber-200">
-          {t('betaBanner')}
-        </span>
-      </div>
-
-      {/* Analysis progress */}
+      {/* Analysis progress (includes beta notice) */}
       <StanceProgressBanner />
 
       {/* Filters */}

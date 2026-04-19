@@ -1,6 +1,6 @@
 import { getTranslations, getLocale } from 'next-intl/server';
 import { sql } from 'drizzle-orm';
-import { BarChart3, Target, Search, Info, AlertTriangle } from 'lucide-react';
+import { BarChart3, AlertTriangle, Info, FlaskConical } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -55,39 +55,30 @@ export default async function StanceProgressBanner() {
   );
 
   const coveragePercent =
-    totals.eligible > 0
-      ? Math.round((totals.classified / totals.eligible) * 100)
+    totals.totalVotes > 0
+      ? Math.round((totals.classified / totals.totalVotes) * 100)
       : 0;
+
+  const fmtLocale = locale === 'he' ? 'he-IL' : locale;
 
   return (
     <TooltipProvider>
-      <Card className="mb-6 border-blue-200 bg-blue-50/50 dark:border-blue-900 dark:bg-blue-950/20">
+      <Card className="mb-6 border-amber-200/60 bg-gradient-to-b from-amber-50/40 to-blue-50/40 dark:border-amber-900/40 dark:from-amber-950/10 dark:to-blue-950/15">
         <CardContent className="p-4 sm:p-5">
-          <div className="mb-4 flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-            <h3 className="text-sm font-semibold text-blue-800 dark:text-blue-200">
-              {t('title')}
-            </h3>
-          </div>
-
-          {/* Total votes context */}
-          <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-blue-700 dark:text-blue-300">
-            <span>
-              {t('totalVotes')}:{' '}
-              <span className="font-medium text-blue-800 dark:text-blue-200">
-                {totals.totalVotes.toLocaleString(
-                  locale === 'he' ? 'he-IL' : locale,
-                )}
+          {/* Beta notice + title row */}
+          <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1">
+            <div className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              <h3 className="text-sm font-semibold text-blue-800 dark:text-blue-200">
+                {t('title')}
+              </h3>
+            </div>
+            <div className="flex items-center gap-1.5 rounded-full bg-amber-100 px-2.5 py-0.5 dark:bg-amber-900/30">
+              <FlaskConical className="h-3 w-3 text-amber-600 dark:text-amber-400" />
+              <span className="text-[11px] font-medium text-amber-700 dark:text-amber-300">
+                {t('beta')}
               </span>
-            </span>
-            <span>
-              {t('eligibleVotes')}:{' '}
-              <span className="font-medium text-blue-800 dark:text-blue-200">
-                {totals.eligible.toLocaleString(
-                  locale === 'he' ? 'he-IL' : locale,
-                )}
-              </span>
-            </span>
+            </div>
           </div>
 
           {/* Overall progress bar */}
@@ -97,21 +88,17 @@ export default async function StanceProgressBanner() {
                 {t('classifiedVotes')}
               </span>
               <span className="text-xs font-medium text-blue-800 dark:text-blue-200">
-                {coveragePercent}% (
-                {totals.classified.toLocaleString(
-                  locale === 'he' ? 'he-IL' : locale,
-                )}{' '}
-                /{' '}
-                {totals.eligible.toLocaleString(
-                  locale === 'he' ? 'he-IL' : locale,
-                )}
-                )
+                <span dir="ltr" className="inline-block">
+                  {coveragePercent}%
+                </span>{' '}
+                ({totals.classified.toLocaleString(fmtLocale)} /{' '}
+                {totals.totalVotes.toLocaleString(fmtLocale)})
               </span>
             </div>
             <div className="h-2 w-full overflow-hidden rounded-full bg-blue-200 dark:bg-blue-900">
               <div
                 className="h-full rounded-full bg-blue-600 transition-all dark:bg-blue-400"
-                style={{ width: `${coveragePercent}%` }}
+                style={{ width: `${Math.max(coveragePercent, 1)}%` }}
               />
             </div>
           </div>
@@ -120,8 +107,8 @@ export default async function StanceProgressBanner() {
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {progressRows.map((row) => {
               const pct =
-                row.total_eligible > 0
-                  ? Math.round((row.classified / row.total_eligible) * 100)
+                row.total_votes > 0
+                  ? Math.round((row.classified / row.total_votes) * 100)
                   : 0;
               return (
                 <div
@@ -135,11 +122,14 @@ export default async function StanceProgressBanner() {
                     <div className="h-1.5 w-full overflow-hidden rounded-full bg-blue-200 dark:bg-blue-900">
                       <div
                         className="h-full rounded-full bg-blue-600 dark:bg-blue-400"
-                        style={{ width: `${pct}%` }}
+                        style={{ width: `${Math.max(pct, 1)}%` }}
                       />
                     </div>
                   </div>
-                  <span className="text-xs font-medium text-blue-800 tabular-nums dark:text-blue-200">
+                  <span
+                    dir="ltr"
+                    className="text-xs font-medium text-blue-800 tabular-nums dark:text-blue-200"
+                  >
                     {pct}%
                   </span>
                   {row.reservation_count > 0 && (

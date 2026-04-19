@@ -1018,7 +1018,6 @@
   "policies": {
     "title": "Policy Positions",
     "subtitle": "How MKs and factions voted on key issues",
-    "betaBanner": "New feature in initial rollout — data may be inaccurate as not all votes have been analyzed yet.",
     "noResults": "No policy positions found",
     "voteCount": "{count} votes",
     "stanceType": {
@@ -1030,13 +1029,14 @@
       "factions": "Factions"
     },
     "tier": {
-      "consistently_for": "Voted consistently for (≥95%)",
-      "almost_always_for": "Voted almost always for (85–94%)",
-      "generally_for": "Voted generally for (60–84%)",
-      "mixture": "Voted a mixture of for and against (40–59%)",
-      "generally_against": "Voted generally against (16–39%)",
-      "almost_always_against": "Voted almost always against (6–15%)",
-      "consistently_against": "Voted consistently against (≤5%)"
+      "very_strongly_for": "Voted very strongly for (>95%)",
+      "strongly_for": "Voted mostly for (80\u201395%)",
+      "moderately_for": "Voted moderately for (60\u201380%)",
+      "slightly_for": "Voted sometimes for (40\u201360%)",
+      "slightly_against": "Voted sometimes against (25\u201340%)",
+      "moderately_against": "Voted moderately against (15\u201325%)",
+      "strongly_against": "Voted mostly against (5\u201315%)",
+      "very_strongly_against": "Voted very strongly against (<5%)"
     },
     "cohesion": "Cohesion",
     "cohesionExplainer": "High cohesion means faction members voted uniformly. This can reflect a clear party stance, but may also indicate voting discipline that limits individual MK independence.",
@@ -1046,7 +1046,7 @@
     "filterByDomain": "Filter by domain",
     "allDomains": "All domains",
     "allTypes": "All types",
-    "searchPlaceholder": "Search policies…",
+    "searchPlaceholder": "Search policies\u2026",
     "clearFilters": "Clear filters",
     "score": "{score}% for",
     "viewVote": "View vote",
