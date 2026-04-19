@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import type { Metadata } from 'next';
 import { Vote, Check, X } from 'lucide-react';
-import { desc, asc, eq, sql, ilike, and } from 'drizzle-orm';
+import { desc, asc, eq, sql, ilike, and, gte, lte } from 'drizzle-orm';
 import { Link } from '@/i18n/navigation';
 import { db } from '@/lib/db';
 import { votes } from '@/lib/db/schema';
@@ -26,6 +26,11 @@ interface Props {
     search?: string;
     sort?: string;
     page?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    voteType?: string;
+    stage?: string;
+    reservation?: string;
   }>;
 }
 
@@ -42,6 +47,11 @@ export default async function VotesPage({ searchParams }: Props) {
   const sortBy = params.sort ?? 'dateDesc';
   const page = Math.max(1, Number(params.page ?? '1'));
   const offset = (page - 1) * PAGE_SIZE;
+  const dateFrom = params.dateFrom ?? '';
+  const dateTo = params.dateTo ?? '';
+  const voteType = params.voteType ?? '';
+  const stage = params.stage ?? '';
+  const reservation = params.reservation ?? '';
 
   const conditions = [];
   if (searchQuery) {
@@ -54,6 +64,21 @@ export default async function VotesPage({ searchParams }: Props) {
   }
   if (knessetNum) {
     conditions.push(eq(votes.knessetNum, knessetNum));
+  }
+  if (dateFrom) {
+    conditions.push(gte(votes.voteDate, new Date(dateFrom)));
+  }
+  if (dateTo) {
+    conditions.push(lte(votes.voteDate, new Date(dateTo)));
+  }
+  if (voteType) {
+    conditions.push(eq(votes.voteType, voteType));
+  }
+  if (stage) {
+    conditions.push(eq(votes.billStage, Number(stage)));
+  }
+  if (reservation === 'true') {
+    conditions.push(eq(votes.isReservation, true));
   }
 
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;

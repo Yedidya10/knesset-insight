@@ -7,7 +7,6 @@ import {
   voteStanceAlignment,
   memberVotes,
   members,
-  votes,
 } from '@/lib/db/schema';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -54,16 +53,14 @@ export default async function FactionPolicyStances({
   const locale = (await getLocale()) as 'he' | 'en' | 'ar' | 'ru';
   const minVotes = appConfig.policyStances.minVotesForScore;
 
-  // Get all vote stance alignments (exclude reservation votes)
+  // Get all vote stance alignments
   const alignments = await db
     .select({
       voteId: voteStanceAlignment.voteId,
       stanceId: voteStanceAlignment.stanceId,
       alignment: voteStanceAlignment.alignment,
     })
-    .from(voteStanceAlignment)
-    .innerJoin(votes, eq(voteStanceAlignment.voteId, votes.id))
-    .where(eq(votes.isReservation, false));
+    .from(voteStanceAlignment);
 
   if (alignments.length === 0) {
     return (
