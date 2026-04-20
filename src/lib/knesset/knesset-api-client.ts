@@ -178,15 +178,29 @@ async function fetchAllODataV4<T>(
 export async function fetchV4PlenumVotes(
   knessetNum: number,
 ): Promise<ODataV4PlenumVote[]> {
-  return fetchAllODataV4<ODataV4PlenumVote>(
+  const results = await fetchAllODataV4<ODataV4PlenumVote>(
     'KNS_PlenumVote',
     {
       $filter: `KNS_PlenumSession/KnessetNum eq ${knessetNum}`,
+      $expand: 'KNS_PlenumSession($select=KnessetNum)',
       $orderby: 'Id desc',
       $top: '100000',
     },
     `v4-votes-k${knessetNum}`,
   );
+
+  // Safety: filter out any votes whose session doesn't match the requested knesset.
+  // The v4 API pagination (nextLink) can occasionally leak unrelated votes.
+  const filtered = results.filter((v) => {
+    const sessionKn = v.KNS_PlenumSession?.KnessetNum;
+    return sessionKn === undefined || sessionKn === knessetNum;
+  });
+  if (filtered.length < results.length) {
+    console.warn(
+      `  [v4-votes-k${knessetNum}] Filtered out ${results.length - filtered.length} votes with wrong KnessetNum`,
+    );
+  }
+  return filtered;
 }
 
 /**

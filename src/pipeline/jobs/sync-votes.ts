@@ -123,7 +123,7 @@ async function fetchVoteHeadersFromV4(
       is_accepted: 0,
       vote_type: v.VoteMethodID ?? 1,
       is_elctrnc_vote: 0,
-      knesset_num: knessetNum,
+      knesset_num: v.KNS_PlenumSession?.KnessetNum ?? knessetNum,
       session_id: String(v.SessionID ?? ''),
       session_num: 0,
     }),
