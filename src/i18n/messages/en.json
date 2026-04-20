@@ -1088,7 +1088,7 @@
     "progress": {
       "title": "Stance Analysis Progress",
       "beta": "Initial rollout",
-      "classifiedVotes": "Classified votes",
+      "classifiedVotes": "Bill votes analyzed",
       "knesset": "Knesset {num}",
       "reservationsDeferred": "{count} reservations — deferred to next phase",
       "disclaimer": "Analysis is gradual, starting from the most recent Knesset. Stances and results may change as more votes are analyzed."
