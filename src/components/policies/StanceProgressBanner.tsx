@@ -27,17 +27,7 @@ export default async function StanceProgressBanner() {
     WITH all_bill_votes AS (
       SELECT v.knesset_num, COUNT(DISTINCT v.id)::int AS total_eligible
       FROM votes v
-      WHERE v.is_reservation = false
-        AND (
-          v.bill_id IS NOT NULL
-          OR (
-            v.title ILIKE '%חוק%'
-            AND v.title NOT ILIKE '%אי אמון%'
-            AND v.title NOT ILIKE '%אי-אמון%'
-            AND v.title NOT ILIKE '%סדר היום%'
-            AND v.title NOT ILIKE '%הודעת הממשלה%'
-          )
-        )
+      WHERE v.activity_type = 'bill'
       GROUP BY v.knesset_num
     ),
     analyzed_votes AS (

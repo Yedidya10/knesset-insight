@@ -1,24 +1,30 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useSyncExternalStore, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { X, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const STORAGE_KEY = 'data-disclosure-dismissed';
 
-function getInitialVisibility() {
-  if (typeof window === 'undefined') return false;
-  return !localStorage.getItem(STORAGE_KEY);
+function subscribe(cb: () => void) {
+  window.addEventListener('storage', cb);
+  return () => window.removeEventListener('storage', cb);
 }
+const getSnapshot = () => !localStorage.getItem(STORAGE_KEY);
+const getServerSnapshot = () => false;
 
 export function DataDisclosureBanner() {
   const t = useTranslations('dataDisclosure');
-  const [visible, setVisible] = useState(getInitialVisibility);
+  const visible = useSyncExternalStore(
+    subscribe,
+    getSnapshot,
+    getServerSnapshot,
+  );
 
   const dismiss = useCallback(() => {
     localStorage.setItem(STORAGE_KEY, '1');
-    setVisible(false);
+    window.dispatchEvent(new StorageEvent('storage', { key: STORAGE_KEY }));
   }, []);
 
   if (!visible) return null;
