@@ -1032,13 +1032,19 @@
       "total": "Total Cases",
       "verified": "Verified",
       "pending": "Pending",
+      "webPending": "Web source — requires approval",
       "noPendingCases": "No pending cases",
       "verify": "Verify",
       "reject": "Reject",
       "verifyTitle": "Verify Integrity Case",
       "rejectTitle": "Reject Integrity Case",
       "reasonPlaceholder": "Reason for action...",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "openSource": "Open source",
+      "source": {
+        "web": "Web",
+        "gov": "Official"
+      }
     },
     "sync": {
       "title": "Sync Status",
@@ -1146,7 +1152,7 @@
       "description": "Open-source civic-tech platform for tracking the Israeli Knesset — MKs, plenary votes, legislation, committees, state budget, elections and policy positions. Parliamentary transparency for every citizen."
     },
     "members": {
-      "title": "Members of Knesset — Knesset Insight",
+      "title": "Members of Knesset",
       "description": "List of Knesset members — search, filter by faction, voting records and legislative initiatives",
       "detail": {
         "title": "{name} — MK Profile",
@@ -1154,7 +1160,7 @@
       }
     },
     "votes": {
-      "title": "Votes — Knesset Insight",
+      "title": "Votes",
       "description": "Knesset plenary votes — faction breakdown, coalition and opposition",
       "detail": {
         "title": "{name} — Vote",
@@ -1162,7 +1168,7 @@
       }
     },
     "legislation": {
-      "title": "Legislation — Knesset Insight",
+      "title": "Legislation",
       "description": "Bills in the Knesset — track legislative stages, votes and sponsors",
       "detail": {
         "title": "{name} — Bill",
@@ -1170,7 +1176,7 @@
       }
     },
     "committees": {
-      "title": "Knesset Committees — Knesset Insight",
+      "title": "Knesset Committees",
       "description": "Knesset committees — standing, special and inquiry committees, members and sessions",
       "detail": {
         "title": "{name} — Knesset Committee",
@@ -1178,31 +1184,31 @@
       }
     },
     "politics": {
-      "title": "Politics — Knesset Insight",
+      "title": "Politics",
       "description": "Factions, parties and political groups in the Knesset — composition, timeline and connections"
     },
     "elections": {
-      "title": "Elections — Knesset Insight",
+      "title": "Elections",
       "description": "Knesset election results — history, mandates and polls"
     },
     "governments": {
-      "title": "Israeli Governments — Knesset Insight",
+      "title": "Israeli Governments",
       "description": "Israeli governments — Prime Minister, ministers, coalition factions and composition",
       "detail": {
-        "title": "Government {number} — Knesset Insight",
+        "title": "Government {number}",
         "description": "Government {number} — Prime Minister, ministers and coalition composition"
       }
     },
     "budget": {
-      "title": "State Budget — Knesset Insight",
+      "title": "State Budget",
       "description": "Israeli state budget — allocation by ministry, utilization rates and yearly comparisons"
     },
     "electionMap": {
-      "title": "Election Map — Knesset Insight",
+      "title": "Election Map",
       "description": "Interactive map of Israeli election results by city — voter turnout, party breakdown and trends"
     },
     "policies": {
-      "title": "Policy Positions — Knesset Insight",
+      "title": "Policy Positions",
       "description": "Policy positions of MKs and factions — how they voted on key issues",
       "detail": {
         "title": "{name} — Policy Position",
@@ -1210,23 +1216,23 @@
       }
     },
     "about": {
-      "title": "About — Knesset Insight",
+      "title": "About",
       "description": "About Knesset Insight — our mission, team and vision"
     },
     "openSource": {
-      "title": "Open Source — Knesset Insight",
+      "title": "Open Source",
       "description": "Knesset Insight is an open-source platform — view the source code and contribute"
     },
     "dataSources": {
-      "title": "Data Sources — Knesset Insight",
+      "title": "Data Sources",
       "description": "Knesset Insight data sources — Knesset API, Open Knesset and more"
     },
     "privacy": {
-      "title": "Privacy Policy — Knesset Insight",
+      "title": "Privacy Policy",
       "description": "Knesset Insight privacy policy — how we collect and protect your data"
     },
     "terms": {
-      "title": "Terms of Use — Knesset Insight",
+      "title": "Terms of Use",
       "description": "Knesset Insight terms of use"
     }
   },
