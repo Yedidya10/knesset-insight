@@ -8,10 +8,28 @@ import {
   ArrowLeftRight,
   Sparkles,
 } from 'lucide-react';
-import { desc, asc, eq, sql, ilike, and, or, exists } from 'drizzle-orm';
+import {
+  desc,
+  asc,
+  eq,
+  sql,
+  ilike,
+  and,
+  or,
+  exists,
+  inArray,
+  gte,
+  lte,
+} from 'drizzle-orm';
 import { Link } from '@/i18n/navigation';
 import { db } from '@/lib/db';
-import { bills, billNames } from '@/lib/db/schema';
+import {
+  bills,
+  billNames,
+  members,
+  factions,
+  committees,
+} from '@/lib/db/schema';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import TranslatedText from '@/components/ui/translated-text';
@@ -30,7 +48,6 @@ import EntityActivityPopover from '@/components/admin/inline/EntityActivityPopov
 import { getBillStatusText } from '@/lib/knesset/bill-status';
 import { computeBillStage } from '@/lib/knesset/bill-stages';
 
-// Mapping between URL-friendly English slugs and Hebrew billType stored in DB
 const BILL_TYPE_SLUGS = ['government', 'private', 'committee'] as const;
 type BillTypeSlug = (typeof BILL_TYPE_SLUGS)[number];
 const SLUG_TO_HEBREW: Record<BillTypeSlug, string> = {
@@ -46,13 +63,29 @@ interface Props {
     status?: string;
     search?: string;
     sort?: string;
+    sortDir?: string;
     page?: string;
+    stage?: string;
+    dateFrom?: string;
+    dateTo?: string;
+    initiatorFaction?: string;
+    initiatorMember?: string;
+    committee?: string;
   }>;
 }
 
 const PAGE_SIZE = 50;
 
 export const dynamic = 'force-dynamic';
+
+function parseList(v?: string): number[] {
+  return (v ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map(Number)
+    .filter((n) => !Number.isNaN(n));
+}
 
 export default async function LegislationPage({ searchParams }: Props) {
   const t = await getTranslations('legislation');
@@ -63,9 +96,32 @@ export default async function LegislationPage({ searchParams }: Props) {
   const billType = params.type ?? '';
   const statusFilter = params.status ?? '';
   const searchQuery = params.search ?? '';
-  const sortBy = params.sort ?? 'dateDesc';
+  const rawSort = params.sort ?? '';
+  // Back-compat: legacy `dateDesc` / `dateAsc` / `nameAsc` / `nameDesc` combined codes.
+  let sortBy: string;
+  let sortDir: 'asc' | 'desc';
+  if (rawSort === 'dateAsc') {
+    sortBy = 'date';
+    sortDir = 'asc';
+  } else if (rawSort === 'nameAsc') {
+    sortBy = 'name';
+    sortDir = 'asc';
+  } else if (rawSort === 'nameDesc') {
+    sortBy = 'name';
+    sortDir = 'desc';
+  } else {
+    sortBy = rawSort || 'date';
+    sortDir = params.sortDir === 'asc' ? 'asc' : 'desc';
+  }
   const page = Math.max(1, Number(params.page ?? '1'));
   const offset = (page - 1) * PAGE_SIZE;
+
+  const stages = parseList(params.stage);
+  const dateFrom = params.dateFrom ?? '';
+  const dateTo = params.dateTo ?? '';
+  const initiatorFactionIds = parseList(params.initiatorFaction);
+  const initiatorMemberIds = parseList(params.initiatorMember);
+  const committeeIds = parseList(params.committee);
 
   const conditions = [];
   if (knessetNum) conditions.push(eq(bills.knessetNum, knessetNum));
@@ -92,17 +148,47 @@ export default async function LegislationPage({ searchParams }: Props) {
       ),
     );
   }
+  if (stages.length > 0) {
+    conditions.push(inArray(bills.currentStage, stages));
+  }
+  if (dateFrom) conditions.push(gte(bills.proposedDate, dateFrom));
+  if (dateTo) conditions.push(lte(bills.proposedDate, dateTo));
+  if (committeeIds.length > 0) {
+    conditions.push(inArray(bills.committeeId, committeeIds));
+  }
+  if (initiatorMemberIds.length > 0) {
+    conditions.push(
+      sql`EXISTS (
+        SELECT 1 FROM bill_initiators bi
+        WHERE bi.bill_id = ${bills.id} AND bi.member_id = ANY(${initiatorMemberIds})
+      )`,
+    );
+  }
+  if (initiatorFactionIds.length > 0) {
+    // Members' current factionId (members.faction_id is latest; close enough for filter)
+    conditions.push(
+      sql`EXISTS (
+        SELECT 1 FROM bill_initiators bi
+        INNER JOIN members m ON m.id = bi.member_id
+        WHERE bi.bill_id = ${bills.id} AND m.faction_id = ANY(${initiatorFactionIds})
+      )`,
+    );
+  }
 
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
   const orderByClause =
-    sortBy === 'dateAsc'
-      ? asc(bills.proposedDate)
-      : sortBy === 'nameAsc'
+    sortBy === 'name'
+      ? sortDir === 'asc'
         ? asc(bills.name)
-        : sortBy === 'nameDesc'
-          ? desc(bills.name)
-          : desc(bills.knessetId);
+        : desc(bills.name)
+      : sortBy === 'stage'
+        ? sortDir === 'asc'
+          ? asc(bills.currentStage)
+          : desc(bills.currentStage)
+        : sortDir === 'asc'
+          ? asc(bills.proposedDate)
+          : desc(bills.proposedDate);
 
   const [data, countResult] = await Promise.all([
     db
@@ -131,9 +217,7 @@ export default async function LegislationPage({ searchParams }: Props) {
   const totalCount = countResult[0]?.count ?? 0;
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
-  // Bill type slugs for filter (static list — no DB query needed)
-
-  // Distinct statuses for filter
+  // Distinct statuses
   const rawStatuses = await db
     .selectDistinct({ status: bills.status })
     .from(bills)
@@ -145,6 +229,39 @@ export default async function LegislationPage({ searchParams }: Props) {
       value: s.status!,
       label: getBillStatusText(s.status),
     }));
+
+  // Reference lists for advanced filters
+  const [factionRows, memberRows, committeeRows] = await Promise.all([
+    db
+      .selectDistinct({ id: factions.id, name: factions.name })
+      .from(factions)
+      .where(sql`${factions.name} IS NOT NULL`)
+      .orderBy(factions.name),
+    db
+      .select({
+        id: members.id,
+        firstName: members.firstName,
+        lastName: members.lastName,
+      })
+      .from(members)
+      .where(
+        sql`EXISTS (SELECT 1 FROM bill_initiators bi WHERE bi.member_id = ${members.id})`,
+      )
+      .orderBy(members.lastName, members.firstName),
+    db
+      .select({ id: committees.id, name: committees.name })
+      .from(committees)
+      .orderBy(committees.name),
+  ]);
+
+  const factionList = factionRows
+    .filter((f) => f.name)
+    .map((f) => ({ id: f.id, name: f.name! }));
+  const memberList = memberRows.map((m) => ({
+    id: m.id,
+    name: `${m.firstName} ${m.lastName}`,
+  }));
+  const committeeList = committeeRows.map((c) => ({ id: c.id, name: c.name }));
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
@@ -162,11 +279,13 @@ export default async function LegislationPage({ searchParams }: Props) {
         </div>
       </div>
 
-      {/* Filters */}
       <div className="mb-6">
         <LegislationFilter
           billTypes={[...BILL_TYPE_SLUGS]}
           statusOptions={statusOptions}
+          factions={factionList}
+          members={memberList}
+          committees={committeeList}
         />
       </div>
 
@@ -273,7 +392,6 @@ export default async function LegislationPage({ searchParams }: Props) {
             })}
           </div>
 
-          {/* Pagination */}
           <PaginationNav
             currentPage={page}
             totalPages={totalPages}
@@ -283,8 +401,17 @@ export default async function LegislationPage({ searchParams }: Props) {
               if (billType) urlParams.set('type', billType);
               if (statusFilter) urlParams.set('status', statusFilter);
               if (searchQuery) urlParams.set('search', searchQuery);
-              if (sortBy && sortBy !== 'dateDesc')
-                urlParams.set('sort', sortBy);
+              if (sortBy !== 'date') urlParams.set('sort', sortBy);
+              if (sortDir !== 'desc') urlParams.set('sortDir', sortDir);
+              if (params.stage) urlParams.set('stage', params.stage);
+              if (dateFrom) urlParams.set('dateFrom', dateFrom);
+              if (dateTo) urlParams.set('dateTo', dateTo);
+              if (params.initiatorFaction)
+                urlParams.set('initiatorFaction', params.initiatorFaction);
+              if (params.initiatorMember)
+                urlParams.set('initiatorMember', params.initiatorMember);
+              if (params.committee)
+                urlParams.set('committee', params.committee);
               if (p > 1) urlParams.set('page', String(p));
               const qs = urlParams.toString();
               return `/legislation${qs ? `?${qs}` : ''}`;

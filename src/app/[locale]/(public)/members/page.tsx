@@ -7,13 +7,13 @@ import { db } from '@/lib/db';
 import {
   members,
   factions,
+  politicalGroups,
   billInitiators,
   memberFactionHistory,
   factionCoalitionPeriods,
   memberVotes,
   votes,
   committees,
-  committeeMembers,
 } from '@/lib/db/schema';
 import MemberCard from '@/components/members/MemberCard';
 import MembersFilter from '@/components/members/MembersFilter';
@@ -36,6 +36,7 @@ interface Props {
   searchParams: Promise<{
     party?: string;
     sort?: string;
+    sortDir?: string;
     status?: string;
     search?: string;
     knesset?: string;
@@ -44,7 +45,23 @@ interface Props {
     details?: string;
     page?: string;
     committee?: string;
+    politicalGroup?: string;
+    knessetTerms?: string;
+    committeeRole?: string;
+    ageFrom?: string;
+    ageTo?: string;
+    seniorityFrom?: string;
+    seniorityTo?: string;
   }>;
+}
+
+function parseList(v?: string): number[] {
+  return (v ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map(Number)
+    .filter((n) => !Number.isNaN(n));
 }
 
 export default async function MembersPage({ searchParams }: Props) {
@@ -53,15 +70,25 @@ export default async function MembersPage({ searchParams }: Props) {
   const params = await searchParams;
   const page = Math.max(1, Number(params.page ?? '1'));
   const offset = (page - 1) * PAGE_SIZE;
-  const partyFilter = params.party ?? '';
+  const partyIds = parseList(params.party);
   const sortBy = params.sort ?? 'name';
+  const sortDir: 'asc' | 'desc' = params.sortDir === 'desc' ? 'desc' : 'asc';
   const statusFilter = params.status ?? 'current';
   const searchQuery = params.search ?? '';
   const knessetFilter = params.knesset ?? '';
   const coalitionFilter = params.coalition ?? '';
   const genderFilter = params.gender ?? '';
   const showDetails = params.details === 'true';
-  const committeeFilter = params.committee ?? '';
+  const committeeIds = parseList(params.committee);
+  const politicalGroupIds = parseList(params.politicalGroup);
+  const knessetTerms = parseList(params.knessetTerms);
+  const committeeRole = params.committeeRole ?? '';
+  const ageFrom = params.ageFrom ? Number(params.ageFrom) : null;
+  const ageTo = params.ageTo ? Number(params.ageTo) : null;
+  const seniorityFrom = params.seniorityFrom
+    ? Number(params.seniorityFrom)
+    : null;
+  const seniorityTo = params.seniorityTo ? Number(params.seniorityTo) : null;
 
   // Get available knesset numbers from faction history (complete) + factions (current)
   const knessetNums = await db
@@ -87,7 +114,6 @@ export default async function MembersPage({ searchParams }: Props) {
     .where(eq(factionCoalitionPeriods.knessetNum, selectedKnesset));
   const latestGovNum = maxGovRow?.maxGov ?? null;
 
-  // Fetch coalition factionIds for the latest government
   let coalitionFactionDbIds: Set<number> = new Set();
   if (latestGovNum != null) {
     const coalitionRows = await db
@@ -102,10 +128,6 @@ export default async function MembersPage({ searchParams }: Props) {
     coalitionFactionDbIds = new Set(coalitionRows.map((r) => r.factionId));
   }
 
-  // For past knessets, pre-fetch member→faction mapping from history.
-  // The members table stores only ONE factionId per member (typically latest),
-  // but members serve across multiple knessets with different factions.
-  // memberFactionHistory has the complete per-knesset faction data.
   type HistoryFactionInfo = {
     factionId: number;
     factionName: string | null;
@@ -133,7 +155,6 @@ export default async function MembersPage({ searchParams }: Props) {
 
     historyFactionMap = new Map();
     for (const row of historyRows) {
-      // First entry per member is the latest (due to DESC startDate order)
       if (!historyFactionMap.has(row.memberId)) {
         historyFactionMap.set(row.memberId, {
           factionId: row.factionId,
@@ -169,7 +190,14 @@ export default async function MembersPage({ searchParams }: Props) {
       .map((f) => ({ id: f.id, name: f.name }));
   }
 
-  // Fetch committees for the advanced filter
+  // Political groups list (cross-term)
+  const pgRows = await db
+    .select({ id: politicalGroups.id, name: politicalGroups.canonicalName })
+    .from(politicalGroups)
+    .orderBy(politicalGroups.canonicalName);
+  const politicalGroupList = pgRows.map((r) => ({ id: r.id, name: r.name }));
+
+  // Committee list for filter dropdown
   const committeeList = await db
     .select({ id: committees.id, name: committees.name })
     .from(committees)
@@ -180,7 +208,6 @@ export default async function MembersPage({ searchParams }: Props) {
   const conditions = [];
 
   if (historyFactionMap) {
-    // Past knesset: select members from faction history, pre-filter by party/coalition
     let eligibleIds = [...historyFactionMap.keys()];
 
     if (coalitionFilter === 'coalition') {
@@ -193,10 +220,10 @@ export default async function MembersPage({ searchParams }: Props) {
       );
     }
 
-    if (partyFilter) {
-      const partyId = Number(partyFilter);
-      eligibleIds = eligibleIds.filter(
-        (id) => historyFactionMap!.get(id)?.factionId === partyId,
+    if (partyIds.length > 0) {
+      const partySet = new Set(partyIds);
+      eligibleIds = eligibleIds.filter((id) =>
+        partySet.has(historyFactionMap!.get(id)?.factionId ?? -1),
       );
     }
 
@@ -206,7 +233,6 @@ export default async function MembersPage({ searchParams }: Props) {
       conditions.push(sql`false`);
     }
   } else {
-    // Current knesset: filter by faction on members table
     const knessetFactionIds = await db
       .select({ id: factions.id })
       .from(factions)
@@ -218,7 +244,6 @@ export default async function MembersPage({ searchParams }: Props) {
       conditions.push(sql`false`);
     }
 
-    // Status filter — only relevant for current knesset
     if (statusFilter === 'current') {
       conditions.push(eq(members.isCurrent, true));
     } else if (statusFilter === 'past') {
@@ -227,11 +252,9 @@ export default async function MembersPage({ searchParams }: Props) {
       );
     }
 
-    // Coalition/opposition filter — use period-derived faction IDs
     if (coalitionFilter === 'coalition' && coalitionFactionDbIds.size > 0) {
       conditions.push(inArray(members.factionId, [...coalitionFactionDbIds]));
     } else if (coalitionFilter === 'opposition') {
-      // Opposition = factions NOT in the coalition set
       const oppositionFactionIds = kfIds.filter(
         (id) => !coalitionFactionDbIds.has(id),
       );
@@ -241,22 +264,16 @@ export default async function MembersPage({ searchParams }: Props) {
         conditions.push(sql`false`);
       }
     }
+
+    if (partyIds.length > 0) {
+      conditions.push(inArray(members.factionId, partyIds));
+    }
   }
 
-  // Gender filter (matches DB values: "זכר" / "נקבה")
   if (genderFilter === 'male') {
     conditions.push(eq(members.gender, 'זכר'));
   } else if (genderFilter === 'female') {
     conditions.push(eq(members.gender, 'נקבה'));
-  }
-
-  if (!historyFactionMap && partyFilter) {
-    const partyId = Number(partyFilter);
-    if (!isNaN(partyId)) {
-      conditions.push(eq(members.factionId, partyId));
-    } else {
-      conditions.push(sql`false`);
-    }
   }
 
   if (searchQuery) {
@@ -272,10 +289,68 @@ export default async function MembersPage({ searchParams }: Props) {
     );
   }
 
-  // Committee membership filter
-  if (committeeFilter) {
+  // Committee membership filter (multi-select)
+  if (committeeIds.length > 0) {
     conditions.push(
-      sql`EXISTS (SELECT 1 FROM committee_members cm WHERE cm.member_id = ${members.id} AND cm.committee_id = ${Number(committeeFilter)})`,
+      sql`EXISTS (SELECT 1 FROM committee_members cm WHERE cm.member_id = ${members.id} AND cm.committee_id = ANY(${committeeIds}))`,
+    );
+  }
+
+  // Political group filter — via factions.political_group_id
+  if (politicalGroupIds.length > 0) {
+    conditions.push(
+      sql`${members.factionId} IN (
+        SELECT id FROM factions WHERE political_group_id = ANY(${politicalGroupIds})
+      )`,
+    );
+  }
+
+  // Knesset terms served — via memberFactionHistory
+  if (knessetTerms.length > 0) {
+    conditions.push(
+      sql`EXISTS (
+        SELECT 1 FROM member_faction_history mfh
+        WHERE mfh.member_id = ${members.id} AND mfh.knesset_num = ANY(${knessetTerms})
+      )`,
+    );
+  }
+
+  // Committee role filter
+  if (committeeRole === 'chair') {
+    conditions.push(
+      sql`EXISTS (SELECT 1 FROM committee_members cm WHERE cm.member_id = ${members.id} AND cm.position_id = 41)`,
+    );
+  } else if (committeeRole === 'deputy') {
+    conditions.push(
+      sql`EXISTS (SELECT 1 FROM committee_members cm WHERE cm.member_id = ${members.id} AND cm.position_id = 67)`,
+    );
+  } else if (committeeRole === 'member') {
+    conditions.push(
+      sql`EXISTS (SELECT 1 FROM committee_members cm WHERE cm.member_id = ${members.id} AND (cm.position_id IS NULL OR cm.position_id NOT IN (41, 67)))`,
+    );
+  }
+
+  // Age range (years from birth_date)
+  if (ageFrom != null && !Number.isNaN(ageFrom)) {
+    conditions.push(
+      sql`date_part('year', age(${members.birthDate})) >= ${ageFrom}`,
+    );
+  }
+  if (ageTo != null && !Number.isNaN(ageTo)) {
+    conditions.push(
+      sql`date_part('year', age(${members.birthDate})) <= ${ageTo}`,
+    );
+  }
+
+  // Seniority range (years from start_date)
+  if (seniorityFrom != null && !Number.isNaN(seniorityFrom)) {
+    conditions.push(
+      sql`date_part('year', age(${members.startDate})) >= ${seniorityFrom}`,
+    );
+  }
+  if (seniorityTo != null && !Number.isNaN(seniorityTo)) {
+    conditions.push(
+      sql`date_part('year', age(${members.startDate})) <= ${seniorityTo}`,
     );
   }
 
@@ -290,7 +365,7 @@ export default async function MembersPage({ searchParams }: Props) {
   const totalCount = countResult?.count ?? 0;
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
-  // Query 1: Fetch ALL matching members (no pagination — sort globally then slice)
+  // Fetch ALL matching members — sort requires some post-processing (billCount / absentCount)
   const memberRows = await db
     .select({
       id: members.id,
@@ -313,7 +388,6 @@ export default async function MembersPage({ searchParams }: Props) {
 
   const allMemberIds = memberRows.map((m) => m.id);
 
-  // Query 2: Bill initiator counts per member (all matching members)
   const billCountMap = new Map<number, number>();
   if (allMemberIds.length > 0) {
     const billRows = await db
@@ -330,7 +404,6 @@ export default async function MembersPage({ searchParams }: Props) {
     }
   }
 
-  // Query 3: Absence counts per member (voteValue = 'absent')
   const absentCountMap = new Map<number, number>();
   if (allMemberIds.length > 0) {
     const absentRows = await db
@@ -354,7 +427,6 @@ export default async function MembersPage({ searchParams }: Props) {
     }
   }
 
-  // Merge all data — for past knessets, override faction data with history
   const allData = memberRows.map((m) => {
     const historyInfo = historyFactionMap?.get(m.id);
     const isCoalition = historyInfo
@@ -377,35 +449,35 @@ export default async function MembersPage({ searchParams }: Props) {
     };
   });
 
-  // Apply global sorting before pagination
-  if (sortBy !== 'name') {
-    allData.sort((a, b) => {
-      switch (sortBy) {
-        case 'mostBills':
-          return b.billCount - a.billCount;
-        case 'mostAbsent':
-          return b.absentCount - a.absentCount;
-        case 'seniority': {
-          // Earliest startDate first; nulls last
-          if (!a.startDate && !b.startDate) return 0;
-          if (!a.startDate) return 1;
-          if (!b.startDate) return -1;
-          return a.startDate.localeCompare(b.startDate);
-        }
-        case 'age': {
-          // Earliest birthDate first (oldest); nulls last
-          if (!a.birthDate && !b.birthDate) return 0;
-          if (!a.birthDate) return 1;
-          if (!b.birthDate) return -1;
-          return a.birthDate.localeCompare(b.birthDate);
-        }
-        default:
-          return 0;
+  // Global sort — apply direction via sign
+  const sign = sortDir === 'desc' ? -1 : 1;
+  allData.sort((a, b) => {
+    switch (sortBy) {
+      case 'mostBills':
+        return sign * (b.billCount - a.billCount);
+      case 'mostAbsent':
+        return sign * (b.absentCount - a.absentCount);
+      case 'seniority': {
+        if (!a.startDate && !b.startDate) return 0;
+        if (!a.startDate) return 1;
+        if (!b.startDate) return -1;
+        return sign * a.startDate.localeCompare(b.startDate);
       }
-    });
-  }
+      case 'age': {
+        if (!a.birthDate && !b.birthDate) return 0;
+        if (!a.birthDate) return 1;
+        if (!b.birthDate) return -1;
+        return sign * a.birthDate.localeCompare(b.birthDate);
+      }
+      case 'name':
+      default: {
+        const la = `${a.lastName} ${a.firstName}`;
+        const lb = `${b.lastName} ${b.firstName}`;
+        return sign * la.localeCompare(lb);
+      }
+    }
+  });
 
-  // Apply pagination after sorting
   const data = allData.slice(offset, offset + PAGE_SIZE);
 
   const subtitleKey = !isCurrentKnesset
@@ -434,6 +506,7 @@ export default async function MembersPage({ searchParams }: Props) {
         <Suspense>
           <MembersFilter
             factions={factionList}
+            politicalGroups={politicalGroupList}
             knessetNumbers={availableKnessets}
             currentKnessetNumber={currentKnesset}
             showDetails={showDetails}
@@ -459,14 +532,28 @@ export default async function MembersPage({ searchParams }: Props) {
             totalPages={totalPages}
             buildPageUrl={(p) => {
               const urlParams = new URLSearchParams();
-              if (partyFilter) urlParams.set('party', partyFilter);
+              if (params.party) urlParams.set('party', params.party);
               if (sortBy !== 'name') urlParams.set('sort', sortBy);
+              if (sortDir !== 'asc') urlParams.set('sortDir', sortDir);
               if (statusFilter !== 'current')
                 urlParams.set('status', statusFilter);
               if (searchQuery) urlParams.set('search', searchQuery);
               if (knessetFilter) urlParams.set('knesset', knessetFilter);
               if (coalitionFilter) urlParams.set('coalition', coalitionFilter);
               if (genderFilter) urlParams.set('gender', genderFilter);
+              if (params.committee)
+                urlParams.set('committee', params.committee);
+              if (params.politicalGroup)
+                urlParams.set('politicalGroup', params.politicalGroup);
+              if (params.knessetTerms)
+                urlParams.set('knessetTerms', params.knessetTerms);
+              if (committeeRole) urlParams.set('committeeRole', committeeRole);
+              if (params.ageFrom) urlParams.set('ageFrom', params.ageFrom);
+              if (params.ageTo) urlParams.set('ageTo', params.ageTo);
+              if (params.seniorityFrom)
+                urlParams.set('seniorityFrom', params.seniorityFrom);
+              if (params.seniorityTo)
+                urlParams.set('seniorityTo', params.seniorityTo);
               if (showDetails) urlParams.set('details', 'true');
               if (p > 1) urlParams.set('page', String(p));
               const qs = urlParams.toString();

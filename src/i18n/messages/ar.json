@@ -200,6 +200,20 @@
       "committee": "اللجنة",
       "allCommittees": "جميع اللجان",
       "advancedGroup": "تصفية متقدمة",
+      "politicalGroup": "المجموعة السياسية",
+      "allPoliticalGroups": "جميع المجموعات السياسية",
+      "knessetTerms": "دورات الكنيست",
+      "committeeRole": "الدور في اللجنة",
+      "committeeRoleAll": "جميع الأدوار",
+      "committeeRoleChair": "رئيس",
+      "committeeRoleDeputy": "نائب رئيس",
+      "committeeRoleMember": "عضو لجنة",
+      "ageRange": "نطاق العمر",
+      "ageFrom": "من عمر",
+      "ageTo": "إلى عمر",
+      "seniorityRange": "الأقدمية (سنوات)",
+      "seniorityFrom": "من",
+      "seniorityTo": "إلى",
       "searchPlaceholder": "البحث حسب الاسم...",
       "statusCurrent": "الحاليون",
       "statusPast": "السابقون",
@@ -247,6 +261,7 @@
     "noResults": "لم يتم العثور على تصويتات",
     "filter": {
       "knessetNum": "رقم الكنيست",
+      "knesset": "الكنيست",
       "allKnessets": "جميع الكنيست",
       "dateFrom": "من تاريخ",
       "dateTo": "إلى تاريخ",
@@ -288,6 +303,7 @@
     },
     "sort": {
       "title": "ترتيب",
+      "date": "التاريخ",
       "dateDesc": "التاريخ (الأحدث أولاً)",
       "dateAsc": "التاريخ (الأقدم أولاً)",
       "mostVotes": "الأكثر تصويتاً",
@@ -325,9 +341,20 @@
       "allKnessets": "جميع الكنيست",
       "allTypes": "جميع الأنواع",
       "allStatuses": "جميع الحالات",
-      "clearFilters": "مسح التصفية"
+      "clearFilters": "مسح التصفية",
+      "advancedGroup": "تصفية متقدمة",
+      "stage": "المرحلة التشريعية",
+      "proposedDateRange": "نطاق تاريخ التقديم",
+      "dateFrom": "من",
+      "dateTo": "إلى",
+      "initiatorMember": "المقدم (عضو كنيست)",
+      "initiatorFaction": "المقدم (كتلة)",
+      "committee": "اللجنة"
     },
     "sort": {
+      "date": "التاريخ",
+      "name": "الاسم",
+      "stage": "المرحلة التشريعية",
       "dateDesc": "التاريخ (الأحدث)",
       "dateAsc": "التاريخ (الأقدم)",
       "nameAsc": "الاسم (أ-ي)",
@@ -479,6 +506,23 @@
     "inactive": "لجان غير نشطة",
     "knesset": "الكنيست",
     "noResults": "لم يتم العثور على لجان",
+    "filter": {
+      "searchPlaceholder": "ابحث باسم اللجنة...",
+      "knesset": "الكنيست",
+      "type": "نوع اللجنة",
+      "activeOnly": "النشطة فقط",
+      "chairman": "الرئيس",
+      "memberCountRange": "عدد الأعضاء",
+      "from": "من",
+      "to": "إلى",
+      "advancedGroup": "تصفية متقدمة",
+      "noResults": "لا توجد لجان تطابق التصفية"
+    },
+    "sort": {
+      "name": "الاسم",
+      "memberCount": "عدد الأعضاء",
+      "knesset": "الكنيست"
+    },
     "detail": {
       "chairman": "رئيس اللجنة",
       "type": "نوع اللجنة",
@@ -1352,6 +1396,10 @@
     "noActiveFilters": "لا توجد فلاتر نشطة",
     "search": "بحث...",
     "from": "من",
-    "to": "إلى"
+    "to": "إلى",
+    "sortDirAsc": "الأقدم أولاً",
+    "sortDirDesc": "الأحدث أولاً",
+    "noResults": "لا توجد نتائج",
+    "selectedCount": "{count} مختار"
   }
 }

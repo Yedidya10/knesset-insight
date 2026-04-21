@@ -200,6 +200,20 @@
       "committee": "ועדה",
       "allCommittees": "כל הוועדות",
       "advancedGroup": "סינון מתקדם",
+      "politicalGroup": "קבוצה פוליטית",
+      "allPoliticalGroups": "כל הקבוצות הפוליטיות",
+      "knessetTerms": "כנסות",
+      "committeeRole": "תפקיד בוועדה",
+      "committeeRoleAll": "כל התפקידים",
+      "committeeRoleChair": "יושב/ת ראש",
+      "committeeRoleDeputy": "סגן/ית יו״ר",
+      "committeeRoleMember": "חבר/ת ועדה",
+      "ageRange": "טווח גיל",
+      "ageFrom": "מגיל",
+      "ageTo": "עד גיל",
+      "seniorityRange": "ותק (שנים)",
+      "seniorityFrom": "ותק מ-",
+      "seniorityTo": "ותק עד",
       "searchPlaceholder": "חיפוש לפי שם...",
       "statusCurrent": "נוכחיים",
       "statusPast": "לשעבר",
@@ -247,6 +261,7 @@
     "noResults": "לא נמצאו הצבעות",
     "filter": {
       "knessetNum": "מספר כנסת",
+      "knesset": "כנסת",
       "allKnessets": "כל הכנסיות",
       "dateFrom": "מתאריך",
       "dateTo": "עד תאריך",
@@ -288,6 +303,7 @@
     },
     "sort": {
       "title": "מיון",
+      "date": "תאריך",
       "dateDesc": "תאריך (חדש לישן)",
       "dateAsc": "תאריך (ישן לחדש)",
       "mostVotes": "הכי הרבה מצביעים",
@@ -325,9 +341,20 @@
       "allKnessets": "כל הכנסות",
       "allTypes": "כל הסוגים",
       "allStatuses": "כל הסטטוסים",
-      "clearFilters": "נקה סינון"
+      "clearFilters": "נקה סינון",
+      "advancedGroup": "סינון מתקדם",
+      "stage": "שלב חקיקה",
+      "proposedDateRange": "טווח תאריכי הגשה",
+      "dateFrom": "מתאריך",
+      "dateTo": "עד תאריך",
+      "initiatorMember": "יוזם (חבר/ת כנסת)",
+      "initiatorFaction": "יוזם (סיעה)",
+      "committee": "ועדה מטפלת"
     },
     "sort": {
+      "date": "תאריך",
+      "name": "שם",
+      "stage": "שלב חקיקה",
       "dateDesc": "תאריך (חדש לישן)",
       "dateAsc": "תאריך (ישן לחדש)",
       "nameAsc": "שם (א-ת)",
@@ -478,6 +505,23 @@
     "inactive": "ועדות לא פעילות",
     "knesset": "כנסת",
     "noResults": "לא נמצאו ועדות",
+    "filter": {
+      "searchPlaceholder": "חיפוש לפי שם ועדה...",
+      "knesset": "כנסת",
+      "type": "סוג ועדה",
+      "activeOnly": "פעילות בלבד",
+      "chairman": "יו\"ר",
+      "memberCountRange": "טווח חברים",
+      "from": "מ-",
+      "to": "עד",
+      "advancedGroup": "סינון מתקדם",
+      "noResults": "לא נמצאו ועדות התואמות לסינון"
+    },
+    "sort": {
+      "name": "שם",
+      "memberCount": "מספר חברים",
+      "knesset": "כנסת"
+    },
     "detail": {
       "chairman": "יו\"ר הוועדה",
       "type": "סוג ועדה",
@@ -1351,6 +1395,10 @@
     "noActiveFilters": "אין סינונים פעילים",
     "search": "חיפוש...",
     "from": "מ-",
-    "to": "עד"
+    "to": "עד",
+    "sortDirAsc": "מהישן לחדש",
+    "sortDirDesc": "מהחדש לישן",
+    "noResults": "לא נמצאו תוצאות",
+    "selectedCount": "{count} נבחרו"
   }
 }

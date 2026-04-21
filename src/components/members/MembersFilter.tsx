@@ -14,9 +14,11 @@ import {
 import { FilterBar } from '@/components/filters';
 import { useFilterParams } from '@/hooks/use-filter-params';
 import type { FilterFieldConfig, SortOption } from '@/components/filters';
+import { SUPPORTED_KNESSETS } from '@/lib/constants/knessets';
 
 interface MembersFilterProps {
   factions: Array<{ id: number; name: string }>;
+  politicalGroups: Array<{ id: number; name: string }>;
   knessetNumbers: number[];
   currentKnessetNumber: number;
   showDetails: boolean;
@@ -25,6 +27,7 @@ interface MembersFilterProps {
 
 export default function MembersFilter({
   factions,
+  politicalGroups,
   knessetNumbers,
   currentKnessetNumber,
   showDetails,
@@ -43,16 +46,14 @@ export default function MembersFilter({
       },
       {
         key: 'party',
-        type: 'select' as const,
+        type: 'multiSelect' as const,
         label: t('allFactions'),
         primary: true,
-        options: [
-          { value: '_all', label: t('allFactions') },
-          ...factions.map((f) => ({
-            value: String(f.id),
-            label: f.name,
-          })),
-        ],
+        variant: 'checkbox',
+        options: factions.map((f) => ({
+          value: String(f.id),
+          label: f.name,
+        })),
       },
       {
         key: 'coalition',
@@ -78,23 +79,73 @@ export default function MembersFilter({
       },
       // ── Advanced filters (shown in FilterSheet) ──
       {
+        key: 'politicalGroup',
+        type: 'multiSelect' as const,
+        label: t('politicalGroup'),
+        group: t('advancedGroup'),
+        variant: 'checkbox',
+        options: politicalGroups.map((g) => ({
+          value: String(g.id),
+          label: g.name,
+        })),
+      },
+      {
+        key: 'knessetTerms',
+        type: 'multiSelect' as const,
+        label: t('knessetTerms'),
+        group: t('advancedGroup'),
+        variant: 'pills',
+        options: SUPPORTED_KNESSETS.map((n) => ({
+          value: String(n),
+          label: `${t('knessetNum')} ${n}`,
+        })),
+      },
+      {
         key: 'committee',
-        type: 'select' as const,
+        type: 'multiSelect' as const,
         label: t('committee'),
         group: t('advancedGroup'),
+        variant: 'checkbox',
+        options: committees.map((c) => ({
+          value: String(c.id),
+          label: c.name,
+        })),
+      },
+      {
+        key: 'committeeRole',
+        type: 'select' as const,
+        label: t('committeeRole'),
+        group: t('advancedGroup'),
         options: [
-          { value: '_all', label: t('allCommittees') },
-          ...committees.map((c) => ({
-            value: String(c.id),
-            label: c.name,
-          })),
+          { value: '_all', label: t('committeeRoleAll') },
+          { value: 'chair', label: t('committeeRoleChair') },
+          { value: 'deputy', label: t('committeeRoleDeputy') },
+          { value: 'member', label: t('committeeRoleMember') },
         ],
       },
+      {
+        key: 'age',
+        type: 'range' as const,
+        label: t('ageRange'),
+        group: t('advancedGroup'),
+        inputType: 'number',
+        fromPlaceholder: t('ageFrom'),
+        toPlaceholder: t('ageTo'),
+      },
+      {
+        key: 'seniority',
+        type: 'range' as const,
+        label: t('seniorityRange'),
+        group: t('advancedGroup'),
+        inputType: 'number',
+        fromPlaceholder: t('seniorityFrom'),
+        toPlaceholder: t('seniorityTo'),
+      },
     ],
-    [t, factions, committees],
+    [t, factions, politicalGroups, committees],
   );
 
-  const sortOptions: SortOption[] = useMemo(
+  const sortFieldOptions: SortOption[] = useMemo(
     () => [
       { value: 'name', label: t('sortByName') },
       { value: 'mostBills', label: t('sortByMostBills') },
@@ -122,8 +173,10 @@ export default function MembersFilter({
   const currentKnesset = filters.knesset || String(currentKnessetNumber);
   const isCurrentKnesset = Number(currentKnesset) === currentKnessetNumber;
   const currentStatus = filters.status || 'current';
+  const sortField = filters.sort || 'name';
+  const sortDir = (filters.sortDir as 'asc' | 'desc') || 'asc';
 
-  // Knesset selector + status tabs — rendered above filters via beforeFilters slot
+  // Knesset selector + status tabs
   const beforeFilters = (
     <div className="flex flex-wrap items-center gap-3">
       {knessetNumbers.length > 1 && (
@@ -179,7 +232,6 @@ export default function MembersFilter({
     </div>
   );
 
-  // Details toggle — rendered after inline filters
   const afterFilters = (
     <Button
       variant={showDetails ? 'default' : 'outline'}
@@ -209,10 +261,13 @@ export default function MembersFilter({
       activeCount={activeCount}
       hasActiveFilters={hasActiveFilters}
       activeFilters={activeFilters}
-      sortOptions={sortOptions}
-      sortValue={filters.sort ?? 'name'}
-      sortDefault="name"
-      onSortChange={(val) => updateFilter('sort', val)}
+      sortFieldOptions={sortFieldOptions}
+      sortField={sortField}
+      sortDir={sortDir}
+      onSortFieldChange={(val) => updateFilter('sort', val)}
+      onSortDirChange={(dir) =>
+        updateFilter('sortDir', dir === 'asc' ? '' : dir)
+      }
       beforeFilters={beforeFilters}
       afterFilters={afterFilters}
     />

@@ -5,6 +5,7 @@ import { useMemo } from 'react';
 import { FilterBar } from '@/components/filters';
 import { useFilterParams } from '@/hooks/use-filter-params';
 import type { FilterFieldConfig, SortOption } from '@/components/filters';
+import { SUPPORTED_KNESSETS } from '@/lib/constants/knessets';
 
 interface StatusOption {
   value: string;
@@ -14,13 +15,17 @@ interface StatusOption {
 interface LegislationFilterProps {
   billTypes: string[];
   statusOptions: StatusOption[];
+  factions: Array<{ id: number; name: string }>;
+  members: Array<{ id: number; name: string }>;
+  committees: Array<{ id: number; name: string }>;
 }
-
-const KNESSET_NUMBERS = [25, 24, 23, 22, 21, 20];
 
 export default function LegislationFilter({
   billTypes,
   statusOptions,
+  factions,
+  members,
+  committees,
 }: LegislationFilterProps) {
   const t = useTranslations('legislation');
 
@@ -40,7 +45,7 @@ export default function LegislationFilter({
         primary: true,
         options: [
           { value: '_all', label: t('filter.allKnessets') },
-          ...KNESSET_NUMBERS.map((n) => ({
+          ...SUPPORTED_KNESSETS.map((n) => ({
             value: String(n),
             label: `${t('knesset')} ${n}`,
           })),
@@ -63,13 +68,40 @@ export default function LegislationFilter({
             },
           ]
         : []),
+      {
+        key: 'stage',
+        type: 'multiSelect' as const,
+        label: t('filter.stage'),
+        primary: true,
+        variant: 'pills' as const,
+        options: [
+          { value: '0', label: t('stages.submitted') },
+          { value: '1', label: t('stages.preliminary') },
+          { value: '2', label: t('stages.committeeFirst') },
+          { value: '3', label: t('stages.firstReading') },
+          { value: '4', label: t('stages.committeeSecond') },
+          { value: '5', label: t('stages.secondThirdReading') },
+          { value: '6', label: t('stages.passed') },
+        ],
+      },
+      {
+        key: 'dateProposed',
+        type: 'range' as const,
+        label: t('filter.proposedDateRange'),
+        primary: true,
+        inputType: 'date' as const,
+        fromKey: 'dateFrom',
+        toKey: 'dateTo',
+        fromPlaceholder: t('filter.dateFrom'),
+        toPlaceholder: t('filter.dateTo'),
+      },
       ...(statusOptions.length > 0
         ? [
             {
               key: 'status',
               type: 'select' as const,
               label: t('filter.allStatuses'),
-              primary: true,
+              group: t('filter.advancedGroup'),
               options: [
                 { value: '_all', label: t('filter.allStatuses') },
                 ...statusOptions.map((s) => ({
@@ -80,16 +112,48 @@ export default function LegislationFilter({
             },
           ]
         : []),
+      {
+        key: 'initiatorFaction',
+        type: 'multiSelect' as const,
+        label: t('filter.initiatorFaction'),
+        group: t('filter.advancedGroup'),
+        variant: 'checkbox' as const,
+        options: factions.map((f) => ({
+          value: String(f.id),
+          label: f.name,
+        })),
+      },
+      {
+        key: 'initiatorMember',
+        type: 'multiSelect' as const,
+        label: t('filter.initiatorMember'),
+        group: t('filter.advancedGroup'),
+        variant: 'checkbox' as const,
+        options: members.map((m) => ({
+          value: String(m.id),
+          label: m.name,
+        })),
+      },
+      {
+        key: 'committee',
+        type: 'multiSelect' as const,
+        label: t('filter.committee'),
+        group: t('filter.advancedGroup'),
+        variant: 'checkbox' as const,
+        options: committees.map((c) => ({
+          value: String(c.id),
+          label: c.name,
+        })),
+      },
     ],
-    [t, billTypes, statusOptions],
+    [t, billTypes, statusOptions, factions, members, committees],
   );
 
-  const sortOptions: SortOption[] = useMemo(
+  const sortFieldOptions: SortOption[] = useMemo(
     () => [
-      { value: 'dateDesc', label: t('sort.dateDesc') },
-      { value: 'dateAsc', label: t('sort.dateAsc') },
-      { value: 'nameAsc', label: t('sort.nameAsc') },
-      { value: 'nameDesc', label: t('sort.nameDesc') },
+      { value: 'date', label: t('sort.date') },
+      { value: 'name', label: t('sort.name') },
+      { value: 'stage', label: t('sort.stage') },
     ],
     [t],
   );
@@ -107,6 +171,9 @@ export default function LegislationFilter({
     commitSearch,
   } = useFilterParams({ fields });
 
+  const sortField = filters.sort || 'date';
+  const sortDir = (filters.sortDir as 'asc' | 'desc') || 'desc';
+
   return (
     <FilterBar
       fields={fields}
@@ -120,10 +187,13 @@ export default function LegislationFilter({
       activeCount={activeCount}
       hasActiveFilters={hasActiveFilters}
       activeFilters={activeFilters}
-      sortOptions={sortOptions}
-      sortValue={filters.sort ?? 'dateDesc'}
-      sortDefault="dateDesc"
-      onSortChange={(val) => updateFilter('sort', val)}
+      sortFieldOptions={sortFieldOptions}
+      sortField={sortField}
+      sortDir={sortDir}
+      onSortFieldChange={(val) => updateFilter('sort', val)}
+      onSortDirChange={(dir) =>
+        updateFilter('sortDir', dir === 'desc' ? '' : dir)
+      }
     />
   );
 }

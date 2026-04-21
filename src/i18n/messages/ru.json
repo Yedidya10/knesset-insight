@@ -200,6 +200,20 @@
       "committee": "Комитет",
       "allCommittees": "Все комитеты",
       "advancedGroup": "Расширенные фильтры",
+      "politicalGroup": "Политическая группа",
+      "allPoliticalGroups": "Все политические группы",
+      "knessetTerms": "Созывы Кнессета",
+      "committeeRole": "Роль в комитете",
+      "committeeRoleAll": "Все роли",
+      "committeeRoleChair": "Председатель",
+      "committeeRoleDeputy": "Заместитель председателя",
+      "committeeRoleMember": "Член комитета",
+      "ageRange": "Возрастной диапазон",
+      "ageFrom": "От",
+      "ageTo": "До",
+      "seniorityRange": "Стаж (лет)",
+      "seniorityFrom": "От",
+      "seniorityTo": "До",
       "searchPlaceholder": "Поиск по имени...",
       "statusCurrent": "Действующие",
       "statusPast": "Бывшие",
@@ -247,6 +261,7 @@
     "noResults": "Голосования не найдены",
     "filter": {
       "knessetNum": "Номер Кнессета",
+      "knesset": "Кнессет",
       "allKnessets": "Все Кнессеты",
       "dateFrom": "С даты",
       "dateTo": "По дату",
@@ -288,6 +303,7 @@
     },
     "sort": {
       "title": "Сортировка",
+      "date": "Дата",
       "dateDesc": "Дата (сначала новые)",
       "dateAsc": "Дата (сначала старые)",
       "mostVotes": "Больше всего голосов",
@@ -325,9 +341,20 @@
       "allKnessets": "Все Кнессеты",
       "allTypes": "Все типы",
       "allStatuses": "Все статусы",
-      "clearFilters": "Сбросить фильтры"
+      "clearFilters": "Сбросить фильтры",
+      "advancedGroup": "Расширенные фильтры",
+      "stage": "Стадия законопроекта",
+      "proposedDateRange": "Диапазон дат подачи",
+      "dateFrom": "От",
+      "dateTo": "До",
+      "initiatorMember": "Инициатор (депутат)",
+      "initiatorFaction": "Инициатор (фракция)",
+      "committee": "Комитет"
     },
     "sort": {
+      "date": "Дата",
+      "name": "Название",
+      "stage": "Стадия",
       "dateDesc": "Дата (новые)",
       "dateAsc": "Дата (старые)",
       "nameAsc": "Название (А-Я)",
@@ -478,6 +505,23 @@
     "inactive": "Неактивные комитеты",
     "knesset": "Кнессет",
     "noResults": "Комитеты не найдены",
+    "filter": {
+      "searchPlaceholder": "Поиск по названию комитета...",
+      "knesset": "Кнессет",
+      "type": "Тип комитета",
+      "activeOnly": "Только активные",
+      "chairman": "Председатель",
+      "memberCountRange": "Количество членов",
+      "from": "От",
+      "to": "До",
+      "advancedGroup": "Расширенные фильтры",
+      "noResults": "Нет комитетов, соответствующих фильтрам"
+    },
+    "sort": {
+      "name": "Название",
+      "memberCount": "Количество членов",
+      "knesset": "Кнессет"
+    },
     "detail": {
       "chairman": "Председатель комитета",
       "type": "Тип комитета",
@@ -1351,6 +1395,10 @@
     "noActiveFilters": "Нет активных фильтров",
     "search": "Поиск...",
     "from": "От",
-    "to": "До"
+    "to": "До",
+    "sortDirAsc": "Сначала старые",
+    "sortDirDesc": "Сначала новые",
+    "noResults": "Результатов не найдено",
+    "selectedCount": "Выбрано: {count}"
   }
 }

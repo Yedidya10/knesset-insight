@@ -200,6 +200,20 @@
       "committee": "Committee",
       "allCommittees": "All committees",
       "advancedGroup": "Advanced filters",
+      "politicalGroup": "Political group",
+      "allPoliticalGroups": "All political groups",
+      "knessetTerms": "Knesset terms",
+      "committeeRole": "Committee role",
+      "committeeRoleAll": "All roles",
+      "committeeRoleChair": "Chair",
+      "committeeRoleDeputy": "Deputy chair",
+      "committeeRoleMember": "Committee member",
+      "ageRange": "Age range",
+      "ageFrom": "From age",
+      "ageTo": "To age",
+      "seniorityRange": "Seniority (years)",
+      "seniorityFrom": "From",
+      "seniorityTo": "To",
       "searchPlaceholder": "Search by name...",
       "statusCurrent": "Current",
       "statusPast": "Past",
@@ -247,6 +261,7 @@
     "noResults": "No votes found",
     "filter": {
       "knessetNum": "Knesset number",
+      "knesset": "Knesset",
       "allKnessets": "All Knessets",
       "dateFrom": "From date",
       "dateTo": "To date",
@@ -288,6 +303,7 @@
     },
     "sort": {
       "title": "Sort",
+      "date": "Date",
       "dateDesc": "Date (newest first)",
       "dateAsc": "Date (oldest first)",
       "mostVotes": "Most voters",
@@ -325,9 +341,20 @@
       "allKnessets": "All Knessets",
       "allTypes": "All Types",
       "allStatuses": "All Statuses",
-      "clearFilters": "Clear Filters"
+      "clearFilters": "Clear Filters",
+      "advancedGroup": "Advanced filters",
+      "stage": "Legislative stage",
+      "proposedDateRange": "Proposed date range",
+      "dateFrom": "From",
+      "dateTo": "To",
+      "initiatorMember": "Initiator (MK)",
+      "initiatorFaction": "Initiator (Faction)",
+      "committee": "Committee"
     },
     "sort": {
+      "date": "Date",
+      "name": "Name",
+      "stage": "Legislative stage",
       "dateDesc": "Date (Newest)",
       "dateAsc": "Date (Oldest)",
       "nameAsc": "Name (A-Z)",
@@ -478,6 +505,23 @@
     "inactive": "Inactive Committees",
     "knesset": "Knesset",
     "noResults": "No committees found",
+    "filter": {
+      "searchPlaceholder": "Search by committee name...",
+      "knesset": "Knesset",
+      "type": "Committee type",
+      "activeOnly": "Active only",
+      "chairman": "Chair",
+      "memberCountRange": "Member count",
+      "from": "From",
+      "to": "To",
+      "advancedGroup": "Advanced filters",
+      "noResults": "No committees match the current filters"
+    },
+    "sort": {
+      "name": "Name",
+      "memberCount": "Member count",
+      "knesset": "Knesset"
+    },
     "detail": {
       "chairman": "Committee Chair",
       "type": "Committee Type",
@@ -1351,6 +1395,10 @@
     "noActiveFilters": "No active filters",
     "search": "Search...",
     "from": "From",
-    "to": "To"
+    "to": "To",
+    "sortDirAsc": "Oldest first",
+    "sortDirDesc": "Newest first",
+    "noResults": "No results found",
+    "selectedCount": "{count} selected"
   }
 }
