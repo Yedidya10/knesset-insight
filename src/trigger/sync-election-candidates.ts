@@ -12,7 +12,8 @@ export const electionCandidateSync = schedules.task({
   id: 'election-candidate-sync',
   cron: {
     pattern: appConfig.elections2026.candidateSyncCron,
-    timezone: 'Asia/Jerusalem',
+    timezone: appConfig.sync.timezone,
+    environments: ['PRODUCTION', 'STAGING'],
   },
   maxDuration: 120, // 2 minutes — lightweight AI call
   retry: {

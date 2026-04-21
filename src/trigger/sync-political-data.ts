@@ -11,12 +11,14 @@ import { syncPoliticalLinks } from '@/pipeline/jobs/sync-political-links';
 import { syncPoliticalGroups } from '@/pipeline/jobs/sync-political-groups';
 import { syncGovMinistries } from '@/pipeline/jobs/sync-gov-ministries';
 import { syncGovernments } from '@/pipeline/jobs/sync-governments';
+import { appConfig } from '../../app.config';
 
 export const syncPoliticalData = schedules.task({
   id: 'sync-political-data',
   cron: {
-    pattern: '0 3 * * *',
-    timezone: 'Asia/Jerusalem',
+    pattern: appConfig.sync.politicalData,
+    timezone: appConfig.sync.timezone,
+    environments: ['PRODUCTION', 'STAGING'],
   },
   maxDuration: 1800,
   retry: {

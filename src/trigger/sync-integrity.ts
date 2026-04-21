@@ -6,12 +6,14 @@
 import { schedules, logger } from '@trigger.dev/sdk';
 import { syncIntegrityKnesset } from '@/pipeline/jobs/sync-integrity-knesset';
 import { syncIntegrityLobbyists } from '@/pipeline/jobs/sync-integrity-lobbyists';
+import { appConfig } from '../../app.config';
 
 export const syncIntegrity = schedules.task({
   id: 'sync-integrity',
   cron: {
-    pattern: '0 4 * * *',
-    timezone: 'Asia/Jerusalem',
+    pattern: appConfig.sync.integrity,
+    timezone: appConfig.sync.timezone,
+    environments: ['PRODUCTION', 'STAGING'],
   },
   maxDuration: 900, // 15 min
   retry: {

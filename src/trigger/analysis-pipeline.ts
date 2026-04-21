@@ -12,12 +12,14 @@ import { generateBillEmbeddings } from '@/pipeline/jobs/generate-bill-embeddings
 import { aiClusterBills } from '@/pipeline/jobs/ai-cluster-bills';
 import { generateBillSummaries } from '@/pipeline/jobs/generate-bill-summaries';
 import { classifyVoteStances } from '@/pipeline/jobs/classify-vote-stances';
+import { appConfig } from '../../app.config';
 
 export const analysisPipeline = schedules.task({
   id: 'analysis-pipeline',
   cron: {
-    pattern: '0 5 * * *',
-    timezone: 'Asia/Jerusalem',
+    pattern: appConfig.sync.analysis,
+    timezone: appConfig.sync.timezone,
+    environments: ['PRODUCTION', 'STAGING'],
   },
   maxDuration: 3600, // 1 hour — AI jobs can be slow
   retry: {
@@ -29,7 +31,28 @@ export const analysisPipeline = schedules.task({
   queue: {
     concurrencyLimit: 1,
   },
-  run: async () => {
+  run: async (payload) => {
+    // Skip expensive AI jobs during Knesset recesses — no meaningful new data.
+    const { summerRecess, passoverRecess } = appConfig.knessetCalendar;
+    const month = payload.timestamp.getMonth() + 1;
+    const day = payload.timestamp.getDate();
+
+    const inSummerRecess =
+      (month === summerRecess.startMonth && day >= summerRecess.startDay) ||
+      (month > summerRecess.startMonth && month < summerRecess.endMonth) ||
+      (month === summerRecess.endMonth && day <= summerRecess.endDay);
+
+    const inPassoverRecess =
+      month === passoverRecess.startMonth &&
+      day >= passoverRecess.startDay &&
+      day <= passoverRecess.endDay;
+
+    if (inSummerRecess || inPassoverRecess) {
+      const reason = inSummerRecess ? 'summer-recess' : 'passover-recess';
+      logger.info(`Knesset in ${reason} — skipping analysis pipeline`);
+      return { skipped: true, reason };
+    }
+
     logger.info('Starting analysis pipeline');
 
     logger.info('Linking votes to bills...');

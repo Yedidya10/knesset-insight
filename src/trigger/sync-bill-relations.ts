@@ -9,12 +9,14 @@ import { syncBillUnions } from '@/pipeline/jobs/sync-bill-unions';
 import { syncBillSplits } from '@/pipeline/jobs/sync-bill-splits';
 import { syncBillNames } from '@/pipeline/jobs/sync-bill-names';
 import { syncBillDocuments } from '@/pipeline/jobs/sync-bill-documents';
+import { appConfig } from '../../app.config';
 
 export const syncBillRelations = schedules.task({
   id: 'sync-bill-relations',
   cron: {
-    pattern: '0 1 * * *',
-    timezone: 'Asia/Jerusalem',
+    pattern: appConfig.sync.billRelations,
+    timezone: appConfig.sync.timezone,
+    environments: ['PRODUCTION', 'STAGING'],
   },
   maxDuration: 1800,
   retry: {

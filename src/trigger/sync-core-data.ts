@@ -8,12 +8,14 @@ import { syncVotes } from '@/pipeline/jobs/sync-votes';
 import { syncBills } from '@/pipeline/jobs/sync-bills';
 import { syncCommittees } from '@/pipeline/jobs/sync-committees';
 import { syncCommitteeMembers } from '@/pipeline/jobs/sync-committee-members';
+import { appConfig } from '../../app.config';
 
 export const syncCoreData = schedules.task({
   id: 'sync-core-data',
   cron: {
-    pattern: '0 */6 * * *',
-    timezone: 'Asia/Jerusalem',
+    pattern: appConfig.sync.coreData,
+    timezone: appConfig.sync.timezone,
+    environments: ['PRODUCTION', 'STAGING'],
   },
   maxDuration: 1800, // 30 min
   retry: {

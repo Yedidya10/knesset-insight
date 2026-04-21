@@ -95,13 +95,54 @@ export const appConfig = {
 
   // Sync schedule (cron expressions, Israel time)
   // These are the source of truth — Trigger.dev tasks read from here.
+  // All schedules are PRODUCTION/STAGING only (dev uses manual triggers).
+  //
+  // Knesset work week: Sunday–Thursday (day 0–4 in cron).
+  // Knesset is in summer recess ~Aug 1–Oct 14 and Passover recess ~Apr 1–19.
+  // During recesses, structural data barely changes — less frequent sync saves cost.
   sync: {
-    coreData: process.env.SYNC_CORE_CRON ?? '0 */6 * * *', // every 6h
-    billRelations: process.env.SYNC_BILL_RELATIONS_CRON ?? '0 1 * * *', // daily 1 AM
-    politicalData: process.env.SYNC_POLITICAL_CRON ?? '0 3 * * *', // daily 3 AM
-    integrity: process.env.SYNC_INTEGRITY_CRON ?? '0 4 * * *', // daily 4 AM
-    analysis: process.env.SYNC_ANALYSIS_CRON ?? '0 5 * * *', // daily 5 AM
+    // Core data (votes, bills, members, committees) — most time-sensitive.
+    // Votes can happen multiple times per day during plenum (Mon–Wed afternoons).
+    // Every 4 hours on Israeli work days (Sun–Thu).
+    coreData: process.env.SYNC_CORE_CRON ?? '0 */4 * * 0-4',
+
+    // Bill relations (initiators, unions, splits, names, documents).
+    // Bills move over days/weeks — once daily on work days is sufficient.
+    billRelations: process.env.SYNC_BILL_RELATIONS_CRON ?? '0 1 * * 0-4',
+
+    // Political data (images, parties, groups, governments).
+    // Political structure barely changes — weekly on Sunday is sufficient.
+    politicalData: process.env.SYNC_POLITICAL_CRON ?? '0 3 * * 0',
+
+    // Integrity data (ethics committee, lobbyists).
+    // Ethics decisions and lobbyist connections are infrequent — twice weekly.
+    integrity: process.env.SYNC_INTEGRITY_CRON ?? '0 4 * * 0,3',
+
+    // Analysis pipeline (AI embeddings, clustering, summaries).
+    // Expensive AI jobs — daily on work days; skipped automatically during recess.
+    analysis: process.env.SYNC_ANALYSIS_CRON ?? '0 5 * * 0-4',
+
     timezone: 'Asia/Jerusalem',
+  },
+
+  // Knesset session calendar (approximate Gregorian date ranges).
+  // Used by the analysis pipeline to skip expensive AI jobs during recesses.
+  // Dates are approximate — the exact recess dates vary by Jewish calendar year.
+  knessetCalendar: {
+    /** Summer recess: ~Aug 1 – Oct 14 (no plenum, minimal committee activity) */
+    summerRecess: {
+      startMonth: 8,
+      startDay: 1,
+      endMonth: 10,
+      endDay: 14,
+    },
+    /** Passover recess: ~Apr 1–19 (varies ±1 week by Jewish calendar) */
+    passoverRecess: {
+      startMonth: 4,
+      startDay: 1,
+      endMonth: 4,
+      endDay: 19,
+    },
   },
 
   // Google Translate
