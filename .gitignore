@@ -58,5 +58,14 @@ test-results/
 playwright-report/
 public/workbox-*.js
 public/workbox-*.js.map
+
+# Claude Code
+.claude/
+
+# Trigger.dev local state
+.trigger/
+
+# Backup env files
+*.bak
 public/swe-worker-*.js
 .env*.local
