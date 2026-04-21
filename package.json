@@ -93,6 +93,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
     "husky": "^9.1.7",
+    "import-in-the-middle": "^3.0.1",
     "lint-staged": "^16.4.0",
     "osmtogeojson": "3.0.0-beta.5",
     "prettier": "^3.8.1",

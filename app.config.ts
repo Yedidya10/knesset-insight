@@ -143,6 +143,57 @@ export const appConfig = {
     sync: {
       cron: process.env.INTEGRITY_SYNC_CRON ?? '0 4 * * *',
     },
+    /**
+     * Per-MK web search (Tavily) to discover integrity mentions outside
+     * official OData sources. ALL hits from here are routed to admin review
+     * regardless of confidence (non-authoritative source).
+     */
+    webSearch: {
+      /** Tavily depth: 'basic' (1 credit) or 'advanced' (2 credits) */
+      searchDepth: (process.env.INTEGRITY_SEARCH_DEPTH ?? 'advanced') as
+        | 'basic'
+        | 'advanced',
+      /** Max results per MK */
+      maxResults: Number(process.env.INTEGRITY_SEARCH_MAX_RESULTS ?? 8),
+      /** Prioritize Israeli government + mainstream news domains */
+      includeDomains: [
+        'knesset.gov.il',
+        'main.knesset.gov.il',
+        'mevaker.gov.il',
+        'gov.il',
+        'justice.gov.il',
+        'court.gov.il',
+        'nevo.co.il',
+        'ynet.co.il',
+        'calcalist.co.il',
+        'themarker.com',
+        'haaretz.co.il',
+        'globes.co.il',
+        'n12.co.il',
+        'kan.org.il',
+        'mako.co.il',
+        'walla.co.il',
+      ],
+      /**
+       * Domains treated as authoritative government sources — findings
+       * from these may auto-verify above confidence threshold.
+       * Non-government domains always route to admin review.
+       */
+      governmentDomains: [
+        'knesset.gov.il',
+        'main.knesset.gov.il',
+        'mevaker.gov.il',
+        'gov.il',
+        'justice.gov.il',
+        'court.gov.il',
+      ],
+      /** AI confidence threshold — below this always goes to review */
+      confidenceThreshold: Number(
+        process.env.INTEGRITY_CONFIDENCE_THRESHOLD ?? 0.7,
+      ),
+      /** Batch size for per-MK processing (Trigger.dev children) */
+      batchSize: Number(process.env.INTEGRITY_BATCH_SIZE ?? 10),
+    },
   },
 
   // Image settings
