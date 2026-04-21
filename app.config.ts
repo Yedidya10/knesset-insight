@@ -194,27 +194,26 @@ export const appConfig = {
       searchDepth: (process.env.INTEGRITY_SEARCH_DEPTH ?? 'advanced') as
         | 'basic'
         | 'advanced',
-      /** Max results per MK */
-      maxResults: Number(process.env.INTEGRITY_SEARCH_MAX_RESULTS ?? 8),
-      /** Prioritize Israeli government + mainstream news domains */
-      includeDomains: [
-        'knesset.gov.il',
-        'main.knesset.gov.il',
-        'mevaker.gov.il',
-        'gov.il',
-        'justice.gov.il',
-        'court.gov.il',
-        'nevo.co.il',
-        'ynet.co.il',
-        'calcalist.co.il',
-        'themarker.com',
-        'haaretz.co.il',
-        'globes.co.il',
-        'n12.co.il',
-        'kan.org.il',
-        'mako.co.il',
-        'walla.co.il',
+      /** Max results per query (we run multiple queries per MK) */
+      maxResults: Number(process.env.INTEGRITY_SEARCH_MAX_RESULTS ?? 12),
+      /**
+       * No `includeDomains` whitelist — domain restriction caused the
+       * pipeline to miss mainstream coverage (e.g. mako / Wikipedia /
+       * regional outlets). Tavily is run globally; `excludeDomains`
+       * below strips out a small set of noise sites.
+       */
+      excludeDomains: [
+        'twitter.com',
+        'x.com',
+        'facebook.com',
+        'instagram.com',
+        'tiktok.com',
+        'youtube.com',
+        'reddit.com',
+        'linkedin.com',
       ],
+      /** Boost Israeli sources (general-topic only). */
+      country: 'israel' as const,
       /**
        * Domains treated as authoritative government sources — findings
        * from these may auto-verify above confidence threshold.

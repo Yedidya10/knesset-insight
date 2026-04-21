@@ -11,6 +11,8 @@ export interface TavilySnippet {
   content: string;
   score: number;
   domain: string;
+  /** Which internal query surfaced this snippet — useful for debugging coverage. */
+  queryTag: 'current' | 'historical' | 'speech';
 }
 
 export interface WebIntegrityEvent extends ExtractedIntegrityEvent {
@@ -26,8 +28,72 @@ export interface WebIntegrityEvent extends ExtractedIntegrityEvent {
 }
 
 /**
- * Runs a Tavily web search for integrity-related mentions of a specific MK.
- * Query is crafted to surface ethics/legal/regulatory events.
+ * URL substrings that are never useful as integrity evidence even if
+ * Tavily returns them: MK bio / legislation bill pages / member-list
+ * queries that just mention the name.
+ */
+const BLOCKED_URL_PATTERNS = [
+  'lawbill.aspx',
+  'lawsuggestionssearch',
+  '/mk/',
+  'MembersIds=',
+  '5559962', // Knesset research paper on immunity — footnote-only citations
+];
+
+function domainOf(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '');
+  } catch {
+    return '';
+  }
+}
+
+function filterResults(
+  results: Array<{
+    url?: string;
+    title?: string;
+    content?: string;
+    score?: number;
+  }>,
+  tag: TavilySnippet['queryTag'],
+): TavilySnippet[] {
+  return results
+    .filter((r) => {
+      const url = r.url ?? '';
+      return !BLOCKED_URL_PATTERNS.some((pat) => url.includes(pat));
+    })
+    .map((r) => ({
+      title: r.title ?? '',
+      url: r.url ?? '',
+      content: r.content ?? '',
+      score: r.score ?? 0,
+      domain: domainOf(r.url ?? ''),
+      queryTag: tag,
+    }));
+}
+
+function dedupeByUrl(snippets: TavilySnippet[]): TavilySnippet[] {
+  const seen = new Map<string, TavilySnippet>();
+  for (const s of snippets) {
+    const existing = seen.get(s.url);
+    if (!existing || s.score > existing.score) seen.set(s.url, s);
+  }
+  return Array.from(seen.values()).sort((a, b) => b.score - a.score);
+}
+
+/**
+ * Runs multiple Tavily web searches for integrity-related mentions of a
+ * specific MK and merges the results. Three passes:
+ *
+ *   1. `current`    — parliamentary/legal integrity events during their
+ *                     tenure (ethics committee, indictments, civil suits).
+ *   2. `historical` — pre-Knesset convictions / indictments (no "חבר כנסת"
+ *                     qualifier so older articles aren't filtered out).
+ *   3. `speech`     — non-parliamentary conduct: incitement, extreme speech,
+ *                     hate speech that drew AG/prosecutor attention.
+ *
+ * No `includeDomains` whitelist — the old pipeline missed mainstream
+ * coverage (e.g. mako, Wikipedia) because it restricted the domain list.
  */
 export async function searchMkIntegrity(
   fullNameHe: string,
@@ -38,58 +104,55 @@ export async function searchMkIntegrity(
     return [];
   }
 
-  const { searchDepth, maxResults, includeDomains } =
+  const { searchDepth, maxResults, excludeDomains, country } =
     appConfig.integrity.webSearch;
   const tvly = tavily({ apiKey });
 
-  // Hebrew query targeting integrity-relevant terms
-  const query =
+  const baseOptions = {
+    searchDepth,
+    maxResults,
+    excludeDomains: [...excludeDomains],
+    country,
+  };
+
+  const currentQuery =
     `"${fullNameHe}" חבר כנסת (ועדת אתיקה OR "הסרת חסינות" OR חסינות OR ` +
     `"כתב אישום" OR הרשעה OR "מבקר המדינה" OR "ניגוד עניינים" OR ` +
     `חקירה OR קנס OR סנקציה OR "תביעה אזרחית")`;
 
-  try {
-    const response = await tvly.search(query, {
-      searchDepth,
-      maxResults,
-      includeDomains: [...includeDomains],
-    });
+  // Historical / pre-Knesset: drop the "חבר כנסת" qualifier so older
+  // articles (when subject wasn't yet an MK) are not excluded.
+  const historicalQuery =
+    `"${fullNameHe}" (הרשעה OR "כתב אישום" OR "הורשע" OR "נשפט" OR ` +
+    `"חקירה פלילית" OR "עבירות" OR "פסק דין")`;
 
-    // URLs that are irrelevant as integrity evidence (legislation pages, general info)
-    const BLOCKED_URL_PATTERNS = [
-      'lawbill.aspx',
-      'lawsuggestionssearch',
-      '/mk/', // MK bio pages
-      'MembersIds=', // member profile queries
-    ];
+  // Non-parliamentary conduct: incitement / extreme speech that's not
+  // necessarily a formal ethics complaint.
+  const speechQuery =
+    `"${fullNameHe}" (הסתה OR "שפה קיצונית" OR "דברי שטנה" OR ` +
+    `"לשרוף" OR "להשמיד" OR "גזענות" OR "תלונה ליועמ"ש" OR ` +
+    `"היועצת המשפטית" OR "פרקליט המדינה")`;
 
-    return (response.results ?? [])
-      .filter((r) => {
-        const url = r.url ?? '';
-        return !BLOCKED_URL_PATTERNS.some((pat) => url.includes(pat));
-      })
-      .map((r) => {
-        let domain = '';
-        try {
-          domain = new URL(r.url ?? '').hostname.replace(/^www\./, '');
-        } catch {
-          // malformed URL — leave empty
-        }
-        return {
-          title: r.title ?? '',
-          url: r.url ?? '',
-          content: r.content ?? '',
-          score: r.score ?? 0,
-          domain,
-        };
-      });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error(
-      `[integrity:web] Tavily failed for "${fullNameHe}": ${message}`,
-    );
-    return [];
+  const runs: Array<[string, TavilySnippet['queryTag']]> = [
+    [currentQuery, 'current'],
+    [historicalQuery, 'historical'],
+    [speechQuery, 'speech'],
+  ];
+
+  const all: TavilySnippet[] = [];
+  for (const [query, tag] of runs) {
+    try {
+      const response = await tvly.search(query, baseOptions);
+      all.push(...filterResults(response.results ?? [], tag));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(
+        `[integrity:web] Tavily ${tag} failed for "${fullNameHe}": ${message}`,
+      );
+    }
   }
+
+  return dedupeByUrl(all);
 }
 
 /**
@@ -112,6 +175,7 @@ export async function analyzeWebSnippets(
     content: s.content,
     tavily_score: s.score,
     domain: s.domain,
+    query_tag: s.queryTag,
   }));
 
   const { text } = await generateText({

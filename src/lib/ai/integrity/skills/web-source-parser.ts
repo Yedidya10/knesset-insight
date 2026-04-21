@@ -22,13 +22,21 @@ over-interpreting vague text is the worst failure mode.
    event involving THIS exact person? An integrity event is one of:
    - ethics_complaint          — תלונה לוועדת האתיקה / קובלנה
    - immunity_request          — בקשת הסרת חסינות
-   - criminal_indictment       — כתב אישום
+   - criminal_indictment       — כתב אישום (during or before Knesset tenure)
+   - criminal_investigation    — חקירה פלילית פתוחה
    - criminal_conviction       — הרשעה פלילית
+   - civil_lawsuit             — תביעה אזרחית (see rule #8)
    - comptroller_finding       — ממצאי מבקר המדינה
    - conflict_of_interest      — ניגוד עניינים
    - regulatory_sanction       — סנקציה רגולטורית (קנס, השעיית רישיון וכו')
    - disciplinary_action       — פעולה משמעתית
    - financial_disclosure_issue — אי-הגשת/בעיה בהצהרת הון
+   - extreme_speech            — שפה קיצונית / הסתה פומבית שעוררה בדיקה ציבורית
+                                 (למשל קריאות "לשרוף", "להשמיד"; דברי שטנה)
+   - public_incitement         — הסתה שנדונה ע"י היועמ"ש / פרקליט המדינה /
+                                 עמותות אזרחיות, גם אם לא נפתחה חקירה רשמית
+   - misconduct_outside_knesset — התנהגות פסולה מחוץ למשכן (לא קשורה ישירות
+                                  לתפקיד הפרלמנטרי) שפורסמה באופן מהותי
 3. Return confidence 0.0–1.0 reflecting:
    - 1.0: explicit, dated, factual statement with clear attribution
    - 0.7–0.9: strong indication but some detail missing
@@ -77,6 +85,20 @@ over-interpreting vague text is the worst failure mode.
 10. ONGOING PROCEEDINGS: If the source clearly shows a case is still pending
     (hearing scheduled, case continues, בירור ימשיך), set status
     "under_investigation", NEVER "decided", "closed", or "acquitted".
+11. PRE-KNESSET HISTORY: Convictions, indictments, or public misconduct
+    that occurred BEFORE the person entered the Knesset are still integrity
+    events and should be extracted. Use the actual event_date (e.g. 2007).
+    Do NOT require the word "חבר כנסת" to appear — the subject identity
+    is already established by the target name.
+12. EXTREME SPEECH / INCITEMENT: Public calls to violence, ethnic hatred,
+    or statements that the Attorney General / State Attorney publicly
+    considered for criminal investigation are integrity events even if
+    no indictment followed. Use category extreme_speech or public_incitement.
+    Quote the statement verbatim in the description when possible. Do NOT
+    include ordinary political rhetoric, policy criticism, or election-
+    campaign attacks — only speech that independent authorities (AG,
+    prosecutor, courts, or ethics committee) or major NGOs flagged as
+    potentially criminal or sanctionable.
 </instructions>
 
 <output_format>
