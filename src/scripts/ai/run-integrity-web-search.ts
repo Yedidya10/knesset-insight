@@ -67,8 +67,8 @@ async function main() {
     console.error('Missing TAVILY_API_KEY in .env.local');
     process.exit(1);
   }
-  if (!process.env.ANTHROPIC_API_KEY) {
-    console.error('Missing ANTHROPIC_API_KEY in .env.local');
+  if (!process.env.ANTHROPIC_API_KEY && !process.env.CLAUDE_API_KEY) {
+    console.error('Missing ANTHROPIC_API_KEY or CLAUDE_API_KEY in .env.local');
     process.exit(1);
   }
 

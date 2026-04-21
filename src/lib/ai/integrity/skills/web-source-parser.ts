@@ -46,6 +46,37 @@ over-interpreting vague text is the worst failure mode.
    known, use YYYY-01-01 and note in metadata.unreliable_date: true.
 7. DO NOT editorialize. DO NOT infer guilt. DO NOT include ongoing political
    controversy that is NOT about integrity.
+8. CIVIL LAWSUITS (תביעות אזרחיות): If the MK is the DEFENDANT (נתבע) in
+   a civil lawsuit filed by a private citizen, this is generally NOT an
+   integrity event unless:
+   (a) the lawsuit explicitly concerns corruption, bribery, misuse of public
+       office, or financial fraud in their public role, OR
+   (b) the MK invoked parliamentary immunity (חסינות) to get dismissed from
+       the lawsuit — in that case, extract it as category "immunity_request"
+       with status "decided", and note in the description that immunity was
+       used to dismiss the civil claim, while proceedings may continue against
+       other defendants.
+   IMPORTANT: If the MK is the PLAINTIFF (תובע) — i.e., they filed the
+   lawsuit against someone else — this is NOT an integrity event. Skip it.
+   Also skip cases where other MKs use immunity against a lawsuit the
+   target MK filed. Only extract events where the TARGET MK benefits
+   from or is subject to an immunity decision as a DEFENDANT.
+   Routine civil disputes where no immunity was invoked → skip entirely.
+   If in doubt → confidence ≤ 0.3.
+   NEVER use the category "civil_lawsuit_immunity" — use "immunity_request" instead.
+9. IMMUNITY (חסינות): The parliamentary immunity process is multi-step and
+   NEVER treat any single step as a final outcome. Specifically:
+   - "בקשת הסרת חסינות" filed = status "reported"
+   - Motion discussed in committee = status "under_investigation"
+   - Committee voted to remove immunity = status "decided"
+   - Knesset plenum voted to remove immunity = status "decided"
+   - Immunity was NOT automatically waived/removed by a court dismissal of
+     a civil suit. A court dismissing a civil claim does NOT end the immunity
+     process. Do NOT set status "closed" or "acquitted" for immunity cases
+     based on civil lawsuit outcomes.
+10. ONGOING PROCEEDINGS: If the source clearly shows a case is still pending
+    (hearing scheduled, case continues, בירור ימשיך), set status
+    "under_investigation", NEVER "decided", "closed", or "acquitted".
 </instructions>
 
 <output_format>

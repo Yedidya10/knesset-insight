@@ -44,9 +44,9 @@ export async function searchMkIntegrity(
 
   // Hebrew query targeting integrity-relevant terms
   const query =
-    `"${fullNameHe}" חבר כנסת (ועדת אתיקה OR "הסרת חסינות" OR ` +
+    `"${fullNameHe}" חבר כנסת (ועדת אתיקה OR "הסרת חסינות" OR חסינות OR ` +
     `"כתב אישום" OR הרשעה OR "מבקר המדינה" OR "ניגוד עניינים" OR ` +
-    `חקירה OR קנס OR סנקציה)`;
+    `חקירה OR קנס OR סנקציה OR "תביעה אזרחית")`;
 
   try {
     const response = await tvly.search(query, {
@@ -55,21 +55,34 @@ export async function searchMkIntegrity(
       includeDomains: [...includeDomains],
     });
 
-    return (response.results ?? []).map((r) => {
-      let domain = '';
-      try {
-        domain = new URL(r.url ?? '').hostname.replace(/^www\./, '');
-      } catch {
-        // malformed URL — leave empty
-      }
-      return {
-        title: r.title ?? '',
-        url: r.url ?? '',
-        content: r.content ?? '',
-        score: r.score ?? 0,
-        domain,
-      };
-    });
+    // URLs that are irrelevant as integrity evidence (legislation pages, general info)
+    const BLOCKED_URL_PATTERNS = [
+      'lawbill.aspx',
+      'lawsuggestionssearch',
+      '/mk/', // MK bio pages
+      'MembersIds=', // member profile queries
+    ];
+
+    return (response.results ?? [])
+      .filter((r) => {
+        const url = r.url ?? '';
+        return !BLOCKED_URL_PATTERNS.some((pat) => url.includes(pat));
+      })
+      .map((r) => {
+        let domain = '';
+        try {
+          domain = new URL(r.url ?? '').hostname.replace(/^www\./, '');
+        } catch {
+          // malformed URL — leave empty
+        }
+        return {
+          title: r.title ?? '',
+          url: r.url ?? '',
+          content: r.content ?? '',
+          score: r.score ?? 0,
+          domain,
+        };
+      });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.error(
