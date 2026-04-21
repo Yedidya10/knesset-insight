@@ -907,17 +907,31 @@
     "decision": "החלטה",
     "verified": "מאומת",
     "disclaimer": "המידע מבוסס על מקורות ציבוריים רשמיים בלבד. ניתוח AI עשוי להכיל אי-דיוקים. יש לבדוק את המקורות המקוריים.",
+    "showAllClosed": "הצג סגורות וזיכויים ({count})",
+    "hideClosed": "הסתר סגורות וזיכויים",
     "client": "לקוח",
+    "groups": {
+      "parliamentary_ethics": "קובלנות ואתיקה של הכנסת",
+      "civil_lawsuits": "תביעות אזרחיות",
+      "criminal": "תביעות והליכים פליליים",
+      "non_parliamentary": "התנהגות לא־פרלמנטרית (הסתה, שפה קיצונית)"
+    },
     "categories": {
       "ethics_complaint": "תלונה אתית",
       "immunity_request": "בקשת חסינות",
       "criminal_indictment": "כתב אישום",
+      "indictment": "כתב אישום",
+      "criminal_investigation": "חקירה פלילית",
       "criminal_conviction": "הרשעה פלילית",
+      "civil_lawsuit": "תביעה אזרחית",
       "comptroller_finding": "ממצא מבקר המדינה",
       "conflict_of_interest": "ניגוד עניינים",
       "regulatory_sanction": "סנקציה רגולטורית",
       "disciplinary_action": "הליך משמעתי",
-      "financial_disclosure_issue": "בעיית דיווח כספי"
+      "financial_disclosure_issue": "בעיית דיווח כספי",
+      "extreme_speech": "שפה קיצונית / הסתה",
+      "public_incitement": "הסתה פומבית",
+      "misconduct_outside_knesset": "התנהגות פסולה מחוץ לכנסת"
     },
     "statuses": {
       "reported": "דווח",
@@ -1392,6 +1406,21 @@
     "errorImageTooLarge": "התמונה גדולה מדי (מקסימום 2MB)",
     "errorTooManyImages": "ניתן לצרף עד {max} תמונות",
     "errorRateLimit": "שלחתם יותר מדי דיווחים. נסו שוב מאוחר יותר."
+  },
+  "ethicsRequest": {
+    "button": "בקשת בדיקת אתיקה",
+    "title": "בקשת בדיקת אתיקה — {name}",
+    "description": "נתקלתם באירוע אתיקה שלא מופיע כאן? שלחו אותו לבדיקת צוות האתר וניתוח על ידי מנהלי האתר.",
+    "descriptionLabel": "תיאור האירוע",
+    "descriptionPlaceholder": "תארו את האירוע: מה קרה, מתי, ואיך הוא קשור לח״כ. ככל שמפורט יותר — כך קל יותר לאמת.",
+    "sourceUrlLabel": "קישור למקור (אופציונלי)",
+    "sourceUrlHelp": "כתבה, פסק דין, החלטת ועדת אתיקה וכו׳. מומלץ מאוד לצרף מקור מוסמך.",
+    "submit": "שלח לבדיקה",
+    "submitting": "שולח...",
+    "success": "הבקשה התקבלה. צוות האתר יבדוק ויעדכן בהתאם.",
+    "error": "שליחת הבקשה נכשלה. אנא נסו שוב.",
+    "errorRateLimit": "שלחתם יותר מדי בקשות. נסו שוב מאוחר יותר.",
+    "errorDescriptionTooShort": "נדרש תיאור מפורט יותר (לפחות 10 תווים)."
   },
   "filters": {
     "openPanel": "סינון מתקדם",

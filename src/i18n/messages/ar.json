@@ -908,17 +908,31 @@
     "decision": "القرار",
     "verified": "تم التحقق",
     "disclaimer": "المعلومات مبنية على مصادر عامة رسمية فقط. قد يحتوي تحليل AI على عدم دقة. يرجى التحقق من المصادر الأصلية.",
+    "showAllClosed": "عرض المغلقة والبريئة ({count})",
+    "hideClosed": "إخفاء المغلقة والبريئة",
     "client": "العميل",
+    "groups": {
+      "parliamentary_ethics": "شكاوى الأخلاقيات في الكنيست",
+      "civil_lawsuits": "دعاوى مدنية",
+      "criminal": "إجراءات جنائية",
+      "non_parliamentary": "سلوك غير برلماني (تحريض، خطاب متطرف)"
+    },
     "categories": {
       "ethics_complaint": "شكوى أخلاقية",
       "immunity_request": "طلب حصانة",
       "criminal_indictment": "لائحة اتهام جنائية",
+      "indictment": "لائحة اتهام",
+      "criminal_investigation": "تحقيق جنائي",
       "criminal_conviction": "إدانة جنائية",
+      "civil_lawsuit": "دعوى مدنية",
       "comptroller_finding": "نتائج مراقب الدولة",
       "conflict_of_interest": "تضارب مصالح",
       "regulatory_sanction": "عقوبة تنظيمية",
       "disciplinary_action": "إجراء تأديبي",
-      "financial_disclosure_issue": "مشكلة إفصاح مالي"
+      "financial_disclosure_issue": "مشكلة إفصاح مالي",
+      "extreme_speech": "خطاب متطرف / تحريض",
+      "public_incitement": "تحريض علني",
+      "misconduct_outside_knesset": "سلوك مشين خارج الكنيست"
     },
     "statuses": {
       "reported": "تم الإبلاغ",
@@ -1393,6 +1407,21 @@
     "errorImageTooLarge": "الصورة كبيرة جداً (الحد الأقصى 2 ميغابايت)",
     "errorTooManyImages": "يمكنك إرفاق حتى {max} صور",
     "errorRateLimit": "تم إرسال عدد كبير جداً من البلاغات. يرجى المحاولة لاحقاً."
+  },
+  "ethicsRequest": {
+    "button": "طلب مراجعة أخلاقية",
+    "title": "طلب مراجعة أخلاقية — {name}",
+    "description": "هل تعرف عن حدث أخلاقي لا يظهر هنا؟ قدّمه لفريق المحررين للمراجعة.",
+    "descriptionLabel": "صف الحدث",
+    "descriptionPlaceholder": "ماذا حدث، ومتى، وكيف يتعلق بهذا العضو. التفاصيل الأكثر تساعد على التحقق بسرعة.",
+    "sourceUrlLabel": "رابط المصدر (اختياري)",
+    "sourceUrlHelp": "مقال، حكم، قرار لجنة أخلاقيات، إلخ. يُنصح بشدة بإرفاق مصدر موثوق.",
+    "submit": "إرسال للمراجعة",
+    "submitting": "جارٍ الإرسال...",
+    "success": "تم استلام الطلب. سيراجعه فريق التحرير ويحدّث السجل.",
+    "error": "فشل إرسال الطلب. يرجى المحاولة مرة أخرى.",
+    "errorRateLimit": "تم إرسال عدد كبير جداً من الطلبات. يرجى المحاولة لاحقاً.",
+    "errorDescriptionTooShort": "يرجى كتابة وصف أطول (10 أحرف على الأقل)."
   },
   "filters": {
     "openPanel": "تصفية متقدمة",

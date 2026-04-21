@@ -907,17 +907,31 @@
     "decision": "Decision",
     "verified": "Verified",
     "disclaimer": "Information is based solely on official public sources. AI analysis may contain inaccuracies. Please verify with original sources.",
+    "showAllClosed": "Show closed & acquitted ({count})",
+    "hideClosed": "Hide closed & acquitted",
     "client": "Client",
+    "groups": {
+      "parliamentary_ethics": "Knesset Ethics Complaints",
+      "civil_lawsuits": "Civil Lawsuits",
+      "criminal": "Criminal Proceedings",
+      "non_parliamentary": "Non-Parliamentary Conduct (Incitement, Extreme Speech)"
+    },
     "categories": {
       "ethics_complaint": "Ethics Complaint",
       "immunity_request": "Immunity Request",
       "criminal_indictment": "Criminal Indictment",
+      "indictment": "Indictment",
+      "criminal_investigation": "Criminal Investigation",
       "criminal_conviction": "Criminal Conviction",
+      "civil_lawsuit": "Civil Lawsuit",
       "comptroller_finding": "State Comptroller Finding",
       "conflict_of_interest": "Conflict of Interest",
       "regulatory_sanction": "Regulatory Sanction",
       "disciplinary_action": "Disciplinary Action",
-      "financial_disclosure_issue": "Financial Disclosure Issue"
+      "financial_disclosure_issue": "Financial Disclosure Issue",
+      "extreme_speech": "Extreme Speech / Incitement",
+      "public_incitement": "Public Incitement",
+      "misconduct_outside_knesset": "Misconduct Outside the Knesset"
     },
     "statuses": {
       "reported": "Reported",
@@ -1392,6 +1406,21 @@
     "errorImageTooLarge": "Image is too large (max 2MB)",
     "errorTooManyImages": "You can attach up to {max} images",
     "errorRateLimit": "Too many reports submitted. Please try again later."
+  },
+  "ethicsRequest": {
+    "button": "Request ethics review",
+    "title": "Ethics review request — {name}",
+    "description": "Know of an ethics event missing here? Submit it for review by the site editors.",
+    "descriptionLabel": "Describe the event",
+    "descriptionPlaceholder": "What happened, when, and how it relates to this MK. More detail makes verification faster.",
+    "sourceUrlLabel": "Source URL (optional)",
+    "sourceUrlHelp": "Article, ruling, ethics-committee decision, etc. Citing a reliable source is strongly encouraged.",
+    "submit": "Submit for review",
+    "submitting": "Submitting...",
+    "success": "Request received. The editorial team will review and update the record.",
+    "error": "Failed to submit the request. Please try again.",
+    "errorRateLimit": "Too many requests submitted. Please try again later.",
+    "errorDescriptionTooShort": "Please provide a longer description (at least 10 characters)."
   },
   "filters": {
     "openPanel": "Advanced filters",

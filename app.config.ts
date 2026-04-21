@@ -179,7 +179,7 @@ export const appConfig = {
         process.env.INTEGRITY_COMPTROLLER_URL ?? 'https://www.mevaker.gov.il',
       lobbyistRegistry:
         process.env.INTEGRITY_LOBBYIST_URL ??
-        'https://production.oknesset.org/pipelines/data/lobbyists/list/datapackage.json',
+        'https://production.oknesset.org/pipelines/data/lobbyists/v_lobbyist/datapackage.json',
     },
     sync: {
       cron: process.env.INTEGRITY_SYNC_CRON ?? '0 4 * * *',
@@ -373,6 +373,16 @@ export const appConfig = {
     ),
     /** Rate limit: max reports per hour per IP */
     rateLimitPerHour: Number(process.env.BUG_REPORT_RATE_LIMIT ?? 5),
+  },
+
+  // Ethics Request → GitHub Issues (public submissions for integrity review)
+  ethicsRequest: {
+    github: {
+      owner: process.env.ETHICS_REQUEST_GITHUB_OWNER ?? 'Yedidya10',
+      repo: process.env.ETHICS_REQUEST_GITHUB_REPO ?? 'knesset-insight',
+    },
+    /** Rate limit: max requests per hour per IP */
+    rateLimitPerHour: Number(process.env.ETHICS_REQUEST_RATE_LIMIT ?? 3),
   },
 
   // Policy Stances — TheyVoteForYou-style vote classification

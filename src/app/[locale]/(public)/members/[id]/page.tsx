@@ -13,7 +13,7 @@ import {
   FileText,
   Building2,
 } from 'lucide-react';
-import { eq, desc, asc, sql } from 'drizzle-orm';
+import { eq, desc, asc, sql, and } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import {
   members,
@@ -183,11 +183,17 @@ export default async function MemberProfilePage({ params }: Props) {
         asc(memberFactionHistory.startDate),
       ),
 
-    // Integrity cases
+    // Integrity cases — public view shows ONLY admin-verified cases.
+    // Unverified cases sit in the admin review queue (/admin/integrity).
     db
       .select()
       .from(integrityCases)
-      .where(eq(integrityCases.memberId, member.id))
+      .where(
+        and(
+          eq(integrityCases.memberId, member.id),
+          eq(integrityCases.verified, true),
+        ),
+      )
       .orderBy(desc(integrityCases.eventDate)),
 
     // Corporate affiliations
@@ -487,6 +493,8 @@ export default async function MemberProfilePage({ params }: Props) {
         }
         integrityContent={
           <IntegrityTab
+            memberId={member.id}
+            memberName={`${member.firstName} ${member.lastName}`}
             cases={integrityData.map((c) => ({
               ...c,
               eventDate: c.eventDate,
