@@ -10,11 +10,20 @@ import { runSyncJob, type SyncCheckpoint } from '../utils';
 import { fetchOData } from '../../lib/knesset/odata-client';
 
 /**
- * Ethics Committee IDs from Knesset OData.
- * 1 = ועדת האתיקה, 2 = ועדת הכנסת (House Committee)
- * These IDs may vary — we query by committee name patterns.
+ * Integrity-relevant Knesset committees:
+ * - ועדת האתיקה — primary authority over MK ethics complaints.
+ * - ועדת הכנסת — mostly procedural; relevant ONLY when item relates to
+ *   immunity removal (הסרת חסינות) or sanctions against speaker/chair.
+ * We narrow House Committee matching to those topical keywords only.
  */
-const ETHICS_COMMITTEE_NAMES = ['ועדת האתיקה', 'ועדת הכנסת'];
+const ETHICS_COMMITTEE_NAMES = ['ועדת האתיקה'];
+const HOUSE_COMMITTEE_KEYWORDS = [
+  'הסרת חסינות',
+  'חסינות',
+  'סנקצי',
+  'התנהגות',
+  'קובלנה',
+];
 
 interface KnsCommitteeSession {
   CommitteeSessionID: number;
@@ -35,22 +44,34 @@ export async function syncIntegrityKnesset(): Promise<void> {
   await runSyncJob(
     'integrity-knesset',
     async (prevCheckpoint: SyncCheckpoint | null) => {
-      // Find ethics-related committees in our DB
-      const ethicsCommittees = await db
+      // Find ethics committee + House Committee (filtered by topic later) in our DB
+      const relevantCommittees = await db
         .select({ id: committees.id, name: committees.name })
         .from(committees)
         .where(
           sql`${committees.name} ILIKE ANY(ARRAY['%אתיקה%', '%ועדת הכנסת%'])`,
         );
 
-      if (ethicsCommittees.length === 0) {
-        console.log('[sync:integrity-knesset] No ethics committees found in DB — skipping');
+      if (relevantCommittees.length === 0) {
+        console.log(
+          '[sync:integrity-knesset] No relevant committees found in DB — skipping',
+        );
         return 0;
       }
 
-      const committeeIds = ethicsCommittees.map((c) => c.id);
+      const ethicsCommitteeIds = new Set(
+        relevantCommittees
+          .filter((c) => c.name?.includes('אתיקה'))
+          .map((c) => c.id),
+      );
+      const houseCommitteeIds = new Set(
+        relevantCommittees
+          .filter((c) => c.name?.includes('ועדת הכנסת'))
+          .map((c) => c.id),
+      );
+      const committeeIds = relevantCommittees.map((c) => c.id);
       console.log(
-        `[sync:integrity-knesset] Found ${committeeIds.length} ethics-related committees`,
+        `[sync:integrity-knesset] Found ${ethicsCommitteeIds.size} ethics + ${houseCommitteeIds.size} house committees`,
       );
 
       // Fetch sessions since last checkpoint
@@ -83,36 +104,57 @@ export async function syncIntegrityKnesset(): Promise<void> {
 
       for (const session of sessions) {
         const sessionDate = session.StartDate.split('T')[0];
-        const updatedDate =
-          session.LastUpdatedDate ?? session.StartDate;
+        const updatedDate = session.LastUpdatedDate ?? session.StartDate;
 
         if (updatedDate > maxTimestamp) {
           maxTimestamp = updatedDate;
         }
 
-        // Upsert a placeholder integrity case for tracking
-        // The Note field may contain relevant info about the session topic
-        if (session.Note) {
-          // Try to match member names from the note
-          const matchedMembers = await findMentionedMembers(session.Note);
+        if (!session.Note) continue;
 
-          for (const member of matchedMembers) {
-            await db
-              .insert(integrityCases)
-              .values({
-                memberId: member.id,
-                category: 'ethics_complaint',
-                severity: 'info',
-                status: 'reported',
-                title: session.Note.substring(0, 200),
-                sourceType: 'knesset_ethics_committee',
-                sourceName: ETHICS_COMMITTEE_NAMES[0],
-                sourceDocId: String(session.CommitteeSessionID),
-                eventDate: sessionDate,
-              })
-              .onConflictDoNothing();
-            count++;
-          }
+        const isEthics = ethicsCommitteeIds.has(session.CommitteeID);
+        const isHouse = houseCommitteeIds.has(session.CommitteeID);
+
+        // For House Committee: only accept items whose topic mentions
+        // immunity removal / sanctions / conduct complaints.
+        if (isHouse) {
+          const matchesTopic = HOUSE_COMMITTEE_KEYWORDS.some((kw) =>
+            session.Note!.includes(kw),
+          );
+          if (!matchesTopic) continue;
+        }
+
+        const { category, sourceType, sourceName } = isHouse
+          ? {
+              category: 'immunity_request',
+              sourceType: 'knesset_house_committee',
+              sourceName: 'ועדת הכנסת',
+            }
+          : {
+              category: 'ethics_complaint',
+              sourceType: 'knesset_ethics_committee',
+              sourceName: 'ועדת האתיקה',
+            };
+
+        if (!isEthics && !isHouse) continue;
+
+        const matchedMembers = await findMentionedMembers(session.Note);
+        for (const member of matchedMembers) {
+          await db
+            .insert(integrityCases)
+            .values({
+              memberId: member.id,
+              category,
+              severity: 'info',
+              status: 'reported',
+              title: session.Note.substring(0, 200),
+              sourceType,
+              sourceName,
+              sourceDocId: String(session.CommitteeSessionID),
+              eventDate: sessionDate,
+            })
+            .onConflictDoNothing();
+          count++;
         }
       }
 
