@@ -68,7 +68,7 @@ export default async function HeroSection() {
   }
 
   return (
-    <section className="border-border/20 relative overflow-hidden border-b">
+    <section className="border-border/20 relative flex min-h-[calc(100svh-4rem)] flex-col justify-center overflow-hidden border-b">
       {/* Animated mesh gradient background */}
       <div className="from-primary/8 via-chart-2/5 to-chart-4/5 animate-mesh absolute inset-0 bg-linear-to-br" />
       <div className="from-primary/12 absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,var(--tw-gradient-stops))] via-transparent to-transparent" />
@@ -84,7 +84,7 @@ export default async function HeroSection() {
         }}
       />
 
-      <div className="relative mx-auto max-w-7xl px-4 pt-8 pb-0 sm:px-6 sm:pt-12 lg:pt-16">
+      <div className="relative mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:py-10">
         {/* Hemicycle */}
         {seatData.length > 0 && (
           <AnimatedSection>
@@ -97,21 +97,21 @@ export default async function HeroSection() {
         )}
 
         {/* Title + CTAs */}
-        <div className="flex flex-col items-center pb-10 text-center">
+        <div className="flex flex-col items-center text-center">
           <AnimatedSection delay={0.8}>
-            <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
+            <h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl lg:text-5xl xl:text-6xl">
               {t('title')}
             </h1>
           </AnimatedSection>
 
           <AnimatedSection delay={0.9}>
-            <p className="text-muted-foreground mt-3 max-w-2xl text-lg sm:text-xl">
+            <p className="text-muted-foreground mt-2 max-w-2xl text-base sm:mt-3 sm:text-lg xl:text-xl">
               {t('subtitle')}
             </p>
           </AnimatedSection>
 
           <AnimatedSection delay={1.0}>
-            <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <div className="mt-5 flex flex-wrap justify-center gap-3 sm:mt-6 lg:mt-8">
               <Button
                 size="lg"
                 className="rounded-xl px-8 shadow-md transition-shadow hover:shadow-lg"

@@ -207,10 +207,11 @@ export default function KnessetHemicycle({
 
   return (
     <TooltipProvider delay={100}>
-      <div className="relative mx-auto w-full max-w-[900px]">
+      <div className="relative mx-auto flex w-full max-w-[900px] justify-center">
         <svg
           viewBox="0 0 1000 460"
-          className="h-auto w-full"
+          preserveAspectRatio="xMidYMid meet"
+          className="block h-auto max-h-[min(414px,48svh)] w-full"
           role="img"
           aria-label="Knesset hemicycle visualization"
         >
