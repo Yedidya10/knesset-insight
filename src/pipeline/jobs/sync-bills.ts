@@ -4,6 +4,7 @@ import { bills } from '../../lib/db/schema';
 import { fetchOData, fetchODataSince } from '../../lib/knesset/odata-client';
 import { getLastSyncTime, runSyncJob, type SyncCheckpoint } from '../utils';
 import { appConfig } from '../../../app.config';
+import { computeBillStage } from '../../lib/knesset/bill-stages';
 
 const BATCH_SIZE = 50;
 const PAGE_SIZE = 100;
@@ -81,12 +82,16 @@ async function syncBillRecords(
     ) {
       maxLastUpdated = raw.LastUpdatedDate;
     }
+    const status = String(raw.StatusID);
+    const billType = raw.SubTypeDesc || null;
+    const subTypeId = raw.SubTypeID ?? null;
+    const stage = computeBillStage(status, subTypeId, billType);
     return {
       knessetId: raw.BillID,
       name: raw.Name,
-      status: String(raw.StatusID),
-      billType: raw.SubTypeDesc || null,
-      subTypeId: raw.SubTypeID ?? null,
+      status,
+      billType,
+      subTypeId,
       isContinuationBill: raw.IsContinuationBill ?? null,
       committeeId: raw.CommitteeID ?? null,
       summary: raw.SummaryLaw ?? null,
@@ -95,6 +100,8 @@ async function syncBillRecords(
         ? raw.PublicationDate.split('T')[0]
         : null,
       lastUpdate: raw.LastUpdatedDate ? new Date(raw.LastUpdatedDate) : null,
+      currentStage: stage.currentStage,
+      stageSpecialStatus: stage.specialStatus ?? null,
     };
   });
 
@@ -116,6 +123,8 @@ async function syncBillRecords(
           knessetNum: sql`excluded.knesset_num`,
           proposedDate: sql`excluded.proposed_date`,
           lastUpdate: sql`excluded.last_update`,
+          currentStage: sql`excluded.current_stage`,
+          stageSpecialStatus: sql`excluded.stage_special_status`,
           updatedAt: new Date(),
         },
       });

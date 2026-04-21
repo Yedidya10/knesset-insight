@@ -2,11 +2,11 @@
 
 import { useTranslations } from 'next-intl';
 import { useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { FilterBar } from '@/components/filters';
 import { useFilterParams } from '@/hooks/use-filter-params';
 import type { FilterFieldConfig, SortOption } from '@/components/filters';
-
-const KNESSET_NUMBERS = [25, 24, 23, 22, 21, 20];
+import { SUPPORTED_KNESSETS } from '@/lib/constants/knessets';
 
 interface VotesFilterProps {
   factions: Array<{ id: number; name: string }>;
@@ -18,6 +18,7 @@ export default function VotesFilter({
   currentMembers,
 }: VotesFilterProps) {
   const t = useTranslations('votes');
+  const searchParams = useSearchParams();
 
   const fields: FilterFieldConfig[] = useMemo(
     () => [
@@ -30,24 +31,20 @@ export default function VotesFilter({
       },
       {
         key: 'knesset',
-        type: 'select' as const,
-        label: t('filter.allKnessets'),
+        type: 'multiSelect' as const,
+        label: t('filter.knesset'),
         primary: true,
-        options: [
-          { value: '_all', label: t('filter.allKnessets') },
-          ...KNESSET_NUMBERS.map((n) => ({
-            value: String(n),
-            label: `${t('knessetNum')} ${n}`,
-          })),
-        ],
+        options: SUPPORTED_KNESSETS.map((n) => ({
+          value: String(n),
+          label: `${t('knessetNum')} ${n}`,
+        })),
       },
+      // ── Result (multi-select: approved / rejected) ──
       {
         key: 'result',
-        type: 'select' as const,
+        type: 'multiSelect' as const,
         label: t('filter.allResults'),
-        primary: true,
         options: [
-          { value: '_all', label: t('filter.allResults') },
           { value: 'approved', label: t('approved') },
           { value: 'rejected', label: t('rejected') },
         ],
@@ -55,11 +52,10 @@ export default function VotesFilter({
       // ── Advanced filters (shown in FilterSheet) ──
       {
         key: 'activityType',
-        type: 'select' as const,
+        type: 'multiSelect' as const,
         label: t('filter.activityType'),
         group: t('filter.advancedGroup'),
         options: [
-          { value: '_all', label: t('filter.allActivities') },
           { value: 'bill', label: t('filter.activityBill') },
           { value: 'noConfidence', label: t('filter.activityNoConfidence') },
           { value: 'agenda', label: t('filter.activityAgenda') },
@@ -68,11 +64,10 @@ export default function VotesFilter({
       },
       {
         key: 'voteType',
-        type: 'select' as const,
+        type: 'multiSelect' as const,
         label: t('filter.voteMethod'),
         group: t('filter.advancedGroup'),
         options: [
-          { value: '_all', label: t('filter.allMethods') },
           { value: '1', label: t('filter.methodElectronic') },
           { value: '2', label: t('filter.methodByName') },
           { value: '3', label: t('filter.methodSecret') },
@@ -81,37 +76,32 @@ export default function VotesFilter({
       },
       {
         key: 'factionId',
-        type: 'select' as const,
+        type: 'multiSelect' as const,
+        variant: 'checkbox' as const,
         label: t('filter.faction'),
         group: t('filter.advancedGroup'),
-        options: [
-          { value: '_all', label: t('filter.allFactions') },
-          ...factions.map((f) => ({
-            value: String(f.id),
-            label: f.name,
-          })),
-        ],
+        options: factions.map((f) => ({
+          value: String(f.id),
+          label: f.name,
+        })),
       },
       {
         key: 'memberId',
-        type: 'select' as const,
+        type: 'multiSelect' as const,
+        variant: 'checkbox' as const,
         label: t('filter.votingMember'),
         group: t('filter.advancedGroup'),
-        options: [
-          { value: '_all', label: t('filter.allMembers') },
-          ...currentMembers.map((m) => ({
-            value: String(m.id),
-            label: m.name,
-          })),
-        ],
+        options: currentMembers.map((m) => ({
+          value: String(m.id),
+          label: m.name,
+        })),
       },
       {
         key: 'voteDirection',
-        type: 'select' as const,
+        type: 'multiSelect' as const,
         label: t('filter.voteDirection'),
         group: t('filter.advancedGroup'),
         options: [
-          { value: '_all', label: t('filter.allDirections') },
           { value: 'for', label: t('filter.directionFor') },
           { value: 'against', label: t('filter.directionAgainst') },
           { value: 'present', label: t('filter.directionPresent') },
@@ -131,14 +121,12 @@ export default function VotesFilter({
       },
       {
         key: 'stage',
-        type: 'select' as const,
+        type: 'multiSelect' as const,
         label: t('filter.billStage'),
         group: t('filter.advancedGroup'),
         options: [
-          { value: '_all', label: t('filter.allStages') },
           { value: '1', label: t('filter.stageFirst') },
           { value: '3', label: t('filter.stageSecondThird') },
-          { value: '5', label: t('filter.stageReservation') },
           { value: '6', label: t('filter.stageOther') },
         ],
       },
@@ -153,10 +141,9 @@ export default function VotesFilter({
     [t, factions, currentMembers],
   );
 
-  const sortOptions: SortOption[] = useMemo(
+  const sortFieldOptions: SortOption[] = useMemo(
     () => [
-      { value: 'dateDesc', label: t('sort.dateDesc') },
-      { value: 'dateAsc', label: t('sort.dateAsc') },
+      { value: 'date', label: t('sort.date') },
       { value: 'mostVotes', label: t('sort.mostVotes') },
       { value: 'mostControversial', label: t('sort.mostControversial') },
     ],
@@ -176,6 +163,10 @@ export default function VotesFilter({
     commitSearch,
   } = useFilterParams({ fields });
 
+  // Sort state read directly from URL (not registered as filter fields)
+  const sortField = searchParams.get('sort') ?? 'date';
+  const sortDir = (searchParams.get('sortDir') ?? 'desc') as 'asc' | 'desc';
+
   return (
     <FilterBar
       fields={fields}
@@ -189,10 +180,11 @@ export default function VotesFilter({
       activeCount={activeCount}
       hasActiveFilters={hasActiveFilters}
       activeFilters={activeFilters}
-      sortOptions={sortOptions}
-      sortValue={filters.sort ?? 'dateDesc'}
-      sortDefault="dateDesc"
-      onSortChange={(val) => updateFilter('sort', val)}
+      sortFieldOptions={sortFieldOptions}
+      sortField={sortField}
+      sortDir={sortDir}
+      onSortFieldChange={(val) => updateFilter('sort', val)}
+      onSortDirChange={(dir) => updateFilter('sortDir', dir)}
     />
   );
 }

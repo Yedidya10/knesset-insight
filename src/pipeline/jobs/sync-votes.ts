@@ -220,6 +220,10 @@ async function syncVoteHeaders(
           abstainCount: sql`CASE WHEN excluded.abstain_count > 0 THEN excluded.abstain_count ELSE ${votes.abstainCount} END`,
           isAccepted: sql`CASE WHEN excluded.for_count > 0 OR excluded.against_count > 0 THEN excluded.is_accepted ELSE ${votes.isAccepted} END`,
           isReservation: sql`excluded.is_reservation`,
+          // Preserve existing activity_type if it has been upgraded to "bill"
+          // by link-votes-to-bills (excluded.activity_type is the pre-link
+          // classification based on title alone and would regress the data).
+          activityType: sql`CASE WHEN ${votes.activityType} = 'bill' THEN ${votes.activityType} ELSE excluded.activity_type END`,
           updatedAt: new Date(),
         },
       });
@@ -709,6 +713,7 @@ export async function syncVotesForKnessets(
           sessionId: sql`excluded.session_id`,
           sessItemId: sql`excluded.sess_item_id`,
           isReservation: sql`excluded.is_reservation`,
+          activityType: sql`CASE WHEN ${votes.activityType} = 'bill' THEN ${votes.activityType} ELSE excluded.activity_type END`,
           updatedAt: new Date(),
         },
       });

@@ -4,6 +4,8 @@ import type {
   OKnessetMember,
   ODataV4PlenumVoteResult,
 } from './types';
+import { classifyVoteActivity } from '../votes/activity-type';
+import { computeBillStage } from './bill-stages';
 
 /**
  * Map OData v4 PlenumVoteResult ResultCode to English enum value.
@@ -87,6 +89,9 @@ export function transformVoteHeader(raw: ODataVoteHeader) {
     abstainCount: raw.total_abstain,
     isAccepted: raw.is_accepted === 1,
     isReservation: /הסתייגו/.test(title),
+    // Pre-classify activity type from title alone; link-votes-to-bills later
+    // upgrades rows to "bill" when it resolves a billId.
+    activityType: classifyVoteActivity(title, null),
   };
 }
 

@@ -12,6 +12,7 @@ import {
   uuid,
   numeric,
   real,
+  smallint,
   customType,
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
@@ -338,6 +339,10 @@ export const bills = pgTable('bills', {
   aiTopics: jsonb('ai_topics').$type<Record<string, string[]>>(),
   metadata: jsonb('metadata'),
   clusterId: integer('cluster_id'),
+  /** Persisted legislative stage (0-6, see BillStage enum). Set by sync-bills + backfill. */
+  currentStage: smallint('current_stage'),
+  /** Persisted special status ("merged", "split", "stopped", etc.) when applicable. */
+  stageSpecialStatus: text('stage_special_status'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
@@ -360,6 +365,9 @@ export const votes = pgTable('votes', {
   metadata: jsonb('metadata'),
   billStage: integer('bill_stage'),
   isReservation: boolean('is_reservation').default(false),
+  /** Persisted activity type ("bill"|"noConfidence"|"agenda"|"plenary").
+   *  Computed by classifyVoteActivity(title, billId) on sync + backfill. */
+  activityType: text('activity_type'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });

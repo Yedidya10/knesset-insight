@@ -102,7 +102,10 @@ export async function linkVotesToBills(): Promise<void> {
       const batch = layer1Updates.slice(i, i + 50);
       await Promise.all(
         batch.map(({ voteId, billId }) =>
-          db.update(votes).set({ billId }).where(eq(votes.id, voteId)),
+          db
+            .update(votes)
+            .set({ billId, activityType: 'bill' })
+            .where(eq(votes.id, voteId)),
         ),
       );
       if ((i + 50) % 500 === 0 || i + 50 >= layer1Updates.length) {
@@ -137,7 +140,7 @@ export async function linkVotesToBills(): Promise<void> {
               SELECT b.id AS bill_id, similarity(b.name, v.title) AS sim
               FROM bills b
               WHERE b.knesset_num = v.knesset_num
-                AND similarity(b.name, v.title) > 0.3
+                AND similarity(b.name, v.title) > 0.25
               ORDER BY sim DESC
               LIMIT 1
             ) sub

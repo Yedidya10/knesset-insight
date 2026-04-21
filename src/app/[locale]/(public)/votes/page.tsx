@@ -1,19 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import type { Metadata } from 'next';
 import { Vote, Check, X } from 'lucide-react';
-import {
-  desc,
-  asc,
-  eq,
-  sql,
-  ilike,
-  and,
-  gte,
-  lte,
-  isNull,
-  isNotNull,
-  not,
-} from 'drizzle-orm';
+import { desc, asc, eq, sql, ilike, and, gte, lte, inArray } from 'drizzle-orm';
 import { Link } from '@/i18n/navigation';
 import { db } from '@/lib/db';
 import { votes, members, memberVotes, factions } from '@/lib/db/schema';
@@ -37,6 +25,7 @@ interface Props {
     result?: string;
     search?: string;
     sort?: string;
+    sortDir?: string;
     page?: string;
     dateFrom?: string;
     dateTo?: string;
@@ -57,10 +46,25 @@ export const dynamic = 'force-dynamic';
 export default async function VotesPage({ searchParams }: Props) {
   const t = await getTranslations('votes');
   const params = await searchParams;
-  const knessetNum = params.knesset ? Number(params.knesset) : undefined;
+  const knessetRaw = params.knesset ?? '';
   const resultFilter = params.result ?? '';
   const searchQuery = params.search ?? '';
-  const sortBy = params.sort ?? 'dateDesc';
+  // Normalize sort: new format is sort=date|mostVotes|mostControversial + sortDir=asc|desc
+  // Legacy format (dateDesc, dateAsc) is handled below for backward compat
+  const rawSort = params.sort ?? 'date';
+  const rawSortDir = (params.sortDir ?? 'desc') as 'asc' | 'desc';
+  let sortFieldKey: string;
+  let sortDir: 'asc' | 'desc';
+  if (rawSort === 'dateDesc') {
+    sortFieldKey = 'date';
+    sortDir = 'desc';
+  } else if (rawSort === 'dateAsc') {
+    sortFieldKey = 'date';
+    sortDir = 'asc';
+  } else {
+    sortFieldKey = rawSort;
+    sortDir = rawSortDir;
+  }
   const page = Math.max(1, Number(params.page ?? '1'));
   const offset = (page - 1) * PAGE_SIZE;
   const dateFrom = params.dateFrom ?? '';
@@ -95,13 +99,20 @@ export default async function VotesPage({ searchParams }: Props) {
   if (searchQuery) {
     conditions.push(ilike(votes.title, `%${searchQuery}%`));
   }
-  if (resultFilter === 'approved') {
-    conditions.push(eq(votes.isAccepted, true));
-  } else if (resultFilter === 'rejected') {
-    conditions.push(eq(votes.isAccepted, false));
+  // result: comma-separated approved,rejected
+  const resultValues = resultFilter.split(',').filter(Boolean);
+  if (resultValues.length === 1) {
+    if (resultValues[0] === 'approved')
+      conditions.push(eq(votes.isAccepted, true));
+    else if (resultValues[0] === 'rejected')
+      conditions.push(eq(votes.isAccepted, false));
   }
-  if (knessetNum) {
-    conditions.push(eq(votes.knessetNum, knessetNum));
+  // if both selected → no filter
+  const knessetNums = knessetRaw.split(',').filter(Boolean).map(Number);
+  if (knessetNums.length === 1) {
+    conditions.push(eq(votes.knessetNum, knessetNums[0]));
+  } else if (knessetNums.length > 1) {
+    conditions.push(inArray(votes.knessetNum, knessetNums));
   }
   if (dateFrom) {
     conditions.push(gte(votes.voteDate, new Date(dateFrom)));
@@ -109,41 +120,72 @@ export default async function VotesPage({ searchParams }: Props) {
   if (dateTo) {
     conditions.push(lte(votes.voteDate, new Date(dateTo)));
   }
-  if (voteType) {
-    conditions.push(eq(votes.voteType, voteType));
+  // voteType: comma-separated 1,2,3,4
+  const voteTypes = voteType.split(',').filter(Boolean);
+  if (voteTypes.length === 1) {
+    conditions.push(eq(votes.voteType, voteTypes[0]));
+  } else if (voteTypes.length > 1) {
+    conditions.push(inArray(votes.voteType, voteTypes));
   }
-  if (stage) {
-    conditions.push(eq(votes.billStage, Number(stage)));
+  // stage: comma-separated 1,3,5,6
+  const stageValues = stage.split(',').filter(Boolean);
+  if (stageValues.length === 1) {
+    conditions.push(eq(votes.billStage, Number(stageValues[0])));
+  } else if (stageValues.length > 1) {
+    conditions.push(inArray(votes.billStage, stageValues.map(Number)));
   }
   if (reservation === 'true') {
     conditions.push(eq(votes.isReservation, true));
   }
-  // Parliamentary activity type (derived from existing data)
-  if (activityType === 'bill') {
-    conditions.push(isNotNull(votes.billId));
-  } else if (activityType === 'noConfidence') {
-    conditions.push(ilike(votes.title, '%אי אמון%'));
-  } else if (activityType === 'agenda') {
-    conditions.push(ilike(votes.title, '%סדר היום%'));
-  } else if (activityType === 'plenary') {
-    conditions.push(isNull(votes.billId));
-    conditions.push(not(ilike(votes.title, '%אי אמון%')));
-    conditions.push(not(ilike(votes.title, '%סדר היום%')));
+  // Parliamentary activity type — uses the persisted votes.activity_type
+  // column (backfilled + maintained by sync-votes + link-votes-to-bills).
+  const activityTypes = activityType
+    ? activityType.split(',').filter(Boolean)
+    : [];
+  if (activityTypes.length === 1) {
+    conditions.push(eq(votes.activityType, activityTypes[0]));
+  } else if (activityTypes.length > 1) {
+    conditions.push(inArray(votes.activityType, activityTypes));
   }
   // Member-level filters (faction / member / vote direction)
-  if (memberId || voteDirection || factionId) {
+  const voteDirections = voteDirection.split(',').filter(Boolean);
+  const memberIds = memberId.split(',').filter(Boolean);
+  const factionIds = factionId.split(',').filter(Boolean);
+  if (
+    memberIds.length > 0 ||
+    voteDirections.length > 0 ||
+    factionIds.length > 0
+  ) {
     const subParts = [sql`mv.vote_id = ${votes.id}`];
-    if (memberId) {
-      subParts.push(sql`mv.member_id = ${Number(memberId)}`);
+    if (memberIds.length === 1) {
+      subParts.push(sql`mv.member_id = ${Number(memberIds[0])}`);
+    } else if (memberIds.length > 1) {
+      const memberIdParams = sql.join(
+        memberIds.map((id) => sql`${Number(id)}`),
+        sql`, `,
+      );
+      subParts.push(sql`mv.member_id IN (${memberIdParams})`);
     }
-    if (voteDirection) {
-      subParts.push(sql`mv.vote_value = ${voteDirection}`);
+    if (voteDirections.length === 1) {
+      subParts.push(sql`mv.vote_value = ${voteDirections[0]}`);
+    } else if (voteDirections.length > 1) {
+      const dirCond = sql.join(
+        voteDirections.map((v) => sql`mv.vote_value = ${v}`),
+        sql` OR `,
+      );
+      subParts.push(sql`(${dirCond})`);
     }
-    if (factionId) {
-      subParts.push(sql`m.faction_id = ${Number(factionId)}`);
+    if (factionIds.length === 1) {
+      subParts.push(sql`m.faction_id = ${Number(factionIds[0])}`);
+    } else if (factionIds.length > 1) {
+      const factionIdParams = sql.join(
+        factionIds.map((id) => sql`${Number(id)}`),
+        sql`, `,
+      );
+      subParts.push(sql`m.faction_id IN (${factionIdParams})`);
     }
     const subWhere = sql.join(subParts, sql` AND `);
-    if (factionId) {
+    if (factionIds.length > 0) {
       conditions.push(
         sql`EXISTS (SELECT 1 FROM member_votes mv JOIN members m ON mv.member_id = m.id WHERE ${subWhere})`,
       );
@@ -157,17 +199,29 @@ export default async function VotesPage({ searchParams }: Props) {
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
   let orderByClause;
-  switch (sortBy) {
-    case 'dateAsc':
-      orderByClause = asc(votes.voteDate);
+  switch (sortFieldKey) {
+    case 'date':
+      orderByClause =
+        sortDir === 'asc' ? asc(votes.voteDate) : desc(votes.voteDate);
       break;
     case 'mostVotes':
-      orderByClause = desc(
-        sql`${votes.forCount} + ${votes.againstCount} + ${votes.abstainCount}`,
-      );
+      orderByClause =
+        sortDir === 'asc'
+          ? asc(
+              sql`${votes.forCount} + ${votes.againstCount} + ${votes.abstainCount}`,
+            )
+          : desc(
+              sql`${votes.forCount} + ${votes.againstCount} + ${votes.abstainCount}`,
+            );
       break;
     case 'mostControversial':
-      orderByClause = asc(sql`abs(${votes.forCount} - ${votes.againstCount})`);
+      // Most controversial = smallest gap between for/against
+      // sortDir=desc → most controversial first (asc abs diff)
+      // sortDir=asc  → least controversial first (desc abs diff)
+      orderByClause =
+        sortDir === 'desc'
+          ? asc(sql`abs(${votes.forCount} - ${votes.againstCount})`)
+          : desc(sql`abs(${votes.forCount} - ${votes.againstCount})`);
       break;
     default:
       orderByClause = desc(votes.voteDate);
@@ -314,10 +368,12 @@ export default async function VotesPage({ searchParams }: Props) {
                 buildPageUrl={(p) => {
                   const urlParams = new URLSearchParams();
                   if (searchQuery) urlParams.set('search', searchQuery);
-                  if (knessetNum) urlParams.set('knesset', String(knessetNum));
+                  if (knessetRaw) urlParams.set('knesset', knessetRaw);
                   if (resultFilter) urlParams.set('result', resultFilter);
-                  if (sortBy && sortBy !== 'dateDesc')
-                    urlParams.set('sort', sortBy);
+                  if (sortFieldKey && sortFieldKey !== 'date')
+                    urlParams.set('sort', sortFieldKey);
+                  if (sortDir && sortDir !== 'desc')
+                    urlParams.set('sortDir', sortDir);
                   if (p > 1) urlParams.set('page', String(p));
                   const qs = urlParams.toString();
                   return `/votes${qs ? `?${qs}` : ''}`;
