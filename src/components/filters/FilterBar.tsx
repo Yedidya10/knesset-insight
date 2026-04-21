@@ -10,6 +10,7 @@ import FilterToggle from './FilterToggle';
 import FilterChips from './FilterChips';
 import FilterSheet from './FilterSheet';
 import SortSelect from './SortSelect';
+import SortControl from './SortControl';
 import type {
   FilterFieldConfig,
   SelectFilterField,
@@ -49,6 +50,16 @@ interface FilterBarProps {
   sortDefault?: string;
   /** Sort change handler */
   onSortChange?: (value: string) => void;
+  /** Split sort: field options (when provided, replaces sortOptions with field+direction UI) */
+  sortFieldOptions?: SortOption[];
+  /** Split sort: current field value */
+  sortField?: string;
+  /** Split sort: current direction */
+  sortDir?: 'asc' | 'desc';
+  /** Split sort: field change handler */
+  onSortFieldChange?: (value: string) => void;
+  /** Split sort: direction change handler */
+  onSortDirChange?: (dir: 'asc' | 'desc') => void;
   /** Extra content rendered between search and filters (e.g. knesset/status tabs) */
   beforeFilters?: React.ReactNode;
   /** Extra content rendered after inline filters (e.g. details toggle) */
@@ -73,6 +84,11 @@ export default function FilterBar({
   sortValue,
   sortDefault,
   onSortChange,
+  sortFieldOptions,
+  sortField,
+  sortDir,
+  onSortFieldChange,
+  onSortDirChange,
   beforeFilters,
   afterFilters,
   customRenderers,
@@ -80,12 +96,8 @@ export default function FilterBar({
   const t = useTranslations('filters');
 
   const searchField = fields.find((f) => f.type === 'search');
-  const primaryFields = fields.filter(
-    (f) => f.primary && f.type !== 'search',
-  );
-  const hasSheetFields = fields.some(
-    (f) => f.type !== 'search' && !f.primary,
-  );
+  const primaryFields = fields.filter((f) => f.primary && f.type !== 'search');
+  const hasSheetFields = fields.some((f) => f.type !== 'search' && !f.primary);
 
   // Count of non-primary active filters (for sheet badge)
   const sheetActiveCount = activeFilters.filter((af) => {
@@ -111,7 +123,7 @@ export default function FilterBar({
             }}
             placeholder={
               searchField.type === 'search'
-                ? searchField.placeholder ?? t('search')
+                ? (searchField.placeholder ?? t('search'))
                 : t('search')
             }
             className="w-full rounded-xl ps-10 pe-10"
@@ -129,7 +141,7 @@ export default function FilterBar({
         </div>
       )}
 
-      {/* Filter row: primary inline filters + sort + sheet trigger + clear */}
+      {/* Filter row: primary inline filters + sheet trigger + sort + clear */}
       <div className="flex flex-wrap items-center gap-2">
         {/* Primary filters (inline, visible on all screen sizes) */}
         {primaryFields.map((field) => {
@@ -156,16 +168,6 @@ export default function FilterBar({
           return null;
         })}
 
-        {/* Sort */}
-        {sortOptions && sortOptions.length > 0 && onSortChange && (
-          <SortSelect
-            options={sortOptions}
-            value={sortValue ?? ''}
-            onChange={onSortChange}
-            defaultValue={sortDefault}
-          />
-        )}
-
         {/* Filter sheet trigger (for non-primary fields) */}
         {hasSheetFields && (
           <FilterSheet
@@ -180,6 +182,38 @@ export default function FilterBar({
 
         {/* After filters slot (e.g. details toggle) */}
         {afterFilters}
+
+        {/* Visual separator between filter controls and sort controls */}
+        {(primaryFields.length > 0 || hasSheetFields) &&
+          (sortFieldOptions || (sortOptions && sortOptions.length > 0)) && (
+            <div className="bg-border mx-0.5 h-6 w-px shrink-0 self-center" />
+          )}
+
+        {/* Split sort (field select + direction arrow button) */}
+        {sortFieldOptions && onSortFieldChange && onSortDirChange && (
+          <SortControl
+            options={sortFieldOptions}
+            sortField={sortField ?? ''}
+            sortDir={sortDir ?? 'desc'}
+            onFieldChange={onSortFieldChange}
+            onDirChange={onSortDirChange}
+            dirAscLabel={t('sortDirAsc')}
+            dirDescLabel={t('sortDirDesc')}
+          />
+        )}
+
+        {/* Legacy sort select (used when sortFieldOptions not provided) */}
+        {!sortFieldOptions &&
+          sortOptions &&
+          sortOptions.length > 0 &&
+          onSortChange && (
+            <SortSelect
+              options={sortOptions}
+              value={sortValue ?? ''}
+              onChange={onSortChange}
+              defaultValue={sortDefault}
+            />
+          )}
 
         {/* Clear all button */}
         {hasActiveFilters && (

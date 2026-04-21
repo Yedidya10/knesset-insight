@@ -29,6 +29,11 @@ export interface MultiSelectFilterField extends FilterFieldBase {
   options: FilterOption[];
   /** URL separator between selected values (default `,`) */
   separator?: string;
+  /**
+   * `'pills'` (default) — pill-button grid, good for ≤8 options.
+   * `'checkbox'` — scrollable checkbox list with inline search, for long lists.
+   */
+  variant?: 'pills' | 'checkbox';
 }
 
 export interface RangeFilterField extends FilterFieldBase {

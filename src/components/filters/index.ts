@@ -6,6 +6,7 @@ export { default as FilterMultiSelect } from './FilterMultiSelect';
 export { default as FilterRange } from './FilterRange';
 export { default as FilterToggle } from './FilterToggle';
 export { default as SortSelect } from './SortSelect';
+export { default as SortControl } from './SortControl';
 export type {
   FilterFieldConfig,
   FilterOption,

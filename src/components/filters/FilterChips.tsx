@@ -21,7 +21,7 @@ export default function FilterChips({ filters, onRemove }: FilterChipsProps) {
             variant="secondary"
             className="shrink-0 gap-1 pe-1"
           >
-            <span className="max-w-32 truncate text-xs">
+            <span className="text-xs whitespace-nowrap">
               {f.label}: {f.displayValue}
             </span>
             <button
