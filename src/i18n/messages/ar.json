@@ -1033,12 +1033,58 @@
     },
     "aiReview": {
       "title": "مراجعة AI",
-      "description": "مراجعة والتحقق من مخرجات AI — مجموعات التشريع وحالات النزاهة",
+      "description": "مراجعة مخرجات AI — ملخصات القوانين، مجموعات التشريع وحالات النزاهة",
       "sections": {
+        "billSummaries": "ملخصات القوانين",
+        "billSummariesDescription": "إعادة توليد ملخصات AI لمشاريع قوانين محددة يدويًا، مع مؤشر \"يحتاج مراجعة\"",
         "clusters": "مجموعات التشريع",
         "clustersDescription": "مراجعة المجموعات المحددة بواسطة AI بثقة منخفضة",
         "integrity": "حالات النزاهة",
         "integrityDescription": "التحقق من حالات النزاهة وتصنيفها"
+      }
+    },
+    "billSummaries": {
+      "title": "ملخصات AI لمشاريع القوانين",
+      "description": "حدد مشاريع القوانين وقم بتشغيل تحليل AI على نصوصها الكاملة. الملخصات الرسمية للكنيست تُعطى الأولوية دائمًا ولا يتم استبدالها.",
+      "regenerate": "إعادة توليد",
+      "regenerating": "جارٍ المعالجة...",
+      "regenerateSelected": "إعادة توليد المحدد",
+      "needsReview": "يحتاج مراجعة",
+      "regenSuccess": "تم توليد الملخص · {tokens} رمز · المصدر: {source} · {docs} مستندات",
+      "regenFailed": "خطأ",
+      "searchPlaceholder": "ابحث باسم القانون",
+      "search": "بحث",
+      "anyKnesset": "كل الكنيست",
+      "knessetN": "كنيست {n}",
+      "selectedCount": "{count}/{max} محدد",
+      "selectAll": "تحديد الكل",
+      "selectRow": "تحديد {name}",
+      "hasOfficialSummary": "يحتوي على ملخص رسمي",
+      "openBill": "فتح القانون",
+      "noResults": "لم يتم العثور على قوانين",
+      "resultsNote": "عرض {count} نتيجة (حد أقصى 200 لكل استعلام)",
+      "bulkConfirm": "تشغيل تحليل AI على {count} مشروع قانون؟",
+      "bulkStarted": "جارٍ التحليل على {count} مشروع قانون...",
+      "bulkDone": "انتهى · نجح: {ok} · متخطى (رسمي): {skipped} · فشل: {failed} · رموز: {tokens}",
+      "bulkFailed": "خطأ: {message}",
+      "batchTooLarge": "الحد الأقصى {max} مشروع قانون لكل دفعة",
+      "filters": {
+        "all": "الكل",
+        "missing": "بدون ملخص",
+        "aiOnly": "ملخص AI",
+        "needsReview": "يحتاج مراجعة",
+        "official": "ملخص رسمي"
+      },
+      "col": {
+        "name": "اسم القانون",
+        "status": "الحالة",
+        "summary": "الملخص",
+        "updated": "تم التحديث"
+      },
+      "badge": {
+        "official": "رسمي",
+        "ai": "AI",
+        "missing": "غير موجود"
       }
     },
     "integrity": {
@@ -1049,6 +1095,8 @@
       "pending": "معلقة",
       "webPending": "مصدر إنترنت — يتطلب موافقة",
       "noPendingCases": "لا توجد حالات معلقة",
+      "noMatchingCases": "لا توجد حالات تطابق التصفية الحالية",
+      "resultsCount": "{count, plural, =0 {لا توجد نتائج} one {نتيجة واحدة} two {نتيجتان} other {# نتائج}}",
       "verify": "تحقق",
       "reject": "رفض",
       "verifyTitle": "التحقق من حالة النزاهة",
@@ -1059,6 +1107,28 @@
       "source": {
         "web": "إنترنت",
         "gov": "رسمي"
+      },
+      "filters": {
+        "searchPlaceholder": "ابحث باسم النائب أو العنوان...",
+        "allGroups": "جميع الفئات",
+        "allSeverities": "جميع مستويات الخطورة",
+        "allSources": "جميع المصادر",
+        "clear": "مسح التصفية",
+        "severity": {
+          "info": "معلومات",
+          "warning": "تحذير",
+          "serious": "خطير",
+          "critical": "حرج"
+        },
+        "source": {
+          "web": "مصدر إنترنت",
+          "gov": "مصدر رسمي"
+        },
+        "status": {
+          "pending": "بانتظار التحقق",
+          "verified": "تم التحقق",
+          "all": "الكل"
+        }
       }
     },
     "sync": {

@@ -5,6 +5,8 @@ import type { Metadata } from 'next';
 import { eq, desc, sql, inArray, and } from 'drizzle-orm';
 import { Users, ExternalLink, Layers, UserMinus, Sparkles } from 'lucide-react';
 import { db } from '@/lib/db';
+import { isAdmin } from '@/lib/auth/admin';
+import AdminSummaryRegenButton from '@/components/admin/AdminSummaryRegenButton';
 import {
   bills,
   billInitiators,
@@ -18,6 +20,7 @@ import {
   memberFactionHistory,
   billClusters,
   billClusterMembers,
+  billStageSummaries,
 } from '@/lib/db/schema';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -88,12 +91,48 @@ export default async function BillDetailPage({ params }: Props) {
       fullTextUrl: bills.fullTextUrl,
       aiSummary: bills.aiSummary,
       aiTopics: bills.aiTopics,
+      currentStage: bills.currentStage,
+      metadata: bills.metadata,
     })
     .from(bills)
     .where(eq(bills.id, billId))
     .limit(1);
   const bill = result[0];
   if (!bill) notFound();
+
+  // Admin gate + summary-needs-review check (computed, not persisted)
+  const viewerIsAdmin = await isAdmin();
+  let summaryNeedsReview = false;
+  if (viewerIsAdmin && !bill.summary) {
+    const meta = (bill.metadata as Record<string, unknown> | null) ?? null;
+    const generatedAtStr =
+      meta && typeof meta.aiSummaryGeneratedAt === 'string'
+        ? meta.aiSummaryGeneratedAt
+        : null;
+    const generatedAt = generatedAtStr ? new Date(generatedAtStr) : null;
+    const billUpdatedAfterGen =
+      !!generatedAt &&
+      !!bill.lastUpdate &&
+      bill.lastUpdate.getTime() > generatedAt.getTime();
+    let stageAdvanced = false;
+    if (bill.aiSummary && bill.currentStage != null) {
+      const [stageRow] = await db
+        .select({
+          maxStage: sql<number | null>`max(${billStageSummaries.stage})`,
+        })
+        .from(billStageSummaries)
+        .where(eq(billStageSummaries.billId, billId));
+      const maxSummarizedStage = stageRow?.maxStage ?? null;
+      if (
+        maxSummarizedStage != null &&
+        bill.currentStage > maxSummarizedStage
+      ) {
+        stageAdvanced = true;
+      }
+    }
+    const noSummaryYet = !bill.aiSummary;
+    summaryNeedsReview = noSummaryYet || billUpdatedAfterGen || stageAdvanced;
+  }
 
   // Fetch related data in parallel
   const [
@@ -483,23 +522,36 @@ export default async function BillDetailPage({ params }: Props) {
 
           <h1 className="text-xl font-bold sm:text-2xl">{bill.name}</h1>
 
-          {(bill.summary || bill.aiSummary) && (
+          {(bill.summary || bill.aiSummary || viewerIsAdmin) && (
             <div className="bg-muted/50 mt-3 rounded-lg border p-4">
-              <h2 className="text-sm font-semibold">
-                {t('summary')}
-                {!bill.summary && bill.aiSummary && (
-                  <Badge
-                    variant="outline"
-                    className="ms-2 gap-1 text-xs font-normal"
-                  >
-                    <Sparkles className="h-3 w-3 text-amber-500" />
-                    {t('aiSummary')}
-                  </Badge>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="text-sm font-semibold">
+                  {t('summary')}
+                  {!bill.summary && bill.aiSummary && (
+                    <Badge
+                      variant="outline"
+                      className="ms-2 gap-1 text-xs font-normal"
+                    >
+                      <Sparkles className="h-3 w-3 text-amber-500" />
+                      {t('aiSummary')}
+                    </Badge>
+                  )}
+                </h2>
+                {viewerIsAdmin && !bill.summary && (
+                  <AdminSummaryRegenButton
+                    billId={billId}
+                    needsReview={summaryNeedsReview}
+                    compact
+                  />
                 )}
-              </h2>
-              <p className="text-muted-foreground mt-1 text-sm leading-relaxed">
-                {bill.summary ?? bill.aiSummary?.[locale] ?? bill.aiSummary?.he}
-              </p>
+              </div>
+              {(bill.summary || bill.aiSummary) && (
+                <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
+                  {bill.summary ??
+                    bill.aiSummary?.[locale] ??
+                    bill.aiSummary?.he}
+                </p>
+              )}
               {bill.aiTopics && (
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {(bill.aiTopics[locale] ?? bill.aiTopics.he ?? []).map(

@@ -13,8 +13,8 @@ import {
   type BudgetBillType,
 } from './budget-bill-utils';
 import {
-  readBillDocumentContext,
-  type DocumentReadResult,
+  readAllOfficialBillDocuments,
+  type MultiDocReadResult,
 } from './document-reader';
 import { BillStage } from '../../knesset/bill-stages';
 
@@ -26,7 +26,6 @@ function extractJson(text: string): unknown | null {
   try {
     return JSON.parse(text);
   } catch {
-    // Try to find JSON object in the text
     const match = text.match(/\{[\s\S]*\}/);
     if (match) {
       try {
@@ -49,26 +48,43 @@ export interface BillForSummary {
   proposedDate: string | null;
 }
 
+/** Quality/provenance of the summary source — tracked in bill metadata. */
+export type SummarySourceType =
+  | 'documents' // Generated from one or more official bill documents (highest quality)
+  | 'web' // No documents available; based on web search only
+  | 'metadata_only'; // Neither documents nor web — just bill name/type/status
+
 export interface SummaryResult {
   billId: number;
   summary: Record<string, string> | null;
   topics: Record<string, string[]> | null;
   tokensUsed: number;
-  /** Budget bill type detected, if any */
   budgetType: BudgetBillType;
-  /** Legislative stage this summary belongs to (from document type) */
+  /** Legislative stage of the primary (latest) source document, if any. */
   stage: BillStage | null;
-  /** ID of the source document in bill_documents table */
+  /** ID of the primary source document in bill_documents table. */
   sourceDocId: number | null;
-  /** GroupTypeID of the source document */
+  /** GroupTypeID of the primary source document. */
   sourceDocType: number | null;
+  /** Provenance/quality indicator — tracks what sources were available. */
+  sourceType: SummarySourceType;
+  /** Number of official bill-text documents read (primary + earlier stages). */
+  docsRead: number;
 }
 
+const DOC_TYPE_LABEL: Record<number, string> = {
+  1: 'דיון מוקדם',
+  2: 'קריאה ראשונה',
+  3: 'קריאה ראשונה',
+  4: 'קריאה שנייה ושלישית',
+  60: 'ועדה לקראת קריאה שנייה',
+  17: 'הונח על שולחן הכנסת',
+};
+
 /**
- * Generate an AI summary for a single bill using Claude + Tavily web search.
- * First searches the web via Tavily for concise snippets, then feeds them
- * as context to Claude in a single generation call (no multi-step tools).
- * This reduces token usage by ~9x compared to provider-level web search.
+ * Generate an AI summary for a single bill as a parliamentary lawyer would.
+ * Reads ALL official bill-text documents (multi-stage), preferring the latest
+ * version which usually embeds the reservations (הסתייגויות) section.
  *
  * @param bill - The bill to summarize
  * @param chapterNames - For parent omnibus bills, the names of split chapters from the DB
@@ -80,7 +96,6 @@ export async function generateBillSummary(
   const model = getSummaryModel();
   const { maxTokens } = appConfig.billSummary.ai;
 
-  // Detect budget/economic-plan bill type
   const budgetType = detectBudgetBillType(bill.name);
   const chapterTopic =
     budgetType === 'chapter' ? extractChapterTopic(bill.name) : null;
@@ -94,10 +109,10 @@ export async function generateBillSummary(
 
   const knessetUrl = `https://main.knesset.gov.il/Activity/Legislation/Laws/Pages/LawBill.aspx?t=LawsTable&lawItemID=${bill.knessetId}`;
 
-  // Step 1: Try to read official document from bill_documents
-  let docResult: DocumentReadResult | null = null;
+  // Step 1: Read all official bill documents (multi-doc lawyer mode)
+  let multiDoc: MultiDocReadResult | null = null;
   try {
-    docResult = await readBillDocumentContext(bill.id, bill.name);
+    multiDoc = await readAllOfficialBillDocuments(bill.id, bill.name);
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     console.warn(
@@ -105,18 +120,18 @@ export async function generateBillSummary(
     );
   }
 
-  // Step 2: Search the web for context about this bill
+  // Step 2: Search the web for supplementary context
   const searchResults = await searchBillContext(
     bill.name,
     bill.knessetNum,
     knessetUrl,
   );
 
-  // Build context from search results
+  // Build web context
   let webContext = '';
   if (searchResults.length > 0) {
     webContext =
-      '\n\nWEB SEARCH RESULTS:\n' +
+      '\n\nWEB SEARCH RESULTS (supplementary only):\n' +
       searchResults
         .map(
           (r, i) =>
@@ -125,19 +140,28 @@ export async function generateBillSummary(
         .join('\n\n');
   }
 
-  // Build document context (NEW — from actual bill PDFs/DOCs)
+  // Build multi-document context — earliest stage first for chronological reading
   let documentContext = '';
-  if (docResult) {
-    documentContext = `\n\nOFFICIAL BILL DOCUMENT (${docResult.groupTypeId === 1 ? 'דיון מוקדם' : docResult.groupTypeId === 2 ? 'קריאה ראשונה' : docResult.groupTypeId === 4 ? "קריאה ב'+ג'" : 'מסמך רשמי'}):
-The following is the actual text of the bill (or its explanatory notes).
-Use this as the PRIMARY source for your summary. Web search results serve as SUPPLEMENTARY context only.
+  if (multiDoc && multiDoc.docs.length > 0) {
+    const docsChronological = [...multiDoc.docs].reverse(); // earliest first
+    const sections = docsChronological.map((d) => {
+      const label = DOC_TYPE_LABEL[d.groupTypeId] ?? `סוג ${d.groupTypeId}`;
+      const isPrimary = d.knessetDocId === multiDoc.primary.knessetDocId;
+      const header = isPrimary
+        ? `=== PRIMARY DOCUMENT — stage ${d.stage} (${label}) — THIS IS THE LATEST VERSION; RESERVATIONS ARE EMBEDDED AT THE END ===`
+        : `=== EARLIER STAGE ${d.stage} (${label}) — for context, DO NOT treat as current ===`;
+      return `${header}\n${d.text}`;
+    });
 
---- BEGIN DOCUMENT ---
-${docResult.text}
---- END DOCUMENT ---`;
+    documentContext = `\n\nOFFICIAL BILL DOCUMENTS (${multiDoc.docs.length} stage${multiDoc.docs.length === 1 ? '' : 's'} read, ${multiDoc.totalChars} chars total):
+These are the PRIMARY SOURCES for your summary. Web search results are supplementary only.
+
+--- BEGIN DOCUMENTS ---
+${sections.join('\n\n')}
+--- END DOCUMENTS ---`;
   }
 
-  // Build budget-specific context for the prompt
+  // Budget-specific context
   let budgetContext = '';
   if (budgetType === 'chapter') {
     budgetContext = BUDGET_CHAPTER_CONTEXT;
@@ -153,7 +177,7 @@ ${docResult.text}
     }
   }
 
-  const prompt = `Generate a summary for this Israeli bill:
+  const prompt = `Generate a parliamentary-lawyer summary for this Israeli bill:
 
 - Bill Name: ${bill.name}
 - Knesset: ${bill.knessetNum ?? 'unknown'}
@@ -162,9 +186,9 @@ ${docResult.text}
 - Proposed Date: ${bill.proposedDate ?? 'unknown'}
 - Official Knesset Page: ${knessetUrl}
 
-Focus on the bill's LATEST version — if it went through committee discussions or readings, describe the current state, not just the original proposal.${budgetContext}${documentContext}${webContext}`;
+Describe the bill's CURRENT/LATEST version. If the primary document contains an embedded הסתייגויות section, analyze those reservations per the skill rules.${budgetContext}${documentContext}${webContext}`;
 
-  // Parent omnibus bills need more output tokens for the broader overview
+  // Parent omnibus bills need more output tokens
   const effectiveMaxTokens =
     budgetType === 'parent' ? maxTokens * 2 : maxTokens;
 
@@ -178,29 +202,37 @@ Focus on the bill's LATEST version — if it went through committee discussions 
   const tokensUsed = usage?.totalTokens ?? 0;
   const trimmed = text.trim();
 
+  // Determine provenance for telemetry
+  const sourceType: SummarySourceType = multiDoc
+    ? 'documents'
+    : searchResults.length > 0
+      ? 'web'
+      : 'metadata_only';
+
+  const baseResult = {
+    billId: bill.id,
+    tokensUsed,
+    budgetType,
+    stage: multiDoc?.primary.stage ?? null,
+    sourceDocId: multiDoc?.primary.documentId ?? null,
+    sourceDocType: multiDoc?.primary.groupTypeId ?? null,
+    sourceType,
+    docsRead: multiDoc?.docs.length ?? 0,
+  };
+
   if (trimmed === 'NO_SUMMARY' || trimmed.length < 10) {
     console.log(
       `[bill-summary] No summary generated for bill ${bill.knessetId} (${bill.name})`,
     );
-    return {
-      billId: bill.id,
-      summary: null,
-      topics: null,
-      tokensUsed,
-      budgetType,
-      stage: docResult?.stage ?? null,
-      sourceDocId: docResult?.documentId ?? null,
-      sourceDocType: docResult?.groupTypeId ?? null,
-    };
+    return { ...baseResult, summary: null, topics: null };
   }
 
-  // Parse JSON response: { summary: {he, en, ar, ru}, topics: {he: [...], ...} }
+  // Parse JSON response
   let summary: Record<string, string> | null = null;
   let topics: Record<string, string[]> | null = null;
 
   const parsed = extractJson(trimmed) as Record<string, unknown> | null;
   if (parsed && typeof parsed === 'object') {
-    // Validate summary object has at least Hebrew
     if (
       parsed.summary &&
       typeof parsed.summary === 'object' &&
@@ -212,7 +244,6 @@ Focus on the bill's LATEST version — if it went through committee discussions 
       summary = { he: parsed.summary };
     }
 
-    // Validate topics object
     if (
       parsed.topics &&
       typeof parsed.topics === 'object' &&
@@ -237,21 +268,11 @@ Focus on the bill's LATEST version — if it went through committee discussions 
       };
     }
   } else {
-    // Complete fallback: no JSON at all, store as Hebrew plain text
     summary = { he: trimmed };
   }
 
   if (!summary || !summary.he || summary.he.length < 10) {
-    return {
-      billId: bill.id,
-      summary: null,
-      topics: null,
-      tokensUsed,
-      budgetType,
-      stage: docResult?.stage ?? null,
-      sourceDocId: docResult?.documentId ?? null,
-      sourceDocType: docResult?.groupTypeId ?? null,
-    };
+    return { ...baseResult, summary: null, topics: null };
   }
 
   console.log(
@@ -259,21 +280,13 @@ Focus on the bill's LATEST version — if it went through committee discussions 
       ` [${Object.keys(summary).length} langs]` +
       (topics ? ` [${Object.keys(topics).length} lang topics]` : '') +
       (budgetType ? ` [budget:${budgetType}]` : '') +
-      (docResult
-        ? ` [doc:type${docResult.groupTypeId}→stage${docResult.stage}]`
+      (multiDoc
+        ? ` [docs:${multiDoc.docs.length}, primary:type${multiDoc.primary.groupTypeId}→stage${multiDoc.primary.stage}]`
         : '') +
+      ` [src:${sourceType}]` +
       (searchResults.length ? ` (${searchResults.length} web sources)` : '') +
       ` [${tokensUsed} tokens]`,
   );
 
-  return {
-    billId: bill.id,
-    summary,
-    topics,
-    tokensUsed,
-    budgetType,
-    stage: docResult?.stage ?? null,
-    sourceDocId: docResult?.documentId ?? null,
-    sourceDocType: docResult?.groupTypeId ?? null,
-  };
+  return { ...baseResult, summary, topics };
 }

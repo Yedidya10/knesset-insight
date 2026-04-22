@@ -1,4 +1,4 @@
-import { eq, and, inArray, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { appConfig } from '../../../../app.config';
 import { db } from '../../db';
 import { billDocuments } from '../../db/schema';
@@ -247,7 +247,7 @@ export function isDocumentRelevant(
   return false;
 }
 
-// ── Main entry point ────────────────────────────────────────────
+// ── Main entry points ───────────────────────────────────────────
 
 /**
  * Read the highest-priority document for a bill and extract context.
@@ -310,4 +310,150 @@ export async function readBillDocumentContext(
   }
 
   return null;
+}
+
+// ── Multi-document reader (parliamentary-lawyer mode) ───────────
+
+export interface MultiDocReadResult {
+  /** All official bill-text docs read, ordered by stage descending (latest first). */
+  docs: Array<
+    DocumentReadResult & {
+      groupTypeDesc: string;
+      knessetDocId: number;
+    }
+  >;
+  /** The highest-stage doc — the one that governs the current version of the bill. */
+  primary: DocumentReadResult & {
+    groupTypeDesc: string;
+    knessetDocId: number;
+  };
+  /** Total characters across all read docs (after truncation). */
+  totalChars: number;
+}
+
+/**
+ * Read ALL official bill-text documents (left column on the Knesset bill page)
+ * for parliamentary-lawyer-grade summarization. The AI receives each document
+ * labeled with its legislative stage so it can reason about bill evolution
+ * and the reservations embedded in the 2nd/3rd reading doc.
+ *
+ * Background/research docs (types 59, 12 — committee minutes, research) are
+ * EXCLUDED when any official doc exists. When no official doc exists, falls
+ * back to the single-doc reader.
+ *
+ * Budget: each doc is truncated to `maxDocumentChars`; we then stop adding
+ * further docs once the combined budget is reached.
+ */
+export async function readAllOfficialBillDocuments(
+  billId: number,
+  billName?: string,
+): Promise<MultiDocReadResult | null> {
+  const { maxDocumentChars } = appConfig.billSummary.documentReader;
+  const allDocs = await fetchBillDocuments(billId);
+  if (allDocs.length === 0) return null;
+
+  const officialDocs = allDocs.filter((d) =>
+    OFFICIAL_DOC_TYPES.has(d.groupTypeId),
+  );
+
+  // No official docs → defer to single-doc reader (which handles background relevance)
+  if (officialDocs.length === 0) {
+    const single = await readBillDocumentContext(billId, billName);
+    if (!single) return null;
+    const meta = allDocs.find((d) => d.id === single.documentId);
+    const enriched = {
+      ...single,
+      groupTypeDesc: meta?.groupTypeDesc ?? '',
+      knessetDocId: meta?.knessetDocId ?? 0,
+    };
+    return {
+      docs: [enriched],
+      primary: enriched,
+      totalChars: single.text.length,
+    };
+  }
+
+  // Read all official docs, sorted by stage DESC so the latest comes first
+  const readResults: MultiDocReadResult['docs'] = [];
+  let budgetRemaining = maxDocumentChars * 3; // allow up to 3× single-doc budget across multi
+
+  // Sort by DOC_TYPE_TO_STAGE descending (latest stage first)
+  const stageOf = (id: number) => DOC_TYPE_TO_STAGE[id] ?? BillStage.SUBMITTED;
+  const sortedDocs = [...officialDocs].sort(
+    (a, b) => stageOf(b.groupTypeId) - stageOf(a.groupTypeId),
+  );
+
+  for (const doc of sortedDocs) {
+    if (budgetRemaining <= 500) break; // not worth reading if almost no budget left
+
+    const rawText = await readDocument(doc);
+    if (!rawText) continue;
+
+    // For the latest-stage doc we keep reservations (which appear at the end);
+    // for earlier-stage docs we prefer explanatory notes (דברי הסבר).
+    const stage = stageOf(doc.groupTypeId);
+    const isLatest = readResults.length === 0;
+    const perDocLimit = Math.min(maxDocumentChars, budgetRemaining);
+    const text = isLatest
+      ? truncateLatestStageDoc(rawText, perDocLimit)
+      : extractExplanatoryNotes(rawText, perDocLimit);
+
+    readResults.push({
+      text,
+      documentId: doc.id,
+      groupTypeId: doc.groupTypeId,
+      stage,
+      groupTypeDesc: doc.groupTypeDesc,
+      knessetDocId: doc.knessetDocId,
+    });
+    budgetRemaining -= text.length;
+
+    console.log(
+      `[doc-reader:multi] Read doc ${doc.knessetDocId} (type ${doc.groupTypeId}: ${doc.groupTypeDesc}) ` +
+        `stage ${stage} → ${text.length} chars${isLatest ? ' [primary]' : ''}`,
+    );
+  }
+
+  if (readResults.length === 0) return null;
+
+  return {
+    docs: readResults,
+    primary: readResults[0],
+    totalChars: readResults.reduce((sum, d) => sum + d.text.length, 0),
+  };
+}
+
+/**
+ * For the latest-stage document, the final section typically contains the
+ * הסתייגויות (reservations). If the text is within budget we keep it all;
+ * otherwise we try to keep BOTH the opening (main bill text + explanatory
+ * notes) AND the closing (reservations) sections at the expense of the middle.
+ */
+function truncateLatestStageDoc(fullText: string, limit: number): string {
+  if (fullText.length <= limit) return fullText;
+
+  // Find the reservations section to ensure we keep it
+  const reservationsMatch = fullText.match(
+    /הסתייגויות(?:\s+ובקשות\s+רשות\s+דיבור)?/,
+  );
+  if (!reservationsMatch || reservationsMatch.index === undefined) {
+    // No reservations section found — keep from explanatory notes forward
+    return extractExplanatoryNotes(fullText, limit);
+  }
+
+  const reservationsStart = reservationsMatch.index;
+  // Reserve ~40% of the budget for the reservations tail
+  const reservationsBudget = Math.floor(limit * 0.4);
+  const bodyBudget = limit - reservationsBudget - 50; // 50 chars for separator
+
+  const body = extractExplanatoryNotes(
+    fullText.slice(0, reservationsStart),
+    bodyBudget,
+  );
+  const reservations = fullText.slice(
+    reservationsStart,
+    reservationsStart + reservationsBudget,
+  );
+
+  return `${body}\n\n--- [TRUNCATED — jumping to reservations section] ---\n\n${reservations}`;
 }

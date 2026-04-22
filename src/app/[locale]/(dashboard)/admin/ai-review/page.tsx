@@ -1,9 +1,14 @@
 import { getTranslations } from 'next-intl/server';
 import { Brain, GitFork, Shield, FileText } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
-import { sql, eq, and, lt } from 'drizzle-orm';
+import { sql, eq, and, lt, isNull, isNotNull } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { billClusters, integrityCases } from '@/lib/db/schema';
+import {
+  billClusters,
+  integrityCases,
+  bills,
+  billStageSummaries,
+} from '@/lib/db/schema';
 import { appConfig } from '@/../app.config';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -11,26 +16,59 @@ import { Badge } from '@/components/ui/badge';
 export default async function AIReviewPage() {
   const t = await getTranslations('admin.aiReview');
 
-  const [pendingClusters, pendingIntegrity] = await Promise.all([
-    db
-      .select({ count: sql<number>`count(*)` })
-      .from(billClusters)
-      .where(
-        and(
-          eq(billClusters.aiProcessed, true),
-          lt(
-            billClusters.aiConfidence,
-            appConfig.billClusters.aiConfidenceThreshold,
+  const needsReviewExpr = sql<boolean>`(
+    ${bills.summary} IS NULL
+    AND ${bills.aiSummary} IS NOT NULL
+    AND (
+      ${bills.lastUpdate} > COALESCE((${bills.metadata}->>'aiSummaryGeneratedAt')::timestamptz, '1970-01-01'::timestamptz)
+      OR (
+        ${bills.currentStage} IS NOT NULL
+        AND ${bills.currentStage} > COALESCE(
+          (SELECT MAX(${billStageSummaries.stage}) FROM ${billStageSummaries} WHERE ${billStageSummaries.billId} = ${bills.id}),
+          -1
+        )
+      )
+    )
+  )`;
+
+  const [pendingClusters, pendingIntegrity, pendingSummaries] =
+    await Promise.all([
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(billClusters)
+        .where(
+          and(
+            eq(billClusters.aiProcessed, true),
+            lt(
+              billClusters.aiConfidence,
+              appConfig.billClusters.aiConfidenceThreshold,
+            ),
           ),
         ),
-      ),
-    db
-      .select({ count: sql<number>`count(*)` })
-      .from(integrityCases)
-      .where(eq(integrityCases.verified, false)),
-  ]);
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(integrityCases)
+        .where(eq(integrityCases.verified, false)),
+      db
+        .select({
+          missing: sql<number>`count(*) FILTER (WHERE ${isNull(bills.summary)} AND ${isNull(bills.aiSummary)})::int`,
+          review: sql<number>`count(*) FILTER (WHERE ${needsReviewExpr})::int`,
+        })
+        .from(bills)
+        .where(isNotNull(bills.knessetNum)),
+    ]);
+
+  const summariesPending =
+    Number(pendingSummaries[0]?.missing ?? 0) +
+    Number(pendingSummaries[0]?.review ?? 0);
 
   const reviewSections = [
+    {
+      key: 'billSummaries',
+      href: '/admin/ai-review/bill-summaries',
+      icon: FileText,
+      pending: summariesPending,
+    },
     {
       key: 'clusters',
       href: '/admin/ai-review/clusters',

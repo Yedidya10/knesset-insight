@@ -1032,12 +1032,58 @@
     },
     "aiReview": {
       "title": "AI Review",
-      "description": "Review and verify AI outputs — legislation clusters and integrity cases",
+      "description": "Review and verify AI outputs — bill summaries, legislation clusters, integrity cases",
       "sections": {
+        "billSummaries": "Bill Summaries",
+        "billSummariesDescription": "Manually regenerate AI summaries for selected bills, with a 'needs review' indicator",
         "clusters": "Legislation Clusters",
         "clustersDescription": "Review AI-identified clusters with low confidence",
         "integrity": "Integrity Cases",
         "integrityDescription": "Verify and classify integrity cases"
+      }
+    },
+    "billSummaries": {
+      "title": "AI Bill Summaries",
+      "description": "Select bills and run AI analysis on their full-text documents. Official Knesset summaries always take priority and are never overwritten.",
+      "regenerate": "Regenerate",
+      "regenerating": "Processing...",
+      "regenerateSelected": "Regenerate selected",
+      "needsReview": "Needs review",
+      "regenSuccess": "Summary generated · {tokens} tokens · source: {source} · {docs} docs",
+      "regenFailed": "Error",
+      "searchPlaceholder": "Search by bill name",
+      "search": "Search",
+      "anyKnesset": "Any Knesset",
+      "knessetN": "Knesset {n}",
+      "selectedCount": "{count}/{max} selected",
+      "selectAll": "Select all",
+      "selectRow": "Select {name}",
+      "hasOfficialSummary": "Has official summary",
+      "openBill": "Open bill",
+      "noResults": "No bills found",
+      "resultsNote": "Showing {count} results (max 200 per query)",
+      "bulkConfirm": "Run AI analysis on {count} bills?",
+      "bulkStarted": "Running analysis on {count} bills...",
+      "bulkDone": "Done · ok: {ok} · skipped (official): {skipped} · failed: {failed} · tokens: {tokens}",
+      "bulkFailed": "Error: {message}",
+      "batchTooLarge": "Max {max} bills per batch",
+      "filters": {
+        "all": "All",
+        "missing": "No summary",
+        "aiOnly": "AI summary",
+        "needsReview": "Needs review",
+        "official": "Official summary"
+      },
+      "col": {
+        "name": "Bill name",
+        "status": "Status",
+        "summary": "Summary",
+        "updated": "Updated"
+      },
+      "badge": {
+        "official": "Official",
+        "ai": "AI",
+        "missing": "Missing"
       }
     },
     "integrity": {
@@ -1048,6 +1094,8 @@
       "pending": "Pending",
       "webPending": "Web source — requires approval",
       "noPendingCases": "No pending cases",
+      "noMatchingCases": "No cases match the current filters",
+      "resultsCount": "{count, plural, =0 {No results} one {1 result} other {# results}}",
       "verify": "Verify",
       "reject": "Reject",
       "verifyTitle": "Verify Integrity Case",
@@ -1058,6 +1106,28 @@
       "source": {
         "web": "Web",
         "gov": "Official"
+      },
+      "filters": {
+        "searchPlaceholder": "Search by MK name or title...",
+        "allGroups": "All categories",
+        "allSeverities": "All severities",
+        "allSources": "All sources",
+        "clear": "Clear filters",
+        "severity": {
+          "info": "Info",
+          "warning": "Warning",
+          "serious": "Serious",
+          "critical": "Critical"
+        },
+        "source": {
+          "web": "Web source",
+          "gov": "Official source"
+        },
+        "status": {
+          "pending": "Pending review",
+          "verified": "Verified",
+          "all": "All"
+        }
       }
     },
     "sync": {

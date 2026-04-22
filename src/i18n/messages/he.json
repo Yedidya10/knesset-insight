@@ -1032,12 +1032,58 @@
     },
     "aiReview": {
       "title": "סקירת AI",
-      "description": "סקירה ואישור של תוצאות AI — אשכולות חקיקה ואירועי יושרה",
+      "description": "סקירה ואישור של תוצאות AI — תקצירי חוקים, אשכולות חקיקה ואירועי יושרה",
       "sections": {
+        "billSummaries": "תקצירי חוקים",
+        "billSummariesDescription": "יצירה מחדש של תקצירי AI לפי בחירה ידנית, עם אינדיקציית \"דורש ביקורת\"",
         "clusters": "אשכולות חקיקה",
         "clustersDescription": "סקירת אשכולות שזוהו ע\"י AI עם רמת ביטחון נמוכה",
         "integrity": "אירועי יושרה",
         "integrityDescription": "אימות ומיון אירועי יושרה שזוהו"
+      }
+    },
+    "billSummaries": {
+      "title": "ניהול תקצירי AI לחוקים",
+      "description": "בחר הצעות חוק והפעל ניתוח AI על טקסט מלא. תקצירים רשמיים של הכנסת תמיד מועדפים ולא נדרסים.",
+      "regenerate": "רענן תקציר",
+      "regenerating": "מעבד...",
+      "regenerateSelected": "רענן נבחרים",
+      "needsReview": "דורש ביקורת",
+      "regenSuccess": "נוצר תקציר · {tokens} טוקנים · מקור: {source} · {docs} מסמכים",
+      "regenFailed": "שגיאה",
+      "searchPlaceholder": "חיפוש לפי שם חוק",
+      "search": "חפש",
+      "anyKnesset": "כל הכנסות",
+      "knessetN": "כנסת {n}",
+      "selectedCount": "{count}/{max} נבחרו",
+      "selectAll": "בחר הכל",
+      "selectRow": "בחר את {name}",
+      "hasOfficialSummary": "קיים תקציר רשמי",
+      "openBill": "פתח חוק",
+      "noResults": "לא נמצאו חוקים",
+      "resultsNote": "מציג {count} תוצאות (מקסימום 200 בשאילתה)",
+      "bulkConfirm": "להפעיל ניתוח AI על {count} חוקים?",
+      "bulkStarted": "מפעיל ניתוח על {count} חוקים...",
+      "bulkDone": "הסתיים · הצלחות: {ok} · דולגו (רשמי): {skipped} · כשלים: {failed} · טוקנים: {tokens}",
+      "bulkFailed": "שגיאה: {message}",
+      "batchTooLarge": "מקסימום {max} חוקים בבת אחת",
+      "filters": {
+        "all": "הכל",
+        "missing": "ללא תקציר",
+        "aiOnly": "תקציר AI",
+        "needsReview": "דורש ביקורת",
+        "official": "תקציר רשמי"
+      },
+      "col": {
+        "name": "שם החוק",
+        "status": "סטטוס",
+        "summary": "תקציר",
+        "updated": "עודכן"
+      },
+      "badge": {
+        "official": "רשמי",
+        "ai": "AI",
+        "missing": "חסר"
       }
     },
     "integrity": {
@@ -1048,6 +1094,8 @@
       "pending": "ממתינים",
       "webPending": "ממקור אינטרנט — דורש אישור",
       "noPendingCases": "אין אירועים ממתינים",
+      "noMatchingCases": "לא נמצאו אירועים התואמים לסינון",
+      "resultsCount": "{count, plural, =0 {אין תוצאות} one {תוצאה אחת} two {שתי תוצאות} other {# תוצאות}}",
       "verify": "אמת",
       "reject": "דחה",
       "verifyTitle": "אימות אירוע יושרה",
@@ -1058,6 +1106,28 @@
       "source": {
         "web": "אינטרנט",
         "gov": "רשמי"
+      },
+      "filters": {
+        "searchPlaceholder": "חפש לפי שם ח\"כ או כותרת...",
+        "allGroups": "כל הקטגוריות",
+        "allSeverities": "כל רמות החומרה",
+        "allSources": "כל המקורות",
+        "clear": "נקה סינון",
+        "severity": {
+          "info": "מידע",
+          "warning": "אזהרה",
+          "serious": "חמור",
+          "critical": "קריטי"
+        },
+        "source": {
+          "web": "מקור אינטרנט",
+          "gov": "מקור רשמי"
+        },
+        "status": {
+          "pending": "ממתינים לאימות",
+          "verified": "מאומתים",
+          "all": "הכל"
+        }
       }
     },
     "sync": {
