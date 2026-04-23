@@ -9,15 +9,81 @@ import {
   Landmark,
   ExternalLink,
 } from 'lucide-react';
-import { eq, desc, sql } from 'drizzle-orm';
+import { and, desc, eq, ilike, inArray, or, sql, type SQL } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { integrityCases, members } from '@/lib/db/schema';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import IntegrityCaseActions from '@/components/admin/IntegrityCaseActions';
+import IntegrityFilters from '@/components/admin/IntegrityFilters';
+import {
+  INTEGRITY_GROUPS,
+  getCategoriesInGroup,
+  type IntegrityGroup,
+} from '@/lib/integrity/categories';
 
-export default async function AdminIntegrityPage() {
+interface Props {
+  searchParams: Promise<{
+    search?: string;
+    group?: string;
+    severity?: string;
+    source?: string;
+    status?: string;
+  }>;
+}
+
+export default async function AdminIntegrityPage({ searchParams }: Props) {
   const t = await getTranslations('admin.integrity');
+  const params = await searchParams;
+
+  const search = (params.search ?? '').trim();
+  const group = INTEGRITY_GROUPS.includes(params.group as IntegrityGroup)
+    ? (params.group as IntegrityGroup)
+    : '';
+  const severity = ['info', 'warning', 'serious', 'critical'].includes(
+    params.severity ?? '',
+  )
+    ? (params.severity as string)
+    : '';
+  const source = ['web', 'gov'].includes(params.source ?? '')
+    ? (params.source as string)
+    : '';
+  const status = ['pending', 'verified', 'all'].includes(params.status ?? '')
+    ? (params.status as string)
+    : 'pending';
+
+  const conditions: SQL[] = [];
+  if (status === 'pending') {
+    conditions.push(eq(integrityCases.verified, false));
+  } else if (status === 'verified') {
+    conditions.push(eq(integrityCases.verified, true));
+  }
+  if (group) {
+    const cats = getCategoriesInGroup(group);
+    if (cats.length > 0) {
+      conditions.push(inArray(integrityCases.category, cats));
+    }
+  }
+  if (severity) {
+    conditions.push(eq(integrityCases.severity, severity));
+  }
+  if (source === 'web') {
+    conditions.push(eq(integrityCases.sourceType, 'web_search'));
+  } else if (source === 'gov') {
+    const webNe = sql`${integrityCases.sourceType} <> 'web_search'`;
+    conditions.push(webNe as SQL);
+  }
+  if (search) {
+    const pattern = `%${search}%`;
+    const searchCond = or(
+      ilike(members.firstName, pattern),
+      ilike(members.lastName, pattern),
+      ilike(integrityCases.title, pattern),
+    );
+    if (searchCond) conditions.push(searchCond);
+  }
+
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
 
   const [pendingCases, verifiedCount, totalCount, webPendingCount] =
     await Promise.all([
@@ -41,13 +107,14 @@ export default async function AdminIntegrityPage() {
         })
         .from(integrityCases)
         .innerJoin(members, eq(integrityCases.memberId, members.id))
-        .where(eq(integrityCases.verified, false))
-        // web_search first (mandatory review), then newest
+        .where(whereClause)
         .orderBy(
           sql`(${integrityCases.sourceType} = 'web_search') desc`,
+          members.lastName,
+          members.firstName,
           desc(integrityCases.createdAt),
         )
-        .limit(50),
+        .limit(500),
       db
         .select({ count: sql<number>`count(*)` })
         .from(integrityCases)
@@ -60,8 +127,8 @@ export default async function AdminIntegrityPage() {
           sql`${integrityCases.verified} = false AND ${integrityCases.sourceType} = 'web_search'`,
         ),
     ]);
-  const webPending = Number(webPendingCount[0]?.count ?? 0);
 
+  const webPending = Number(webPendingCount[0]?.count ?? 0);
   const verified = Number(verifiedCount[0]?.count ?? 0);
   const total = Number(totalCount[0]?.count ?? 0);
   const pending = total - verified;
@@ -125,11 +192,24 @@ export default async function AdminIntegrityPage() {
         </Card>
       </div>
 
-      {/* Pending Cases */}
+      {/* Filters */}
+      <IntegrityFilters
+        search={search}
+        group={group}
+        severity={severity}
+        source={source}
+        status={status}
+      />
+
+      <p className="text-muted-foreground text-sm">
+        {t('resultsCount', { count: pendingCases.length })}
+      </p>
+
+      {/* Cases list */}
       {pendingCases.length === 0 ? (
         <Card>
           <CardContent className="text-muted-foreground p-8 text-center">
-            {t('noPendingCases')}
+            {t('noMatchingCases')}
           </CardContent>
         </Card>
       ) : (
@@ -157,6 +237,15 @@ export default async function AdminIntegrityPage() {
                         <Badge variant="secondary" className="text-xs">
                           {caseItem.category}
                         </Badge>
+                        {caseItem.verified && (
+                          <Badge
+                            variant="outline"
+                            className="border-emerald-500/40 bg-emerald-500/10 text-xs text-emerald-700 dark:text-emerald-300"
+                          >
+                            <CheckCircle2 className="me-1 h-3 w-3" />
+                            {t('verified')}
+                          </Badge>
+                        )}
                         {isWeb ? (
                           <Badge
                             variant="outline"
@@ -209,7 +298,9 @@ export default async function AdminIntegrityPage() {
                         )}
                       </div>
                     </div>
-                    <IntegrityCaseActions caseId={caseItem.id} />
+                    {!caseItem.verified && (
+                      <IntegrityCaseActions caseId={caseItem.id} />
+                    )}
                   </div>
                 </CardContent>
               </Card>

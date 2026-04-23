@@ -102,11 +102,14 @@ export default function KnessetHemicycle({
 }: KnessetHemicycleProps) {
   const router = useRouter();
   const [hoveredId, setHoveredId] = useState<number | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined'
+      ? window.matchMedia('(max-width: 640px)').matches
+      : false,
+  );
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 640px)');
-    setIsMobile(mq.matches);
     const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
@@ -121,14 +124,15 @@ export default function KnessetHemicycle({
     [router],
   );
 
+  // Use deterministic scatter positions (trig-based on index) to avoid
+  // SSR/client hydration mismatches that Math.random() would cause.
   const scatterPositions = useMemo(
     () =>
-      positioned.map(() => ({
-        x: (Math.random() - 0.5) * 600,
-        y: (Math.random() - 0.5) * 300,
+      positioned.map((_, i) => ({
+        x: Math.sin(i * 2.3998) * 300,
+        y: Math.cos(i * 1.7321) * 150,
       })),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [positioned.length],
+    [positioned],
   );
 
   const renderSeat = (

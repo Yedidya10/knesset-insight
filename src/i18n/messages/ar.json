@@ -911,6 +911,22 @@
     "showAllClosed": "عرض المغلقة والبريئة ({count})",
     "hideClosed": "إخفاء المغلقة والبريئة",
     "client": "العميل",
+    "documents": {
+      "officialDocs": "المستندات الرسمية",
+      "noDocuments": "لا توجد مستندات رسمية مرفقة",
+      "viewDoc": "عرض المستند",
+      "openInNewTab": "فتح في تبويب جديد",
+      "close": "إغلاق",
+      "mobileViewNote": "لعرض المستند على الجوال، افتح في تبويب جديد"
+    },
+    "docTypes": {
+      "ruling": "حكم قضائي",
+      "report": "تقرير",
+      "protocol": "بروتوكول",
+      "indictment": "لائحة اتهام",
+      "response": "رد",
+      "other": "أخرى"
+    },
     "groups": {
       "parliamentary_ethics": "شكاوى الأخلاقيات في الكنيست",
       "civil_lawsuits": "دعاوى مدنية",
@@ -1129,6 +1145,23 @@
           "verified": "تم التحقق",
           "all": "الكل"
         }
+      },
+      "documents": {
+        "manage": "إدارة المستندات",
+        "title": "مستندات القضية",
+        "existingDocs": "المستندات الحالية",
+        "noDocs": "لا توجد مستندات بعد",
+        "preview": "معاينة",
+        "delete": "حذف",
+        "uploadNew": "رفع مستند جديد",
+        "docTitle": "عنوان المستند",
+        "docTitlePlaceholder": "مثال: حكم محكمة المنطقة",
+        "docType": "نوع المستند",
+        "publishedAt": "تاريخ النشر",
+        "file": "ملف (PDF / صورة)",
+        "fileHelp": "ملفات PDF وJPG وPNG وWEBP حتى 50MB",
+        "upload": "رفع",
+        "reset": "إعادة تعيين"
       }
     },
     "sync": {
@@ -1485,7 +1518,10 @@
     "descriptionLabel": "صف الحدث",
     "descriptionPlaceholder": "ماذا حدث، ومتى، وكيف يتعلق بهذا العضو. التفاصيل الأكثر تساعد على التحقق بسرعة.",
     "sourceUrlLabel": "رابط المصدر (اختياري)",
+    "sourceUrlsLabel": "روابط المصادر (اختياري)",
     "sourceUrlHelp": "مقال، حكم، قرار لجنة أخلاقيات، إلخ. يُنصح بشدة بإرفاق مصدر موثوق.",
+    "addSource": "إضافة مصدر",
+    "removeSource": "إزالة المصدر",
     "submit": "إرسال للمراجعة",
     "submitting": "جارٍ الإرسال...",
     "success": "تم استلام الطلب. سيراجعه فريق التحرير ويحدّث السجل.",

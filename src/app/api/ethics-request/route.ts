@@ -6,6 +6,8 @@ const ethicsRequestSchema = z.object({
   memberId: z.coerce.number().int().positive(),
   memberName: z.string().min(1).max(200),
   description: z.string().min(10).max(5000),
+  sourceUrls: z.array(z.string().url().max(1000)).max(5).optional(),
+  // Legacy single URL — kept for backward compat
   sourceUrl: z.string().url().max(1000).optional().or(z.literal('')),
   pageUrl: z.string().max(500).optional(),
   locale: z.string().max(5).optional(),
@@ -61,8 +63,21 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { memberId, memberName, description, sourceUrl, pageUrl, locale } =
-    parsed.data;
+  const {
+    memberId,
+    memberName,
+    description,
+    sourceUrls,
+    sourceUrl,
+    pageUrl,
+    locale,
+  } = parsed.data;
+
+  // Merge both source formats, dedupe, limit to 5
+  const allSources = [...(sourceUrls ?? []), ...(sourceUrl ? [sourceUrl] : [])]
+    .filter(Boolean)
+    .filter((u, i, arr) => arr.indexOf(u) === i)
+    .slice(0, 5);
 
   const { owner, repo } = appConfig.ethicsRequest.github;
 
@@ -74,7 +89,8 @@ export async function POST(request: NextRequest) {
     `## Description`,
     description,
   ];
-  if (sourceUrl) bodyParts.push('', `## Source`, sourceUrl);
+  if (allSources.length > 0)
+    bodyParts.push('', `## Sources`, ...allSources.map((u) => `- ${u}`));
   if (pageUrl) bodyParts.push('', `**Submitted from:** ${pageUrl}`);
   if (locale) bodyParts.push(`**Locale:** ${locale}`);
   bodyParts.push('', '---', '*Submitted via ethics-request form*');

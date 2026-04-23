@@ -1,5 +1,5 @@
 import { z } from 'zod/v4';
-import { eq, desc, and, sql } from 'drizzle-orm';
+import { eq, desc, and, sql, inArray } from 'drizzle-orm';
 import { router, publicProcedure } from '../trpc';
 import { db } from '../../lib/db';
 import {
@@ -48,8 +48,29 @@ export const integrityRouter = router({
           .where(where),
       ]);
 
+      // Attach official documents to each case
+      const caseIds = data.map((c) => c.id);
+      const allDocs =
+        caseIds.length > 0
+          ? await db
+              .select()
+              .from(integrityDocuments)
+              .where(inArray(integrityDocuments.caseId, caseIds))
+              .orderBy(desc(integrityDocuments.publishedAt))
+          : [];
+
+      const docsByCaseId = new Map<number, typeof allDocs>();
+      for (const doc of allDocs) {
+        const arr = docsByCaseId.get(doc.caseId) ?? [];
+        arr.push(doc);
+        docsByCaseId.set(doc.caseId, arr);
+      }
+
       return {
-        items: data,
+        items: data.map((c) => ({
+          ...c,
+          documents: docsByCaseId.get(c.id) ?? [],
+        })),
         total: countResult[0]?.count ?? 0,
         page,
         pageSize,
@@ -193,11 +214,7 @@ export const integrityRouter = router({
         })
         .from(integrityCases)
         .innerJoin(members, eq(integrityCases.memberId, members.id))
-        .groupBy(
-          integrityCases.memberId,
-          members.firstName,
-          members.lastName,
-        )
+        .groupBy(integrityCases.memberId, members.firstName, members.lastName)
         .orderBy(desc(sql`count(*)`))
         .limit(10),
     ]);

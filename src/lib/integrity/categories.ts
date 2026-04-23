@@ -47,6 +47,13 @@ export function getIntegrityGroup(category: string): IntegrityGroup {
   return CATEGORY_TO_GROUP[category] ?? 'parliamentary_ethics';
 }
 
+/** All category strings that map to the given group. */
+export function getCategoriesInGroup(group: IntegrityGroup): string[] {
+  return Object.entries(CATEGORY_TO_GROUP)
+    .filter(([, g]) => g === group)
+    .map(([c]) => c);
+}
+
 /** Group integrity cases by their display group, preserving input order. */
 export function groupIntegrityCases<T extends { category: string }>(
   cases: T[],

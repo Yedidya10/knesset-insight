@@ -910,6 +910,22 @@
     "showAllClosed": "Show closed & acquitted ({count})",
     "hideClosed": "Hide closed & acquitted",
     "client": "Client",
+    "documents": {
+      "officialDocs": "Official documents",
+      "noDocuments": "No official documents attached",
+      "viewDoc": "View document",
+      "openInNewTab": "Open in new tab",
+      "close": "Close",
+      "mobileViewNote": "To view the document on mobile, open in a new tab"
+    },
+    "docTypes": {
+      "ruling": "Court ruling",
+      "report": "Report",
+      "protocol": "Protocol",
+      "indictment": "Indictment",
+      "response": "Response",
+      "other": "Other"
+    },
     "groups": {
       "parliamentary_ethics": "Knesset Ethics Complaints",
       "civil_lawsuits": "Civil Lawsuits",
@@ -1128,6 +1144,23 @@
           "verified": "Verified",
           "all": "All"
         }
+      },
+      "documents": {
+        "manage": "Manage documents",
+        "title": "Case documents",
+        "existingDocs": "Existing documents",
+        "noDocs": "No documents yet",
+        "preview": "Preview",
+        "delete": "Delete",
+        "uploadNew": "Upload new document",
+        "docTitle": "Document title",
+        "docTitlePlaceholder": "e.g. District Court Ruling",
+        "docType": "Document type",
+        "publishedAt": "Published date",
+        "file": "File (PDF / image)",
+        "fileHelp": "PDF, JPG, PNG, WEBP files up to 50MB",
+        "upload": "Upload",
+        "reset": "Reset"
       }
     },
     "sync": {
@@ -1484,7 +1517,10 @@
     "descriptionLabel": "Describe the event",
     "descriptionPlaceholder": "What happened, when, and how it relates to this MK. More detail makes verification faster.",
     "sourceUrlLabel": "Source URL (optional)",
+    "sourceUrlsLabel": "Source links (optional)",
     "sourceUrlHelp": "Article, ruling, ethics-committee decision, etc. Citing a reliable source is strongly encouraged.",
+    "addSource": "Add source",
+    "removeSource": "Remove source",
     "submit": "Submit for review",
     "submitting": "Submitting...",
     "success": "Request received. The editorial team will review and update the record.",

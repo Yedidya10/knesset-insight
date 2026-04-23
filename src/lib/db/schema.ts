@@ -686,6 +686,10 @@ export const integrityCases = pgTable('integrity_cases', {
   verified: boolean('verified').default(false),
   verifiedBy: text('verified_by'),
   verifiedAt: timestamp('verified_at', { withTimezone: true }),
+  /** URLs submitted by the public; format: [{ url: string, label?: string }] */
+  submitterSources: jsonb('submitter_sources')
+    .$type<{ url: string; label?: string }[]>()
+    .default([]),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 });
@@ -714,6 +718,8 @@ export const integrityDocuments = pgTable('integrity_documents', {
   title: text('title').notNull(),
   url: text('url'),
   filePath: text('file_path'),
+  /** Supabase Storage object path, e.g. "integrity-documents/123/ruling.pdf" */
+  storagePath: text('storage_path'),
   publishedAt: date('published_at'),
   metadata: jsonb('metadata'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),

@@ -74,11 +74,15 @@ export async function syncIntegrityKnesset(): Promise<void> {
         `[sync:integrity-knesset] Found ${ethicsCommitteeIds.size} ethics + ${houseCommitteeIds.size} house committees`,
       );
 
-      // Fetch sessions since last checkpoint
+      // Fetch sessions since last checkpoint.
+      // Knesset OData is v3 — use `X eq A or X eq B`, NOT `X in (...)` (v4 only).
       const lastTimestamp = prevCheckpoint?.lastItemTimestamp;
+      const committeeClause = `(${committeeIds
+        .map((id) => `CommitteeID eq ${id}`)
+        .join(' or ')})`;
       const filter = lastTimestamp
-        ? `CommitteeID in (${committeeIds.join(',')}) and LastUpdatedDate gt datetime'${lastTimestamp}'`
-        : `CommitteeID in (${committeeIds.join(',')})`;
+        ? `${committeeClause} and LastUpdatedDate gt datetime'${lastTimestamp}'`
+        : committeeClause;
 
       const sessions = await fetchOData<KnsCommitteeSession>(
         'ParliamentInfo',

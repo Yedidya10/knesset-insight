@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { ScaleIcon, Loader2Icon } from 'lucide-react';
+import { ScaleIcon, Loader2Icon, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -26,7 +26,7 @@ export function EthicsRequestButton({ memberId, memberName }: Props) {
   const tCommon = useTranslations('common');
   const [open, setOpen] = useState(false);
   const [description, setDescription] = useState('');
-  const [sourceUrl, setSourceUrl] = useState('');
+  const [sourceUrls, setSourceUrls] = useState<string[]>(['']);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<
     'success' | 'error' | 'rateLimit' | null
@@ -35,7 +35,7 @@ export function EthicsRequestButton({ memberId, memberName }: Props) {
 
   function resetForm() {
     setDescription('');
-    setSourceUrl('');
+    setSourceUrls(['']);
     setResult(null);
     setValidationError(null);
   }
@@ -62,7 +62,10 @@ export function EthicsRequestButton({ memberId, memberName }: Props) {
           memberId,
           memberName,
           description: description.trim(),
-          sourceUrl: sourceUrl.trim() || undefined,
+          sourceUrls: sourceUrls
+            .map((u) => u.trim())
+            .filter(Boolean)
+            .slice(0, 5),
           pageUrl: window.location.href,
           locale: document.documentElement.lang || undefined,
         }),
@@ -123,18 +126,57 @@ export function EthicsRequestButton({ memberId, memberName }: Props) {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label htmlFor="ethics-source" className="text-sm font-medium">
-                {t('sourceUrlLabel')}
+              <label className="text-sm font-medium">
+                {t('sourceUrlsLabel')}
               </label>
-              <Input
-                id="ethics-source"
-                type="url"
-                value={sourceUrl}
-                onChange={(e) => setSourceUrl(e.target.value)}
-                placeholder="https://…"
-                maxLength={1000}
-                disabled={submitting}
-              />
+              <div className="space-y-2">
+                {sourceUrls.map((url, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <Input
+                      type="url"
+                      value={url}
+                      onChange={(e) => {
+                        const next = [...sourceUrls];
+                        next[idx] = e.target.value;
+                        setSourceUrls(next);
+                      }}
+                      placeholder="https://…"
+                      maxLength={1000}
+                      disabled={submitting}
+                    />
+                    {sourceUrls.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="shrink-0"
+                        onClick={() =>
+                          setSourceUrls((prev) =>
+                            prev.filter((_, i) => i !== idx),
+                          )
+                        }
+                        disabled={submitting}
+                        title={t('removeSource')}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {sourceUrls.length < 5 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mt-1 gap-1.5 self-start"
+                  onClick={() => setSourceUrls((prev) => [...prev, ''])}
+                  disabled={submitting}
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  {t('addSource')}
+                </Button>
+              )}
               <p className="text-muted-foreground text-xs">
                 {t('sourceUrlHelp')}
               </p>

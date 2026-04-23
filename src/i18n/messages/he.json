@@ -910,6 +910,22 @@
     "showAllClosed": "הצג סגורות וזיכויים ({count})",
     "hideClosed": "הסתר סגורות וזיכויים",
     "client": "לקוח",
+    "documents": {
+      "officialDocs": "מסמכים רשמיים",
+      "noDocuments": "אין מסמכים רשמיים מצורפים",
+      "viewDoc": "צפה במסמך",
+      "openInNewTab": "פתח בלשונית חדשה",
+      "close": "סגור",
+      "mobileViewNote": "לצפייה במסמך על מכשיר נייד, פתח בלשונית חדשה"
+    },
+    "docTypes": {
+      "ruling": "פסק דין",
+      "report": "דוח",
+      "protocol": "פרוטוקול",
+      "indictment": "כתב אישום",
+      "response": "תגובה",
+      "other": "אחר"
+    },
     "groups": {
       "parliamentary_ethics": "קובלנות ואתיקה של הכנסת",
       "civil_lawsuits": "תביעות אזרחיות",
@@ -1128,6 +1144,23 @@
           "verified": "מאומתים",
           "all": "הכל"
         }
+      },
+      "documents": {
+        "manage": "נהל מסמכים",
+        "title": "מסמכי תיק",
+        "existingDocs": "מסמכים קיימים",
+        "noDocs": "אין מסמכים עדיין",
+        "preview": "תצוגה מקדימה",
+        "delete": "מחק",
+        "uploadNew": "העלה מסמך חדש",
+        "docTitle": "כותרת המסמך",
+        "docTitlePlaceholder": "לדוגמה: פסק דין בית משפט מחוזי",
+        "docType": "סוג מסמך",
+        "publishedAt": "תאריך פרסום",
+        "file": "קובץ (PDF / תמונה)",
+        "fileHelp": "קבצי PDF, JPG, PNG, WEBP עד 50MB",
+        "upload": "העלה",
+        "reset": "אפס"
       }
     },
     "sync": {
@@ -1484,7 +1517,10 @@
     "descriptionLabel": "תיאור האירוע",
     "descriptionPlaceholder": "תארו את האירוע: מה קרה, מתי, ואיך הוא קשור לח״כ. ככל שמפורט יותר — כך קל יותר לאמת.",
     "sourceUrlLabel": "קישור למקור (אופציונלי)",
+    "sourceUrlsLabel": "קישורים למקורות (אופציונלי)",
     "sourceUrlHelp": "כתבה, פסק דין, החלטת ועדת אתיקה וכו׳. מומלץ מאוד לצרף מקור מוסמך.",
+    "addSource": "הוסף מקור",
+    "removeSource": "הסר מקור",
     "submit": "שלח לבדיקה",
     "submitting": "שולח...",
     "success": "הבקשה התקבלה. צוות האתר יבדוק ויעדכן בהתאם.",

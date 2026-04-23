@@ -1,3 +1,4 @@
+import React from 'react';
 import { ChevronLeft } from 'lucide-react';
 import { Link } from '@/i18n/navigation';
 import {
@@ -54,16 +55,18 @@ export default function AppBreadcrumb({ items }: AppBreadcrumbProps) {
             const isLast = index === items.length - 1;
 
             return (
-              <BreadcrumbItem key={item.href ?? item.label}>
-                {isLast ? (
-                  <BreadcrumbPage>{item.label}</BreadcrumbPage>
-                ) : (
-                  <BreadcrumbLink render={<Link href={item.href!} />}>
-                    {item.label}
-                  </BreadcrumbLink>
-                )}
+              <React.Fragment key={item.href ?? item.label}>
+                <BreadcrumbItem>
+                  {isLast ? (
+                    <BreadcrumbPage>{item.label}</BreadcrumbPage>
+                  ) : (
+                    <BreadcrumbLink render={<Link href={item.href!} />}>
+                      {item.label}
+                    </BreadcrumbLink>
+                  )}
+                </BreadcrumbItem>
                 {!isLast && <BreadcrumbSeparator />}
-              </BreadcrumbItem>
+              </React.Fragment>
             );
           })}
         </BreadcrumbList>

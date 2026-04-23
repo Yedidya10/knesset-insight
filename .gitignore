@@ -69,3 +69,6 @@ public/workbox-*.js.map
 *.bak
 public/swe-worker-*.js
 .env*.local
+
+# Local workspace (integrity fetch cache, analysis JSON, etc)
+tmp/
